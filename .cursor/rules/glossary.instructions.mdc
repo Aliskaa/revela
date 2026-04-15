@@ -1,0 +1,69 @@
+---
+description: "Use this context for domain and architecture glossary terms and acronyms."
+alwaysApply: false
+globs: **/*.md
+---
+
+# Glossary Context
+
+Use the following canonical meanings for acronyms and terms.
+
+## DDD Terms
+
+- BC: Bounded Context (DDD). Boundary Context can appear as an alias, but Bounded Context is the canonical term.
+- Ubiquitous Language: Shared domain language used by business and engineering.
+- Aggregate: Cluster of domain objects treated as a consistency boundary.
+- Aggregate Root: Main entry point that controls access to an aggregate.
+- Entity: Object with identity that persists through state changes.
+- Value Object: Immutable object defined by attributes, not identity.
+- Domain Event: Significant business fact that happened in the domain.
+- Repository: Abstraction used to load and persist aggregates.
+
+## CMDB Terms
+
+- CI: Configuration Item (CMDB).
+- CIM: Configuration Item Model (CMDB).
+- CI Class: Category of configuration items with shared attributes and rules.
+- Relationship: Dependency or association between configuration items.
+- Service Mapping: Mapping of technical CIs to business services.
+- Source of Truth: Authoritative system for a given data scope.
+- Reconciliation: Process that merges and resolves CI data from multiple sources.
+- Discovery: Automated identification and collection of CI data.
+
+## Architecture Terms
+
+- CQRS: Command Query Responsibility Segregation.
+- CQS: Command Query Separation.
+- Port: Application-facing contract in Hexagonal Architecture.
+- Adapter: Infrastructure-side implementation of a Port.
+- ACL: Anti-Corruption Layer used to isolate external model influence.
+
+## Engineering and Quality Terms
+
+- SOLID: Set of five object-oriented design principles.
+- SRP: Single Responsibility Principle.
+- OCP: Open Closed Principle.
+- LSP: Liskov Substitution Principle.
+- ISP: Interface Segregation Principle.
+- DIP: Dependency Inversion Principle.
+- DI: Dependency Injection.
+- TDD: Test Driven Development.
+- BDD: Behavior Driven Development.
+
+## TypeScript and Validation Terms
+
+- DTO: Data Transfer Object.
+- Schema: Executable validation contract for structured data.
+- Zod Schema: Runtime schema defined with Zod v4.
+- z.infer: TypeScript type inferred from a Zod schema.
+
+## Tooling Terms
+
+- ADR: Architecture Decision Record. A document that captures a single significant architectural decision with its context, rationale, consequences, and alternatives considered.
+- Biome: BiomeJS — the sole linting and formatting tool used in this project (replaces ESLint and Prettier).
+- Conventional Commits: A commit message specification that imposes a structured format (`type(scope): subject`) to enable deterministic changelog generation.
+- czg: Interactive CLI prompt that guides commit message authoring. Reads `commitlint.config.ts` to enforce type and length constraints during input.
+- simple-git-hooks: Lightweight Git hook manager. Configuration is declared inline in `package.json`. Activated via the `prepare` lifecycle script.
+- commitlint: Tool that validates commit messages against a ruleset. Runs in the `commit-msg` Git hook.
+- pnpm catalog: Mechanism in `pnpm-workspace.yaml` that centralises all npm package versions. Package `package.json` files reference versions using the `catalog:` protocol.
+- Barrel: An `index.ts` file that re-exports all public symbols from a folder, serving as the public API surface of that folder.

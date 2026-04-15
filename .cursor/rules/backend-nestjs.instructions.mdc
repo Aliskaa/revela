@@ -1,0 +1,79 @@
+---
+description: Backend NestJS rules for modular hexagonal architecture
+alwaysApply: false
+globs: applications/backend/**/*.ts
+---
+
+# Backend NestJS Rules
+
+This rule applies to backend TypeScript files under `applications/backend`.
+Use it with existing global DI, architecture, and code-convention rules.
+
+## 1) Module Shape (mandatory)
+
+Each feature module must follow this structure:
+
+```
+modules/<feature>/
+├── application/
+│   └── usecases/
+├── domain/
+│   ├── entities/
+│   ├── ports/
+│   └── tokens.ts
+├── infrastructure/
+│   ├── adapters/
+│   └── dto/
+├── <feature>.controller.ts
+└── <feature>.module.ts
+```
+
+- Do not create a `controllers/` folder.
+- Keep controllers at `modules/<feature>/`.
+- Do not use `*.service.ts` for business logic.
+
+## 2) Layer Responsibilities (mandatory)
+
+- Controllers are input adapters only.
+- Controllers call use cases only (never repositories/adapters directly).
+- Controllers must avoid conditional business branching (`if/else`) on use case results.
+- Controllers should delegate directly to `execute(...)` and let use cases throw domain/HTTP exceptions.
+- Use cases hold business orchestration logic.
+- Domain remains infrastructure-agnostic.
+- Infrastructure adapters implement domain/application ports.
+
+## 3) SRP and ISP (mandatory)
+
+- One use case = one business intent.
+- Do not create catch-all use cases (`*Crud*`, `Manage*`, `Save*`).
+- Split ports by responsibility; avoid large mixed interfaces.
+- Prefer explicit read/write separation when useful:
+  - `I*ReadQuery.port.ts` (or `I*Query.port.ts`) for reads
+  - `I*WriteRepository.port.ts` (or `I*Repository.port.ts`) for writes
+
+## 4) Naming and Imports (mandatory)
+
+- Use case files: `<Name>.usecase.ts` (example: `CreateCronjobK8s.usecase.ts`)
+- Port files: `I*.port.ts`
+- Adapter files: `*.adapter.ts`
+- Internal imports must use `@src/...` alias (no deep relative imports).
+
+## 5) Dependency Injection (mandatory)
+
+- Define module tokens in `domain/tokens.ts`.
+- Use symbol tokens for injected dependencies.
+- Use explicit `@Inject(token)` in constructors where dependencies are wired by token.
+- In controllers, inject use cases (not adapters/repositories).
+
+## 6) Errors, Logging, and Tests (mandatory)
+
+- Throw Nest exceptions (`BadRequestException`, `NotFoundException`, etc.).
+- Do not mask known HTTP exceptions as generic 500 errors.
+- Log unexpected errors with actionable context.
+- Add unit tests for controllers and use cases when behavior changes.
+
+## 7) CRUD Consistency (mandatory)
+
+- Keep CRUD endpoint method names consistent: `getAll`, `get`, `create`, `update`, `delete`.
+- `get`/`update` use cases must throw `NotFoundException` when target does not exist.
+- For `@HttpCode(204)` delete endpoints, return `Promise<void>` from controller and use case.

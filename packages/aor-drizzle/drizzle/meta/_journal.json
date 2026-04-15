@@ -1,0 +1,76 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1774462358509,
+      "tag": "0000_new_shinko_yamashiro",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1775250255099,
+      "tag": "0001_bent_jackpot",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1775302115315,
+      "tag": "0002_puzzling_mathemanic",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1775486252803,
+      "tag": "0003_tidy_the_fury",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1775491200000,
+      "tag": "0004_invite_campaign_link",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1775492400000,
+      "tag": "0005_campaign_questionnaire",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1775490904564,
+      "tag": "0006_large_magneto",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1775606400000,
+      "tag": "0007_v2_foundation_backfill",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1775692800000,
+      "tag": "0008_campaign_coach_scope",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1775984794983,
+      "tag": "0009_questionnaire_responses_campaign_on_delete_set_null",
+      "breakpoints": true
+    }
+  ]
+}

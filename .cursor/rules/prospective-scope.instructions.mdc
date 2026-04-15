@@ -1,0 +1,33 @@
+---
+description: "Use this context when the user asks for a prospective study, analysis, comparison, or exploration."
+alwaysApply: false
+globs: docs/prospective/**/*.md
+---
+
+# Prospective Scope Context
+
+- If the user explicitly asks for a prospective study, analysis, comparison, or exploration, do not modify files outside `./docs/prospective`.
+- In prospective mode, prefer creating or updating Markdown documents under `./docs/prospective`.
+- Do not change implementation files, active instruction files, or application/package source files during a prospective request unless the user explicitly overrides this rule.
+
+## File Naming Convention
+
+Every prospective file **must** use the following format:
+
+```
+YYYY-MM-DD-{status}-{kebab-case-title}.md
+```
+
+Examples:
+- `2026-03-20-NEW-cqrs-read-versioning.md`
+- `2026-03-20-PARTIAL-tenant-validation-registry-adapter.md`
+- `2026-03-20-DONE-bc-version-sequence-prisma-postgresql.md`
+
+Rules:
+- The date is the ISO 8601 calendar date on which the file is first created.
+- The status segment is mandatory and must be one of:
+	- `NEW`
+	- `PARTIAL`
+	- `DONE`
+- The title part uses kebab-case (lowercase, hyphens only, no spaces or underscores).
+- Existing prospective files must be renamed when the convention changes or when explicitly requested.

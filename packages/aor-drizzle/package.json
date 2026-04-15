@@ -1,0 +1,32 @@
+{
+    "name": "@aor/drizzle",
+    "private": true,
+    "version": "0.1.0",
+    "main": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "default": "./dist/index.js"
+        }
+    },
+    "scripts": {
+        "build": "tsc -p tsconfig.build.json",
+        "typecheck": "tsc -p tsconfig.json --noEmit",
+        "lint": "biome check .",
+        "db:generate": "drizzle-kit generate",
+        "db:migrate": "drizzle-kit migrate"
+    },
+    "dependencies": {
+        "drizzle-orm": "catalog:",
+        "pg": "catalog:"
+    },
+    "devDependencies": {
+        "@biomejs/biome": "catalog:",
+        "@types/node": "catalog:",
+        "dotenv": "catalog:",
+        "drizzle-kit": "catalog:",
+        "@types/pg": "catalog:",
+        "typescript": "catalog:"
+    }
+}

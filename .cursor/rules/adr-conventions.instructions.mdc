@@ -1,0 +1,133 @@
+---
+globs: docs/adr/**/*.md
+alwaysApply: false
+---
+# ADR Conventions
+
+## What Is an ADR
+
+An Architecture Decision Record (ADR) captures a single significant architectural decision: its context, the decision taken, the consequences, and the alternatives that were considered and rejected.
+
+ADRs are stored in `docs/adr/` and indexed in `docs/adr/README.md`.
+
+---
+
+## When to Create an ADR
+
+Create an ADR whenever a decision is made that:
+
+- Selects a library, framework, or tool at the platform level.
+- Establishes a cross-cutting architectural pattern (e.g., DI strategy, CQRS variant, hexagonal layering rule).
+- Introduces a constraint that affects multiple bounded contexts or packages.
+- Supersedes or deprecates a previous architectural choice.
+
+Do **not** create an ADR for:
+
+- Local implementation details within a single package.
+- Decisions that are already fully covered by an existing instruction file (unless they rise to architectural significance).
+- Exploratory/prospective analysis (use `docs/prospective/` for those).
+
+---
+
+## ADR File Naming
+
+ADRs use **two distinct naming schemes** based on their validation status.
+
+### Unvalidated ADRs (status: Proposed)
+
+```
+ADR__{LETTER}-{short-kebab-title}.md
+```
+
+Where `LETTER` is a single uppercase letter (A, B, C, …), assigned sequentially among pending proposals.
+
+Examples:
+
+- `ADR__A-mongodb-read-store.md`
+- `ADR__B-outbox-relay-pattern.md`
+
+### Validated ADRs (status: Accepted)
+
+When a Proposed ADR is accepted, it is **renamed** to the numeric scheme:
+
+```
+ADR-{XXX}-{short-kebab-title}.md
+```
+
+Where `XXX` is a zero-padded three-digit sequence number, incremented from the last accepted ADR in the index.
+
+Examples:
+
+- `ADR-004-mongodb-read-store.md`
+- `ADR-005-outbox-relay-pattern.md`
+
+The index and all references must be updated to reflect the renamed file when an ADR is accepted.
+
+---
+
+## ADR File Format
+
+Each ADR must follow this structure:
+
+```markdown
+# ADR-XXX: Title
+
+## Status
+
+Proposed | Accepted | Deprecated | Superseded by [ADR-XXX](./ADR-XXX-...)
+
+## Date
+
+YYYY-MM-DD
+
+## Context
+
+[Describe the problem, constraints, and situation that led to the decision.]
+
+## Decision
+
+[State the decision clearly and unambiguously.]
+
+## Consequences
+
+[List the direct effects of the decision: what becomes easier, harder, or constrained.]
+
+## Alternatives Considered
+
+[For each rejected alternative, give its name and the reason it was rejected.]
+
+## References
+
+[Optional. Links to companion documents, prospective analyses, or instruction files.]
+```
+
+---
+
+## Mandatory Index Update
+
+**Every time an ADR is created or its status changes, the ADR index at `docs/adr/README.md` must be updated.**
+
+The index table must always reflect the current state of all ADRs:
+
+| ADR | Title | Status | Date |
+| --- | --- | --- | --- |
+| [ADR-XXX](./ADR-XXX-...) | Title | Status | YYYY-MM-DD |
+
+---
+
+## Status Lifecycle
+
+```
+Proposed (ADR__X) → Accepted (ADR-XXX) → Deprecated → Superseded
+```
+
+- **Proposed**: the decision is under discussion and not yet in effect. File uses the `ADR__{LETTER}` naming scheme.
+- **Accepted**: the decision is in effect and must be followed by all contributors. The file is **renamed** from `ADR__{LETTER}-…` to `ADR-{XXX}-…` at this point.
+- **Deprecated**: the decision is no longer recommended but has not been replaced yet.
+- **Superseded**: the decision has been replaced by a newer ADR. Update the `Status` field to `Superseded by [ADR-XXX](./ADR-XXX-...)` and update the index.
+
+---
+
+## Companion Documents
+
+An ADR is the formal decision record. Detailed implementation guidance, diagrams, and port/adapter contracts belong in companion documents under `docs/` or `docs/prospective/`, linked from the ADR `References` section.

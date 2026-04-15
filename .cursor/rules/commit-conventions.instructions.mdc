@@ -1,0 +1,127 @@
+---
+alwaysApply: true
+---
+# Commit Message Conventions
+
+All commits in this repository must follow the [Conventional Commits](https://www.conventionalcommits.org/) specification, enforced by `@commitlint` via the `commit-msg` Git hook (see [ADR-006](../../architecture/adr/ADR-006-commitlint-czg.md)).
+
+The authoritative ruleset is defined in [`commitlint.config.ts`](../../../commitlint.config.ts) at the workspace root.
+
+---
+
+## Format
+
+```
+<type>(<scope>): <subject>
+
+[optional body]
+
+[optional footer(s)]
+```
+
+---
+
+## Allowed Types
+
+| Type | When to use |
+|---|---|
+| `feat` | New feature or capability |
+| `fix` | Bug fix |
+| `docs` | Documentation only change |
+| `style` | Formatting, whitespace — no logic change |
+| `refactor` | Code restructuring with no behaviour change |
+| `test` | Adding or updating tests |
+| `chore` | Maintenance: build system, dependencies, tooling |
+| `perf` | Performance improvement |
+| `ci` | CI pipeline change |
+| `build` | Build system or external dependency change |
+| `revert` | Reverts a previous commit |
+
+---
+
+## Scope (optional)
+
+The scope identifies the area of the codebase affected. Use kebab-case.
+
+Examples: `identity-access`, `ci-management`, `biome`, `barrel`, `commitlint`, `di`, `types`
+
+---
+
+## Subject Rules
+
+- Mandatory. Must not be empty.
+- Must not exceed **72 characters**.
+- Must not end with a period.
+- Must be **all lowercase** (the `@commitlint/config-conventional` base preset rejects sentence-case, start-case, pascal-case, and upper-case subjects).
+- Write as an imperative statement: *"add user creation command"*, not *"added"* or *"adding"*.
+
+---
+
+## Body (optional)
+
+- Separated from the subject by a blank line.
+- Each line must not exceed **100 characters**.
+- Use the body to explain *why* the change was made, not *what* was changed (the code shows that).
+
+---
+
+## Footer (optional)
+
+- Use `BREAKING CHANGE: <description>` for breaking changes.
+- Use `Closes #<issue>` or `Refs #<issue>` to link issues.
+
+---
+
+## Examples
+
+```
+feat(identity-access): add role assignment command handler
+```
+
+```
+fix(di): correct token symbol collision for UserRepository
+```
+
+```
+chore: update @commitlint to 20.5.0
+```
+
+```
+docs(adr): add ADR-006 for commitlint and czg decision
+```
+
+```
+refactor(barrel): move IdentityAccessDomainEvent to types subfolder
+
+The types subfolder centralises shared domain event types used across
+all identity-access subdomains. Relative imports updated accordingly.
+```
+
+```
+feat(identity-access)!: remove legacy UserManagementPort
+
+BREAKING CHANGE: UserManagementPort is removed. Use individual command
+handlers via the CQRS write stack instead.
+```
+
+---
+
+## How to Commit
+
+```bash
+# Guided interactive prompt (recommended for complex commits)
+pnpm commit
+
+# Direct commit (hook validates message automatically)
+git commit -m "feat(identity-access): Add group creation event"
+```
+
+`pnpm commit` launches `czg`, which reads `commitlint.config.ts` to populate the type list and enforce length constraints during the prompt.
+
+---
+
+## Validation
+
+The `commit-msg` hook runs `pnpm commitlint --edit $1` on every commit. Non-conforming messages are rejected with an error listing the violated rules.
+
+To skip hooks in CI: set `SKIP_SIMPLE_GIT_HOOKS=1`.

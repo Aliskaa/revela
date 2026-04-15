@@ -1,0 +1,62 @@
+---
+description: "Use this context for development architecture patterns: SOLID, Hexagonal Architecture, and CQRS."
+globs: **/*.ts,**/*.tsx
+alwaysApply: false
+---
+
+# Development Architecture Context
+
+- Apply SOLID principles in design and implementation.
+- Apply Hexagonal Architecture (Ports and Adapters).
+- Apply CQRS where command and query responsibilities are clearly separated.
+- Use CQRS without Event Sourcing by default for this application.
+- Use immutable entities in the write side only.
+
+## Atomicity of CQRS Artifacts
+
+- Each command, event, and handler must represent a single, focused intent.
+- A command file must contain one command schema and one derived type — never bundle multiple commands in one file.
+- A handler file must handle exactly one command or one event.
+- Commands and handlers are atomic by default; use one focused business intent per command and one handler per command or event type.
+- A combined create/update use case is allowed only when the caller contract is explicitly upsert-like. In that case, use `Upsert{Aggregate}...` or `CreateOrUpdate{Aggregate}...` naming.
+- Batch-processing handlers are allowed, but their names must include `Bulk`. The corresponding command name should also include `Bulk`.
+- `Save*`, `Manage*`, and other catch-all command or handler names are forbidden when they hide the real business intent.
+- When renaming a command, event, or handler: rename the file, the schema, and the type together as a single atomic operation.
+- The filename must always match the schema and type name it contains (e.g., `UserUpdateDisplayNameCommand.ts` → `UserUpdateDisplayNameSchema` + `UserUpdateDisplayName` type).
+- Use SQL storage for both write model and outbox in the same database schema.
+- Persist write model changes and outbox records in one transactional operation.
+
+## Ports and Adapters Naming Rules
+
+- Use case files must use the `<Name>.usecase.ts` naming pattern (example: `CreateCronjobK8s.usecase.ts`).
+- Port contracts must use the `I*.port.ts` naming pattern.
+- Adapter implementations must use the `*.adapter.ts` naming pattern.
+- Keep adapters in infrastructure-facing layers and keep ports in application/domain-facing layers.
+
+## Grouping Ports in Method Signatures
+
+- When a method requires one or more ports, always group them into a single `ports` object parameter.
+- This rule applies to static factories, command handlers, domain services, and entity methods.
+- Apply this rule even for a single port.
+- Keep business input data in `params` and infrastructure dependencies in `ports`.
+
+```ts
+// ✅ multiple ports
+static async create(
+	params: CreateConfigSnapshotParams,
+	ports: {
+		uuidPort: UuidPort;
+		dateTimePort: DateTimePort;
+		categoryRepository: CiConfigTypeRepository;
+	},
+): Promise<ConfigSnapshot> {
+	const { uuidPort, dateTimePort, categoryRepository } = ports;
+	// ...
+}
+
+// ✅ single port
+delete(ports: { dateTimePort: DateTimePort }): void {
+	const { dateTimePort } = ports;
+	// ...
+}
+```

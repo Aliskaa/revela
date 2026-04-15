@@ -1,0 +1,86 @@
+---
+description: "Use this context when writing or reviewing Zod schemas to enforce Zod v4 API conventions."
+alwaysApply: false
+globs: **/*Schema.ts, **/*Dto.ts
+---
+
+# Zod v4 API Conventions
+
+This project uses **Zod v4**. Do not use Zod v3 API patterns. The two versions have significant API differences that must not be mixed.
+
+---
+
+## String format validators
+
+In Zod v4, string format validators were split into two categories:
+
+1. **Top-level primitives** — standalone schema types, no longer chained on `z.string()`.
+2. **`z.iso.*` namespace** — ISO 8601 date/time formats.
+
+### UUID
+
+```ts
+// ❌ Zod v3 — forbidden
+z.string().uuid()
+
+// ✅ Zod v4
+z.uuid()
+```
+
+### ISO 8601 datetime
+
+```ts
+// ❌ Zod v3 — forbidden
+z.string().datetime()
+
+// ✅ Zod v4
+z.iso.datetime()
+```
+
+### ISO 8601 date
+
+```ts
+// ❌ Zod v3 — forbidden
+z.string().date()
+
+// ✅ Zod v4
+z.iso.date()
+```
+
+### ISO 8601 time
+
+```ts
+// ❌ Zod v3 — forbidden
+z.string().time()
+
+// ✅ Zod v4
+z.iso.time()
+```
+
+### Email
+
+```ts
+// ❌ Zod v3 — forbidden
+z.string().email()
+
+// ✅ Zod v4
+z.email()
+```
+
+### URL
+
+```ts
+// ❌ Zod v3 — forbidden
+z.string().url()
+
+// ✅ Zod v4
+z.url()
+```
+
+---
+
+## General rule
+
+> If you are chaining a format specifier (uuid, email, url, datetime, date, time) on `z.string()`, it is a Zod v3 pattern and must be replaced with the Zod v4 equivalent.
+
+Plain `z.string()` without a format specifier remains valid for unformatted strings.

@@ -1,0 +1,14 @@
+{
+    "extends": "./tsconfig.json",
+    "compilerOptions": {
+        "noEmit": false,
+        "rootDir": "./src",
+        "outDir": "./dist",
+        "sourceMap": true,
+        "module": "CommonJS",
+        "moduleResolution": "Node",
+        "allowImportingTsExtensions": true,
+        "rewriteRelativeImportExtensions": true
+    },
+    "exclude": ["**/*.spec.ts", "**/*.test.ts"]
+}

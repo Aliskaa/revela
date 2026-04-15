@@ -1,0 +1,1197 @@
+{
+    "B": {
+        "id": "B",
+        "title": "Questionnaire B — Comportement",
+        "description": "Évalue vos comportements interpersonnels selon 3 dimensions.",
+        "dimensions": [
+            { "name": "Inclusion", "icon": "Users" },
+            { "name": "Contrôle", "icon": "Hand" },
+            { "name": "Affection", "icon": "Heart" }
+        ],
+        "questions": {
+            "series_labels": ["Mon comportement actuel", "Mon comportement souhaité"],
+            "series": [
+                [
+                    { "question": "Je recherche activement la compagnie des gens.", "threshold": 2, "function": "ge" },
+                    {
+                        "question": "Les autres décident ce que nous faisons lorsque nous sommes ensemble.",
+                        "threshold": 1,
+                        "function": "ge"
+                    },
+                    {
+                        "question": "Je suis totalement honnête avec mes amis proches.",
+                        "threshold": 3,
+                        "function": "ge"
+                    },
+                    {
+                        "question": "Les gens m'invitent à avoir des activités avec eux.",
+                        "threshold": 3,
+                        "function": "ge"
+                    },
+                    {
+                        "question": "Je suis la personne dominante lorsque je suis avec d'autres.",
+                        "threshold": 2,
+                        "function": "ge"
+                    },
+                    {
+                        "question": "Mes amis proches m'expriment leurs véritables sentiments.",
+                        "threshold": 3,
+                        "function": "ge"
+                    },
+                    { "question": "Je fais partie de groupes sociaux.", "threshold": 1, "function": "ge" },
+                    { "question": "Les autres influencent fortement mes actions.", "threshold": 1, "function": "ge" },
+                    { "question": "Je me confie à mes amis proches.", "threshold": 4, "function": "ge" },
+                    {
+                        "question": "Les autres m'invitent à participer à leurs activités.",
+                        "threshold": 3,
+                        "function": "ge"
+                    },
+                    {
+                        "question": "J'obtiens des autres qu'ils fassent ce que je veux.",
+                        "threshold": 3,
+                        "function": "ge"
+                    },
+                    {
+                        "question": "Mes amis proches me parlent de leurs affaires privées.",
+                        "threshold": 3,
+                        "function": "ge"
+                    },
+                    { "question": "Je suis membre d'associations.", "threshold": 1, "function": "ge" },
+                    { "question": "Les autres contrôlent mes actions.", "threshold": 1, "function": "ge" },
+                    {
+                        "question": "Je suis plus à l'aise quand les gens ne sont pas trop proches.",
+                        "threshold": 1,
+                        "function": "le"
+                    },
+                    { "question": "Les autres m'incluent dans leurs activités.", "threshold": 3, "function": "ge" },
+                    { "question": "J'influence fortement les actions des autres.", "threshold": 3, "function": "ge" },
+                    {
+                        "question": "Mes amis proches ne me disent pas tout d'eux-mêmes.",
+                        "threshold": 0,
+                        "function": "le"
+                    },
+                    {
+                        "question": "Je m'intègre à des activités sociales informelles.",
+                        "threshold": 2,
+                        "function": "ge"
+                    },
+                    { "question": "Je suis facilement mené(e) par les autres.", "threshold": 2, "function": "ge" },
+                    {
+                        "question": "Les gens devraient garder leurs sentiments intimes pour eux-mêmes.",
+                        "threshold": 1,
+                        "function": "le"
+                    },
+                    {
+                        "question": "Les gens m'invitent à participer à leurs activités.",
+                        "threshold": 3,
+                        "function": "ge"
+                    },
+                    {
+                        "question": "Je prends les choses en main lorsque je suis en société.",
+                        "threshold": 2,
+                        "function": "ge"
+                    },
+                    {
+                        "question": "Mes amis proches me laissent connaître leurs véritables sentiments.",
+                        "threshold": 4,
+                        "function": "ge"
+                    },
+                    { "question": "J'inclus les autres dans mes projets.", "threshold": 3, "function": "ge" },
+                    { "question": "Les gens décident des choses pour moi.", "threshold": 0, "function": "ge" },
+                    {
+                        "question": "Il y a certaines choses que je ne confie à personne.",
+                        "threshold": 2,
+                        "function": "le"
+                    },
+                    {
+                        "question": "Les gens m'incluent dans leurs activités sociales.",
+                        "threshold": 3,
+                        "function": "ge"
+                    },
+                    {
+                        "question": "J'obtiens des gens qu'ils fassent les choses comme je veux.",
+                        "threshold": 3,
+                        "function": "ge"
+                    },
+                    {
+                        "question": "Mes plus proches amis conservent des secrets à mon égard.",
+                        "threshold": 1,
+                        "function": "le"
+                    },
+                    { "question": "Je suis entouré(e).", "threshold": 3, "function": "ge" },
+                    { "question": "Les autres influencent fortement mes idées.", "threshold": 2, "function": "ge" },
+                    {
+                        "question": "Il y a certaines choses que je ne raconterais à personne.",
+                        "threshold": 2,
+                        "function": "le"
+                    },
+                    {
+                        "question": "Les autres me demandent de participer à leurs discussions.",
+                        "threshold": 4,
+                        "function": "ge"
+                    },
+                    {
+                        "question": "Je prends en charge les choses lorsque je suis avec d'autres.",
+                        "threshold": 2,
+                        "function": "ge"
+                    },
+                    { "question": "Mes amis se confient à moi.", "threshold": 3, "function": "ge" },
+                    {
+                        "question": "Lorsque les gens font des choses ensemble, je me joins à eux.",
+                        "threshold": 3,
+                        "function": "ge"
+                    },
+                    {
+                        "question": "Je suis fortement influencé(e) par ce que les gens disent.",
+                        "threshold": 2,
+                        "function": "ge"
+                    },
+                    { "question": "J'ai au moins un ami à qui je peux tout dire.", "threshold": 4, "function": "ge" },
+                    { "question": "Les gens m'invitent à leurs fêtes.", "threshold": 3, "function": "ge" },
+                    { "question": "J'influence fortement les idées des autres.", "threshold": 2, "function": "ge" },
+                    { "question": "Mes amis proches me cachent leurs sentiments.", "threshold": -1, "function": "le" },
+                    { "question": "Je recherche la compagnie d'autres personnes.", "threshold": 4, "function": "ge" },
+                    {
+                        "question": "Les autres prennent les choses en main quand nous travaillons ensemble.",
+                        "threshold": 1,
+                        "function": "ge"
+                    },
+                    { "question": "Il y a une part de moi que je garde secrète.", "threshold": 2, "function": "le" },
+                    {
+                        "question": "Les gens m'invitent à me joindre à eux lorsque nous avons du temps libre.",
+                        "threshold": 3,
+                        "function": "ge"
+                    },
+                    {
+                        "question": "Je prends les choses en main quand je travaille avec les autres.",
+                        "threshold": 3,
+                        "function": "ge"
+                    },
+                    {
+                        "question": "Au moins deux de mes amis partagent avec moi leurs véritables sentiments.",
+                        "threshold": 3,
+                        "function": "ge"
+                    },
+                    { "question": "Je participe à des activités de groupe.", "threshold": 4, "function": "ge" },
+                    { "question": "Les gens m'amènent souvent à changer d'idée.", "threshold": 1, "function": "ge" },
+                    { "question": "J'ai des relations intimes avec peu de gens.", "threshold": 4, "function": "ge" },
+                    {
+                        "question": "Les autres m'invitent à faire des choses avec eux.",
+                        "threshold": 2,
+                        "function": "ge"
+                    },
+                    {
+                        "question": "Je veille à ce que les gens fassent les choses comme je veux.",
+                        "threshold": 2,
+                        "function": "ge"
+                    },
+                    { "question": "Mes amis me parlent de leur vie intime.", "threshold": 2, "function": "ge" }
+                ],
+                [
+                    {
+                        "question": "Je veux rechercher activement la compagnie des gens.",
+                        "threshold": 2,
+                        "function": "ge"
+                    },
+                    {
+                        "question": "Je veux que les autres décident ce que nous faisons lorsque nous sommes ensemble.",
+                        "threshold": 1,
+                        "function": "ge"
+                    },
+                    {
+                        "question": "Je veux être totalement honnête avec mes amis proches.",
+                        "threshold": 3,
+                        "function": "ge"
+                    },
+                    {
+                        "question": "Je veux que les gens m'invitent à avoir des activités avec eux.",
+                        "threshold": 3,
+                        "function": "ge"
+                    },
+                    {
+                        "question": "Je veux être la personne dominante lorsque je suis avec d'autres.",
+                        "threshold": 2,
+                        "function": "ge"
+                    },
+                    {
+                        "question": "Je veux que mes amis proches m'expriment leurs véritables sentiments.",
+                        "threshold": 3,
+                        "function": "ge"
+                    },
+                    { "question": "Je veux faire partie de groupes sociaux.", "threshold": 1, "function": "ge" },
+                    {
+                        "question": "Je veux que les autres influencent fortement mes actions.",
+                        "threshold": 1,
+                        "function": "ge"
+                    },
+                    { "question": "Je veux me confier à mes amis proches.", "threshold": 4, "function": "ge" },
+                    {
+                        "question": "Je veux que les autres m'invitent à participer à leurs activités.",
+                        "threshold": 3,
+                        "function": "ge"
+                    },
+                    {
+                        "question": "Je veux obtenir des autres qu'ils fassent ce que je veux.",
+                        "threshold": 3,
+                        "function": "ge"
+                    },
+                    {
+                        "question": "Je veux que mes amis proches me parlent de leurs affaires privées.",
+                        "threshold": 3,
+                        "function": "ge"
+                    },
+                    { "question": "Je veux être membre d'associations.", "threshold": 1, "function": "ge" },
+                    { "question": "Je veux que les autres contrôlent mes actions.", "threshold": 1, "function": "ge" },
+                    {
+                        "question": "Je préfère que les personnes ne soient pas trop proches.",
+                        "threshold": 1,
+                        "function": "le"
+                    },
+                    {
+                        "question": "Je veux que les autres m'incluent dans leurs activités.",
+                        "threshold": 3,
+                        "function": "ge"
+                    },
+                    {
+                        "question": "Je veux influencer fortement les actions des autres.",
+                        "threshold": 3,
+                        "function": "ge"
+                    },
+                    {
+                        "question": "Je ne veux pas que mes amis proches me disent tout d'eux-mêmes.",
+                        "threshold": 0,
+                        "function": "le"
+                    },
+                    {
+                        "question": "Je veux m'intégrer à des activités sociales informelles.",
+                        "threshold": 2,
+                        "function": "ge"
+                    },
+                    { "question": "Je veux être mené(e) facilement par les autres.", "threshold": 2, "function": "ge" },
+                    {
+                        "question": "Je veux que les gens gardent leurs sentiments intimes pour eux-mêmes.",
+                        "threshold": 1,
+                        "function": "le"
+                    },
+                    {
+                        "question": "Je veux que les gens m'invitent à participer à leurs activités.",
+                        "threshold": 3,
+                        "function": "ge"
+                    },
+                    {
+                        "question": "Je veux prendre les choses en main lorsque je suis en société.",
+                        "threshold": 2,
+                        "function": "ge"
+                    },
+                    {
+                        "question": "Je veux que mes amis proches me laissent connaître leurs véritables sentiments.",
+                        "threshold": 4,
+                        "function": "ge"
+                    },
+                    { "question": "Je veux inclure les autres dans mes projets.", "threshold": 3, "function": "ge" },
+                    {
+                        "question": "Je veux que les gens décident des choses pour moi.",
+                        "threshold": 0,
+                        "function": "ge"
+                    },
+                    {
+                        "question": "Il y a certaines choses que je ne veux confier à personne.",
+                        "threshold": 2,
+                        "function": "le"
+                    },
+                    {
+                        "question": "Je veux que les gens m'incluent dans leurs activités sociales.",
+                        "threshold": 3,
+                        "function": "ge"
+                    },
+                    {
+                        "question": "Je veux obtenir des gens qu'ils fassent les choses comme je veux.",
+                        "threshold": 3,
+                        "function": "ge"
+                    },
+                    {
+                        "question": "Je veux que mes plus proches amis conservent des secrets à mon égard.",
+                        "threshold": 1,
+                        "function": "le"
+                    },
+                    { "question": "Je veux être entouré(e).", "threshold": 3, "function": "ge" },
+                    {
+                        "question": "Je veux que les autres influencent fortement mes idées.",
+                        "threshold": 2,
+                        "function": "ge"
+                    },
+                    {
+                        "question": "Il y a certaines choses que je ne voudrais raconter à personne.",
+                        "threshold": 2,
+                        "function": "le"
+                    },
+                    {
+                        "question": "Je veux que les autres me demandent de participer à leurs discussions.",
+                        "threshold": 4,
+                        "function": "ge"
+                    },
+                    {
+                        "question": "Je veux prendre en charge les choses lorsque je suis avec d'autres.",
+                        "threshold": 2,
+                        "function": "ge"
+                    },
+                    { "question": "Je veux que mes amis se confient à moi.", "threshold": 3, "function": "ge" },
+                    {
+                        "question": "Lorsque les gens font des choses ensemble, je veux me joindre à eux.",
+                        "threshold": 3,
+                        "function": "ge"
+                    },
+                    {
+                        "question": "Je veux être fortement influencé(e) par ce que les gens disent.",
+                        "threshold": 2,
+                        "function": "ge"
+                    },
+                    {
+                        "question": "Je veux avoir au moins un ami à qui je peux tout dire.",
+                        "threshold": 4,
+                        "function": "ge"
+                    },
+                    { "question": "Je veux que les gens m'invitent à leurs fêtes.", "threshold": 3, "function": "ge" },
+                    {
+                        "question": "Je veux influencer fortement les idées des autres.",
+                        "threshold": 2,
+                        "function": "ge"
+                    },
+                    {
+                        "question": "Je veux que mes amis proches me cachent leurs sentiments.",
+                        "threshold": -1,
+                        "function": "le"
+                    },
+                    {
+                        "question": "Je veux rechercher la compagnie d'autres personnes.",
+                        "threshold": 4,
+                        "function": "ge"
+                    },
+                    {
+                        "question": "Je veux que les autres prennent les choses en main quand nous travaillons ensemble.",
+                        "threshold": 1,
+                        "function": "ge"
+                    },
+                    {
+                        "question": "Il y a une part de moi que je veux garder secrète.",
+                        "threshold": 2,
+                        "function": "le"
+                    },
+                    {
+                        "question": "Je veux que les gens m'invitent à me joindre à eux lorsque nous avons du temps libre.",
+                        "threshold": 3,
+                        "function": "ge"
+                    },
+                    {
+                        "question": "Je veux prendre les choses en main quand je travaille avec les autres.",
+                        "threshold": 3,
+                        "function": "ge"
+                    },
+                    {
+                        "question": "Je veux qu'au moins deux de mes amis partagent avec moi leurs véritables sentiments.",
+                        "threshold": 3,
+                        "function": "ge"
+                    },
+                    { "question": "Je veux participer à des activités de groupe.", "threshold": 4, "function": "ge" },
+                    {
+                        "question": "Je veux que les gens m'amènent à changer d'idée.",
+                        "threshold": 1,
+                        "function": "ge"
+                    },
+                    {
+                        "question": "Je veux avoir des relations intimes avec peu de gens.",
+                        "threshold": 4,
+                        "function": "ge"
+                    },
+                    {
+                        "question": "Je veux que les autres m'invitent à faire des choses avec eux.",
+                        "threshold": 2,
+                        "function": "ge"
+                    },
+                    {
+                        "question": "Je veux veiller à ce que les gens fassent les choses comme je veux.",
+                        "threshold": 2,
+                        "function": "ge"
+                    },
+                    {
+                        "question": "Je veux que mes amis me parlent de leur vie intime.",
+                        "threshold": 2,
+                        "function": "ge"
+                    }
+                ]
+            ]
+        },
+        "score_labels": {
+            "11": "Inclusion exprimée (eI)",
+            "12": "Inclusion souhaitée (wI)",
+            "13": "Inclusion reçue (reI)",
+            "14": "Inclusion reçue souhaitée (rwI)",
+            "21": "Contrôle exprimé (eC)",
+            "22": "Contrôle souhaité (wC)",
+            "23": "Contrôle reçu (reC)",
+            "24": "Contrôle reçu souhaité (rwC)",
+            "31": "Affection exprimée (eA)",
+            "32": "Affection souhaitée (wA)",
+            "33": "Affection reçue (reA)",
+            "34": "Affection reçue souhaitée (rwA)"
+        },
+        "short_labels": {
+            "11": "J'inclus les gens.",
+            "12": "Je veux inclure les gens.",
+            "13": "Les gens m'incluent.",
+            "14": "Je veux que les gens m'incluent.",
+            "21": "Je contrôle les gens.",
+            "22": "Je veux contrôler les gens.",
+            "23": "Les gens me contrôlent.",
+            "24": "Je veux que les gens me contrôlent.",
+            "31": "Je m'ouvre aux gens.",
+            "32": "Je veux m'ouvrir aux gens.",
+            "33": "Les gens s'ouvrent à moi.",
+            "34": "Je veux que les gens s'ouvrent à moi."
+        },
+        "result_dims": [
+            {
+                "name": "Inclusion",
+                "scores": [11, 12, 13, 14],
+                "diff_pairs": [
+                    {
+                        "e": 11,
+                        "w": 12,
+                        "if_e_gt": "J'inclus les gens plus que je ne le veux.",
+                        "if_w_gt": "Je veux inclure les gens plus que je ne le fais."
+                    },
+                    {
+                        "e": 13,
+                        "w": 14,
+                        "if_e_gt": "Les gens m'incluent plus que je ne le veux.",
+                        "if_w_gt": "Je veux que les gens m'incluent plus qu'ils ne le font."
+                    }
+                ]
+            },
+            {
+                "name": "Contrôle",
+                "scores": [21, 22, 23, 24],
+                "diff_pairs": [
+                    {
+                        "e": 21,
+                        "w": 22,
+                        "if_e_gt": "Je contrôle les gens plus que je ne le veux.",
+                        "if_w_gt": "Je veux contrôler les gens plus que je ne le fais."
+                    },
+                    {
+                        "e": 23,
+                        "w": 24,
+                        "if_e_gt": "Les gens me contrôlent plus que je ne le veux.",
+                        "if_w_gt": "Je veux que les gens me contrôlent plus qu'ils ne le font."
+                    }
+                ]
+            },
+            {
+                "name": "Affection / Ouverture",
+                "scores": [31, 32, 33, 34],
+                "diff_pairs": [
+                    {
+                        "e": 31,
+                        "w": 32,
+                        "if_e_gt": "Je m'ouvre aux gens plus que je ne le veux.",
+                        "if_w_gt": "Je veux m'ouvrir aux gens plus que je ne le fais."
+                    },
+                    {
+                        "e": 33,
+                        "w": 34,
+                        "if_e_gt": "Les gens s'ouvrent à moi plus que je ne le veux.",
+                        "if_w_gt": "Je veux que les gens s'ouvrent à moi plus qu'ils ne le font."
+                    }
+                ]
+            }
+        ],
+        "score_groups": {
+            "11": [[0], [1, 7, 13, 19, 25, 31, 37, 43, 49]],
+            "12": [[1], [1, 7, 13, 19, 25, 31, 37, 43, 49]],
+            "13": [[0], [4, 10, 16, 22, 28, 34, 40, 46, 52]],
+            "14": [[1], [4, 10, 16, 22, 28, 34, 40, 46, 52]],
+            "21": [[0], [5, 11, 17, 23, 29, 35, 41, 47, 53]],
+            "22": [[1], [5, 11, 17, 23, 29, 35, 41, 47, 53]],
+            "23": [[0], [2, 8, 14, 20, 26, 32, 38, 44, 50]],
+            "24": [[1], [2, 8, 14, 20, 26, 32, 38, 44, 50]],
+            "31": [[0], [3, 9, 15, 21, 27, 33, 39, 45, 51]],
+            "32": [[1], [3, 9, 15, 21, 27, 33, 39, 45, 51]],
+            "33": [[0], [6, 12, 18, 24, 30, 36, 42, 48, 54]],
+            "34": [[1], [6, 12, 18, 24, 30, 36, 42, 48, 54]]
+        }
+    },
+    "F": {
+        "id": "F",
+        "title": "Questionnaire F — Ressentis",
+        "description": "Évalue vos ressentis interpersonnels selon 3 dimensions.",
+        "dimensions": [
+            { "name": "Importance", "icon": "Star" },
+            { "name": "Compétence", "icon": "Check" },
+            { "name": "Affection", "icon": "Heart" }
+        ],
+        "questions": {
+            "series_labels": ["Mes ressentis actuels", "Mes ressentis désirés"],
+            "series": [
+                [
+                    { "question": "Je ressens chaque personne comme importante.", "threshold": 4, "function": "ge" },
+                    { "question": "Les autres ont confiance en mes capacités.", "threshold": 3, "function": "ge" },
+                    { "question": "Je me montre chaleureux(se) avec les autres.", "threshold": 3, "function": "ge" },
+                    { "question": "Les autres s'intéressent à moi.", "threshold": 4, "function": "ge" },
+                    { "question": "Je peux faire confiance au jugement des autres.", "threshold": 3, "function": "ge" },
+                    {
+                        "question": "En général, les autres ressentent de l'affection pour moi.",
+                        "threshold": 2,
+                        "function": "ge"
+                    },
+                    {
+                        "question": "Chaque personne a, selon moi, une valeur propre.",
+                        "threshold": 4,
+                        "function": "ge"
+                    },
+                    {
+                        "question": "Les autres sentent qu'ils peuvent faire confiance à mon jugement.",
+                        "threshold": 4,
+                        "function": "ge"
+                    },
+                    { "question": "Je ressens de l'affection pour les autres.", "threshold": 3, "function": "ge" },
+                    {
+                        "question": "Les autres me voient comme une personne importante.",
+                        "threshold": 3,
+                        "function": "ge"
+                    },
+                    {
+                        "question": "Je suis sceptique quant aux capacités des autres.",
+                        "threshold": 0,
+                        "function": "le"
+                    },
+                    {
+                        "question": "Les autres se sentent personnellement proches de moi.",
+                        "threshold": 3,
+                        "function": "ge"
+                    },
+                    { "question": "Les autres ne comptent pas à mes yeux.", "threshold": -1, "function": "le" },
+                    { "question": "Les autres ont des doutes sur mes capacités.", "threshold": 0, "function": "le" },
+                    { "question": "Je me sens proche des autres.", "threshold": 3, "function": "ge" },
+                    {
+                        "question": "Les autres ressentent que je n'ai pas d'importance.",
+                        "threshold": 0,
+                        "function": "le"
+                    },
+                    { "question": "J'admire la compétence des autres.", "threshold": 3, "function": "ge" },
+                    { "question": "Les autres sont chaleureux envers moi.", "threshold": 3, "function": "ge" },
+                    {
+                        "question": "Je ne ressens rien de particulier pour les autres.",
+                        "threshold": 1,
+                        "function": "le"
+                    },
+                    {
+                        "question": "Les autres sont sceptiques quant à mes capacités.",
+                        "threshold": 0,
+                        "function": "le"
+                    },
+                    {
+                        "question": "Le plus souvent, je me sens distant(e) des gens.",
+                        "threshold": -1,
+                        "function": "le"
+                    },
+                    { "question": "Les autres s'inquiètent pour moi.", "threshold": 3, "function": "ge" },
+                    { "question": "J'admire les capacités des autres.", "threshold": 4, "function": "ge" },
+                    { "question": "Les autres se montrent amicaux avec moi.", "threshold": 3, "function": "ge" },
+                    { "question": "Je ne me sens pas concerné(e) par les autres.", "threshold": -1, "function": "le" },
+                    { "question": "Les autres ont des réserves sur ma compétence.", "threshold": 0, "function": "le" },
+                    { "question": "J'éprouve de l'amertume envers les autres.", "threshold": 0, "function": "le" },
+                    { "question": "Les autres s'intéressent à moi.", "threshold": 3, "function": "ge" },
+                    { "question": "J'ai confiance dans la capacité des autres.", "threshold": 3, "function": "ge" },
+                    { "question": "Les autres m'aiment bien.", "threshold": 3, "function": "ge" },
+                    { "question": "Je ressens de l'indifférence envers les autres.", "threshold": 1, "function": "le" },
+                    { "question": "Les autres respectent mes compétences.", "threshold": 4, "function": "ge" },
+                    { "question": "J'éprouve de la sympathie pour les autres.", "threshold": 3, "function": "ge" },
+                    { "question": "Les autres sont neutres à mon égard.", "threshold": 0, "function": "le" },
+                    {
+                        "question": "Je suis suspicieux(se) quant à la compétence des autres.",
+                        "threshold": 0,
+                        "function": "le"
+                    },
+                    { "question": "Les autres ne m'apprécient pas.", "threshold": 0, "function": "le" },
+                    { "question": "Je suis intéressé(e) par les autres.", "threshold": 3, "function": "ge" },
+                    { "question": "Les autres ne croient pas en mes capacités.", "threshold": 0, "function": "le" },
+                    { "question": "Le plus souvent, j'apprécie les autres.", "threshold": 3, "function": "ge" },
+                    { "question": "Les autres me ressentent comme important(e).", "threshold": 2, "function": "ge" },
+                    { "question": "J'ai confiance en la compétence des autres.", "threshold": 3, "function": "ge" },
+                    { "question": "Les autres ne m'apprécient pas.", "threshold": 0, "function": "le" },
+                    { "question": "Je suis fasciné(e) par les autres.", "threshold": 3, "function": "ge" },
+                    {
+                        "question": "Les autres n'ont pas confiance dans mes capacités.",
+                        "threshold": 0,
+                        "function": "le"
+                    },
+                    { "question": "Les autres me laissent froid(e).", "threshold": -1, "function": "le" },
+                    {
+                        "question": "Les autres éprouvent de l'indifférence à mon égard.",
+                        "threshold": 0,
+                        "function": "le"
+                    },
+                    { "question": "J'ai confiance dans les capacités des autres.", "threshold": 3, "function": "ge" },
+                    {
+                        "question": "Les autres éprouvent de l'hostilité à mon égard.",
+                        "threshold": 0,
+                        "function": "le"
+                    },
+                    { "question": "Je suis stimulé(e) par les autres.", "threshold": 4, "function": "ge" },
+                    {
+                        "question": "Les autres sentent qu'ils peuvent compter sur mes capacités.",
+                        "threshold": 4,
+                        "function": "ge"
+                    },
+                    { "question": "Je déteste les autres.", "threshold": -1, "function": "le" },
+                    {
+                        "question": "Les autres me voient comme une personne digne d'attention.",
+                        "threshold": 2,
+                        "function": "ge"
+                    },
+                    {
+                        "question": "Je sens que je peux faire confiance au jugement des autres.",
+                        "threshold": 3,
+                        "function": "ge"
+                    },
+                    { "question": "Les autres sont attirés par moi.", "threshold": 3, "function": "ge" }
+                ],
+                [
+                    {
+                        "question": "Je veux que chaque personne se sente importante.",
+                        "threshold": 4,
+                        "function": "ge"
+                    },
+                    {
+                        "question": "Je veux que les autres aient confiance en mes capacités.",
+                        "threshold": 3,
+                        "function": "ge"
+                    },
+                    {
+                        "question": "Je veux me montrer chaleureux(se) avec les autres.",
+                        "threshold": 3,
+                        "function": "ge"
+                    },
+                    { "question": "Je veux que les autres s'intéressent à moi.", "threshold": 4, "function": "ge" },
+                    {
+                        "question": "Je veux pouvoir faire confiance au jugement des autres.",
+                        "threshold": 3,
+                        "function": "ge"
+                    },
+                    {
+                        "question": "Je veux que les gens ressentent de l'affection pour moi.",
+                        "threshold": 2,
+                        "function": "ge"
+                    },
+                    {
+                        "question": "Je veux considérer chaque personne comme ayant une valeur propre.",
+                        "threshold": 4,
+                        "function": "ge"
+                    },
+                    {
+                        "question": "Je veux que les autres sentent qu'ils peuvent faire confiance à mon jugement.",
+                        "threshold": 4,
+                        "function": "ge"
+                    },
+                    {
+                        "question": "Je veux ressentir de l'affection pour les autres.",
+                        "threshold": 3,
+                        "function": "ge"
+                    },
+                    {
+                        "question": "Je veux que les autres me voient comme une personne importante.",
+                        "threshold": 3,
+                        "function": "ge"
+                    },
+                    {
+                        "question": "Je veux rester sceptique quant aux capacités des autres.",
+                        "threshold": 0,
+                        "function": "le"
+                    },
+                    {
+                        "question": "Je veux que les autres se sentent personnellement proches de moi.",
+                        "threshold": 3,
+                        "function": "ge"
+                    },
+                    {
+                        "question": "Je veux que les autres ne comptent pas à mes yeux.",
+                        "threshold": -1,
+                        "function": "le"
+                    },
+                    {
+                        "question": "Je veux que les autres aient des doutes sur mes capacités.",
+                        "threshold": 0,
+                        "function": "le"
+                    },
+                    { "question": "Je veux me sentir proche des autres.", "threshold": 3, "function": "ge" },
+                    {
+                        "question": "Je veux que les autres ressentent que je n'ai pas d'importance.",
+                        "threshold": 0,
+                        "function": "le"
+                    },
+                    { "question": "Je veux admirer la compétence des autres.", "threshold": 3, "function": "ge" },
+                    {
+                        "question": "Je veux que les autres soient chaleureux envers moi.",
+                        "threshold": 3,
+                        "function": "ge"
+                    },
+                    {
+                        "question": "Je veux ne ressentir rien de particulier pour les autres.",
+                        "threshold": 1,
+                        "function": "le"
+                    },
+                    {
+                        "question": "Je veux que les autres soient sceptiques quant à mes capacités.",
+                        "threshold": 0,
+                        "function": "le"
+                    },
+                    {
+                        "question": "Le plus souvent, je veux me sentir distant(e) des gens.",
+                        "threshold": -1,
+                        "function": "le"
+                    },
+                    { "question": "Je veux que les autres s'inquiètent pour moi.", "threshold": 3, "function": "ge" },
+                    { "question": "Je veux admirer les capacités des autres.", "threshold": 4, "function": "ge" },
+                    {
+                        "question": "Je veux que les autres se montrent amicaux avec moi.",
+                        "threshold": 3,
+                        "function": "ge"
+                    },
+                    {
+                        "question": "Je veux ne pas me sentir concerné(e) par les autres.",
+                        "threshold": -1,
+                        "function": "le"
+                    },
+                    {
+                        "question": "Je veux que les autres aient des réserves sur ma compétence.",
+                        "threshold": 0,
+                        "function": "le"
+                    },
+                    {
+                        "question": "Je veux éprouver de l'amertume envers les autres.",
+                        "threshold": 0,
+                        "function": "le"
+                    },
+                    { "question": "Je veux que les autres s'intéressent à moi.", "threshold": 3, "function": "ge" },
+                    {
+                        "question": "Je veux avoir confiance dans la capacité des autres.",
+                        "threshold": 3,
+                        "function": "ge"
+                    },
+                    { "question": "Je veux que les autres m'aiment bien.", "threshold": 3, "function": "ge" },
+                    {
+                        "question": "Je veux ressentir de l'indifférence envers les autres.",
+                        "threshold": 1,
+                        "function": "le"
+                    },
+                    {
+                        "question": "Je veux que les autres respectent mes compétences.",
+                        "threshold": 4,
+                        "function": "ge"
+                    },
+                    {
+                        "question": "Je veux éprouver de la sympathie pour les autres.",
+                        "threshold": 3,
+                        "function": "ge"
+                    },
+                    {
+                        "question": "Je veux que les autres soient neutres à mon égard.",
+                        "threshold": 0,
+                        "function": "le"
+                    },
+                    {
+                        "question": "Je veux rester suspicieux(se) quant à la compétence des autres.",
+                        "threshold": 0,
+                        "function": "le"
+                    },
+                    { "question": "Je veux que les autres ne m'apprécient pas.", "threshold": 0, "function": "le" },
+                    { "question": "Je veux être intéressé(e) par les autres.", "threshold": 3, "function": "ge" },
+                    {
+                        "question": "Je veux que les autres ne croient pas en mes capacités.",
+                        "threshold": 0,
+                        "function": "le"
+                    },
+                    { "question": "Le plus souvent, je veux apprécier les autres.", "threshold": 3, "function": "ge" },
+                    {
+                        "question": "Je veux que les autres me ressentent comme important(e).",
+                        "threshold": 2,
+                        "function": "ge"
+                    },
+                    {
+                        "question": "Je veux avoir confiance en la compétence des autres.",
+                        "threshold": 3,
+                        "function": "ge"
+                    },
+                    { "question": "Je veux que les autres ne m'apprécient pas.", "threshold": 0, "function": "le" },
+                    { "question": "Je veux être fasciné(e) par les autres.", "threshold": 3, "function": "ge" },
+                    {
+                        "question": "Je veux que les autres n'aient pas confiance dans mes capacités.",
+                        "threshold": 0,
+                        "function": "le"
+                    },
+                    { "question": "Je veux que les autres me laissent froid(e).", "threshold": -1, "function": "le" },
+                    {
+                        "question": "Je veux que les autres éprouvent de l'indifférence à mon égard.",
+                        "threshold": 0,
+                        "function": "le"
+                    },
+                    {
+                        "question": "Je veux avoir confiance dans les capacités des autres.",
+                        "threshold": 3,
+                        "function": "ge"
+                    },
+                    {
+                        "question": "Je veux que les autres éprouvent de l'hostilité à mon égard.",
+                        "threshold": 0,
+                        "function": "le"
+                    },
+                    { "question": "Je veux être stimulé(e) par les autres.", "threshold": 4, "function": "ge" },
+                    {
+                        "question": "Je veux que les autres sentent qu'ils peuvent compter sur mes capacités.",
+                        "threshold": 4,
+                        "function": "ge"
+                    },
+                    { "question": "Je veux détester les autres.", "threshold": -1, "function": "le" },
+                    {
+                        "question": "Je veux que les autres me voient comme une personne digne d'attention.",
+                        "threshold": 2,
+                        "function": "ge"
+                    },
+                    {
+                        "question": "Je veux sentir que je peux faire confiance au jugement des autres.",
+                        "threshold": 3,
+                        "function": "ge"
+                    },
+                    { "question": "Je veux que les autres soient attirés par moi.", "threshold": 3, "function": "ge" }
+                ]
+            ]
+        },
+        "score_labels": {
+            "41": "Importance exprimée (eS)",
+            "42": "Importance souhaitée (wS)",
+            "43": "Importance reçue (reS)",
+            "44": "Importance reçue souhaitée (rwS)",
+            "51": "Compétence exprimée (eC)",
+            "52": "Compétence souhaitée (wC)",
+            "53": "Compétence reçue (reC)",
+            "54": "Compétence reçue souhaitée (rwC)",
+            "61": "Affection exprimée (eL)",
+            "62": "Affection souhaitée (wL)",
+            "63": "Affection reçue (reL)",
+            "64": "Affection reçue souhaitée (rwL)"
+        },
+        "short_labels": {
+            "41": "Je ressens les autres comme importants.",
+            "42": "Je veux ressentir les autres comme importants.",
+            "43": "Les autres me ressentent comme important(e).",
+            "44": "Je veux que les autres me ressentent comme important(e).",
+            "51": "J'admire les capacités des autres.",
+            "52": "Je veux admirer les capacités des autres.",
+            "53": "Les autres font confiance à mes capacités.",
+            "54": "Je veux que les autres fassent confiance à mes capacités.",
+            "61": "J'éprouve de l'affection pour les autres.",
+            "62": "Je veux éprouver de l'affection pour les autres.",
+            "63": "Les autres éprouvent de l'affection pour moi.",
+            "64": "Je veux que les autres éprouvent de l'affection pour moi."
+        },
+        "result_dims": [
+            { "name": "Importance / Valeur", "scores": [41, 42, 43, 44] },
+            { "name": "Compétence", "scores": [51, 52, 53, 54] },
+            { "name": "Affection / Bienveillance", "scores": [61, 62, 63, 64] }
+        ],
+        "score_groups": {
+            "41": [[0], [1, 7, 13, 19, 25, 31, 37, 43, 49]],
+            "42": [[1], [1, 7, 13, 19, 25, 31, 37, 43, 49]],
+            "43": [[0], [4, 10, 16, 22, 28, 34, 40, 46, 52]],
+            "44": [[1], [4, 10, 16, 22, 28, 34, 40, 46, 52]],
+            "51": [[0], [5, 11, 17, 23, 29, 35, 41, 47, 53]],
+            "52": [[1], [5, 11, 17, 23, 29, 35, 41, 47, 53]],
+            "53": [[0], [2, 8, 14, 20, 26, 32, 38, 44, 50]],
+            "54": [[1], [2, 8, 14, 20, 26, 32, 38, 44, 50]],
+            "61": [[0], [3, 9, 15, 21, 27, 33, 39, 45, 51]],
+            "62": [[1], [3, 9, 15, 21, 27, 33, 39, 45, 51]],
+            "63": [[0], [6, 12, 18, 24, 30, 36, 42, 48, 54]],
+            "64": [[1], [6, 12, 18, 24, 30, 36, 42, 48, 54]]
+        }
+    },
+    "S": {
+        "id": "S",
+        "title": "Questionnaire S — Soi",
+        "description": "Évalue votre perception de vous-même selon 6 dimensions.",
+        "dimensions": [
+            { "name": "Vitalité", "icon": "Heart" },
+            { "name": "Libre arbitre", "icon": "Hand" },
+            { "name": "Conscience", "icon": "Brain" },
+            { "name": "Importance", "icon": "Star" },
+            { "name": "Compétence", "icon": "Check" },
+            { "name": "Amour de soi", "icon": "Heart" }
+        ],
+        "questions": {
+            "series_labels": ["Ma perception actuelle de moi", "Ma perception idéale de moi"],
+            "series": [
+                [
+                    {
+                        "question": "J'accorde toute mon attention à ce qui se passe.",
+                        "threshold": 4,
+                        "function": "ge"
+                    },
+                    { "question": "Je détermine ma propre destinée.", "threshold": 4, "function": "ge" },
+                    { "question": "Je me voile la face sur certains sujets.", "threshold": -1, "function": "le" },
+                    { "question": "Je ressens que je suis important(e).", "threshold": 4, "function": "ge" },
+                    {
+                        "question": "Je ne peux pas faire confiance à mon propre jugement.",
+                        "threshold": 0,
+                        "function": "le"
+                    },
+                    { "question": "Je ressens de la bienveillance à mon égard.", "threshold": 3, "function": "ge" },
+                    { "question": "Je suis plein(e) d'énergie.", "threshold": 4, "function": "ge" },
+                    { "question": "Ce qui m'arrive est le fruit de la chance.", "threshold": -1, "function": "le" },
+                    { "question": "Je n'ai pas de secrets pour moi-même.", "threshold": 4, "function": "ge" },
+                    { "question": "Je me sens insignifiant(e).", "threshold": -1, "function": "le" },
+                    { "question": "J'ai confiance en mes capacités.", "threshold": 2, "function": "ge" },
+                    { "question": "J'éprouve de l'affection pour moi.", "threshold": 2, "function": "ge" },
+                    { "question": "Je me sens plein(e) de vie.", "threshold": 4, "function": "ge" },
+                    {
+                        "question": "Je peux changer des choses en moi n'importe quand.",
+                        "threshold": 3,
+                        "function": "ge"
+                    },
+                    { "question": "Je ne me cache rien à moi-même.", "threshold": 3, "function": "ge" },
+                    { "question": "Je me sens une personne importante.", "threshold": 3, "function": "ge" },
+                    { "question": "J'ai des doutes quant à ma propre compétence.", "threshold": -1, "function": "le" },
+                    { "question": "Je m'aime bien.", "threshold": 2, "function": "ge" },
+                    { "question": "Je suis facilement distrait(e).", "threshold": 0, "function": "le" },
+                    { "question": "Je choisis mes maladies.", "threshold": 3, "function": "ge" },
+                    { "question": "Je me cache certaines choses à propos de moi.", "threshold": 0, "function": "le" },
+                    { "question": "Je sens que je suis une personne intéressante.", "threshold": 3, "function": "ge" },
+                    { "question": "J'admire mes capacités.", "threshold": 3, "function": "ge" },
+                    { "question": "Je me sens déconnecté(e) de mes ressentis.", "threshold": -1, "function": "le" },
+                    { "question": "Je dors beaucoup.", "threshold": 0, "function": "le" },
+                    { "question": "Je choisis tout dans ma vie.", "threshold": 3, "function": "ge" },
+                    { "question": "J'arrive à comprendre mes motivations cachées.", "threshold": 3, "function": "ge" },
+                    { "question": "Je me sens digne d'attention.", "threshold": 2, "function": "ge" },
+                    { "question": "J'ai confiance en mes propres capacités.", "threshold": 2, "function": "ge" },
+                    {
+                        "question": "Je sens que je ne suis pas une personne sympathique.",
+                        "threshold": -1,
+                        "function": "le"
+                    },
+                    { "question": "J'ai beaucoup d'énergie.", "threshold": 3, "function": "ge" },
+                    { "question": "Ma vie a été pré-déterminée.", "threshold": -1, "function": "le" },
+                    { "question": "Je me comprends bien.", "threshold": 3, "function": "ge" },
+                    { "question": "Je sens que je suis une personne stimulante.", "threshold": 3, "function": "ge" },
+                    { "question": "Je peux me fier à mon propre jugement.", "threshold": 4, "function": "ge" },
+                    { "question": "Je me déteste.", "threshold": -1, "function": "le" },
+                    { "question": "Je me sens parfois sans vie.", "threshold": 0, "function": "le" },
+                    { "question": "Je ne peux pas me changer.", "threshold": -1, "function": "le" },
+                    { "question": "Je me connais bien.", "threshold": 3, "function": "ge" },
+                    {
+                        "question": "Je sens que j'ai de la valeur en tant qu'individu.",
+                        "threshold": 4,
+                        "function": "ge"
+                    },
+                    { "question": "Je suis sceptique quant à mes capacités.", "threshold": 0, "function": "le" },
+                    { "question": "Je ne m'aime pas.", "threshold": -1, "function": "le" },
+                    { "question": "Je me sens souvent fatigué(e).", "threshold": 2, "function": "le" },
+                    { "question": "Je choisis mes comportements et mes ressentis.", "threshold": 3, "function": "ge" },
+                    {
+                        "question": "Je suis conscient(e) des choses négatives que je ressens envers moi-même.",
+                        "threshold": 3,
+                        "function": "ge"
+                    },
+                    { "question": "Je me sens une personne sans importance.", "threshold": 0, "function": "le" },
+                    { "question": "Je ne crois pas en ma compétence.", "threshold": -1, "function": "le" },
+                    { "question": "Je me sens bienveillant(e) envers moi-même.", "threshold": 3, "function": "ge" },
+                    { "question": "Je m'ennuie souvent.", "threshold": 1, "function": "le" },
+                    { "question": "Ma vie est déterminée par l'hérédité.", "threshold": 0, "function": "le" },
+                    { "question": "Je suis conscient(e) de tous mes ressentis.", "threshold": 1, "function": "ge" },
+                    { "question": "Vivre ou mourir n'a pas d'importance pour moi.", "threshold": -1, "function": "le" },
+                    { "question": "Je crois en ma propre compétence.", "threshold": 3, "function": "ge" },
+                    { "question": "Je me sens une personne sympathique.", "threshold": 4, "function": "ge" }
+                ],
+                [
+                    {
+                        "question": "Je veux accorder toute mon attention à ce qui se passe.",
+                        "threshold": 4,
+                        "function": "ge"
+                    },
+                    { "question": "Je veux déterminer ma propre destinée.", "threshold": 4, "function": "ge" },
+                    { "question": "Je veux me voiler la face sur certains sujets.", "threshold": -1, "function": "le" },
+                    { "question": "Je veux ressentir que je suis important(e).", "threshold": 4, "function": "ge" },
+                    {
+                        "question": "Je ne veux pas faire confiance à mon propre jugement.",
+                        "threshold": 0,
+                        "function": "le"
+                    },
+                    { "question": "Je veux me donner de la bienveillance.", "threshold": 3, "function": "ge" },
+                    { "question": "Je veux être plein(e) d'énergie.", "threshold": 4, "function": "ge" },
+                    {
+                        "question": "Je veux que ce qui m'arrive soit le fruit de la chance.",
+                        "threshold": -1,
+                        "function": "le"
+                    },
+                    { "question": "Je ne veux pas avoir de secrets pour moi-même.", "threshold": 4, "function": "ge" },
+                    { "question": "Je veux me sentir insignifiant(e).", "threshold": -1, "function": "le" },
+                    { "question": "Je veux avoir confiance en mes capacités.", "threshold": 2, "function": "ge" },
+                    { "question": "Je veux éprouver de l'affection pour moi.", "threshold": 2, "function": "ge" },
+                    { "question": "Je veux me sentir plein(e) de vie.", "threshold": 4, "function": "ge" },
+                    {
+                        "question": "Je veux pouvoir changer des choses en moi n'importe quand.",
+                        "threshold": 3,
+                        "function": "ge"
+                    },
+                    { "question": "Je veux ne rien me cacher à moi-même.", "threshold": 3, "function": "ge" },
+                    { "question": "Je veux me sentir une personne importante.", "threshold": 3, "function": "ge" },
+                    {
+                        "question": "Je veux avoir des doutes quant à ma propre compétence.",
+                        "threshold": -1,
+                        "function": "le"
+                    },
+                    { "question": "Je veux bien m'aimer.", "threshold": 2, "function": "ge" },
+                    { "question": "Je veux être facilement distrait(e).", "threshold": 0, "function": "le" },
+                    { "question": "Je veux choisir mes maladies.", "threshold": 3, "function": "ge" },
+                    {
+                        "question": "Je veux me cacher certaines choses à propos de moi.",
+                        "threshold": 0,
+                        "function": "le"
+                    },
+                    {
+                        "question": "Je veux sentir que je suis une personne intéressante.",
+                        "threshold": 3,
+                        "function": "ge"
+                    },
+                    { "question": "Je veux admirer mes capacités.", "threshold": 3, "function": "ge" },
+                    {
+                        "question": "Je veux me sentir déconnecté(e) de mes ressentis.",
+                        "threshold": -1,
+                        "function": "le"
+                    },
+                    { "question": "Je veux dormir beaucoup.", "threshold": 0, "function": "le" },
+                    { "question": "Je veux choisir tout dans ma vie.", "threshold": 3, "function": "ge" },
+                    {
+                        "question": "Je veux arriver à comprendre mes motivations cachées.",
+                        "threshold": 3,
+                        "function": "ge"
+                    },
+                    { "question": "Je veux me sentir digne d'attention.", "threshold": 2, "function": "ge" },
+                    {
+                        "question": "Je veux avoir confiance en mes propres capacités.",
+                        "threshold": 2,
+                        "function": "ge"
+                    },
+                    {
+                        "question": "Je veux sentir que je ne suis pas une personne sympathique.",
+                        "threshold": -1,
+                        "function": "le"
+                    },
+                    { "question": "Je veux avoir beaucoup d'énergie.", "threshold": 3, "function": "ge" },
+                    { "question": "Je veux que ma vie ait été pré-déterminée.", "threshold": -1, "function": "le" },
+                    { "question": "Je veux bien me comprendre.", "threshold": 3, "function": "ge" },
+                    {
+                        "question": "Je veux sentir que je suis une personne stimulante.",
+                        "threshold": 3,
+                        "function": "ge"
+                    },
+                    { "question": "Je veux pouvoir me fier à mon propre jugement.", "threshold": 4, "function": "ge" },
+                    { "question": "Je veux me détester.", "threshold": -1, "function": "le" },
+                    { "question": "Je veux me sentir parfois sans vie.", "threshold": 0, "function": "le" },
+                    { "question": "Je ne veux pas pouvoir me changer.", "threshold": -1, "function": "le" },
+                    { "question": "Je veux bien me connaître.", "threshold": 3, "function": "ge" },
+                    {
+                        "question": "Je veux sentir que j'ai de la valeur en tant qu'individu.",
+                        "threshold": 4,
+                        "function": "ge"
+                    },
+                    { "question": "Je veux rester sceptique quant à mes capacités.", "threshold": 0, "function": "le" },
+                    { "question": "Je ne veux pas m'aimer.", "threshold": -1, "function": "le" },
+                    { "question": "Je veux me sentir souvent fatigué(e).", "threshold": 2, "function": "le" },
+                    {
+                        "question": "Je veux choisir mes comportements et mes ressentis.",
+                        "threshold": 3,
+                        "function": "ge"
+                    },
+                    {
+                        "question": "Je veux être conscient(e) des choses négatives que je ressens envers moi-même.",
+                        "threshold": 3,
+                        "function": "ge"
+                    },
+                    { "question": "Je veux me sentir une personne sans importance.", "threshold": 0, "function": "le" },
+                    { "question": "Je ne veux pas croire en ma compétence.", "threshold": -1, "function": "le" },
+                    {
+                        "question": "Je veux me sentir bienveillant(e) envers moi-même.",
+                        "threshold": 3,
+                        "function": "ge"
+                    },
+                    { "question": "Je veux m'ennuyer souvent.", "threshold": 1, "function": "le" },
+                    {
+                        "question": "Je veux que ma vie soit déterminée par l'hérédité.",
+                        "threshold": 0,
+                        "function": "le"
+                    },
+                    {
+                        "question": "Je veux être conscient(e) de tous mes ressentis.",
+                        "threshold": 1,
+                        "function": "ge"
+                    },
+                    {
+                        "question": "Je veux que vivre ou mourir n'ait pas d'importance pour moi.",
+                        "threshold": -1,
+                        "function": "le"
+                    },
+                    { "question": "Je veux croire en ma propre compétence.", "threshold": 3, "function": "ge" },
+                    { "question": "Je veux me sentir une personne sympathique.", "threshold": 4, "function": "ge" }
+                ]
+            ]
+        },
+        "score_labels": {
+            "15": "Vitalité actuelle (D15)",
+            "16": "Vitalité idéale (D16)",
+            "25": "Libre arbitre actuel (D25)",
+            "26": "Libre arbitre idéal (D26)",
+            "35": "Conscience de soi actuelle (D35)",
+            "36": "Conscience de soi idéale (D36)",
+            "45": "Importance personnelle actuelle (D45)",
+            "46": "Importance personnelle idéale (D46)",
+            "55": "Compétence personnelle actuelle (D55)",
+            "56": "Compétence personnelle idéale (D56)",
+            "65": "Amour de soi actuel (D65)",
+            "66": "Amour de soi idéal (D66)"
+        },
+        "short_labels": {
+            "15": "Je me sens plein(e) d'énergie et de vie.",
+            "16": "Je veux me sentir plein(e) d'énergie et de vie.",
+            "25": "Je détermine ma propre vie.",
+            "26": "Je veux déterminer ma propre vie.",
+            "35": "Je me connais vraiment.",
+            "36": "Je veux me connaître vraiment.",
+            "45": "Je me sens important(e).",
+            "46": "Je veux me sentir important(e).",
+            "55": "J'ai confiance en mes capacités.",
+            "56": "Je veux avoir confiance en mes capacités.",
+            "65": "Je m'aime bien.",
+            "66": "Je veux m'aimer bien."
+        },
+        "result_dims": [
+            { "name": "Présence / Vitalité", "scores": [15, 16] },
+            { "name": "Libre arbitre", "scores": [25, 26] },
+            { "name": "Conscience de soi", "scores": [35, 36] },
+            { "name": "Importance personnelle", "scores": [45, 46] },
+            { "name": "Compétence personnelle", "scores": [55, 56] },
+            { "name": "Amour de soi", "scores": [65, 66] }
+        ],
+        "score_groups": {
+            "15": [[0], [1, 7, 13, 19, 25, 31, 37, 43, 49]],
+            "16": [[1], [1, 7, 13, 19, 25, 31, 37, 43, 49]],
+            "25": [[0], [2, 8, 14, 20, 26, 32, 38, 44, 50]],
+            "26": [[1], [2, 8, 14, 20, 26, 32, 38, 44, 50]],
+            "35": [[0], [3, 9, 15, 21, 27, 33, 39, 45, 51]],
+            "36": [[1], [3, 9, 15, 21, 27, 33, 39, 45, 51]],
+            "45": [[0], [4, 10, 16, 22, 28, 34, 40, 46, 52]],
+            "46": [[1], [4, 10, 16, 22, 28, 34, 40, 46, 52]],
+            "55": [[0], [5, 11, 17, 23, 29, 35, 41, 47, 53]],
+            "56": [[1], [5, 11, 17, 23, 29, 35, 41, 47, 53]],
+            "65": [[0], [6, 12, 18, 24, 30, 36, 42, 48, 54]],
+            "66": [[1], [6, 12, 18, 24, 30, 36, 42, 48, 54]]
+        }
+    }
+}

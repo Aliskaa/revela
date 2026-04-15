@@ -1,0 +1,38 @@
+---
+description: "Use this context for monorepo bounded-context structure and package layout conventions."
+alwaysApply: false
+globs: packages/**/*.ts,applications/**/*.ts
+---
+
+# Monorepo Structure Context
+
+## Active Layout (authoritative)
+
+- Runnable applications live in `./applications`.
+- Reusable libraries live in `./packages`.
+- Tooling and scripts may live in `./tools`.
+- Libraries must not import from `./applications`.
+- Internal package scope is `@aor/*`.
+
+## Bounded Context Library Shape
+
+- Preferred BC package family:
+  - `./packages/{bc}/types`
+  - `./packages/{bc}/write`
+  - `./packages/{bc}/read`
+- Optional packages are allowed when justified:
+  - `./packages/{bc}/core`
+  - `./packages/{bc}/write-domain`
+  - `./packages/{bc}/read-domain`
+
+## Integration Package
+
+- `./packages/integration` is the dedicated cross-BC adapter composition package.
+- Applications may import `@aor/integration`.
+- BC packages must not import from `@aor/integration`.
+
+## CQRS and Source Organization
+
+- Keep read and write responsibilities separated.
+- Prefer aggregate-first organization under `src/domains/{aggregate}/` when working inside BC packages.
+- Keep command/event artifacts atomic (one intent per file).

@@ -1,0 +1,5 @@
+.env
+
+archives/
+**/node_modules/
+dist/

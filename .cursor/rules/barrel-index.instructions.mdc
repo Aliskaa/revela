@@ -1,0 +1,79 @@
+---
+description: "Use this context for barrel index.ts file conventions in source packages."
+alwaysApply: false
+globs: **/index.ts
+---
+# Barrel Index Convention
+
+## Rule
+
+Every source folder that contains `.ts` files must have an `index.ts` barrel that re-exports all public symbols from that folder and its child subfolders.
+
+This applies to all source packages under `./packages` (shared libraries). If an application folder exposes a public entry-point barrel, apply the same convention there too.
+
+## Structure
+
+Each `index.ts` barrel must:
+
+1. Re-export every sibling `.ts` file in the same folder (excluding `index.ts` itself and test files).
+2. Re-export every direct child subfolder via its own `index.ts` (i.e., `export * from './subfolder'`).
+
+## Export Ordering
+
+Within an `index.ts`, group and sort exports as follows:
+
+1. Sibling files, alphabetical order.
+2. Child subfolder re-exports, alphabetical order.
+
+## `__tests__` Exclusion
+
+Folders named `__tests__` must **never** be included in a barrel `index.ts`. Test files are never part of the public API.
+
+## Example
+
+Given this folder:
+
+```
+src/domains/group/
+  Group.ts
+  events/
+    GroupCreatedEvent.ts
+    GroupUpdatedEvent.ts
+    index.ts
+  __tests__/
+    Group.spec.ts
+```
+
+The `src/domains/group/index.ts` must be:
+
+```ts
+/*
+ * Copyright (c) 2026 AOR Conseil. All rights reserved.
+ * ...
+ */
+
+export * from './Group';
+export * from './events';
+```
+
+And `src/domains/group/events/index.ts` must be:
+
+```ts
+/*
+ * Copyright (c) 2026 AOR Conseil. All rights reserved.
+ * ...
+ */
+
+export * from './GroupCreatedEvent';
+export * from './GroupUpdatedEvent';
+```
+
+## When Creating or Moving a File
+
+- When adding a new `.ts` file to a folder, **always** add (or update) the corresponding `export * from './NewFile'` line in the folder's `index.ts`.
+- When moving a file to a new folder, update the source and destination `index.ts` files accordingly.
+- When creating a new subfolder, create its `index.ts` immediately and add a re-export of the new subfolder in the parent `index.ts`.
+
+## Top-Level Package Barrel
+
+Each package's `src/index.ts` (or the entry point declared in `package.json`) must aggregate all public exports from all domains and top-level source folders. This is the only file consumers of the package should import from.

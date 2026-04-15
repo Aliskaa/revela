@@ -1,0 +1,70 @@
+---
+description: "Use this context for intra-package import discipline: always import from the real source file, never from a barrel index within the same package."
+globs: **/*.ts
+alwaysApply: false
+---
+
+# Intra-Package Import Discipline
+
+## Rule
+
+Within the same package, every import must point to the **real source file**, never to a barrel `index.ts` in the same package.
+
+Barrel `index.ts` files are the **public API surface for external consumers** (other packages). They must not be used as import targets inside the package that owns them.
+
+## Why
+
+- Importing through a barrel inside the same package creates circular dependency risks.
+- It makes the dependency graph opaque: readers cannot tell which symbol comes from which module.
+- It increases the chance of accidental re-export conflicts when barrels are updated.
+
+## Good
+
+```ts
+// src/domains/group/events/GroupCreatedEvent.ts
+import { IdentityAccessDomainEventSchema } from '../../types/IdentityAccessDomainEventSchema';
+
+// src/domains/role/events/RoleCreatedEvent.ts
+import { DescriptionSchema, NameSchema } from '../../types/base-schema';
+
+// src/user/UserEntity.ts — importing a peer aggregate directly
+import { UserRepositoryPort } from './ports/UserRepositoryPort';
+import { buildUserCreatedEvent } from './events/buildUserCreatedEvent';
+import { UserCreateCommand } from './commands/UserCreateCommand';
+```
+
+## Bad
+
+```ts
+// ❌ Never import through a barrel inside the same package
+
+// src/domains/group/events/GroupCreatedEvent.ts
+import { IdentityAccessDomainEventSchema } from '../../types'; // ← barrel of sibling folder
+
+// src/user/UserEntity.ts
+import { buildUserCreatedEvent } from './events'; // ← barrel of sibling subfolder
+import { UserCreateCommand } from './commands';    // ← barrel of sibling subfolder
+import { UserRepositoryPort } from './ports';      // ← barrel of sibling subfolder
+```
+
+## Scope
+
+This rule applies **only within a package**. When importing from another package (e.g. `@aor/common`, `@aor/domain`), always import from the package root or its published entry-point — i.e., the barrel is the correct target for cross-package imports.
+
+```ts
+// ✅ Cross-package: import from the package entry-point (barrel is correct here)
+import { AccessTokenType } from '@aor/common';
+import { ICommandUseCase } from '@aor/domain';
+
+// ✅ Intra-package: import from the real source file
+import { buildUserCreatedEvent } from './events/buildUserCreatedEvent';
+```
+
+## Summary Table
+
+| Context | Target |
+|---|---|
+| Same package, same folder | `./RealFile` |
+| Same package, sibling subfolder | `./subfolder/RealFile` |
+| Same package, parent folder | `../RealFile` |
+| Different package | Package entry-point (barrel) |

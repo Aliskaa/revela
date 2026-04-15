@@ -1,0 +1,13 @@
+{
+  "name": "questionnaire-platform",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "pnpm@10.8.1",
+  "scripts": {
+    "build:libs": "pnpm --filter @aor/logger build && pnpm --filter @aor/utils build && pnpm --filter @aor/domain build && pnpm --filter @aor/ports build && pnpm --filter @aor/types build && pnpm --filter @aor/scoring build && pnpm --filter @aor/drizzle build && pnpm --filter @aor/questionnaires build",
+    "build": "pnpm -r build",
+    "guard:backend-shared-imports": "node ./guard-backend-shared-imports.mjs",
+    "lint": "pnpm run guard:backend-shared-imports && pnpm -r lint",
+    "typecheck": "pnpm -r typecheck"
+  }
+}

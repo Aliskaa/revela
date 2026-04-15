@@ -1,0 +1,38 @@
+---
+description: "Use this context for TypeScript language standards and typing approach."
+globs: **/*.ts,**/*.tsx
+alwaysApply: false
+---
+
+# TypeScript Language Context
+
+- TypeScript is the default programming language for source code.
+- Prefer strict typing and explicit types at boundaries.
+- Prefer `type` declarations over `interface` by default.
+- Use `interface` only when it is required by a specific use case (for example declaration merging or class contract patterns).
+- When an `interface` is used, it must start with the `I` prefix.
+- Port contracts must also use the `I` prefix for consistency with backend rules (for example `IUserReadQueryPort`).
+- Use Zod v4 as the source of truth for all domain and transport schemas.
+- Derive TypeScript types from Zod schemas using `z.infer` whenever possible.
+- All DTO declarations must use the `Dto` suffix.
+
+## Typing Preference Example
+
+```ts
+// Preferred for most domain and transport shapes
+type UserDto = {
+	id: string;
+	email: string;
+	tenantIds: string[];
+};
+
+// Allowed only when interface-specific behavior is required (I prefix for non-port contracts)
+interface IUserRepository {
+	findById(id: string): Promise<UserDto | null>;
+}
+
+// Port contracts also use the I prefix
+interface IUserRepositoryPort {
+	findById(id: string): Promise<UserDto | null>;
+}
+```

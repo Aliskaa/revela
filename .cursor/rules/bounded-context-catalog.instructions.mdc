@@ -1,0 +1,78 @@
+---
+alwaysApply: false
+globs: packages/**/*.ts
+---
+# Bounded Context Catalog Context
+
+This catalog defines what each BC contains at domain level.
+
+## Phase 1 BCs
+
+### ci-management
+
+Purpose:
+
+- Manage Configuration Items (CIs) and their modeling metadata.
+
+Expected subcategories:
+
+- `ci`
+- `ci-config`
+- `ci-class`
+- `ci-relation`
+
+### identity-access
+
+Purpose:
+
+- Manage identity, memberships, roles, and authorization policies.
+
+Expected subcategories:
+
+- `user`
+- `role`
+- `permission`
+- `membership`
+- `policy`
+
+### tenant-management
+
+Purpose:
+
+- Manage tenant boundaries, tenant lifecycle, and tenant-level governance.
+
+Expected subcategories:
+
+- `tenant`
+- `tenant-config`
+- `tenant-lifecycle`
+- `tenant-governance`
+
+### customer-contract
+
+Purpose:
+
+- Manage customers, contracts, and contractual lifecycle.
+
+Expected subcategories:
+
+- `customer`
+- `contract`
+- `contract-plan`
+- `contract-lifecycle`
+
+## Phase 2 BCs
+
+### billing
+
+Purpose:
+
+- Manage pricing, rating, invoicing, and billing lifecycle.
+
+Expected subcategories:
+
+- `pricing`
+- `metering`
+- `invoice`
+- `payment`
+- `billing-lifecycle`

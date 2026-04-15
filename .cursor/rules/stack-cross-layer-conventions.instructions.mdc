@@ -1,0 +1,32 @@
+---
+description: "Cross-layer frontend/backend conventions for architecture, quality, and testing."
+globs: **/*.ts,**/*.tsx
+alwaysApply: false
+---
+
+# Stack Cross-Layer Conventions
+
+## Shared Principles
+
+- Apply SOLID principles (especially SRP and DIP) and keep business logic separate from orchestration and technical adapters.
+- Keep a single responsibility per class, module, and component.
+- Avoid `any`; explicitly type public input/output contracts.
+- Prefer readable, intention-revealing code.
+
+## Architecture and Dependencies
+
+- In both frontend and backend layers, do not mix business logic with integration concerns (UI, HTTP, DB, external APIs).
+- Centralize external integrations in dedicated services/adapters.
+- Favor dependency injection to improve testability and change resilience.
+
+## Cross-Layer Testing
+
+- Use Vitest for all tests.
+- Keep tests isolated and deterministic (reset mocks in `beforeEach`).
+- Prefer behavior-focused tests over implementation-detail tests.
+- Use a `tests/` folder when aligned with package/app conventions.
+
+## Quality and Verification
+
+- Before integration, run lint/format/tests for the impacted package.
+- If a conflict appears between this cross-layer rule and a specialized rule, the specialized frontend/backend rule takes precedence.

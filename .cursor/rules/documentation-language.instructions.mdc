@@ -1,0 +1,13 @@
+---
+description: "Use this context for all documentation and documentary content language."
+alwaysApply: true
+---
+
+# Documentation Language Context
+
+- All documentation must be written in French (en-en).
+- All documentation files must be created and maintained in Markdown format (`.md`).
+- In documentation, references to files and sections must use clickable Markdown links.
+- This includes README content, Markdown docs, architecture notes, runbooks, ADRs, and inline documentation prose.
+- If source material is in another language, translate and publish documentation in French.
+- Keep terminology consistent across documents.

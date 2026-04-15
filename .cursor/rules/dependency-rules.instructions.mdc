@@ -1,0 +1,37 @@
+---
+description: "Use this context for allowed and forbidden package dependencies across bounded contexts in phase 1."
+alwaysApply: false
+globs: packages/**/*.ts, applications/**/*.ts
+---
+
+# Dependency Rules Context
+
+## Active Dependency Rules
+
+- Runnable applications live in `./applications` and may import any required libraries from `./packages`.
+- Libraries in `./packages` must not import from `./applications`.
+- Keep layering: low-level “types/DTOs/domain abstractions” should be imported by higher-level/infrastructure libraries (e.g. `@aor/domain`, `@aor/common`), but not vice-versa.
+- Treat `@aor/drizzle` as infrastructure: prefer importing it only from backend/batch adapter layers, not from UI/frontend code.
+
+## Bounded Context Isolation
+
+- Applications may import both read and write packages from multiple BCs.
+- BC packages must not import packages from another BC directly.
+- Cross-BC composition belongs to applications or explicit integration contracts.
+
+## Integration Package Rule (`@aor/integration`)
+
+- `@aor/integration` (`./packages/integration`) is the **only non-application package** allowed to import from multiple BCs.
+- It may depend on `*-types` and `*-read` packages from any BC to implement cross-BC adapter logic.
+- BC packages (`{bc}-types`, `{bc}-write`, `{bc}-read`) must **never** import from `@aor/integration`.
+- Applications import `@aor/integration`; they do **not** re-implement cross-BC adapters already present in it.
+- `@aor/integration` should not depend on `*-write` packages.
+
+## Core Package Dependency Rules (`{bc}-core`)
+
+When a BC defines a `core` package, the following additional rules apply:
+
+- `{bc}-core` may only depend on `@aor/types` and `@aor/adapters`.
+- `{bc}-write` and `{bc}-read` may depend on `{bc}-core`.
+- `{bc}-types` re-exports public contracts from `{bc}-core` — consumers that already import from `{bc}-types` are not affected.
+- Other BCs must not import `{bc}-core` directly; they must go through `{bc}-types`.

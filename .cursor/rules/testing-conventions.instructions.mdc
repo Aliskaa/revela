@@ -1,0 +1,42 @@
+---
+description: "Use this context for unit test file placement, naming, and configuration conventions."
+alwaysApply: false
+globs: **/*.spec.ts, **/*.spec.tsx, tests/**/*.ts, vitest*.ts
+---
+
+# Testing Conventions
+
+## Framework
+
+- Always use **Vitest** for tests (backend, packages, and packages), never Jest.
+- Each package must declare a `test` script running Vitest (`vitest` or `vitest run`).
+- A `test:watch` script is recommended (`vitest --watch` or equivalent).
+
+## File placement and naming
+
+- Preferred location: colocated in `src/**/tests/` relative to source files.
+- `*.spec.ts` and `*.spec.tsx` are the default naming patterns.
+- Legacy `*.test.ts` may exist during migration and should not be introduced in new tests.
+
+## Imports and architecture
+
+- In tests, use the `@src/` alias for source imports when available; avoid deep relative paths like `../../`.
+- Apply dependency injection for testability:
+  - NestJS: use `Test.createTestingModule` and mock use cases with `{ provide: UseCase, useValue: mock }`.
+  - Unit tests: inject mocked repositories/adapters through constructors (DIP).
+
+## Vitest setup and isolation
+
+- If needed by the package, `vitest.setup.ts` can mock `@aor/nestjs-common` to avoid Prometheus conflicts.
+- Tests must be isolated and independent; reset mocks in `beforeEach`.
+- Avoid mocking Redis directly when constructor-injected adapters/repositories can be mocked.
+
+## Build and config
+
+- `*.spec.ts` and `*.spec.tsx` files must be excluded from TypeScript build via `tsconfig.json` `exclude`.
+- When tests exist for a package, a `vite.config.ts` should configure Vitest include patterns.
+
+## Commands
+
+- `pnpm test`: run tests once.
+- `pnpm test:watch`: run tests in watch mode.
