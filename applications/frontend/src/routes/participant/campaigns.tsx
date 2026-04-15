@@ -113,7 +113,7 @@ function SectionTitle({ title, subtitle }: { title: string; subtitle?: string })
 
 function StatCard({ label, value, icon: Icon }: { label: string; value: string; icon: React.ElementType }) {
   return (
-    <Card variant="outlined" sx={{ borderRadius: 5, borderColor: COLORS.border, boxShadow: "0 6px 18px rgba(15,23,42,0.04)" }}>
+    <Card variant="outlined">
       <CardContent sx={{ p: 2.3 }}>
         <Stack direction="row" justifyContent="space-between" alignItems="end">
           <Box>
@@ -149,7 +149,7 @@ function CampaignCard({ campaign }: { campaign: Campaign }) {
   const isActive = campaign.status === "active";
 
   return (
-    <Card variant="outlined" sx={{ borderRadius: 6, borderColor: COLORS.border, boxShadow: "0 6px 18px rgba(15,23,42,0.04)" }}>
+    <Card variant="outlined">
       <CardContent sx={{ p: 2.5 }}>
         <Stack spacing={2}>
           <Stack direction="row" justifyContent="space-between" alignItems="start" spacing={2}>
@@ -179,7 +179,7 @@ function CampaignCard({ campaign }: { campaign: Campaign }) {
               <Row icon={CalendarDays} label="Dernière mise à jour" value={campaign.lastUpdate} />
             </Stack>
 
-            <Box sx={{ borderRadius: 4, bgcolor: "rgba(15,23,42,0.03)", p: 2 }}>
+            <Card variant="outlined" sx={{ bgcolor: "rgba(15,23,42,0.03)", p: 2 }}>
               <Typography variant="caption" color="text.secondary">
                 Progression
               </Typography>
@@ -189,7 +189,7 @@ function CampaignCard({ campaign }: { campaign: Campaign }) {
               <Typography variant="body2" color="text.secondary" sx={{ mt: 1, lineHeight: 1.7 }}>
                 {campaign.nextAction}
               </Typography>
-            </Box>
+            </Card>
           </Box>
 
           <Stack direction={{ xs: "column", sm: "row" }} spacing={1.2}>
@@ -241,7 +241,7 @@ function Row({ icon: Icon, label, value }: { icon: React.ElementType; label: str
 
 function EmptyCampaignsState() {
   return (
-    <Card variant="outlined" sx={{ borderRadius: 6, borderColor: COLORS.border }}>
+    <Card variant="outlined">
       <CardContent sx={{ p: 3 }}>
         <Stack spacing={2} alignItems="start">
           <Box sx={{ width: 48, height: 48, borderRadius: 3, bgcolor: "rgba(255,204,0,0.16)", color: "rgb(180,120,0)", display: "grid", placeItems: "center" }}>
@@ -267,7 +267,7 @@ function ParticipantCampaignsRoute() {
 
   return (
     <Stack spacing={3}>
-      <Card variant="outlined" sx={{ borderRadius: 6, borderColor: COLORS.border, boxShadow: "0 6px 18px rgba(15,23,42,0.04)" }}>
+      <Card variant="outlined">
         <CardContent sx={{ p: { xs: 2.5, md: 3 } }}>
           <Stack spacing={2.5}>
             <SectionTitle
@@ -304,7 +304,7 @@ function ParticipantCampaignsRoute() {
         </Stack>
 
         <Stack spacing={2.5}>
-          <Card variant="outlined" sx={{ borderRadius: 6, borderColor: COLORS.border, boxShadow: "0 6px 18px rgba(15,23,42,0.04)" }}>
+          <Card variant="outlined">
             <CardContent sx={{ p: 2.5 }}>
               <Typography variant="h6" fontWeight={800} color="text.primary">
                 Résumé rapide
@@ -321,7 +321,7 @@ function ParticipantCampaignsRoute() {
             </CardContent>
           </Card>
 
-          <Card variant="outlined" sx={{ borderRadius: 6, borderColor: COLORS.border, boxShadow: "0 6px 18px rgba(15,23,42,0.04)" }}>
+          <Card variant="outlined">
             <CardContent sx={{ p: 2.5 }}>
               <Typography variant="h6" fontWeight={800} color="text.primary">
                 Rappel produit

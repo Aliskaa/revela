@@ -58,7 +58,7 @@ function SectionTitle({ title, subtitle }: { title: string; subtitle?: string })
 
 function InfoCard({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value: string }) {
   return (
-    <Box sx={{ border: "1px solid rgba(15,23,42,0.10)", borderRadius: 4, p: 2 }}>
+    <Card variant="outlined" sx={{ p: 2 }}>
       <Stack direction="row" spacing={1.3} alignItems="start">
         <Box sx={{ width: 38, height: 38, borderRadius: 3, bgcolor: "rgba(15,24,152,0.08)", color: COLORS.blue, display: "grid", placeItems: "center", flex: "none" }}>
           <Icon size={16} />
@@ -72,14 +72,14 @@ function InfoCard({ icon: Icon, label, value }: { icon: React.ElementType; label
           </Typography>
         </Box>
       </Stack>
-    </Box>
+    </Card>
   );
 }
 
 function ParticipantProfileRoute() {
   return (
     <Stack spacing={3}>
-      <Card variant="outlined" sx={{ borderRadius: 6, borderColor: COLORS.border, boxShadow: "0 6px 18px rgba(15,23,42,0.04)" }}>
+      <Card variant="outlined">
         <CardContent sx={{ p: { xs: 2.5, md: 3 } }}>
           <Stack spacing={2.5} direction={{ xs: "column", lg: "row" }} justifyContent="space-between" alignItems={{ xs: "start", lg: "start" }}>
             <Box>
@@ -92,7 +92,7 @@ function ParticipantProfileRoute() {
               </Typography>
             </Box>
 
-            <Box sx={{ borderRadius: 4, bgcolor: "rgba(15,23,42,0.03)", p: 2.2, width: { xs: "100%", sm: 340 } }}>
+            <Card variant="outlined" sx={{ bgcolor: "rgba(15,23,42,0.03)", p: 2.2, width: { xs: "100%", sm: 340 } }}>
               <Stack direction="row" spacing={1.5} alignItems="center">
                 <Box sx={{ width: 48, height: 48, borderRadius: 4, bgcolor: COLORS.blue, color: "#fff", display: "grid", placeItems: "center" }}>
                   <UserRound size={20} />
@@ -106,7 +106,7 @@ function ParticipantProfileRoute() {
                   </Typography>
                 </Box>
               </Stack>
-            </Box>
+            </Card>
           </Stack>
         </CardContent>
       </Card>
@@ -119,7 +119,7 @@ function ParticipantProfileRoute() {
       </Box>
 
       <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", xl: "1.15fr 0.85fr" }, gap: 3, alignItems: "start" }}>
-        <Card variant="outlined" sx={{ borderRadius: 6, borderColor: COLORS.border, boxShadow: "0 6px 18px rgba(15,23,42,0.04)" }}>
+        <Card variant="outlined">
           <CardContent sx={{ p: 2.5 }}>
             <SectionTitle title="Informations préremplies" subtitle="Ces informations sont injectées à partir du fichier d’import de campagne." />
 
@@ -145,7 +145,7 @@ function ParticipantProfileRoute() {
         </Card>
 
         <Stack spacing={2.5}>
-          <Card variant="outlined" sx={{ borderRadius: 6, borderColor: COLORS.border, boxShadow: "0 6px 18px rgba(15,23,42,0.04)" }}>
+          <Card variant="outlined">
             <CardContent sx={{ p: 2.5 }}>
               <SectionTitle title="Rôle dans la campagne" subtitle="Le profil participant reste simple et lisible." />
               <Stack spacing={1.4} sx={{ mt: 1.5 }}>
@@ -156,7 +156,7 @@ function ParticipantProfileRoute() {
             </CardContent>
           </Card>
 
-          <Card variant="outlined" sx={{ borderRadius: 6, borderColor: COLORS.border, boxShadow: "0 6px 18px rgba(15,23,42,0.04)" }}>
+          <Card variant="outlined">
             <CardContent sx={{ p: 2.5 }}>
               <SectionTitle title="Confidentialité" subtitle="Les espaces sont séparés pour préserver la confiance du participant." />
               <Divider sx={{ my: 2 }} />

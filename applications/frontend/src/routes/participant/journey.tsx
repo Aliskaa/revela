@@ -154,7 +154,7 @@ function StepCard({ step }: { step: JourneyStep }) {
 
 function RuleCard({ title, description, icon: Icon }: { title: string; description: string; icon: React.ElementType }) {
   return (
-    <Card variant="outlined" sx={{ borderRadius: 5, borderColor: COLORS.border, boxShadow: "0 6px 18px rgba(15,23,42,0.04)" }}>
+    <Card variant="outlined">
       <CardContent sx={{ p: 2.2 }}>
         <Stack direction="row" spacing={1.3} alignItems="start">
           <Box sx={{ width: 40, height: 40, borderRadius: 3, bgcolor: "rgba(15,24,152,0.08)", color: COLORS.blue, display: "grid", placeItems: "center", flex: "none" }}>
@@ -177,7 +177,7 @@ function RuleCard({ title, description, icon: Icon }: { title: string; descripti
 function ParticipantJourneyRoute() {
   return (
     <Stack spacing={3}>
-      <Card variant="outlined" sx={{ borderRadius: 6, borderColor: COLORS.border, boxShadow: "0 6px 18px rgba(15,23,42,0.04)" }}>
+      <Card variant="outlined">
         <CardContent sx={{ p: { xs: 2.5, md: 3 } }}>
           <Stack spacing={2.5} direction={{ xs: "column", lg: "row" }} justifyContent="space-between" alignItems={{ xs: "start", lg: "start" }}>
             <Box>
@@ -190,7 +190,7 @@ function ParticipantJourneyRoute() {
               </Typography>
             </Box>
 
-            <Card variant="outlined" sx={{ borderRadius: 4, borderColor: COLORS.border, width: { xs: "100%", sm: 340 } }}>
+            <Card variant="outlined" sx={{ width: { xs: "100%", sm: 340 } }}>
               <CardContent sx={{ p: 2 }}>
                 <Stack direction="row" spacing={1.5} alignItems="center">
                   <Box sx={{ width: 48, height: 48, borderRadius: 4, bgcolor: COLORS.blue, color: "#fff", display: "grid", placeItems: "center" }}>
@@ -230,7 +230,7 @@ function ParticipantJourneyRoute() {
       </Box>
 
       <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", xl: "1.2fr 0.8fr" }, gap: 3, alignItems: "start" }}>
-        <Card variant="outlined" sx={{ borderRadius: 6, borderColor: COLORS.border, boxShadow: "0 6px 18px rgba(15,23,42,0.04)" }}>
+        <Card variant="outlined">
           <CardContent sx={{ p: 2.5 }}>
             <SectionTitle title="Les étapes du parcours" subtitle="Le participant avance dans cet ordre, avec des étapes verrouillées tant que les prérequis ne sont pas remplis." />
             <Stack spacing={1.4} sx={{ mt: 2 }}>
@@ -242,7 +242,7 @@ function ParticipantJourneyRoute() {
         </Card>
 
         <Stack spacing={2.5}>
-          <Card variant="outlined" sx={{ borderRadius: 6, borderColor: COLORS.border, boxShadow: "0 6px 18px rgba(15,23,42,0.04)" }}>
+          <Card variant="outlined">
             <CardContent sx={{ p: 2.5 }}>
               <SectionTitle title="Ce que le participant voit" subtitle="Une vue simple et rassurante, sans surcharge métier." />
               <Divider sx={{ my: 2 }} />
@@ -254,7 +254,7 @@ function ParticipantJourneyRoute() {
             </CardContent>
           </Card>
 
-          <Card variant="outlined" sx={{ borderRadius: 6, borderColor: COLORS.border, boxShadow: "0 6px 18px rgba(15,23,42,0.04)" }}>
+          <Card variant="outlined">
             <CardContent sx={{ p: 2.5 }}>
               <SectionTitle title="Raccourci métier" subtitle="Le parcours alimente les pages dédiées sans les mélanger." />
               <Stack spacing={1.2} sx={{ mt: 2 }}>
@@ -268,7 +268,7 @@ function ParticipantJourneyRoute() {
         </Stack>
       </Box>
 
-      <Card variant="outlined" sx={{ borderRadius: 6, borderColor: COLORS.border, boxShadow: "0 6px 18px rgba(15,23,42,0.04)" }}>
+      <Card variant="outlined">
         <CardContent sx={{ p: 2.5 }}>
           <SectionTitle title="Rappel important" subtitle="Le parcours ne mélange pas les formulaires et la restitution." />
           <Typography variant="body2" color="text.secondary" sx={{ mt: 1.5, lineHeight: 1.8 }}>

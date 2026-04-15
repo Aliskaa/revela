@@ -76,7 +76,7 @@ function SectionTitle({ title, subtitle }: { title: string; subtitle?: string })
 
 function CoachHeader() {
   return (
-    <Card variant="outlined" sx={{ borderRadius: 6, borderColor: COLORS.border, boxShadow: "0 6px 18px rgba(15,23,42,0.04)" }}>
+    <Card variant="outlined">
       <CardContent sx={{ p: { xs: 2.5, md: 3 } }}>
         <Stack spacing={2.5} direction={{ xs: "column", lg: "row" }} justifyContent="space-between" alignItems={{ xs: "start", lg: "start" }}>
           <Box>
@@ -89,7 +89,7 @@ function CoachHeader() {
             </Typography>
           </Box>
 
-          <Card variant="outlined" sx={{ borderRadius: 4, borderColor: COLORS.border, width: { xs: "100%", sm: 340 } }}>
+          <Card variant="outlined" sx={{ width: { xs: "100%", sm: 340 } }}>
             <CardContent sx={{ p: 2, display: "flex", gap: 1.5, alignItems: "center" }}>
               <Box sx={{ width: 48, height: 48, borderRadius: 4, bgcolor: COLORS.blue, color: "#fff", display: "grid", placeItems: "center" }}>
                 <UserRound size={20} />
@@ -112,7 +112,7 @@ function CoachHeader() {
 
 function CoachProfileCard() {
   return (
-    <Card variant="outlined" sx={{ borderRadius: 6, borderColor: COLORS.border, boxShadow: "0 6px 18px rgba(15,23,42,0.04)" }}>
+    <Card variant="outlined">
       <CardContent sx={{ p: 2.5 }}>
         <SectionTitle title="Profil du coach" subtitle="Lecture simple du rôle et du cadre d’accompagnement." />
 
@@ -135,12 +135,12 @@ function CoachProfileCard() {
 
 function NextSessionCard() {
   return (
-    <Card variant="outlined" sx={{ borderRadius: 6, borderColor: COLORS.border, boxShadow: "0 6px 18px rgba(15,23,42,0.04)" }}>
+    <Card variant="outlined">
       <CardContent sx={{ p: 2.5 }}>
         <SectionTitle title="Prochaine séance" subtitle="La restitution est le temps de mise en sens des résultats." />
 
         <Stack spacing={1.5} sx={{ mt: 1.5 }}>
-          <Box sx={{ borderRadius: 4, bgcolor: COLORS.blue, color: "#fff", p: 2.2 }}>
+          <Card variant="outlined" sx={{ bgcolor: COLORS.blue, color: "#fff", p: 2.2 }}>
             <Typography variant="caption" sx={{ opacity: 0.8 }}>
               {nextSession.format}
             </Typography>
@@ -150,7 +150,7 @@ function NextSessionCard() {
             <Typography variant="body2" sx={{ opacity: 0.9, mt: 0.4 }}>
               {nextSession.time}
             </Typography>
-          </Box>
+          </Card>
 
           <Stack spacing={1.25}>
             <SessionRow icon={Clock3} label="Durée" value="1 heure" />
@@ -183,7 +183,7 @@ function SessionRow({ icon: Icon, label, value }: { icon: React.ElementType; lab
 
 function InfoPill({ label, value, icon: Icon }: { label: string; value: string; icon: React.ElementType }) {
   return (
-    <Box sx={{ border: "1px solid rgba(15,23,42,0.10)", borderRadius: 4, p: 1.8 }}>
+    <Card variant="outlined" sx={{ p: 1.8 }}>
       <Stack direction="row" spacing={1.2} alignItems="start">
         <Box sx={{ width: 36, height: 36, borderRadius: 3, bgcolor: "rgba(255,204,0,0.16)", color: "rgb(180,120,0)", display: "grid", placeItems: "center", flex: "none" }}>
           <Icon size={16} />
@@ -197,13 +197,13 @@ function InfoPill({ label, value, icon: Icon }: { label: string; value: string; 
           </Typography>
         </Box>
       </Stack>
-    </Box>
+    </Card>
   );
 }
 
 function ContactCard() {
   return (
-    <Card variant="outlined" sx={{ borderRadius: 6, borderColor: COLORS.border, boxShadow: "0 6px 18px rgba(15,23,42,0.04)" }}>
+    <Card variant="outlined">
       <CardContent sx={{ p: 2.5 }}>
         <SectionTitle title="Contacter le coach" subtitle="Les canaux disponibles pour échanger avant ou après la séance." />
 
@@ -231,7 +231,7 @@ function ContactCard() {
 
 function MessageCard() {
   return (
-    <Card variant="outlined" sx={{ borderRadius: 6, borderColor: COLORS.border, boxShadow: "0 6px 18px rgba(15,23,42,0.04)" }}>
+    <Card variant="outlined">
       <CardContent sx={{ p: 2.5 }}>
         <SectionTitle title="Message au coach" subtitle="Un court message pour préparer ou compléter la restitution." />
 
@@ -258,7 +258,7 @@ function ParticipantCoachRoute() {
       <CoachHeader />
 
       <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "repeat(3, minmax(0, 1fr))" }, gap: 2 }}>
-        <Card variant="outlined" sx={{ borderRadius: 5, borderColor: COLORS.border }}>
+        <Card variant="outlined">
           <CardContent sx={{ p: 2.3 }}>
             <Typography variant="body2" color="text.secondary">
               Statut
@@ -268,7 +268,7 @@ function ParticipantCoachRoute() {
             </Typography>
           </CardContent>
         </Card>
-        <Card variant="outlined" sx={{ borderRadius: 5, borderColor: COLORS.border }}>
+        <Card variant="outlined">
           <CardContent sx={{ p: 2.3 }}>
             <Typography variant="body2" color="text.secondary">
               Prochaine séance
@@ -278,7 +278,7 @@ function ParticipantCoachRoute() {
             </Typography>
           </CardContent>
         </Card>
-        <Card variant="outlined" sx={{ borderRadius: 5, borderColor: COLORS.border }}>
+        <Card variant="outlined">
           <CardContent sx={{ p: 2.3 }}>
             <Typography variant="body2" color="text.secondary">
               Format

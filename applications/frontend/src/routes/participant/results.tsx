@@ -124,7 +124,7 @@ function SectionTitle({ title, subtitle }: { title: string; subtitle?: string })
 
 function StatCard({ label, value, helper, icon: Icon }: { label: string; value: string; helper: string; icon: React.ElementType }) {
   return (
-    <Card variant="outlined" sx={{ borderRadius: 5, borderColor: COLORS.border, boxShadow: "0 6px 18px rgba(15,23,42,0.04)" }}>
+    <Card variant="outlined">
       <CardContent sx={{ p: 2.3 }}>
         <Stack direction="row" justifyContent="space-between" alignItems="end">
           <Box>
@@ -151,7 +151,7 @@ function MiniValue({ item }: { item: MetricItem }) {
   const barColor = item.accent === "blue" ? COLORS.blue : COLORS.yellow;
 
   return (
-    <Box sx={{ border: "1px solid rgba(15,23,42,0.10)", borderRadius: 4, p: 1.5 }}>
+    <Card variant="outlined" sx={{ p: 1.5 }}>
       <Typography variant="caption" color="text.secondary">
         {item.label}
       </Typography>
@@ -163,13 +163,13 @@ function MiniValue({ item }: { item: MetricItem }) {
         value={item.value * 10}
         sx={{ mt: 1.1, height: 8, borderRadius: 99, bgcolor: "rgba(15,23,42,0.06)", "& .MuiLinearProgress-bar": { bgcolor: barColor } }}
       />
-    </Box>
+    </Card>
   );
 }
 
 function DimensionCard({ dimension }: { dimension: DimensionDetail }) {
   return (
-    <Card variant="outlined" sx={{ borderRadius: 6, borderColor: COLORS.border, boxShadow: "0 6px 18px rgba(15,23,42,0.04)" }}>
+    <Card variant="outlined">
       <CardContent sx={{ p: 2.5 }}>
         <Stack spacing={2}>
           <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={2}>
@@ -216,7 +216,7 @@ function CoachingQuestionCard({ item }: { item: CoachingQuestion }) {
 
 function CoachNote() {
   return (
-    <Card variant="outlined" sx={{ borderRadius: 6, borderColor: COLORS.border, boxShadow: "0 6px 18px rgba(15,23,42,0.04)" }}>
+    <Card variant="outlined">
       <CardContent sx={{ p: 2.5 }}>
         <SectionTitle title="Lecture coach" subtitle="Une synthèse courte avant restitution" />
 
@@ -244,7 +244,7 @@ function CoachNote() {
 function ParticipantResultsRoute() {
   return (
     <Stack spacing={3}>
-      <Card variant="outlined" sx={{ borderRadius: 6, borderColor: COLORS.border, boxShadow: "0 6px 18px rgba(15,23,42,0.04)" }}>
+      <Card variant="outlined">
         <CardContent sx={{ p: { xs: 2.5, md: 3 } }}>
           <Stack spacing={2.5}>
             <Stack direction={{ xs: "column", lg: "row" }} spacing={3} justifyContent="space-between" alignItems={{ xs: "start", lg: "start" }}>
@@ -259,7 +259,7 @@ function ParticipantResultsRoute() {
               </Box>
 
               <Stack spacing={1.2} sx={{ width: { xs: "100%", sm: 340 } }}>
-                <Card variant="outlined" sx={{ borderRadius: 4, borderColor: COLORS.border }}>
+                <Card variant="outlined">
                   <CardContent sx={{ p: 2, display: "flex", gap: 1.5, alignItems: "center" }}>
                     <Box sx={{ width: 40, height: 40, borderRadius: 3, bgcolor: "rgba(15,24,152,0.08)", color: COLORS.blue, display: "grid", placeItems: "center" }}>
                       <Users size={16} />
@@ -274,7 +274,7 @@ function ParticipantResultsRoute() {
                     </Box>
                   </CardContent>
                 </Card>
-                <Card variant="outlined" sx={{ borderRadius: 4, borderColor: COLORS.border }}>
+                <Card variant="outlined">
                   <CardContent sx={{ p: 2, display: "flex", gap: 1.5, alignItems: "center" }}>
                     <Box sx={{ width: 40, height: 40, borderRadius: 3, bgcolor: "rgba(255,204,0,0.16)", color: "rgb(180,120,0)", display: "grid", placeItems: "center" }}>
                       <Radar size={16} />
@@ -313,7 +313,7 @@ function ParticipantResultsRoute() {
 
       <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", xl: "1.2fr 0.8fr" }, gap: 3, alignItems: "start" }}>
         <Stack spacing={2.5}>
-          <Card variant="outlined" sx={{ borderRadius: 6, borderColor: COLORS.border, boxShadow: "0 6px 18px rgba(15,23,42,0.04)" }}>
+          <Card variant="outlined">
             <CardContent sx={{ p: 2.5 }}>
               <SectionTitle title="Métriques détaillées par dimension" subtitle="Chaque dimension affiche plusieurs métriques pour enrichir la lecture." />
               <Stack spacing={2}>
@@ -324,7 +324,7 @@ function ParticipantResultsRoute() {
             </CardContent>
           </Card>
 
-          <Card variant="outlined" sx={{ borderRadius: 6, borderColor: COLORS.border, boxShadow: "0 6px 18px rgba(15,23,42,0.04)" }}>
+          <Card variant="outlined">
             <CardContent sx={{ p: 2.5 }}>
               <SectionTitle title="Questions de restitution" subtitle="Le coach s’appuie sur des questions ouvertes plutôt que sur une comparaison brute de sources." />
               <Stack spacing={1.4}>
@@ -337,7 +337,7 @@ function ParticipantResultsRoute() {
         </Stack>
 
         <Stack spacing={2.5}>
-          <Card variant="outlined" sx={{ borderRadius: 6, borderColor: COLORS.border, boxShadow: "0 6px 18px rgba(15,23,42,0.04)" }}>
+          <Card variant="outlined">
             <CardContent sx={{ p: 2.5 }}>
               <SectionTitle title="Synthèse express" subtitle="Le coach peut s’appuyer dessus pour préparer la restitution." />
               <Box sx={{ borderRadius: 4, bgcolor: "rgba(15,23,42,0.03)", p: 2 }}>

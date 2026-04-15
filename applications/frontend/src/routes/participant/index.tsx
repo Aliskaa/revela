@@ -138,7 +138,7 @@ function SectionTitle({ title, subtitle, action }: { title: string; subtitle?: s
 function MetricCard({ metric }: { metric: Metric }) {
   const Icon = metric.icon;
   return (
-    <Card variant="outlined" sx={{ borderRadius: 5, borderColor: COLORS.border, boxShadow: "0 6px 18px rgba(15,23,42,0.04)" }}>
+    <Card variant="outlined">
       <CardContent sx={{ p: 2.4 }}>
         <Typography variant="body2" color="text.secondary">
           {metric.label}
@@ -215,7 +215,7 @@ function JourneyItem({ step }: { step: JourneyStep }) {
 
 function PageHeader() {
   return (
-    <Card variant="outlined" sx={{ borderRadius: 6, borderColor: COLORS.border, boxShadow: "0 6px 18px rgba(15,23,42,0.04)" }}>
+    <Card variant="outlined">
       <CardContent sx={{ p: { xs: 2.5, md: 3 } }}>
         <Stack direction={{ xs: "column", lg: "row" }} spacing={3} justifyContent="space-between" alignItems={{ xs: "start", lg: "start" }}>
           <Box sx={{ minWidth: 0 }}>
@@ -229,7 +229,7 @@ function PageHeader() {
           </Box>
 
           <Stack spacing={1.4} sx={{ width: { xs: "100%", sm: 320 } }}>
-            <Card variant="outlined" sx={{ borderRadius: 4, borderColor: COLORS.border }}>
+            <Card variant="outlined">
               <CardContent sx={{ p: 2, display: "flex", gap: 1.5, alignItems: "center" }}>
                 <Box sx={{ width: 40, height: 40, borderRadius: 3, bgcolor: "rgba(15,24,152,0.08)", color: COLORS.blue, display: "grid", placeItems: "center" }}>
                   <Users size={16} />
@@ -240,7 +240,7 @@ function PageHeader() {
                 </Box>
               </CardContent>
             </Card>
-            <Card variant="outlined" sx={{ borderRadius: 4, borderColor: COLORS.border }}>
+            <Card variant="outlined">
               <CardContent sx={{ p: 2, display: "flex", gap: 1.5, alignItems: "center" }}>
                 <Box sx={{ width: 40, height: 40, borderRadius: 3, bgcolor: "rgba(255,204,0,0.16)", color: "rgb(180,120,0)", display: "grid", placeItems: "center" }}>
                   <Bell size={16} />
@@ -260,7 +260,7 @@ function PageHeader() {
 
 function QuestionnaireCard() {
   return (
-    <Card variant="outlined" sx={{ borderRadius: 6, borderColor: COLORS.border, boxShadow: "0 6px 18px rgba(15,23,42,0.04)" }}>
+    <Card variant="outlined">
       <CardContent sx={{ p: 2.5 }}>
         <SectionTitle
           title="Questionnaire associé à la campagne"
@@ -279,15 +279,15 @@ function QuestionnaireCard() {
 
 function CampaignCard() {
   return (
-    <Card variant="outlined" sx={{ borderRadius: 6, borderColor: COLORS.border, boxShadow: "0 6px 18px rgba(15,23,42,0.04)" }}>
+    <Card variant="outlined">
       <CardContent sx={{ p: 2.5 }}>
         <SectionTitle title="Campagne active" subtitle="Contexte du parcours participant" />
 
-        <Box sx={{ borderRadius: 4, bgcolor: COLORS.blue, color: "#fff", p: 2.2 }}>
+        <Card variant="outlined" sx={{ bgcolor: COLORS.blue, color: "#fff", p: 2.2 }}>
           <Typography variant="caption" sx={{ opacity: 0.8 }}>Campagne</Typography>
           <Typography variant="h6" fontWeight={700} sx={{ mt: 0.5 }}>{campaign.name}</Typography>
           <Typography variant="body2" sx={{ opacity: 0.9, mt: 0.75 }}>{campaign.company} · {campaign.status}</Typography>
-        </Box>
+        </Card>
 
         <Box sx={{ mt: 2 }}>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>Progression</Typography>
@@ -332,7 +332,7 @@ function RadarPreview() {
 
 function CoachCard() {
   return (
-    <Card variant="outlined" sx={{ borderRadius: 6, borderColor: COLORS.border, boxShadow: "0 6px 18px rgba(15,23,42,0.04)" }}>
+    <Card variant="outlined">
       <CardContent sx={{ p: 2.5 }}>
         <SectionTitle title="Mon coach" subtitle="La personne qui accompagne la restitution" />
         <Stack direction="row" spacing={1.5} alignItems="center" sx={{ borderRadius: 4, bgcolor: "rgba(15,23,42,0.03)", p: 2 }}>
@@ -351,7 +351,7 @@ function CoachCard() {
 
 function QuickActions() {
   return (
-    <Card variant="outlined" sx={{ borderRadius: 6, borderColor: COLORS.border, boxShadow: "0 6px 18px rgba(15,23,42,0.04)" }}>
+    <Card variant="outlined">
       <CardContent sx={{ p: 2.5 }}>
         <SectionTitle title="Actions rapides" subtitle="Les liens les plus utilisés" />
         <Stack spacing={1.2}>
@@ -393,7 +393,7 @@ export function ParticipantDashboardRoute() {
 
       <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", xl: "1.4fr 0.9fr" }, gap: 3, alignItems: "start" }}>
         <Stack spacing={3}>
-          <Card variant="outlined" sx={{ borderRadius: 6, borderColor: COLORS.border, boxShadow: "0 6px 18px rgba(15,23,42,0.04)" }}>
+          <Card variant="outlined">
             <CardContent sx={{ p: 2.5 }}>
               <SectionTitle title="Parcours Révéla" subtitle="Le flux reste lisible : terminé / en cours / verrouillé." />
               <Stack spacing={1.4}>
