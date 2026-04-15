@@ -1,31 +1,28 @@
-import * as React from "react";
-import { createFileRoute } from "@tanstack/react-router";
-import {
-  ArrowRight,
-  BadgeCheck,
-  Brain,
-  CheckCircle2,
-  ClipboardList,
-  CircleDot,
-  Sparkles,
-  Users,
-  Heart,
-  Star,
-  Hash,
-} from "lucide-react";
 import {
   Box,
   Button,
   Card,
   CardContent,
   Chip,
-  Divider,
   Stack,
-  Typography,
+  Typography
 } from "@mui/material";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import {
+  ArrowRight,
+  Brain,
+  CheckCircle2,
+  CircleDot,
+  ClipboardList,
+  Hash,
+  Heart,
+  Sparkles,
+  Users
+} from "lucide-react";
+import * as React from "react";
 
 export const Route = createFileRoute("/participant/test/")({
-  component: ParticipantTestRoute,
+  component: ParticipantTestIndexRoute,
 });
 
 const COLORS = {
@@ -76,7 +73,7 @@ const questionnaires: Record<QuestionnaireCode, QuestionnaireMeta> = {
   },
 };
 
-// Remplacer cette valeur par la donnée de campagne côté API / route loader.
+// À remplacer par la donnée de campagne venant du loader / API.
 const campaignQuestionnaireCode: QuestionnaireCode = "B";
 const questionnaire = questionnaires[campaignQuestionnaireCode];
 
@@ -115,31 +112,40 @@ function InfoPill({ icon: Icon, label, value }: { icon: React.ElementType; label
   );
 }
 
-function DimensionCard({ label }: { label: string }) {
+function TestChecklist() {
   return (
-    <Box sx={{ border: "1px solid rgba(15,23,42,0.10)", borderRadius: 4, p: 1.5 }}>
-      <Typography variant="caption" color="text.secondary">
-        Dimension
-      </Typography>
-      <Typography variant="body2" fontWeight={700} color="text.primary" sx={{ mt: 0.25 }}>
-        {label}
-      </Typography>
-    </Box>
+    <Card variant="outlined" sx={{ borderRadius: 6, borderColor: COLORS.border, boxShadow: "0 6px 18px rgba(15,23,42,0.04)" }}>
+      <CardContent sx={{ p: 2.5 }}>
+        <SectionTitle title="Avant de commencer" subtitle="Quelques rappels utiles pour un parcours fluide." />
+        <Stack spacing={1.4} sx={{ mt: 2 }}>
+          <ChecklistItem text="Répondre sérieusement et sans aller trop vite." />
+          <ChecklistItem text="Le test suit le questionnaire assigné par la campagne." />
+          <ChecklistItem text="Le parcours contient deux séries de 54 questions." />
+          <ChecklistItem text="La restitution viendra après la consolidation des résultats." />
+        </Stack>
+      </CardContent>
+    </Card>
   );
 }
 
-function PreviewCard() {
+function ChecklistItem({ text }: { text: string }) {
+  return (
+    <Stack direction="row" spacing={1.2} alignItems="start">
+      <Box sx={{ width: 34, height: 34, borderRadius: 3, bgcolor: "rgba(15,24,152,0.08)", color: COLORS.blue, display: "grid", placeItems: "center", flex: "none" }}>
+        <CheckCircle2 size={15} />
+      </Box>
+      <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.7, pt: 0.2 }}>
+        {text}
+      </Typography>
+    </Stack>
+  );
+}
+
+function QuestionnairePreview() {
   const Icon = questionnaire.icon;
 
   return (
-    <Card
-      variant="outlined"
-      sx={{
-        borderRadius: 6,
-        borderColor: COLORS.border,
-        boxShadow: "0 6px 18px rgba(15,23,42,0.04)",
-      }}
-    >
+    <Card variant="outlined" sx={{ borderRadius: 6, borderColor: COLORS.border, boxShadow: "0 6px 18px rgba(15,23,42,0.04)" }}>
       <CardContent sx={{ p: 2.5 }}>
         <Stack spacing={2}>
           <Stack direction="row" justifyContent="space-between" alignItems="start" spacing={2}>
@@ -173,37 +179,8 @@ function PreviewCard() {
   );
 }
 
-function TestChecklist() {
-  return (
-    <Card variant="outlined" sx={{ borderRadius: 6, borderColor: COLORS.border, boxShadow: "0 6px 18px rgba(15,23,42,0.04)" }}>
-      <CardContent sx={{ p: 2.5 }}>
-        <SectionTitle title="Avant de commencer" subtitle="Quelques rappels utiles pour un parcours fluide." />
-        <Stack spacing={1.4} sx={{ mt: 2 }}>
-          <ChecklistItem text="Répondre sérieusement et sans aller trop vite." />
-          <ChecklistItem text="Les deux séries doivent être complétées pour le questionnaire de la campagne." />
-          <ChecklistItem text="Le test peut être repris si le parcours le permet." />
-          <ChecklistItem text="La restitution viendra après la consolidation des résultats." />
-        </Stack>
-      </CardContent>
-    </Card>
-  );
-}
-
-function ChecklistItem({ text }: { text: string }) {
-  return (
-    <Stack direction="row" spacing={1.2} alignItems="start">
-      <Box sx={{ width: 34, height: 34, borderRadius: 3, bgcolor: "rgba(15,24,152,0.08)", color: COLORS.blue, display: "grid", placeItems: "center", flex: "none" }}>
-        <CheckCircle2 size={15} />
-      </Box>
-      <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.7, pt: 0.2 }}>
-        {text}
-      </Typography>
-    </Stack>
-  );
-}
-
-function ParticipantTestRoute() {
-  const currentQuestionnaire = questionnaire;
+function ParticipantTestIndexRoute() {
+  const startHref = `/participant/test/${campaignQuestionnaireCode}`;
 
   return (
     <Stack spacing={3}>
@@ -216,7 +193,7 @@ function ParticipantTestRoute() {
                 Questionnaire de la campagne
               </Typography>
               <Typography variant="body1" color="text.secondary" sx={{ mt: 1, lineHeight: 1.7, maxWidth: 860 }}>
-                Le participant passe uniquement le questionnaire qui lui a été assigné par la campagne. Le choix n’est pas disponible ici.
+                Le participant passe uniquement le questionnaire assigné par sa campagne. Le choix n’est pas disponible ici.
               </Typography>
             </Box>
 
@@ -228,7 +205,7 @@ function ParticipantTestRoute() {
                   </Box>
                   <Box>
                     <Typography fontWeight={800} color="text.primary">
-                      {currentQuestionnaire.title}
+                      {questionnaire.title}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
                       Assigné par la campagne
@@ -252,23 +229,18 @@ function ParticipantTestRoute() {
         <Stack spacing={2.5}>
           <Card variant="outlined" sx={{ borderRadius: 6, borderColor: COLORS.border, boxShadow: "0 6px 18px rgba(15,23,42,0.04)" }}>
             <CardContent sx={{ p: 2.5 }}>
-              <SectionTitle title="Questionnaire de la campagne" subtitle="Un seul questionnaire, défini par la campagne." />
+              <SectionTitle title="Questionnaire de la campagne" subtitle="Le questionnaire actif dépend de l’invitation reçue." />
               <Stack spacing={2} sx={{ mt: 2 }}>
-                <PreviewCard />
-                <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "repeat(3, minmax(0, 1fr))" }, gap: 1.2 }}>
-                  {currentQuestionnaire.dimensions.map((dimension) => (
-                    <DimensionCard key={dimension} label={dimension} />
-                  ))}
-                </Box>
+                <QuestionnairePreview />
               </Stack>
             </CardContent>
           </Card>
 
           <Card variant="outlined" sx={{ borderRadius: 6, borderColor: COLORS.border, boxShadow: "0 6px 18px rgba(15,23,42,0.04)" }}>
             <CardContent sx={{ p: 2.5 }}>
-              <SectionTitle title="Ce que le test implique" subtitle="Le parcours se déroule questionnaire par questionnaire." />
+              <SectionTitle title="Ce que le test implique" subtitle="Le parcours est séquentiel." />
               <Typography variant="body2" color="text.secondary" sx={{ mt: 1.5, lineHeight: 1.8 }}>
-                Chaque questionnaire B, F ou S contient deux séries de 54 questions. L’utilisateur ne choisit pas son questionnaire ici : il est lié à la campagne et à son invitation.
+                Chaque questionnaire B, F ou S contient deux séries de 54 questions. L’utilisateur ne choisit pas ici le questionnaire : il est imposé par la campagne et son invitation.
               </Typography>
             </CardContent>
           </Card>
@@ -281,7 +253,14 @@ function ParticipantTestRoute() {
             <CardContent sx={{ p: 2.5 }}>
               <SectionTitle title="Actions" subtitle="Passer au questionnaire ou revenir au parcours." />
               <Stack spacing={1.2} sx={{ mt: 2 }}>
-                <Button variant="contained" disableElevation startIcon={<ArrowRight size={16} />} sx={{ borderRadius: 3, bgcolor: COLORS.blue, textTransform: "none" }}>
+                <Button
+                  variant="contained"
+                  disableElevation
+                  component={Link}
+                  to={startHref}
+                  startIcon={<ArrowRight size={16} />}
+                  sx={{ borderRadius: 3, bgcolor: COLORS.blue, textTransform: "none" }}
+                >
                   Commencer le test
                 </Button>
                 <Button variant="outlined" sx={{ borderRadius: 3, textTransform: "none" }}>
