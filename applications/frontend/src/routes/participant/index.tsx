@@ -1,0 +1,419 @@
+import * as React from "react";
+import { createFileRoute } from "@tanstack/react-router";
+import {
+  BadgeCheck,
+  Bell,
+  BookOpen,
+  ChevronRight,
+  ClipboardCheck,
+  ClipboardList,
+  Gauge,
+  Brain,
+  Lock,
+  MessageSquareQuote,
+  Radar,
+  Sparkles,
+  UserRound,
+  Users,
+} from "lucide-react";
+import {
+  Box,
+  Button,
+  Card,
+  CardContent,
+  Chip,
+  Divider,
+  LinearProgress,
+  Stack,
+  Typography,
+} from "@mui/material";
+
+export const Route = createFileRoute("/participant/")({
+  component: ParticipantDashboardRoute,
+});
+
+const COLORS = {
+  blue: "rgb(15,24,152)",
+  yellow: "rgb(255,204,0)",
+  border: "rgba(15,23,42,0.10)",
+};
+
+type StepState = "completed" | "current" | "locked";
+
+type JourneyStep = {
+  label: string;
+  state: StepState;
+  description: string;
+  icon: React.ElementType;
+};
+
+type Metric = {
+  label: string;
+  value: string;
+  helper: string;
+  icon: React.ElementType;
+};
+
+type Dimension = {
+  title: string;
+  expressed: number;
+  wanted: number;
+  delta: number;
+};
+
+const campaign = {
+  name: "Leadership DSJ 2026",
+  company: "Ville de Lyon",
+  coach: "Claire Martin",
+  questionnaire: "B — Comportement",
+  status: "En cours",
+  progress: 58,
+  nextAction: "Inviter 2 pairs supplémentaires",
+};
+
+const journey: JourneyStep[] = [
+  {
+    label: "Auto-évaluation",
+    state: "completed",
+    description: "Vos réponses sont enregistrées pour la campagne en cours.",
+    icon: BadgeCheck,
+  },
+  {
+    label: "Feedback des pairs",
+    state: "current",
+    description: "Encore quelques réponses attendues avant de débloquer la suite.",
+    icon: Users,
+  },
+  {
+    label: "Test Élément Humain",
+    state: "locked",
+    description: "Accessible une fois les prérequis de la campagne complétés.",
+    icon: Lock,
+  },
+  {
+    label: "Résultats",
+    state: "locked",
+    description: "Les scores et écarts seront affichés après le test.",
+    icon: Radar,
+  },
+  {
+    label: "Restitution coaching",
+    state: "locked",
+    description: "Lecture partagée des résultats avec le coach.",
+    icon: MessageSquareQuote,
+  },
+];
+
+const metrics: Metric[] = [
+  { label: "Progression", value: "58%", helper: "parcours complété", icon: Gauge },
+  { label: "Auto-évaluation", value: "Terminé", helper: "prêt pour la suite", icon: ClipboardCheck },
+  { label: "Feedback pairs", value: "3 / 5", helper: "réponses reçues", icon: Users },
+  { label: "Questionnaire", value: campaign.questionnaire, helper: "lié à la campagne", icon: Brain },
+];
+
+const dimensions: Dimension[] = [
+  { title: "Importance / Valeur", expressed: 3, wanted: 5, delta: 2 },
+  { title: "Compétence", expressed: 7, wanted: 7, delta: 0 },
+  { title: "Affection / Bienveillance", expressed: 5, wanted: 5, delta: 0 },
+];
+
+function SectionTitle({ title, subtitle, action }: { title: string; subtitle?: string; action?: React.ReactNode }) {
+  return (
+    <Stack direction="row" alignItems="start" justifyContent="space-between" spacing={2} sx={{ mb: 2 }}>
+      <Box>
+        <Typography variant="h6" fontWeight={700} color="text.primary">
+          {title}
+        </Typography>
+        {subtitle ? (
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+            {subtitle}
+          </Typography>
+        ) : null}
+      </Box>
+      {action}
+    </Stack>
+  );
+}
+
+function MetricCard({ metric }: { metric: Metric }) {
+  const Icon = metric.icon;
+  return (
+    <Card variant="outlined" sx={{ borderRadius: 5, borderColor: COLORS.border, boxShadow: "0 6px 18px rgba(15,23,42,0.04)" }}>
+      <CardContent sx={{ p: 2.4 }}>
+        <Typography variant="body2" color="text.secondary">
+          {metric.label}
+        </Typography>
+        <Stack direction="row" justifyContent="space-between" alignItems="end" sx={{ mt: 1 }}>
+          <Box>
+            <Typography variant="h4" fontWeight={700} color="text.primary" lineHeight={1.05} sx={{ letterSpacing: -0.5 }}>
+              {metric.value}
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              {metric.helper}
+            </Typography>
+          </Box>
+          <Box sx={{ width: 42, height: 42, borderRadius: 3, bgcolor: "rgba(15,24,152,0.08)", color: COLORS.blue, display: "grid", placeItems: "center" }}>
+            <Icon size={18} />
+          </Box>
+        </Stack>
+        {metric.label === "Progression" ? (
+          <LinearProgress
+            variant="determinate"
+            value={campaign.progress}
+            sx={{ mt: 2.2, height: 8, borderRadius: 99, bgcolor: "rgba(15,23,42,0.06)", "& .MuiLinearProgress-bar": { bgcolor: COLORS.blue } }}
+          />
+        ) : null}
+      </CardContent>
+    </Card>
+  );
+}
+
+function JourneyItem({ step }: { step: JourneyStep }) {
+  const Icon = step.icon;
+  const chipLabel = step.state === "completed" ? "Terminé" : step.state === "current" ? "En cours" : "Verrouillé";
+  const chipSx =
+    step.state === "completed"
+      ? { bgcolor: "rgba(16,185,129,0.12)", color: "rgb(4,120,87)" }
+      : step.state === "current"
+        ? { bgcolor: "rgba(255,204,0,0.16)", color: "rgb(180,120,0)" }
+        : { bgcolor: "rgba(148,163,184,0.16)", color: "rgb(100,116,139)" };
+
+  return (
+    <Stack spacing={1.2} sx={{ p: 2, border: `1px solid ${COLORS.border}`, borderRadius: 4, bgcolor: "#fff" }}>
+      <Stack direction="row" spacing={1.5} alignItems="start">
+        <Box
+          sx={{
+            width: 44,
+            height: 44,
+            borderRadius: 4,
+            display: "grid",
+            placeItems: "center",
+            ...(step.state === "completed"
+              ? { bgcolor: "rgba(16,185,129,0.10)", color: "rgb(4,120,87)" }
+              : step.state === "current"
+                ? { bgcolor: "rgba(255,204,0,0.14)", color: "rgb(180,120,0)" }
+                : { bgcolor: "rgba(148,163,184,0.12)", color: "rgb(100,116,139)" }),
+          }}
+        >
+          <Icon size={18} />
+        </Box>
+        <Box sx={{ minWidth: 0, flex: 1 }}>
+          <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={1} flexWrap="wrap">
+            <Typography fontWeight={600} color="text.primary">
+              {step.label}
+            </Typography>
+            <Chip label={chipLabel} size="small" sx={{ borderRadius: 99, ...chipSx }} />
+          </Stack>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, lineHeight: 1.6 }}>
+            {step.description}
+          </Typography>
+        </Box>
+      </Stack>
+    </Stack>
+  );
+}
+
+function PageHeader() {
+  return (
+    <Card variant="outlined" sx={{ borderRadius: 6, borderColor: COLORS.border, boxShadow: "0 6px 18px rgba(15,23,42,0.04)" }}>
+      <CardContent sx={{ p: { xs: 2.5, md: 3 } }}>
+        <Stack direction={{ xs: "column", lg: "row" }} spacing={3} justifyContent="space-between" alignItems={{ xs: "start", lg: "start" }}>
+          <Box sx={{ minWidth: 0 }}>
+            <Chip label={campaign.status} sx={{ borderRadius: 99, bgcolor: "rgba(15,24,152,0.08)", color: COLORS.blue, mb: 1.5 }} />
+            <Typography variant="h4" fontWeight={700} color="text.primary" sx={{ letterSpacing: -0.5 }}>
+              Bonjour Thomas,
+            </Typography>
+            <Typography variant="body1" color="text.secondary" sx={{ mt: 1, lineHeight: 1.7, maxWidth: 860 }}>
+              Vous êtes dans l’espace participant de la campagne <Box component="span" sx={{ fontWeight: 700, color: "text.primary" }}>{campaign.name}</Box>. Le tableau de bord vous montre le contexte, la progression et la prochaine étape.
+            </Typography>
+          </Box>
+
+          <Stack spacing={1.4} sx={{ width: { xs: "100%", sm: 320 } }}>
+            <Card variant="outlined" sx={{ borderRadius: 4, borderColor: COLORS.border }}>
+              <CardContent sx={{ p: 2, display: "flex", gap: 1.5, alignItems: "center" }}>
+                <Box sx={{ width: 40, height: 40, borderRadius: 3, bgcolor: "rgba(15,24,152,0.08)", color: COLORS.blue, display: "grid", placeItems: "center" }}>
+                  <Users size={16} />
+                </Box>
+                <Box>
+                  <Typography variant="caption" color="text.secondary">Coach</Typography>
+                  <Typography variant="body2" fontWeight={700} color="text.primary">{campaign.coach}</Typography>
+                </Box>
+              </CardContent>
+            </Card>
+            <Card variant="outlined" sx={{ borderRadius: 4, borderColor: COLORS.border }}>
+              <CardContent sx={{ p: 2, display: "flex", gap: 1.5, alignItems: "center" }}>
+                <Box sx={{ width: 40, height: 40, borderRadius: 3, bgcolor: "rgba(255,204,0,0.16)", color: "rgb(180,120,0)", display: "grid", placeItems: "center" }}>
+                  <Bell size={16} />
+                </Box>
+                <Box>
+                  <Typography variant="caption" color="text.secondary">Prochaine action</Typography>
+                  <Typography variant="body2" fontWeight={700} color="text.primary">{campaign.nextAction}</Typography>
+                </Box>
+              </CardContent>
+            </Card>
+          </Stack>
+        </Stack>
+      </CardContent>
+    </Card>
+  );
+}
+
+function QuestionnaireCard() {
+  return (
+    <Card variant="outlined" sx={{ borderRadius: 6, borderColor: COLORS.border, boxShadow: "0 6px 18px rgba(15,23,42,0.04)" }}>
+      <CardContent sx={{ p: 2.5 }}>
+        <SectionTitle
+          title="Questionnaire associé à la campagne"
+          subtitle="1 campagne = 1 questionnaire. Le dashboard reste une vue de synthèse."
+          action={<Button variant="outlined" sx={{ borderRadius: 3, textTransform: "none" }}>Ouvrir le questionnaire</Button>}
+        />
+        <Box sx={{ borderRadius: 4, bgcolor: "rgba(15,23,42,0.03)", p: 2 }}>
+          <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.7 }}>
+            Le contenu détaillé du formulaire vit dans une page dédiée, alimentée par le catalogue de questionnaire.
+          </Typography>
+        </Box>
+      </CardContent>
+    </Card>
+  );
+}
+
+function CampaignCard() {
+  return (
+    <Card variant="outlined" sx={{ borderRadius: 6, borderColor: COLORS.border, boxShadow: "0 6px 18px rgba(15,23,42,0.04)" }}>
+      <CardContent sx={{ p: 2.5 }}>
+        <SectionTitle title="Campagne active" subtitle="Contexte du parcours participant" />
+
+        <Box sx={{ borderRadius: 4, bgcolor: COLORS.blue, color: "#fff", p: 2.2 }}>
+          <Typography variant="caption" sx={{ opacity: 0.8 }}>Campagne</Typography>
+          <Typography variant="h6" fontWeight={700} sx={{ mt: 0.5 }}>{campaign.name}</Typography>
+          <Typography variant="body2" sx={{ opacity: 0.9, mt: 0.75 }}>{campaign.company} · {campaign.status}</Typography>
+        </Box>
+
+        <Box sx={{ mt: 2 }}>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>Progression</Typography>
+          <LinearProgress variant="determinate" value={campaign.progress} sx={{ height: 10, borderRadius: 99, bgcolor: "rgba(15,23,42,0.06)", "& .MuiLinearProgress-bar": { bgcolor: COLORS.blue } }} />
+        </Box>
+      </CardContent>
+    </Card>
+  );
+}
+
+function RadarPreview() {
+  return (
+    <Card variant="outlined" sx={{ borderRadius: 6, borderColor: COLORS.border, boxShadow: "0 6px 18px rgba(15,23,42,0.04)" }}>
+      <CardContent sx={{ p: 2.5 }}>
+        <SectionTitle title="Aperçu des écarts" subtitle="Synthèse rapide des dimensions clés" />
+
+        <Box sx={{ borderRadius: 4, bgcolor: "rgba(15,23,42,0.02)", p: 2 }}>
+          {dimensions.map((dimension, index) => (
+            <Box key={dimension.title} sx={{ mb: index === dimensions.length - 1 ? 0 : 2 }}>
+              <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
+                <Typography variant="body2" fontWeight={600} color="text.primary">{dimension.title}</Typography>
+                <Chip label={dimension.delta === 0 ? "Écart 0" : `Écart ${dimension.delta}`} size="small" sx={{ borderRadius: 99, bgcolor: dimension.delta === 0 ? "rgba(16,185,129,0.12)" : "rgba(255,204,0,0.16)", color: dimension.delta === 0 ? "rgb(4,120,87)" : "rgb(180,120,0)" }} />
+              </Stack>
+              <Stack spacing={0.8}>
+                <Box>
+                  <Typography variant="caption" color="text.secondary">Exprimé</Typography>
+                  <LinearProgress variant="determinate" value={dimension.expressed * 10} sx={{ height: 8, borderRadius: 99, bgcolor: "rgba(15,23,42,0.06)", "& .MuiLinearProgress-bar": { bgcolor: COLORS.blue } }} />
+                </Box>
+                <Box>
+                  <Typography variant="caption" color="text.secondary">Souhaité</Typography>
+                  <LinearProgress variant="determinate" value={dimension.wanted * 10} sx={{ height: 8, borderRadius: 99, bgcolor: "rgba(15,23,42,0.06)", "& .MuiLinearProgress-bar": { bgcolor: COLORS.yellow } }} />
+                </Box>
+              </Stack>
+              {index < dimensions.length - 1 ? <Divider sx={{ mt: 2 }} /> : null}
+            </Box>
+          ))}
+        </Box>
+      </CardContent>
+    </Card>
+  );
+}
+
+function CoachCard() {
+  return (
+    <Card variant="outlined" sx={{ borderRadius: 6, borderColor: COLORS.border, boxShadow: "0 6px 18px rgba(15,23,42,0.04)" }}>
+      <CardContent sx={{ p: 2.5 }}>
+        <SectionTitle title="Mon coach" subtitle="La personne qui accompagne la restitution" />
+        <Stack direction="row" spacing={1.5} alignItems="center" sx={{ borderRadius: 4, bgcolor: "rgba(15,23,42,0.03)", p: 2 }}>
+          <Box sx={{ width: 54, height: 54, borderRadius: 4, bgcolor: COLORS.blue, color: "#fff", display: "grid", placeItems: "center" }}>
+            <UserRound size={22} />
+          </Box>
+          <Box>
+            <Typography fontWeight={700} color="text.primary">Claire Martin</Typography>
+            <Typography variant="body2" color="text.secondary">Coach référente Révéla</Typography>
+          </Box>
+        </Stack>
+      </CardContent>
+    </Card>
+  );
+}
+
+function QuickActions() {
+  return (
+    <Card variant="outlined" sx={{ borderRadius: 6, borderColor: COLORS.border, boxShadow: "0 6px 18px rgba(15,23,42,0.04)" }}>
+      <CardContent sx={{ p: 2.5 }}>
+        <SectionTitle title="Actions rapides" subtitle="Les liens les plus utilisés" />
+        <Stack spacing={1.2}>
+          {[
+            { label: "Inviter des pairs", icon: Users },
+            { label: "Reprendre l’auto-évaluation", icon: ClipboardList },
+            { label: "Consulter les résultats", icon: Radar },
+          ].map((item) => {
+            const Icon = item.icon;
+            return (
+              <Button
+                key={item.label}
+                variant="outlined"
+                fullWidth
+                startIcon={<Icon size={16} />}
+                endIcon={<ChevronRight size={16} />}
+                sx={{ justifyContent: "space-between", borderRadius: 4, borderColor: COLORS.border, textTransform: "none", color: "text.primary", py: 1.3 }}
+              >
+                {item.label}
+              </Button>
+            );
+          })}
+        </Stack>
+      </CardContent>
+    </Card>
+  );
+}
+
+export function ParticipantDashboardRoute() {
+  return (
+    <Stack spacing={3}>
+      <PageHeader />
+
+      <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "repeat(2, minmax(0, 1fr))", xl: "repeat(4, minmax(0, 1fr))" }, gap: 2 }}>
+        {metrics.map((metric) => (
+          <MetricCard key={metric.label} metric={metric} />
+        ))}
+      </Box>
+
+      <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", xl: "1.4fr 0.9fr" }, gap: 3, alignItems: "start" }}>
+        <Stack spacing={3}>
+          <Card variant="outlined" sx={{ borderRadius: 6, borderColor: COLORS.border, boxShadow: "0 6px 18px rgba(15,23,42,0.04)" }}>
+            <CardContent sx={{ p: 2.5 }}>
+              <SectionTitle title="Parcours Révéla" subtitle="Le flux reste lisible : terminé / en cours / verrouillé." />
+              <Stack spacing={1.4}>
+                {journey.map((step) => (
+                  <JourneyItem key={step.label} step={step} />
+                ))}
+              </Stack>
+            </CardContent>
+          </Card>
+
+          <QuestionnaireCard />
+          <CampaignCard />
+        </Stack>
+
+        <Stack spacing={3}>
+          <RadarPreview />
+          <CoachCard />
+          <QuickActions />
+        </Stack>
+      </Box>
+    </Stack>
+  );
+}
