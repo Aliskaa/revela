@@ -1,4 +1,5 @@
-import { index, integer, pgEnum, pgTable, serial, timestamp, varchar } from 'drizzle-orm/pg-core';
+import { sql } from 'drizzle-orm';
+import { index, integer, pgEnum, pgTable, serial, timestamp, uniqueIndex, varchar } from 'drizzle-orm/pg-core';
 
 import { campaignsTable } from './campaign.schema';
 import { inviteTokensTable } from './invite-token.schema';
@@ -19,6 +20,7 @@ export const questionnaireResponsesTable = pgTable(
         submissionKind: submissionKindEnum('submission_kind').notNull().default('element_humain'),
         subjectParticipantId: integer('subject_participant_id').references(() => participantsTable.id),
         raterParticipantId: integer('rater_participant_id').references(() => participantsTable.id),
+        ratedParticipantId: integer('rated_participant_id').references(() => participantsTable.id),
         name: varchar('name', { length: 255 }).notNull(),
         email: varchar('email', { length: 255 }).notNull(),
         organisation: varchar('organisation', { length: 255 }),
@@ -30,5 +32,21 @@ export const questionnaireResponsesTable = pgTable(
         index('questionnaire_responses_submission_kind_idx').on(table.submissionKind),
         index('questionnaire_responses_subject_participant_id_idx').on(table.subjectParticipantId),
         index('questionnaire_responses_rater_participant_id_idx').on(table.raterParticipantId),
+        index('questionnaire_responses_rated_participant_id_idx').on(table.ratedParticipantId),
+        uniqueIndex('questionnaire_responses_unique_self_rating')
+            .on(table.campaignId, table.questionnaireId, table.subjectParticipantId)
+            .where(
+                sql`${table.submissionKind} = 'self_rating' and ${table.campaignId} is not null and ${table.subjectParticipantId} is not null`
+            ),
+        uniqueIndex('questionnaire_responses_unique_element_humain')
+            .on(table.campaignId, table.questionnaireId, table.subjectParticipantId)
+            .where(
+                sql`${table.submissionKind} = 'element_humain' and ${table.campaignId} is not null and ${table.subjectParticipantId} is not null`
+            ),
+        uniqueIndex('questionnaire_responses_unique_peer_rating_target')
+            .on(table.campaignId, table.questionnaireId, table.subjectParticipantId, table.ratedParticipantId)
+            .where(
+                sql`${table.submissionKind} = 'peer_rating' and ${table.campaignId} is not null and ${table.subjectParticipantId} is not null and ${table.ratedParticipantId} is not null`
+            ),
     ]
 );

@@ -71,6 +71,13 @@
       "when": 1775984794983,
       "tag": "0009_questionnaire_responses_campaign_on_delete_set_null",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1776287187573,
+      "tag": "0010_perpetual_puma",
+      "breakpoints": true
     }
   ]
 }

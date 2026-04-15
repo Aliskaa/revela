@@ -15,14 +15,11 @@ import { calculateScores } from '@aor/scoring';
 import type { QuestionnaireId } from '@aor/types';
 import { submitParticipantQuestionnaireBodySchema } from '@aor/types';
 
-import {
-    formatPeerRatingStoredName,
-    parsePeerRatingTargetParticipantId,
-} from '@aor/domain';
+import { parsePeerRatingTargetParticipantId } from '@aor/domain';
 import { ResponsesQuestionnaireNotFoundError, ResponsesValidationError } from '@src/domain/responses/responses.errors';
 import type { ICampaignsReadPort } from '@src/interfaces/campaigns/ICampaignsRepository.port';
 import type { ICompaniesReadPort } from '@src/interfaces/companies/ICompaniesRepository.port';
-import type { IParticipantsIdentityReaderPort, IParticipantsInviteAssignmentsReaderPort, IParticipantsCampaignStateReaderPort } from '@src/interfaces/participants/IParticipantsRepository.port';
+import type { IParticipantsCampaignStateReaderPort, IParticipantsIdentityReaderPort, IParticipantsInviteAssignmentsReaderPort } from '@src/interfaces/participants/IParticipantsRepository.port';
 import type {
     IResponsesSubmissionReaderPort,
     IResponsesWriterPort,
@@ -171,9 +168,16 @@ export class SubmitParticipantQuestionnaireUseCase {
             const peerResponses = existing.filter(r => r.submissionKind === 'peer_rating');
             const isDuplicate = peerResponses.some(r => {
                 if (ratedParticipantId !== undefined) {
-                    return parsePeerRatingTargetParticipantId(r.name) === ratedParticipantId;
+                    return (
+                        r.ratedParticipantId === ratedParticipantId ||
+                        (r.ratedParticipantId === null && parsePeerRatingTargetParticipantId(r.name) === ratedParticipantId)
+                    );
                 }
-                return parsePeerRatingTargetParticipantId(r.name) === null && r.name.trim() === peerLabel;
+                return (
+                    r.ratedParticipantId === null &&
+                    parsePeerRatingTargetParticipantId(r.name) === null &&
+                    r.name.trim() === peerLabel
+                );
             });
             if (isDuplicate) {
                 throw new ResponsesValidationError('Feedback pair deja soumis. Modification non autorisee.');
@@ -183,11 +187,6 @@ export class SubmitParticipantQuestionnaireUseCase {
                     'Le nombre maximum de feedbacks pairs (5) est atteint pour ce questionnaire.'
                 );
             }
-
-            const storedPeerName =
-                ratedParticipantId !== undefined
-                    ? formatPeerRatingStoredName(ratedParticipantId, peerLabel)
-                    : peerLabel;
 
             const errLikert = validateLikertScoresRecord(questionnaire, payload.scores);
             if (errLikert) {
@@ -203,8 +202,9 @@ export class SubmitParticipantQuestionnaireUseCase {
                 submissionKind: 'peer_rating',
                 subjectParticipantId: participant.id,
                 raterParticipantId: null,
+                ratedParticipantId: ratedParticipantId ?? null,
                 participantId: participant.id,
-                name: storedPeerName,
+                name: peerLabel,
                 email: participant.email,
                 organisation: info.organisation,
                 scores: scoresRows,

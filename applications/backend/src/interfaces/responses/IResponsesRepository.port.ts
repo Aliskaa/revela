@@ -29,6 +29,7 @@ export type ResponseRecord = {
     submissionKind: SubmissionKind;
     subjectParticipantId: number | null;
     raterParticipantId: number | null;
+    ratedParticipantId: number | null;
     name: string;
     email: string;
     organisation: string | null;
@@ -44,6 +45,7 @@ export type CreateResponseCommand = {
     submissionKind?: SubmissionKind;
     subjectParticipantId?: number | null;
     raterParticipantId?: number | null;
+    ratedParticipantId?: number | null;
     name: string;
     email: string;
     organisation?: string;

@@ -380,6 +380,7 @@ CREATE TABLE IF NOT EXISTS public.questionnaire_responses (
   submission_kind public.submission_kind DEFAULT 'element_humain'::submission_kind NOT NULL,
   subject_participant_id int4 NULL,
   rater_participant_id int4 NULL,
+  rated_participant_id int4 NULL,
   campaign_id int4 NULL,
   CONSTRAINT questionnaire_responses_pkey PRIMARY KEY (id),
   CONSTRAINT questionnaire_responses_participant_id_participants_id_fk
@@ -390,6 +391,8 @@ CREATE TABLE IF NOT EXISTS public.questionnaire_responses (
     FOREIGN KEY (subject_participant_id) REFERENCES public.participants(id),
   CONSTRAINT questionnaire_responses_rater_participant_id_participants_id_fk
     FOREIGN KEY (rater_participant_id) REFERENCES public.participants(id),
+  CONSTRAINT questionnaire_responses_rated_participant_id_participants_id_fk
+    FOREIGN KEY (rated_participant_id) REFERENCES public.participants(id),
   CONSTRAINT questionnaire_responses_campaign_id_campaigns_id_fk
     FOREIGN KEY (campaign_id) REFERENCES public.campaigns(id) ON DELETE SET NULL
 );
@@ -403,11 +406,33 @@ CREATE INDEX IF NOT EXISTS questionnaire_responses_questionnaire_id_idx
 CREATE INDEX IF NOT EXISTS questionnaire_responses_rater_participant_id_idx
   ON public.questionnaire_responses USING btree (rater_participant_id);
 
+CREATE INDEX IF NOT EXISTS questionnaire_responses_rated_participant_id_idx
+  ON public.questionnaire_responses USING btree (rated_participant_id);
+
 CREATE INDEX IF NOT EXISTS questionnaire_responses_subject_participant_id_idx
   ON public.questionnaire_responses USING btree (subject_participant_id);
 
 CREATE INDEX IF NOT EXISTS questionnaire_responses_submission_kind_idx
   ON public.questionnaire_responses USING btree (submission_kind);
+
+CREATE UNIQUE INDEX IF NOT EXISTS questionnaire_responses_unique_self_rating
+  ON public.questionnaire_responses USING btree (campaign_id, questionnaire_id, subject_participant_id)
+  WHERE submission_kind = 'self_rating'::submission_kind
+    AND campaign_id IS NOT NULL
+    AND subject_participant_id IS NOT NULL;
+
+CREATE UNIQUE INDEX IF NOT EXISTS questionnaire_responses_unique_element_humain
+  ON public.questionnaire_responses USING btree (campaign_id, questionnaire_id, subject_participant_id)
+  WHERE submission_kind = 'element_humain'::submission_kind
+    AND campaign_id IS NOT NULL
+    AND subject_participant_id IS NOT NULL;
+
+CREATE UNIQUE INDEX IF NOT EXISTS questionnaire_responses_unique_peer_rating_target
+  ON public.questionnaire_responses USING btree (campaign_id, questionnaire_id, subject_participant_id, rated_participant_id)
+  WHERE submission_kind = 'peer_rating'::submission_kind
+    AND campaign_id IS NOT NULL
+    AND subject_participant_id IS NOT NULL
+    AND rated_participant_id IS NOT NULL;
 
 -- Scores
 CREATE TABLE IF NOT EXISTS public.scores (

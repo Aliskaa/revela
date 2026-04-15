@@ -29,6 +29,7 @@ export function responseBaseJson(record: ResponseRecord) {
         submission_kind: record.submissionKind,
         subject_participant_id: record.subjectParticipantId,
         rater_participant_id: record.raterParticipantId,
+        rated_participant_id: record.ratedParticipantId,
         name: record.name,
         email: record.email,
         organisation: record.organisation ?? '',

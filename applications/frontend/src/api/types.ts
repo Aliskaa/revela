@@ -85,6 +85,7 @@ export interface ResponseDetail {
     submission_kind: ResponseSubmissionKind;
     subject_participant_id: number | null;
     rater_participant_id: number | null;
+    rated_participant_id: number | null;
     name: string;
     email: string;
     organisation: string;
@@ -129,6 +130,7 @@ export interface AdminResponse {
     submission_kind: ResponseSubmissionKind;
     subject_participant_id: number | null;
     rater_participant_id: number | null;
+    rated_participant_id: number | null;
     name: string;
     email: string;
     organisation: string;

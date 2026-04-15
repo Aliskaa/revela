@@ -1,783 +1,406 @@
-import type { AdminCampaignDetail, AdminResponse } from '@/api/types';
-import { DataTable } from '@/components/common/DataTable';
+import * as React from "react";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import {
-    useAdminCampaign,
-    useArchiveAdminCampaign,
-    useCoaches,
-    useImportParticipantsToCampaign,
-    useInviteCampaignParticipants,
-    useReassignCampaignCoach,
-    useUpdateAdminCampaignStatus,
-} from '@/hooks/admin';
-import { parseAdminJwtClaims } from '@/lib/auth';
+  ArrowRight,
+  BadgeCheck,
+  CalendarDays,
+  ClipboardList,
+  Clock3,
+  Download,
+  FileText,
+  Mail,
+  MessageSquareText,
+  Plus,
+  Sparkles,
+  Target,
+  UserRound,
+  Users,
+} from "lucide-react";
 import {
-    Alert,
-    Box,
-    Button,
-    Card,
-    CardContent,
-    Chip,
-    Dialog,
-    DialogActions,
-    DialogContent,
-    DialogContentText,
-    DialogTitle,
-    Divider,
-    FormControl,
-    InputAdornment,
-    InputLabel,
-    MenuItem,
-    Select,
-    Stack,
-    TableCell,
-    TableRow,
-    TextField,
-    Typography,
-} from '@mui/material';
-import { Link, createFileRoute, useNavigate } from '@tanstack/react-router';
-import type { ColumnDef } from '@tanstack/react-table';
-import { Archive, Calendar, Eye, FileSpreadsheet, Mail, Save, Search, Upload, UserRoundCog } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+  Box,
+  Button,
+  Card,
+  CardContent,
+  Chip,
+  Divider,
+  LinearProgress,
+  Stack,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableRow,
+  Typography,
+} from "@mui/material";
 
-export const Route = createFileRoute('/admin/campaigns/$campaignId')({
-    component: AdminCampaignDetailPage,
+export const Route = createFileRoute("/admin/campaigns/$campaignId")({
+  component: AdminCampaignDetailRoute,
 });
 
-type CampaignParticipantProgressRow = AdminCampaignDetail['participant_progress'][number];
-
-const readApiError = (err: unknown): string => {
-    if (typeof err === 'object' && err !== null && 'response' in err) {
-        const data = (err as { response?: { data?: { error?: string } } }).response?.data;
-        if (data?.error) {
-            return data.error;
-        }
-    }
-    return err instanceof Error ? err.message : 'Erreur inconnue.';
+const COLORS = {
+  blue: "rgb(15,24,152)",
+  yellow: "rgb(255,204,0)",
+  border: "rgba(15,23,42,0.10)",
 };
 
-const getProgressChipColor = (status: string): 'default' | 'success' | 'warning' => {
-    const s = status.toLowerCase();
-    if (s.includes('completed') || s.includes('terminé')) {
-        return 'success';
-    }
-    if (s.includes('pending') || s.includes('en cours')) {
-        return 'warning';
-    }
-    return 'default';
+type ParticipantRow = {
+  name: string;
+  email: string;
+  status: "invited" | "in_progress" | "completed";
+  responses: string;
 };
 
-function AdminCampaignDetailPage() {
-    const { campaignId } = Route.useParams();
-    const id = Number(campaignId);
-    const navigate = useNavigate();
+type ResponseRow = {
+  type: string;
+  count: number;
+  status: "waiting" | "active" | "complete";
+};
 
-    const { data, isLoading } = useAdminCampaign(id);
-    const updateStatus = useUpdateAdminCampaignStatus();
-    const archiveCampaign = useArchiveAdminCampaign();
-    const importParticipants = useImportParticipantsToCampaign();
-    const inviteParticipants = useInviteCampaignParticipants();
-    const { data: coaches } = useCoaches();
-    const reassignCampaignCoach = useReassignCampaignCoach();
+const campaign = {
+  id: "camp-2026-lyon",
+  name: "Leadership DSJ 2026",
+  company: "Ville de Lyon",
+  coach: "Claire Martin",
+  questionnaire: "B — Questionnaire B — Comportement",
+  status: "Active",
+  progress: 58,
+  createdAt: "12 février 2026",
+  updatedAt: "Il y a 2 jours",
+  participants: 1,
+  invitations: 5,
+  collectedResponses: 3,
+};
 
-    const [status, setStatus] = useState<'draft' | 'active' | 'closed' | 'archived'>('draft');
-    const [file, setFile] = useState<File | null>(null);
-    const [search, setSearch] = useState('');
-    const [earlyActiveDialogOpen, setEarlyActiveDialogOpen] = useState(false);
-    const [reassignCoachOpen, setReassignCoachOpen] = useState(false);
-    const [reassignCoachSelect, setReassignCoachSelect] = useState('');
-    const [reassignCoachError, setReassignCoachError] = useState<string | null>(null);
+const participants: ParticipantRow[] = [
+  {
+    name: "Thomas Dubois",
+    email: "thomas.dubois@ville-lyon.fr",
+    status: "in_progress",
+    responses: "3/5 pairs · auto terminée",
+  },
+  {
+    name: "Marie Dupont",
+    email: "marie.dupont@ville-lyon.fr",
+    status: "completed",
+    responses: "1/1 soumission",
+  },
+  {
+    name: "Paul Martin",
+    email: "paul.martin@ville-lyon.fr",
+    status: "invited",
+    responses: "En attente",
+  },
+];
 
-    // Synchroniser le statut local avec les données de la campagne une fois chargées
-    useEffect(() => {
-        if (data?.campaign?.status) {
-            setStatus(data.campaign.status as 'draft' | 'active' | 'closed' | 'archived');
-        }
-    }, [data?.campaign?.status]);
+const responses: ResponseRow[] = [
+  { type: "Auto-évaluation", count: 1, status: "complete" },
+  { type: "Feedback des pairs", count: 2, status: "active" },
+  { type: "Test Élément Humain", count: 0, status: "waiting" },
+];
 
-    const responseColumns = useMemo<ColumnDef<AdminResponse>[]>(
-        () => [
-            {
-                accessorKey: 'id',
-                header: 'ID',
-                enableSorting: false,
-                cell: ({ getValue }) => (
-                    <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                        #{getValue() as number}
-                    </Typography>
-                ),
-            },
-            {
-                accessorKey: 'name',
-                header: 'Participant',
-                enableSorting: false,
-                cell: ({ getValue }) => (
-                    <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                        {getValue() as string}
-                    </Typography>
-                ),
-            },
-            {
-                accessorKey: 'submitted_at',
-                header: 'Soumis le',
-                enableSorting: false,
-                cell: ({ getValue }) => {
-                    const v = getValue() as string;
-                    return <Typography variant="body2">{v ? new Date(v).toLocaleString('fr-FR') : '—'}</Typography>;
-                },
-            },
-            {
-                accessorKey: 'submission_kind',
-                header: 'Type',
-                enableSorting: false,
-                cell: ({ getValue }) => <Chip label={getValue() as string} size="small" variant="outlined" />,
-            },
-        ],
-        []
-    );
+function SectionTitle({ title, subtitle, action }: { title: string; subtitle?: string; action?: React.ReactNode }) {
+  return (
+    <Stack direction="row" alignItems="start" justifyContent="space-between" spacing={2} sx={{ mb: 2 }}>
+      <Box>
+        <Typography variant="h5" fontWeight={800} color="text.primary" sx={{ letterSpacing: -0.4 }}>
+          {title}
+        </Typography>
+        {subtitle ? (
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.7, lineHeight: 1.7 }}>
+            {subtitle}
+          </Typography>
+        ) : null}
+      </Box>
+      {action}
+    </Stack>
+  );
+}
 
-    const participantColumns = useMemo<ColumnDef<CampaignParticipantProgressRow>[]>(
-        () => [
-            {
-                accessorKey: 'fullName',
-                header: 'Nom',
-                enableSorting: false,
-                cell: ({ getValue }) => (
-                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                        {getValue() as string}
-                    </Typography>
-                ),
-            },
-            {
-                accessorKey: 'email',
-                header: 'Email',
-                enableSorting: false,
-                cell: ({ getValue }) => (
-                    <Typography variant="body2" sx={{ color: 'text.secondary', fontSize: '0.875rem' }}>
-                        {getValue() as string}
-                    </Typography>
-                ),
-            },
-            {
-                accessorKey: 'selfRatingStatus',
-                header: 'Self',
-                enableSorting: false,
-                cell: ({ getValue }) => (
-                    <Chip
-                        size="small"
-                        label={getValue() as string}
-                        color={getProgressChipColor(getValue() as string)}
-                        variant="outlined"
-                    />
-                ),
-            },
-            {
-                accessorKey: 'peerFeedbackStatus',
-                header: 'Peer',
-                enableSorting: false,
-                cell: ({ getValue }) => (
-                    <Chip
-                        size="small"
-                        label={getValue() as string}
-                        color={getProgressChipColor(getValue() as string)}
-                        variant="outlined"
-                    />
-                ),
-            },
-            {
-                accessorKey: 'elementHumainStatus',
-                header: 'Test',
-                enableSorting: false,
-                cell: ({ getValue }) => (
-                    <Chip
-                        size="small"
-                        label={getValue() as string}
-                        color={getProgressChipColor(getValue() as string)}
-                        variant="outlined"
-                    />
-                ),
-            },
-        ],
-        []
-    );
+function StatCard({ label, value, helper, icon: Icon }: { label: string; value: string; helper: string; icon: React.ElementType }) {
+  return (
+    <Card variant="outlined">
+      <CardContent sx={{ p: 2.5 }}>
+        <Stack direction="row" justifyContent="space-between" alignItems="end">
+          <Box>
+            <Typography variant="body2" color="text.secondary">
+              {label}
+            </Typography>
+            <Typography variant="h4" fontWeight={800} color="text.primary" sx={{ mt: 0.4, letterSpacing: -0.5 }}>
+              {value}
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              {helper}
+            </Typography>
+          </Box>
+          <Box sx={{ width: 42, height: 42, borderRadius: 3, bgcolor: "rgba(15,24,152,0.08)", color: COLORS.blue, display: "grid", placeItems: "center" }}>
+            <Icon size={18} />
+          </Box>
+        </Stack>
+      </CardContent>
+    </Card>
+  );
+}
 
-    const filteredParticipants = useMemo(() => {
-        const list = data?.participant_progress ?? [];
-        const q = search.trim().toLowerCase();
-        if (!q) {
-            return list;
-        }
-        return list.filter(p => p.fullName.toLowerCase().includes(q) || p.email.toLowerCase().includes(q));
-    }, [data?.participant_progress, search]);
+function StatusChip({ status }: { status: string }) {
+  if (status === "Active") return <Chip label="Active" size="small" sx={{ borderRadius: 99, bgcolor: "rgba(16,185,129,0.12)", color: "rgb(4,120,87)" }} />;
+  if (status === "Closed") return <Chip label="Clôturée" size="small" sx={{ borderRadius: 99, bgcolor: "rgba(148,163,184,0.16)", color: "rgb(100,116,139)" }} />;
+  return <Chip label="Brouillon" size="small" sx={{ borderRadius: 99, bgcolor: "rgba(255,204,0,0.16)", color: "rgb(180,120,0)" }} />;
+}
 
-    if (isLoading) {
-        return (
-            <Box sx={{ p: 4, textAlign: 'center', color: 'text.secondary' }}>
-                Chargement des détails de la campagne...
+function ParticipantStatusChip({ status }: { status: ParticipantRow["status"] }) {
+  if (status === "completed") return <Chip label="Complété" size="small" sx={{ borderRadius: 99, bgcolor: "rgba(16,185,129,0.12)", color: "rgb(4,120,87)" }} />;
+  if (status === "in_progress") return <Chip label="En cours" size="small" sx={{ borderRadius: 99, bgcolor: "rgba(15,24,152,0.08)", color: COLORS.blue }} />;
+  return <Chip label="Invité" size="small" sx={{ borderRadius: 99, bgcolor: "rgba(255,204,0,0.16)", color: "rgb(180,120,0)" }} />;
+}
+
+function ResponseStatusChip({ status }: { status: ResponseRow["status"] }) {
+  if (status === "complete") return <Chip label="Complété" size="small" sx={{ borderRadius: 99, bgcolor: "rgba(16,185,129,0.12)", color: "rgb(4,120,87)" }} />;
+  if (status === "active") return <Chip label="En cours" size="small" sx={{ borderRadius: 99, bgcolor: "rgba(15,24,152,0.08)", color: COLORS.blue }} />;
+  return <Chip label="En attente" size="small" sx={{ borderRadius: 99, bgcolor: "rgba(255,204,0,0.16)", color: "rgb(180,120,0)" }} />;
+}
+
+function ParticipantRowView({ participant }: { participant: ParticipantRow }) {
+  return (
+    <TableRow hover>
+      <TableCell>
+        <Typography fontWeight={700} color="text.primary">
+          {participant.name}
+        </Typography>
+        <Typography variant="caption" color="text.secondary">
+          {participant.email}
+        </Typography>
+      </TableCell>
+      <TableCell>
+        <ParticipantStatusChip status={participant.status} />
+      </TableCell>
+      <TableCell>{participant.responses}</TableCell>
+      <TableCell align="right">
+        <Button variant="text" endIcon={<ArrowRight size={16} />} sx={{ textTransform: "none" }}>
+          Ouvrir
+        </Button>
+      </TableCell>
+    </TableRow>
+  );
+}
+
+function ResponseRowView({ response }: { response: ResponseRow }) {
+  return (
+    <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ border: "1px solid rgba(15,23,42,0.10)", borderRadius: 4, p: 1.8 }}>
+      <Box>
+        <Typography variant="body2" fontWeight={700} color="text.primary">
+          {response.type}
+        </Typography>
+        <Typography variant="caption" color="text.secondary">
+          {response.count} soumission(s)
+        </Typography>
+      </Box>
+      <ResponseStatusChip status={response.status} />
+    </Stack>
+  );
+}
+
+function AdminCampaignDetailRoute() {
+  return (
+    <Stack spacing={3}>
+      <Card variant="outlined">
+        <CardContent sx={{ p: { xs: 2.5, md: 3 } }}>
+          <Stack spacing={2.5} direction={{ xs: "column", lg: "row" }} justifyContent="space-between" alignItems={{ xs: "start", lg: "start" }}>
+            <Box>
+              <Chip label="Détail campagne" sx={{ borderRadius: 99, bgcolor: "rgba(15,24,152,0.08)", color: COLORS.blue, mb: 1.5 }} />
+              <Typography variant="h4" fontWeight={800} color="text.primary" sx={{ letterSpacing: -0.5 }}>
+                {campaign.name}
+              </Typography>
+              <Typography variant="body1" color="text.secondary" sx={{ mt: 1, lineHeight: 1.7, maxWidth: 900 }}>
+                Cockpit opérationnel de la campagne : questionnaire assigné, participants, invitations, réponses et pilotage.
+              </Typography>
             </Box>
-        );
-    }
-    if (!data?.campaign) {
-        return (
-            <Box sx={{ p: 4 }}>
-                <Alert severity="error" variant="filled">
-                    Campagne introuvable.
-                </Alert>
-            </Box>
-        );
-    }
 
-    const campaign = data.campaign;
-    const responses = data.responses;
-    const isSuperAdmin = parseAdminJwtClaims()?.scope === 'super-admin';
-
-    // Helpers pour les couleurs des badges
-    const getCampaignStatusColor = (status: string) => {
-        switch (status) {
-            case 'active':
-                return 'success';
-            case 'closed':
-                return 'error';
-            case 'archived':
-                return 'warning';
-            default:
-                return 'default';
-        }
-    };
-
-    const scheduledStartMs = campaign.startsAt ? new Date(campaign.startsAt).getTime() : null;
-    const startsAtIsInFuture =
-        scheduledStartMs !== null && !Number.isNaN(scheduledStartMs) && scheduledStartMs > Date.now();
-
-    const applyStatusUpdate = async (alignStartsAtToNow?: boolean) => {
-        await updateStatus.mutateAsync({
-            campaignId: campaign.id,
-            status,
-            ...(alignStartsAtToNow ? { align_starts_at_to_now: true } : {}),
-        });
-    };
-
-    const handleRequestStatusUpdate = () => {
-        if (status === 'active' && startsAtIsInFuture) {
-            setEarlyActiveDialogOpen(true);
-            return;
-        }
-        void applyStatusUpdate();
-    };
-
-    const handleConfirmEarlyActivation = () => {
-        void (async () => {
-            try {
-                await applyStatusUpdate(true);
-                setEarlyActiveDialogOpen(false);
-            } catch {
-                // erreur affichée via updateStatus.isError
-            }
-        })();
-    };
-
-    return (
-        <Box sx={{ maxWidth: 1400, mx: 'auto', p: { xs: 2, sm: 3, md: 4 } }}>
-            {/* En-tête de la page */}
-            <Stack
-                direction={{ xs: 'column', md: 'row' }}
-                justifyContent="space-between"
-                alignItems={{ xs: 'flex-start', md: 'center' }}
-                spacing={2}
-                sx={{ mb: 4 }}
-            >
-                <Box>
-                    <Typography variant="h4" fontWeight={800} sx={{ color: 'primary.main', mb: 0.5 }}>
-                        {campaign.name}
-                    </Typography>
-                    <Stack
-                        direction="row"
-                        spacing={1}
-                        alignItems="center"
-                        flexWrap="wrap"
-                        useFlexGap
-                        sx={{ color: 'text.secondary' }}
-                    >
-                        <Typography variant="body2" fontWeight={600}>
-                            Campagne #{campaign.id}
-                        </Typography>
-                        <Typography variant="body2">•</Typography>
-                        <Typography variant="body2">Questionnaire {campaign.questionnaireId ?? 'n/a'}</Typography>
-                        <Typography variant="body2">•</Typography>
-                        <Typography variant="body2">Entreprise #{campaign.companyId}</Typography>
-                    </Stack>
-                </Box>
-                <Stack direction="row" spacing={1.5} flexWrap="wrap" useFlexGap>
-                    <Button
-                        variant="contained"
-                        color="primary"
-                        startIcon={<Mail size={18} />}
-                        onClick={() => inviteParticipants.mutate({ campaignId: campaign.id })}
-                        disabled={inviteParticipants.isPending}
-                        sx={{ boxShadow: 1 }}
-                    >
-                        {inviteParticipants.isPending ? 'Envoi...' : 'Inviter les participants'}
-                    </Button>
-                    <Link
-                        to="/admin/responses"
-                        search={{ qid: campaign.questionnaireId ?? undefined, campaignId: campaign.id }}
-                        style={{ textDecoration: 'none' }}
-                    >
-                        <Button variant="outlined" color="primary" startIcon={<Eye size={18} />}>
-                            Voir les réponses
-                        </Button>
-                    </Link>
-                    <Button
-                        color="error"
-                        variant="outlined"
-                        startIcon={<Archive size={18} />}
-                        onClick={async () => {
-                            if (window.confirm('Êtes-vous sûr de vouloir archiver cette campagne ?')) {
-                                await archiveCampaign.mutateAsync({ campaignId: campaign.id });
-                                navigate({ to: '/admin/campaigns' });
-                            }
-                        }}
-                    >
-                        Archiver
-                    </Button>
-                </Stack>
+            <Stack direction={{ xs: "column", sm: "row" }} spacing={1.2}>
+              <Button variant="contained" disableElevation startIcon={<Mail size={16} />} sx={{ borderRadius: 3, bgcolor: COLORS.blue, textTransform: "none" }}>
+                Relancer les pairs
+              </Button>
+              <Button variant="outlined" startIcon={<Download size={16} />} sx={{ borderRadius: 3, textTransform: "none" }}>
+                Exporter
+              </Button>
             </Stack>
+          </Stack>
+        </CardContent>
+      </Card>
 
-            {/* Section Supérieure : Détails & Import */}
-            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: '1fr 1fr' }, gap: 3, mb: 3 }}>
-                {/* Carte Détails de campagne */}
-                <Card sx={{ borderRadius: 2.5 }}>
-                    <CardContent sx={{ p: 3 }}>
-                        <Typography
-                            variant="h6"
-                            fontWeight={800}
-                            sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}
-                        >
-                            <Calendar size={20} className="text-primary" />
-                            Détails de la campagne
-                        </Typography>
+      <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "repeat(4, minmax(0, 1fr))" }, gap: 2 }}>
+        <StatCard label="Participants" value={String(campaign.participants)} helper="rattachés" icon={Users} />
+        <StatCard label="Invitations" value={String(campaign.invitations)} helper="envoyées" icon={Mail} />
+        <StatCard label="Réponses" value={String(campaign.collectedResponses)} helper="collectées" icon={MessageSquareText} />
+        <StatCard label="Progression" value={`${campaign.progress}%`} helper="parcours global" icon={Target} />
+      </Box>
 
-                        <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2, mb: 3 }}>
-                            <Box>
-                                <Typography
-                                    variant="caption"
-                                    color="text.secondary"
-                                    fontWeight={600}
-                                    textTransform="uppercase"
-                                >
-                                    Statut actuel
-                                </Typography>
-                                <Box sx={{ mt: 0.5 }}>
-                                    <Chip
-                                        size="small"
-                                        label={campaign.status}
-                                        color={
-                                            getCampaignStatusColor(campaign.status) as
-                                                | 'default'
-                                                | 'success'
-                                                | 'error'
-                                                | 'warning'
-                                        }
-                                        variant={campaign.status === 'draft' ? 'outlined' : 'filled'}
-                                        sx={{ fontWeight: 600, textTransform: 'capitalize' }}
-                                    />
-                                </Box>
-                            </Box>
-                            <Box>
-                                <Typography
-                                    variant="caption"
-                                    color="text.secondary"
-                                    fontWeight={600}
-                                    textTransform="uppercase"
-                                >
-                                    Test sans inputs
-                                </Typography>
-                                <Typography variant="body2" fontWeight={500} sx={{ mt: 0.5 }}>
-                                    {campaign.allowTestWithoutManualInputs ? 'Autorisé' : 'Non autorisé'}
-                                </Typography>
-                            </Box>
-                            <Box>
-                                <Typography
-                                    variant="caption"
-                                    color="text.secondary"
-                                    fontWeight={600}
-                                    textTransform="uppercase"
-                                >
-                                    Date de début
-                                </Typography>
-                                <Typography variant="body2" fontWeight={500} sx={{ mt: 0.5 }}>
-                                    {campaign.startsAt ? new Date(campaign.startsAt).toLocaleString('fr-FR') : '—'}
-                                </Typography>
-                            </Box>
-                            <Box>
-                                <Typography
-                                    variant="caption"
-                                    color="text.secondary"
-                                    fontWeight={600}
-                                    textTransform="uppercase"
-                                >
-                                    Date de fin
-                                </Typography>
-                                <Typography variant="body2" fontWeight={500} sx={{ mt: 0.5 }}>
-                                    {campaign.endsAt ? new Date(campaign.endsAt).toLocaleString('fr-FR') : '—'}
-                                </Typography>
-                            </Box>
-                            <Box sx={{ gridColumn: { xs: '1 / -1', sm: '1 / -1' } }}>
-                                <Typography
-                                    variant="caption"
-                                    color="text.secondary"
-                                    fontWeight={600}
-                                    textTransform="uppercase"
-                                >
-                                    Coach
-                                </Typography>
-                                <Stack
-                                    direction={{ xs: 'column', sm: 'row' }}
-                                    spacing={1.5}
-                                    alignItems={{ xs: 'flex-start', sm: 'center' }}
-                                    sx={{ mt: 0.5 }}
-                                >
-                                    <Typography variant="body2" fontWeight={600} component="div">
-                                        {coaches?.find(c => c.id === campaign.coachId)?.displayName ??
-                                            `ID ${campaign.coachId}`}{' '}
-                                        <Box
-                                            component="span"
-                                            sx={{ fontWeight: 400, color: 'text.secondary', fontSize: '0.8rem' }}
-                                        >
-                                            ({coaches?.find(c => c.id === campaign.coachId)?.username ?? '—'})
-                                        </Box>
-                                    </Typography>
-                                    {isSuperAdmin ? (
-                                        <Button
-                                            size="small"
-                                            variant="outlined"
-                                            color="inherit"
-                                            startIcon={<UserRoundCog size={16} />}
-                                            onClick={() => {
-                                                setReassignCoachSelect(String(campaign.coachId));
-                                                setReassignCoachError(null);
-                                                setReassignCoachOpen(true);
-                                            }}
-                                            sx={{ fontWeight: 600, borderColor: 'divider' }}
-                                        >
-                                            Réaffecter
-                                        </Button>
-                                    ) : null}
-                                </Stack>
-                            </Box>
-                        </Box>
+      <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", xl: "1.25fr 0.75fr" }, gap: 3, alignItems: "start" }}>
+        <Stack spacing={3}>
+          <Card variant="outlined">
+            <CardContent sx={{ p: 2.5 }}>
+              <SectionTitle
+                title="Résumé opérationnel"
+                subtitle="Les informations clés pour piloter rapidement la campagne."
+              />
 
-                        <Divider sx={{ my: 2 }} />
-
-                        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} alignItems="flex-end">
-                            <FormControl size="small" sx={{ minWidth: 200, flexGrow: 1 }}>
-                                <InputLabel>Nouveau statut</InputLabel>
-                                <Select
-                                    label="Nouveau statut"
-                                    value={status}
-                                    onChange={e =>
-                                        setStatus(e.target.value as 'draft' | 'active' | 'closed' | 'archived')
-                                    }
-                                >
-                                    <MenuItem value="draft">Brouillon (Draft)</MenuItem>
-                                    <MenuItem value="active">Active</MenuItem>
-                                    <MenuItem value="closed">Fermée (Closed)</MenuItem>
-                                    <MenuItem value="archived">Archivée</MenuItem>
-                                </Select>
-                            </FormControl>
-                            <Button
-                                variant="contained"
-                                color="primary"
-                                startIcon={<Save size={18} />}
-                                onClick={handleRequestStatusUpdate}
-                                disabled={updateStatus.isPending || status === campaign.status}
-                            >
-                                Mettre à jour
-                            </Button>
-                        </Stack>
-                        {updateStatus.isError && (
-                            <Alert severity="error" sx={{ mt: 2 }}>
-                                {updateStatus.error.message}
-                            </Alert>
-                        )}
-                        {updateStatus.isSuccess && (
-                            <Alert severity="success" sx={{ mt: 2 }}>
-                                Statut mis à jour avec succès.
-                            </Alert>
-                        )}
-                    </CardContent>
+              <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "repeat(3, minmax(0, 1fr))" }, gap: 2, mt: 2 }}>
+                <Card variant="outlined" sx={{ p: 2 }}>
+                  <Typography variant="caption" color="text.secondary">
+                    Entreprise
+                  </Typography>
+                  <Typography variant="body2" fontWeight={700} color="text.primary" sx={{ mt: 0.4 }}>
+                    {campaign.company}
+                  </Typography>
                 </Card>
-
-                {/* Carte Import CSV */}
-                <Card sx={{ borderRadius: 2.5 }}>
-                    <CardContent sx={{ p: 3, display: 'flex', flexDirection: 'column', height: '100%' }}>
-                        <Typography
-                            variant="h6"
-                            fontWeight={800}
-                            sx={{ mb: 1, display: 'flex', alignItems: 'center', gap: 1 }}
-                        >
-                            <FileSpreadsheet size={20} className="text-primary" />
-                            Import participants (CSV)
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                            Import global des participants. Assurez-vous d'utiliser un fichier cohérent avec
-                            l'entreprise de cette campagne.
-                        </Typography>
-
-                        <Box
-                            sx={{
-                                flexGrow: 1,
-                                display: 'flex',
-                                flexDirection: 'column',
-                                justifyContent: 'center',
-                                alignItems: 'center',
-                                p: 3,
-                                border: '2px dashed',
-                                borderColor: 'divider',
-                                borderRadius: 2,
-                                bgcolor: 'background.default',
-                            }}
-                        >
-                            <Button
-                                component="label"
-                                variant="outlined"
-                                startIcon={<Upload size={18} />}
-                                sx={{ mb: 1 }}
-                            >
-                                Choisir un fichier CSV
-                                <input
-                                    type="file"
-                                    accept=".csv"
-                                    hidden
-                                    onChange={e => setFile(e.target.files?.[0] ?? null)}
-                                />
-                            </Button>
-                            <Typography variant="caption" color="text.secondary">
-                                {file ? file.name : 'Aucun fichier sélectionné'}
-                            </Typography>
-                        </Box>
-
-                        <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end' }}>
-                            <Button
-                                variant="contained"
-                                color="secondary"
-                                disabled={!file || importParticipants.isPending}
-                                onClick={async () => {
-                                    if (!file) return;
-                                    const form = new FormData();
-                                    form.append('file', file);
-                                    await importParticipants.mutateAsync({ campaignId: campaign.id, formData: form });
-                                    setFile(null);
-                                }}
-                            >
-                                {importParticipants.isPending ? 'Importation...' : "Lancer l'importation"}
-                            </Button>
-                        </Box>
-
-                        {importParticipants.isError && (
-                            <Alert severity="error" sx={{ mt: 2 }}>
-                                Échec de l'importation CSV.
-                            </Alert>
-                        )}
-                        {importParticipants.isSuccess && (
-                            <Alert severity="success" sx={{ mt: 2 }}>
-                                Import terminé : {importParticipants.data.created} créés,{' '}
-                                {importParticipants.data.updated} mis à jour, {importParticipants.data.invited} invités.
-                            </Alert>
-                        )}
-                    </CardContent>
+                <Card variant="outlined" sx={{ p: 2 }}>
+                  <Typography variant="caption" color="text.secondary">
+                    Coach
+                  </Typography>
+                  <Typography variant="body2" fontWeight={700} color="text.primary" sx={{ mt: 0.4 }}>
+                    {campaign.coach}
+                  </Typography>
                 </Card>
-            </Box>
+                <Card variant="outlined" sx={{ p: 2 }}>
+                  <Typography variant="caption" color="text.secondary">
+                    Questionnaire
+                  </Typography>
+                  <Typography variant="body2" fontWeight={700} color="text.primary" sx={{ mt: 0.4 }}>
+                    {campaign.questionnaire}
+                  </Typography>
+                </Card>
+              </Box>
 
-            {/* Section Inférieure : Réponses & Participants */}
-            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', xl: '1.2fr 1.5fr' }, gap: 3 }}>
-                <DataTable
-                    data={responses ?? []}
-                    columns={responseColumns}
-                    minWidth={480}
-                    size="small"
-                    stickyHeader
-                    tableContainerSx={{ maxHeight: 400 }}
-                    cardSx={{ borderRadius: 2.5 }}
-                    toolbar={
-                        <Typography variant="h6" fontWeight={800}>
-                            Dernières réponses
-                        </Typography>
-                    }
-                    afterRows={
-                        (responses?.length ?? 0) === 0 ? (
-                            <TableRow>
-                                <TableCell
-                                    colSpan={responseColumns.length}
-                                    align="center"
-                                    sx={{ py: 4, color: 'text.secondary' }}
-                                >
-                                    Aucune réponse pour cette campagne.
-                                </TableCell>
-                            </TableRow>
-                        ) : null
-                    }
+              <Box sx={{ mt: 2.5 }}>
+                <Typography variant="body2" color="text.secondary">
+                  Progression
+                </Typography>
+                <LinearProgress
+                  variant="determinate"
+                  value={campaign.progress}
+                  sx={{ mt: 1, height: 10, borderRadius: 99, bgcolor: "rgba(15,23,42,0.06)", "& .MuiLinearProgress-bar": { bgcolor: COLORS.blue } }}
                 />
+              </Box>
 
-                <DataTable
-                    data={filteredParticipants}
-                    columns={participantColumns}
-                    minWidth={520}
-                    size="small"
-                    stickyHeader
-                    tableContainerSx={{ maxHeight: 400 }}
-                    cardSx={{ borderRadius: 2.5 }}
-                    toolbar={
-                        <Box
-                            sx={{
-                                display: 'flex',
-                                justifyContent: 'space-between',
-                                alignItems: 'center',
-                                flexWrap: 'wrap',
-                                gap: 2,
-                            }}
-                        >
-                            <Typography variant="h6" fontWeight={800}>
-                                Suivi des participants
-                            </Typography>
-                            <TextField
-                                size="small"
-                                placeholder="Rechercher un participant..."
-                                value={search}
-                                onChange={e => setSearch(e.target.value)}
-                                sx={{ width: { xs: '100%', sm: 250 } }}
-                                InputProps={{
-                                    startAdornment: (
-                                        <InputAdornment position="start" sx={{ color: 'text.secondary' }}>
-                                            <Search size={18} />
-                                        </InputAdornment>
-                                    ),
-                                    sx: { borderRadius: 2, bgcolor: 'background.default' },
-                                }}
-                            />
-                        </Box>
-                    }
-                    afterRows={
-                        filteredParticipants.length === 0 ? (
-                            <TableRow>
-                                <TableCell
-                                    colSpan={participantColumns.length}
-                                    align="center"
-                                    sx={{ py: 4, color: 'text.secondary' }}
-                                >
-                                    Aucun participant trouvé.
-                                </TableCell>
-                            </TableRow>
-                        ) : null
-                    }
-                />
-            </Box>
+              <Stack direction="row" spacing={1.2} sx={{ mt: 2.5, flexWrap: "wrap" }}>
+                <Chip icon={<CalendarDays size={14} />} label={`Créée le ${campaign.createdAt}`} sx={{ borderRadius: 99 }} />
+                <Chip icon={<Clock3 size={14} />} label={`Maj ${campaign.updatedAt}`} sx={{ borderRadius: 99 }} />
+                <StatusChip status={campaign.status} />
+              </Stack>
+            </CardContent>
+          </Card>
 
-            <Dialog
-                open={earlyActiveDialogOpen}
-                onClose={() => {
-                    if (!updateStatus.isPending) {
-                        setEarlyActiveDialogOpen(false);
-                    }
-                }}
-                disableEscapeKeyDown={updateStatus.isPending}
-                aria-labelledby="early-active-dialog-title"
-            >
-                <DialogTitle id="early-active-dialog-title">Activer avant la date de début ?</DialogTitle>
-                <DialogContent>
-                    <DialogContentText component="div">
-                        La date de début prévue (
-                        {campaign.startsAt
-                            ? new Date(campaign.startsAt).toLocaleString('fr-FR', {
-                                  dateStyle: 'long',
-                                  timeStyle: 'short',
-                              })
-                            : '—'}
-                        ) n&apos;est pas encore atteinte.
-                        <Box component="span" sx={{ display: 'block', mt: 1.5 }}>
-                            Si vous confirmez, la campagne passera en <strong>Active</strong> et la{' '}
-                            <strong>date de début sera mise à maintenant</strong> (heure du serveur).
-                        </Box>
-                    </DialogContentText>
-                </DialogContent>
-                <DialogActions sx={{ px: 3, pb: 2 }}>
-                    <Button onClick={() => setEarlyActiveDialogOpen(false)} disabled={updateStatus.isPending}>
-                        Annuler
-                    </Button>
-                    <Button
-                        onClick={handleConfirmEarlyActivation}
-                        variant="contained"
-                        color="primary"
-                        disabled={updateStatus.isPending}
-                    >
-                        {updateStatus.isPending ? 'Mise à jour…' : 'Confirmer et activer'}
-                    </Button>
-                </DialogActions>
-            </Dialog>
+          <Card variant="outlined">
+            <CardContent sx={{ p: 2.5 }}>
+              <SectionTitle
+                title="Participants de la campagne"
+                subtitle="Vue opérationnelle des participants rattachés et de leur état de collecte."
+                action={<Button variant="outlined" startIcon={<Plus size={16} />} sx={{ borderRadius: 3, textTransform: "none" }}>Ajouter</Button>}
+              />
 
-            <Dialog
-                open={reassignCoachOpen}
-                onClose={() => !reassignCampaignCoach.isPending && setReassignCoachOpen(false)}
-                maxWidth="sm"
-                fullWidth
-                PaperProps={{ sx: { borderRadius: 3 } }}
-            >
-                <DialogTitle sx={{ fontWeight: 800, color: 'primary.main' }}>
-                    Réaffecter la campagne à un coach
-                </DialogTitle>
-                <DialogContent>
-                    <Stack spacing={2} sx={{ mt: 1 }}>
-                        <Typography variant="body2" color="text.secondary">
-                            La campagne <strong>{campaign.name}</strong> sera associée au coach sélectionné.
-                        </Typography>
-                        <FormControl fullWidth size="small">
-                            <InputLabel id="reassign-coach-label">Coach</InputLabel>
-                            <Select
-                                labelId="reassign-coach-label"
-                                label="Coach"
-                                value={reassignCoachSelect}
-                                onChange={e => setReassignCoachSelect(String(e.target.value))}
-                            >
-                                {(coaches ?? [])
-                                    .filter(c => c.isActive)
-                                    .map(c => (
-                                        <MenuItem key={c.id} value={String(c.id)}>
-                                            {c.displayName} ({c.username})
-                                        </MenuItem>
-                                    ))}
-                            </Select>
-                        </FormControl>
-                        {reassignCoachError ? <Alert severity="error">{reassignCoachError}</Alert> : null}
-                    </Stack>
-                </DialogContent>
-                <DialogActions sx={{ px: 3, pb: 2 }}>
-                    <Button onClick={() => setReassignCoachOpen(false)} disabled={reassignCampaignCoach.isPending}>
-                        Annuler
-                    </Button>
-                    <Button
-                        variant="contained"
-                        color="primary"
-                        disabled={
-                            reassignCampaignCoach.isPending ||
-                            !reassignCoachSelect ||
-                            Number(reassignCoachSelect) === campaign.coachId
-                        }
-                        onClick={async () => {
-                            setReassignCoachError(null);
-                            try {
-                                await reassignCampaignCoach.mutateAsync({
-                                    campaignId: campaign.id,
-                                    coachId: Number(reassignCoachSelect),
-                                });
-                                setReassignCoachOpen(false);
-                            } catch (e) {
-                                setReassignCoachError(readApiError(e));
-                            }
-                        }}
-                    >
-                        {reassignCampaignCoach.isPending ? 'Enregistrement…' : 'Enregistrer'}
-                    </Button>
-                </DialogActions>
-            </Dialog>
-        </Box>
-    );
+              <Box sx={{ overflowX: "auto" }}>
+                <Table sx={{ minWidth: 800 }}>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Participant</TableCell>
+                      <TableCell>Statut</TableCell>
+                      <TableCell>Réponses</TableCell>
+                      <TableCell />
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {participants.map((participant) => (
+                      <ParticipantRowView key={participant.email} participant={participant} />
+                    ))}
+                  </TableBody>
+                </Table>
+              </Box>
+            </CardContent>
+          </Card>
+
+          <Card variant="outlined">
+            <CardContent sx={{ p: 2.5 }}>
+              <SectionTitle
+                title="Questionnaire et réponses"
+                subtitle="Le questionnaire assigné et le volume de collecte associé."
+              />
+
+              <Stack spacing={1.3} sx={{ mt: 2 }}>
+                {responses.map((response) => (
+                  <ResponseRowView key={response.type} response={response} />
+                ))}
+              </Stack>
+
+              <Divider sx={{ my: 2.5 }} />
+
+              <Stack direction={{ xs: "column", sm: "row" }} spacing={1.2}>
+                <Button variant="contained" disableElevation startIcon={<FileText size={16} />} sx={{ borderRadius: 3, bgcolor: COLORS.blue, textTransform: "none" }}>
+                  Voir le détail des soumissions
+                </Button>
+                <Button variant="outlined" sx={{ borderRadius: 3, textTransform: "none" }}>
+                  Ouvrir le catalogue
+                </Button>
+              </Stack>
+            </CardContent>
+          </Card>
+        </Stack>
+
+        <Stack spacing={3}>
+          <Card variant="outlined">
+            <CardContent sx={{ p: 2.5 }}>
+              <SectionTitle title="Actions rapides" subtitle="Les actions fréquentes sur une campagne." />
+              <Stack spacing={1.2} sx={{ mt: 2 }}>
+                <Button variant="contained" disableElevation startIcon={<Mail size={16} />} sx={{ borderRadius: 3, bgcolor: COLORS.blue, textTransform: "none" }}>
+                  Relancer les pairs
+                </Button>
+                <Button variant="outlined" startIcon={<BadgeCheck size={16} />} sx={{ borderRadius: 3, textTransform: "none" }}>
+                  Marquer comme terminée
+                </Button>
+                <Button variant="outlined" startIcon={<ArrowRight size={16} />} sx={{ borderRadius: 3, textTransform: "none" }}>
+                  Aller au tableau de bord
+                </Button>
+              </Stack>
+            </CardContent>
+          </Card>
+
+          <Card variant="outlined">
+            <CardContent sx={{ p: 2.5 }}>
+              <SectionTitle title="Pilotage" subtitle="Quelques repères utiles." />
+              <Stack spacing={1.2} sx={{ mt: 2 }}>
+                <MiniLine label="Questionnaire" value={campaign.questionnaire} icon={ClipboardList} />
+                <MiniLine label="Coach" value={campaign.coach} icon={UserRound} />
+                <MiniLine label="Entreprise" value={campaign.company} icon={Sparkles} />
+              </Stack>
+            </CardContent>
+          </Card>
+
+          <Card variant="outlined">
+            <CardContent sx={{ p: 2.5 }}>
+              <SectionTitle title="Notes" subtitle="Bloc réservé aux commentaires internes." />
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 1.5, lineHeight: 1.8 }}>
+                Cette campagne est structurée autour d’un seul questionnaire. La page détail doit rester le point de pilotage principal pour le suivi des invitations, des réponses et des exports.
+              </Typography>
+            </CardContent>
+          </Card>
+        </Stack>
+      </Box>
+    </Stack>
+  );
+}
+
+function MiniLine({ label, value, icon: Icon }: { label: string; value: string; icon: React.ElementType }) {
+  return (
+    <Stack direction="row" spacing={1.2} alignItems="start">
+      <Box sx={{ width: 36, height: 36, borderRadius: 3, bgcolor: "rgba(15,24,152,0.08)", color: COLORS.blue, display: "grid", placeItems: "center", flex: "none" }}>
+        <Icon size={15} />
+      </Box>
+      <Box>
+        <Typography variant="caption" color="text.secondary">
+          {label}
+        </Typography>
+        <Typography variant="body2" fontWeight={700} color="text.primary" sx={{ mt: 0.25 }}>
+          {value}
+        </Typography>
+      </Box>
+    </Stack>
+  );
 }

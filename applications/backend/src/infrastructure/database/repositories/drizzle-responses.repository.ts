@@ -110,6 +110,7 @@ export class DrizzleResponsesRepository implements IResponsesRepositoryPort {
                     submissionKind: command.submissionKind ?? 'element_humain',
                     subjectParticipantId: command.subjectParticipantId ?? null,
                     raterParticipantId: command.raterParticipantId ?? null,
+                    ratedParticipantId: command.ratedParticipantId ?? null,
                     name: command.name,
                     email: command.email,
                     organisation: command.organisation ?? null,

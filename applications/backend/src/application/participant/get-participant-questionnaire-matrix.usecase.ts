@@ -122,7 +122,7 @@ export class GetParticipantQuestionnaireMatrixUseCase {
                 response_id: r.id,
                 label: displayPeerRatingStoredLabel(rawName),
                 rater_participant_id: r.raterParticipantId,
-                rated_participant_id: parsePeerRatingTargetParticipantId(rawName),
+                rated_participant_id: r.ratedParticipantId ?? parsePeerRatingTargetParticipantId(rawName),
             };
         });
 
