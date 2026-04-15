@@ -303,6 +303,18 @@ CREATE INDEX IF NOT EXISTS invite_tokens_token_idx
 CREATE INDEX IF NOT EXISTS invite_tokens_campaign_id_idx
   ON public.invite_tokens USING btree (campaign_id);
 
+CREATE UNIQUE INDEX IF NOT EXISTS invite_tokens_active_campaign_assignment_unique
+  ON public.invite_tokens USING btree (participant_id, campaign_id, questionnaire_id)
+  WHERE is_active = true
+    AND used_at IS NULL
+    AND campaign_id IS NOT NULL;
+
+CREATE UNIQUE INDEX IF NOT EXISTS invite_tokens_active_standalone_assignment_unique
+  ON public.invite_tokens USING btree (participant_id, questionnaire_id)
+  WHERE is_active = true
+    AND used_at IS NULL
+    AND campaign_id IS NULL;
+
 -- Peer feedback invitations
 CREATE TABLE IF NOT EXISTS public.peer_feedback_invitations (
   id serial4 NOT NULL,
@@ -441,6 +453,7 @@ CREATE TABLE IF NOT EXISTS public.scores (
   score_key int4 NOT NULL,
   value int4 NOT NULL,
   CONSTRAINT scores_pkey PRIMARY KEY (id),
+  CONSTRAINT scores_response_id_score_key_unique UNIQUE (response_id, score_key),
   CONSTRAINT scores_response_id_questionnaire_responses_id_fk
     FOREIGN KEY (response_id) REFERENCES public.questionnaire_responses(id) ON DELETE CASCADE
 );

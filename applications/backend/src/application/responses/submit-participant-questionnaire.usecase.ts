@@ -221,6 +221,14 @@ export class SubmitParticipantQuestionnaireUseCase {
         if (existing.some(r => r.submissionKind === 'element_humain')) {
             throw new ResponsesValidationError('Test scientifique deja soumis. Modification non autorisee.');
         }
+        const manualInputsCompleted =
+            existing.some(r => r.submissionKind === 'self_rating') &&
+            existing.some(r => r.submissionKind === 'peer_rating');
+        if (!campaign.allowTestWithoutManualInputs && !manualInputsCompleted) {
+            throw new ResponsesValidationError(
+                "Le test Element Humain sera disponible apres l'auto-evaluation et le feedback pair."
+            );
+        }
         const errSeries = validateSubmissionSeries(questionnaire, series0, series1);
         if (errSeries) {
             throw new ResponsesValidationError(errSeries);

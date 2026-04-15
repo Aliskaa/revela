@@ -12,6 +12,7 @@
 
 import {
     campaignParticipantsTable,
+    campaignsTable,
     DRIZZLE_DB_SYMBOL,
     type DrizzleDb,
     inviteTokensTable,
@@ -149,6 +150,14 @@ export class DrizzleResponsesRepository implements IResponsesRepositoryPort {
                         )
                     )
                     .limit(1);
+                const [campaign] = await tx
+                    .select({
+                        allowTestWithoutManualInputs: campaignsTable.allowTestWithoutManualInputs,
+                    })
+                    .from(campaignsTable)
+                    .where(eq(campaignsTable.id, command.campaignId))
+                    .limit(1);
+                const canSkipManualInputs = campaign?.allowTestWithoutManualInputs === true;
 
                 const selfDoneAfter =
                     command.submissionKind === 'self_rating'
@@ -162,8 +171,7 @@ export class DrizzleResponsesRepository implements IResponsesRepositoryPort {
                     (command.submissionKind === 'self_rating' ||
                         command.submissionKind === 'peer_rating') &&
                     (existingProgress?.elementHumainStatus ?? 'locked') === 'locked' &&
-                    selfDoneAfter &&
-                    peerDoneAfter;
+                    (canSkipManualInputs || (selfDoneAfter && peerDoneAfter));
 
                 const elementHumainUnlockPatch = unlockElementHumain
                     ? { elementHumainStatus: 'pending' as const }

@@ -1,453 +1,311 @@
-import { downloadAdminBlob } from '@/api/downloads';
-import type { AdminResponse } from '@/api/types';
-import { DataTable } from '@/components/common/DataTable';
-import { useAdminResponses, useDeleteResponse } from '@/hooks/admin';
-import { useAdminQuestionnaires } from '@/hooks/questionnaires';
+import * as React from "react";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import {
-    Alert,
-    Box,
-    Button,
-    Chip,
-    Dialog,
-    DialogActions,
-    DialogContent,
-    DialogTitle,
-    FormControl,
-    IconButton,
-    InputAdornment,
-    InputLabel,
-    MenuItem,
-    Select,
-    Stack,
-    TableCell,
-    TableRow,
-    TextField,
-    Tooltip,
-    Typography,
-} from '@mui/material';
-import { Link, createFileRoute } from '@tanstack/react-router';
-import { type ColumnDef, type SortingState, getFilteredRowModel, getSortedRowModel } from '@tanstack/react-table';
-import { AlertCircle, ChevronRight, Download, Eye, FileText, Filter, Search, Trash2 } from 'lucide-react';
-import { useMemo, useState } from 'react';
+  ArrowRight,
+  BadgeCheck,
+  ClipboardList,
+  Download,
+  FileText,
+  MessageSquareText,
+  Search,
+  Sparkles,
+  Users,
+} from "lucide-react";
+import {
+  Box,
+  Button,
+  Card,
+  CardContent,
+  Chip,
+  Stack,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableRow,
+  TextField,
+  Typography,
+} from "@mui/material";
 
-const ERASE_CONFIRM_PHRASE = 'SUPPRIMER';
-
-// Thème des questionnaires pour harmoniser avec le tableau de bord
-const QID_THEME: Record<string, { bg: string; text: string }> = {
-    B: { bg: 'rgba(21, 21, 176, 0.08)', text: '#1515B0' },
-    F: { bg: '#f0fdf4', text: '#166534' },
-    S: { bg: '#fffbeb', text: '#b45309' },
-    C: { bg: '#f5f3ff', text: '#6d28d9' },
-};
-
-type SearchParams = { qid?: string; campaignId?: number };
-
-export const Route = createFileRoute('/admin/responses')({
-    validateSearch: (search: Record<string, unknown>): SearchParams => {
-        const rawCampaignId = search.campaignId ?? search.campaign_id;
-        const parsedCampaignId =
-            typeof rawCampaignId === 'number'
-                ? rawCampaignId
-                : typeof rawCampaignId === 'string' && rawCampaignId.trim().length > 0
-                  ? Number.parseInt(rawCampaignId, 10)
-                  : undefined;
-        return {
-            qid: search.qid as string | undefined,
-            campaignId: Number.isFinite(parsedCampaignId) ? parsedCampaignId : undefined,
-        };
-    },
-    component: AdminResponsesPage,
+export const Route = createFileRoute("/admin/responses")({
+  component: AdminResponsesRoute,
 });
 
-function AdminResponsesPage() {
-    const search = Route.useSearch();
-    const [selectedQid, setSelectedQid] = useState<string>(search.qid ?? '');
-    const selectedCampaignId = search.campaignId;
-    const [globalFilter, setGlobalFilter] = useState('');
-    const [sorting, setSorting] = useState<SortingState>([{ id: 'submitted_at', desc: true }]);
-    const [page, setPage] = useState(1);
-    const [eraseRow, setEraseRow] = useState<AdminResponse | null>(null);
-    const [eraseConfirmText, setEraseConfirmText] = useState('');
-    const [exportLoading, setExportLoading] = useState(false);
+const COLORS = {
+  blue: "rgb(15,24,152)",
+  yellow: "rgb(255,204,0)",
+  border: "rgba(15,23,42,0.10)",
+};
 
-    const { data: questionnaires } = useAdminQuestionnaires();
-    const { data, isLoading } = useAdminResponses(selectedQid || undefined, page, 50, selectedCampaignId);
-    const deleteMut = useDeleteResponse();
+type ResponseStatus = "complete" | "active" | "waiting";
 
-    const columns = useMemo<ColumnDef<AdminResponse>[]>(
-        () => [
-            {
-                accessorKey: 'name',
-                header: 'Participant',
-                cell: ({ row }) => (
-                    <Box>
-                        <Typography variant="body2" fontWeight={700} color="text.primary">
-                            {row.original.name}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.25 }}>
-                            {row.original.email}
-                        </Typography>
-                    </Box>
-                ),
-            },
-            {
-                accessorKey: 'organisation',
-                header: 'Organisation',
-                cell: ({ getValue }) => (
-                    <Typography variant="body2" color="text.secondary" fontWeight={500}>
-                        {(getValue() as string) || '—'}
-                    </Typography>
-                ),
-            },
-            {
-                accessorKey: 'questionnaire_id',
-                header: 'Type',
-                cell: ({ getValue }) => {
-                    const val = getValue() as string;
-                    const theme = QID_THEME[val] || { bg: '#f3f4f6', text: '#4b5563' };
-                    return (
-                        <Chip
-                            label={val}
-                            size="small"
-                            sx={{
-                                bgcolor: theme.bg,
-                                color: theme.text,
-                                fontWeight: 700,
-                                fontSize: '0.75rem',
-                                borderRadius: 1.5,
-                                px: 0.5,
-                            }}
-                        />
-                    );
-                },
-            },
-            {
-                accessorKey: 'submitted_at',
-                header: 'Date de soumission',
-                cell: ({ getValue }) => (
-                    <Typography variant="body2" color="text.secondary" fontWeight={500}>
-                        {new Date(getValue() as string).toLocaleDateString('fr-FR', {
-                            day: '2-digit',
-                            month: 'short',
-                            year: 'numeric',
-                        })}
-                    </Typography>
-                ),
-            },
-            {
-                id: 'actions',
-                header: '',
-                enableSorting: false,
-                cell: ({ row }) => (
-                    <Stack direction="row" spacing={1} justifyContent="flex-end" alignItems="center">
-                        <Tooltip title="Ouvrir le rapport détaillé" placement="left">
-                            <Link
-                                to="/results/$qid/$responseId"
-                                params={{ qid: row.original.questionnaire_id, responseId: String(row.original.id) }}
-                                style={{ textDecoration: 'none' }}
-                            >
-                                <IconButton
-                                    size="small"
-                                    sx={{
-                                        color: 'text.disabled',
-                                        '&:hover': { color: 'primary.main', bgcolor: 'primary.lighter' },
-                                    }}
-                                >
-                                    <Eye size={18} />
-                                </IconButton>
-                            </Link>
-                        </Tooltip>
-                        <Tooltip title="Supprimer (RGPD)">
-                            <IconButton
-                                size="small"
-                                onClick={() => {
-                                    setEraseRow(row.original);
-                                    setEraseConfirmText('');
-                                }}
-                                sx={{
-                                    color: 'text.disabled',
-                                    '&:hover': { color: 'error.main', bgcolor: 'error.lighter' },
-                                }}
-                            >
-                                <Trash2 size={16} />
-                            </IconButton>
-                        </Tooltip>
-                    </Stack>
-                ),
-            },
-        ],
-        []
-    );
+type ResponseRow = {
+  type: string;
+  campaign: string;
+  company: string;
+  participant: string;
+  count: number;
+  status: ResponseStatus;
+  updatedAt: string;
+};
 
-    return (
-        <Box sx={{ maxWidth: 1400, mx: 'auto', p: { xs: 2, sm: 3, md: 4 } }}>
-            {/* En-tête de la page */}
-            <Stack
-                direction={{ xs: 'column', md: 'row' }}
-                justifyContent="space-between"
-                alignItems={{ xs: 'flex-start', md: 'flex-end' }}
-                spacing={3}
-                sx={{ mb: 4 }}
-            >
-                <Box>
-                    <Typography
-                        variant="h4"
-                        fontWeight={800}
-                        sx={{ color: 'primary.main', mb: 0.5, display: 'flex', alignItems: 'center', gap: 1.5 }}
-                    >
-                        <FileText size={28} />
-                        Réponses
-                    </Typography>
-                    <Typography variant="body1" color="text.secondary">
-                        Gérez et consultez les {data?.total ?? 0} soumissions de vos participants.
-                    </Typography>
-                    {selectedCampaignId && (
-                        <Chip
-                            label={`Filtre campagne actif : #${selectedCampaignId}`}
-                            size="small"
-                            color="primary"
-                            variant="outlined"
-                            sx={{ mt: 1, fontWeight: 600 }}
-                        />
-                    )}
-                </Box>
+const responses: ResponseRow[] = [
+  {
+    type: "Auto-évaluation",
+    campaign: "Leadership DSJ 2026",
+    company: "Ville de Lyon",
+    participant: "Thomas Dubois",
+    count: 1,
+    status: "complete",
+    updatedAt: "Il y a 2 jours",
+  },
+  {
+    type: "Feedback des pairs",
+    campaign: "Leadership DSJ 2026",
+    company: "Ville de Lyon",
+    participant: "Thomas Dubois",
+    count: 2,
+    status: "active",
+    updatedAt: "Aujourd’hui",
+  },
+  {
+    type: "Test Élément Humain",
+    campaign: "Transformation managériale",
+    company: "Métropole du Nord",
+    participant: "Paul Martin",
+    count: 0,
+    status: "waiting",
+    updatedAt: "En attente",
+  },
+];
 
-                {selectedQid && (
-                    <Button
-                        variant="contained"
-                        color="primary"
-                        startIcon={<Download size={18} />}
-                        disabled={exportLoading}
-                        onClick={async () => {
-                            if (!selectedQid) return;
-                            setExportLoading(true);
-                            try {
-                                await downloadAdminBlob('/admin/export/responses', { qid: selectedQid });
-                            } finally {
-                                setExportLoading(false);
-                            }
-                        }}
-                        sx={{ fontWeight: 600, boxShadow: 1 }}
-                    >
-                        {exportLoading ? "Génération de l'export…" : 'Exporter en CSV'}
-                    </Button>
-                )}
+function SectionTitle({ title, subtitle, action }: { title: string; subtitle?: string; action?: React.ReactNode }) {
+  return (
+    <Stack direction="row" alignItems="start" justifyContent="space-between" spacing={2} sx={{ mb: 2 }}>
+      <Box>
+        <Typography variant="h5" fontWeight={800} color="text.primary" sx={{ letterSpacing: -0.4 }}>
+          {title}
+        </Typography>
+        {subtitle ? (
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.7, lineHeight: 1.7 }}>
+            {subtitle}
+          </Typography>
+        ) : null}
+      </Box>
+      {action}
+    </Stack>
+  );
+}
+
+function StatCard({ label, value, helper, icon: Icon }: { label: string; value: string; helper: string; icon: React.ElementType }) {
+  return (
+    <Card variant="outlined">
+      <CardContent sx={{ p: 2.5 }}>
+        <Stack direction="row" justifyContent="space-between" alignItems="end">
+          <Box>
+            <Typography variant="body2" color="text.secondary">
+              {label}
+            </Typography>
+            <Typography variant="h4" fontWeight={800} color="text.primary" sx={{ mt: 0.4, letterSpacing: -0.5 }}>
+              {value}
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              {helper}
+            </Typography>
+          </Box>
+          <Box sx={{ width: 42, height: 42, borderRadius: 3, bgcolor: "rgba(15,24,152,0.08)", color: COLORS.blue, display: "grid", placeItems: "center" }}>
+            <Icon size={18} />
+          </Box>
+        </Stack>
+      </CardContent>
+    </Card>
+  );
+}
+
+function StatusChip({ status }: { status: ResponseStatus }) {
+  if (status === "complete") return <Chip label="Complété" size="small" sx={{ borderRadius: 99, bgcolor: "rgba(16,185,129,0.12)", color: "rgb(4,120,87)" }} />;
+  if (status === "active") return <Chip label="En cours" size="small" sx={{ borderRadius: 99, bgcolor: "rgba(15,24,152,0.08)", color: COLORS.blue }} />;
+  return <Chip label="En attente" size="small" sx={{ borderRadius: 99, bgcolor: "rgba(255,204,0,0.16)", color: "rgb(180,120,0)" }} />;
+}
+
+function ResponseRowView({ response }: { response: ResponseRow }) {
+  return (
+    <TableRow hover>
+      <TableCell>
+        <Typography fontWeight={700} color="text.primary">
+          {response.type}
+        </Typography>
+        <Typography variant="caption" color="text.secondary">
+          {response.participant}
+        </Typography>
+      </TableCell>
+      <TableCell>{response.campaign}</TableCell>
+      <TableCell>{response.company}</TableCell>
+      <TableCell>{response.count}</TableCell>
+      <TableCell>
+        <StatusChip status={response.status} />
+      </TableCell>
+      <TableCell>{response.updatedAt}</TableCell>
+      <TableCell align="right">
+        <Button variant="text" endIcon={<ArrowRight size={16} />} sx={{ textTransform: "none" }}>
+          Ouvrir
+        </Button>
+      </TableCell>
+    </TableRow>
+  );
+}
+
+function ResponseCard({ response }: { response: ResponseRow }) {
+  return (
+    <Card variant="outlined">
+      <CardContent sx={{ p: 2.5 }}>
+        <Stack spacing={1.8}>
+          <Stack direction="row" justifyContent="space-between" alignItems="start" spacing={2}>
+            <Box>
+              <Typography variant="h6" fontWeight={800} color="text.primary">
+                {response.type}
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 0.4 }}>
+                {response.participant}
+              </Typography>
+            </Box>
+            <StatusChip status={response.status} />
+          </Stack>
+
+          <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "repeat(3, minmax(0, 1fr))" }, gap: 1.2 }}>
+            <MiniStat label="Campagne" value={response.campaign} />
+            <MiniStat label="Entreprise" value={response.company} />
+            <MiniStat label="Réponses" value={String(response.count)} />
+          </Box>
+
+          <Stack direction={{ xs: "column", sm: "row" }} spacing={1.2}>
+            <Button variant="contained" disableElevation startIcon={<ArrowRight size={16} />} sx={{ borderRadius: 3, bgcolor: COLORS.blue, textTransform: "none" }}>
+              Ouvrir
+            </Button>
+            <Button variant="outlined" sx={{ borderRadius: 3, textTransform: "none" }}>
+              Exporter
+            </Button>
+          </Stack>
+        </Stack>
+      </CardContent>
+    </Card>
+  );
+}
+
+function MiniStat({ label, value }: { label: string; value: string }) {
+  return (
+    <Box sx={{ border: "1px solid rgba(15,23,42,0.10)", borderRadius: 4, p: 1.5 }}>
+      <Typography variant="caption" color="text.secondary">
+        {label}
+      </Typography>
+      <Typography variant="body2" fontWeight={700} color="text.primary" sx={{ mt: 0.25, lineHeight: 1.6 }}>
+        {value}
+      </Typography>
+    </Box>
+  );
+}
+
+function AdminResponsesRoute() {
+  return (
+    <Stack spacing={3}>
+      <Card variant="outlined">
+        <CardContent sx={{ p: { xs: 2.5, md: 3 } }}>
+          <Stack spacing={2.5} direction={{ xs: "column", lg: "row" }} justifyContent="space-between" alignItems={{ xs: "start", lg: "start" }}>
+            <Box>
+              <Chip label="Réponses" sx={{ borderRadius: 99, bgcolor: "rgba(15,24,152,0.08)", color: COLORS.blue, mb: 1.5 }} />
+              <Typography variant="h4" fontWeight={800} color="text.primary" sx={{ letterSpacing: -0.5 }}>
+                Réponses
+              </Typography>
+              <Typography variant="body1" color="text.secondary" sx={{ mt: 1, lineHeight: 1.7, maxWidth: 860 }}>
+                Suivi des soumissions collectées par campagne, avec accès rapide aux dossiers de collecte.
+              </Typography>
+            </Box>
+
+            <Stack direction={{ xs: "column", sm: "row" }} spacing={1.2}>
+              <Button variant="contained" disableElevation startIcon={<Download size={16} />} sx={{ borderRadius: 3, bgcolor: COLORS.blue, textTransform: "none" }}>
+                Exporter
+              </Button>
+              <Button variant="outlined" startIcon={<FileText size={16} />} sx={{ borderRadius: 3, textTransform: "none" }}>
+                Détail
+              </Button>
             </Stack>
+          </Stack>
+        </CardContent>
+      </Card>
 
-            <DataTable
-                data={data?.items ?? []}
-                columns={columns}
-                isLoading={isLoading}
-                skeletonRowCount={5}
-                minWidth={700}
-                sortableHeaders
-                cardSx={{ borderRadius: 2.5, boxShadow: '0 2px 10px rgba(0,0,0,0.02)', overflow: 'hidden' }}
-                tableOptions={{
-                    state: { sorting, globalFilter },
-                    onSortingChange: setSorting,
-                    onGlobalFilterChange: setGlobalFilter,
-                    getSortedRowModel: getSortedRowModel(),
-                    getFilteredRowModel: getFilteredRowModel(),
-                    manualPagination: true,
-                    pageCount: data?.pages ?? 1,
-                }}
-                toolbar={
-                    <Box
-                        sx={{
-                            display: 'flex',
-                            flexDirection: { xs: 'column', sm: 'row' },
-                            gap: 2,
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                            width: '100%',
-                        }}
-                    >
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: 'text.secondary' }}>
-                            <Filter size={18} />
-                        </Box>
+      <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "repeat(4, minmax(0, 1fr))" }, gap: 2 }}>
+        <StatCard label="Soumissions" value="3" helper="tous types confondus" icon={MessageSquareText} />
+        <StatCard label="Complétées" value="1" helper="collecte validée" icon={BadgeCheck} />
+        <StatCard label="En cours" value="1" helper="feedbacks pairs" icon={Sparkles} />
+        <StatCard label="En attente" value="1" helper="test non démarré" icon={Users} />
+      </Box>
 
-                        <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', width: { xs: '100%', md: 'auto' } }}>
-                            <FormControl size="small" sx={{ minWidth: 220, flexGrow: { xs: 1, sm: 0 } }}>
-                                <InputLabel>Type de questionnaire</InputLabel>
-                                <Select
-                                    label="Type de questionnaire"
-                                    value={selectedQid}
-                                    onChange={e => {
-                                        setSelectedQid(e.target.value);
-                                        setPage(1);
-                                    }}
-                                    sx={{ borderRadius: 2 }}
-                                >
-                                    <MenuItem value="">
-                                        <em>Tous les questionnaires</em>
-                                    </MenuItem>
-                                    {questionnaires?.map(q => (
-                                        <MenuItem key={q.id} value={q.id}>
-                                            {q.id} — {q.title.split('—')[1]?.trim() || q.title}
-                                        </MenuItem>
-                                    ))}
-                                </Select>
-                            </FormControl>
+      <Card variant="outlined">
+        <CardContent sx={{ p: 2.5 }}>
+          <SectionTitle
+            title="Liste des soumissions"
+            subtitle="Chaque ligne correspond à un type de réponse relié à une campagne et à un participant."
+            action={<TextField size="small" placeholder="Rechercher une soumission…" sx={{ minWidth: 300 }} />}
+          />
 
-                            <TextField
-                                size="small"
-                                placeholder="Rechercher (nom, email)..."
-                                value={globalFilter}
-                                onChange={e => setGlobalFilter(e.target.value)}
-                                InputProps={{
-                                    startAdornment: (
-                                        <InputAdornment position="start">
-                                            <Search size={18} />
-                                        </InputAdornment>
-                                    ),
-                                    sx: { borderRadius: 2 },
-                                }}
-                                sx={{ flexGrow: 1, minWidth: { xs: '100%', sm: 280 } }}
-                            />
-                        </Box>
-                    </Box>
-                }
-                afterRows={
-                    !isLoading && (data?.items?.length ?? 0) === 0 ? (
-                        <TableRow>
-                            <TableCell colSpan={columns.length} align="center" sx={{ py: 8 }}>
-                                <FileText size={48} color="#e5e7eb" style={{ marginBottom: 16 }} />
-                                <Typography variant="h6" color="text.primary" fontWeight={700} gutterBottom>
-                                    Aucune réponse trouvée
-                                </Typography>
-                                <Typography variant="body2" color="text.secondary">
-                                    Modifiez vos filtres ou attendez que les participants soumettent leurs évaluations.
-                                </Typography>
-                            </TableCell>
-                        </TableRow>
-                    ) : null
-                }
-                footer={
-                    (data?.pages ?? 1) > 1 ? (
-                        <Box
-                            sx={{
-                                display: 'flex',
-                                justifyContent: 'space-between',
-                                alignItems: 'center',
-                                p: 2,
-                                bgcolor: 'background.default',
-                                borderTop: '1px solid',
-                                borderColor: 'divider',
-                            }}
-                        >
-                            <Button
-                                size="small"
-                                variant="outlined"
-                                disabled={page === 1}
-                                onClick={() => setPage(page - 1)}
-                                sx={{ borderColor: 'divider', color: 'text.primary', bgcolor: 'background.paper' }}
-                            >
-                                Précédent
-                            </Button>
-                            <Typography variant="body2" color="text.secondary" fontWeight={600}>
-                                Page {page} sur {data?.pages}
-                            </Typography>
-                            <Button
-                                size="small"
-                                variant="outlined"
-                                disabled={page === data?.pages}
-                                onClick={() => setPage(page + 1)}
-                                sx={{ borderColor: 'divider', color: 'text.primary', bgcolor: 'background.paper' }}
-                            >
-                                Suivant
-                            </Button>
-                        </Box>
-                    ) : null
-                }
-            />
+          <Box sx={{ display: { xs: "none", lg: "block" }, overflowX: "auto" }}>
+            <Table sx={{ minWidth: 1100 }}>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Type</TableCell>
+                  <TableCell>Campagne</TableCell>
+                  <TableCell>Entreprise</TableCell>
+                  <TableCell>Réponses</TableCell>
+                  <TableCell>Statut</TableCell>
+                  <TableCell>Mis à jour</TableCell>
+                  <TableCell />
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {responses.map((response) => (
+                  <ResponseRowView key={`${response.type}-${response.campaign}`} response={response} />
+                ))}
+              </TableBody>
+            </Table>
+          </Box>
 
-            {/* Modale de Suppression */}
-            <Dialog
-                open={!!eraseRow}
-                onClose={() => !deleteMut.isPending && setEraseRow(null)}
-                maxWidth="sm"
-                fullWidth
-                PaperProps={{ sx: { borderRadius: 3 } }}
-            >
-                <DialogTitle
-                    sx={{
-                        fontWeight: 800,
-                        color: 'error.main',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 1,
-                        pt: 3,
-                        px: 3,
-                    }}
-                >
-                    <AlertCircle size={24} />
-                    Suppression définitive
-                </DialogTitle>
-                <DialogContent sx={{ px: 3 }}>
-                    <Alert severity="error" sx={{ mb: 3, mt: 1, borderRadius: 2 }}>
-                        La soumission du{' '}
-                        <strong>{eraseRow && new Date(eraseRow.submitted_at).toLocaleDateString('fr-FR')}</strong> pour{' '}
-                        <strong>{eraseRow?.name}</strong> ({eraseRow?.email}) et tous les scores associés seront
-                        supprimés de manière irréversible. Les liens publics existants cesseront de fonctionner.
-                    </Alert>
+          <Stack spacing={2} sx={{ display: { xs: "flex", lg: "none" }, mt: 2 }}>
+            {responses.map((response) => (
+              <ResponseCard key={`${response.type}-${response.campaign}`} response={response} />
+            ))}
+          </Stack>
+        </CardContent>
+      </Card>
 
-                    <Box
-                        sx={{
-                            bgcolor: 'background.default',
-                            p: 2,
-                            borderRadius: 2,
-                            border: '1px solid',
-                            borderColor: 'divider',
-                        }}
-                    >
-                        <Typography variant="body2" color="text.primary" sx={{ mb: 1 }}>
-                            Veuillez taper <strong>{ERASE_CONFIRM_PHRASE}</strong> pour confirmer cette action :
-                        </Typography>
-                        <TextField
-                            fullWidth
-                            size="small"
-                            value={eraseConfirmText}
-                            onChange={e => setEraseConfirmText(e.target.value)}
-                            placeholder={ERASE_CONFIRM_PHRASE}
-                            disabled={deleteMut.isPending}
-                            autoFocus
-                            sx={{ bgcolor: 'background.paper', borderRadius: 1 }}
-                        />
-                    </Box>
+      <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", xl: "1.2fr 0.8fr" }, gap: 3, alignItems: "start" }}>
+        <Card variant="outlined">
+          <CardContent sx={{ p: 2.5 }}>
+            <SectionTitle title="Accès rapides" subtitle="Les vues les plus utiles pour la collecte." />
+            <Stack spacing={1.2} sx={{ mt: 2 }}>
+              <Button variant="outlined" startIcon={<ClipboardList size={16} />} sx={{ justifyContent: "space-between", borderRadius: 3, textTransform: "none" }}>
+                Voir les campagnes concernées
+              </Button>
+              <Button variant="outlined" startIcon={<Users size={16} />} sx={{ justifyContent: "space-between", borderRadius: 3, textTransform: "none" }}>
+                Voir les participants actifs
+              </Button>
+              <Button variant="outlined" startIcon={<Sparkles size={16} />} sx={{ justifyContent: "space-between", borderRadius: 3, textTransform: "none" }}>
+                Voir les questionnaires assignés
+              </Button>
+            </Stack>
+          </CardContent>
+        </Card>
 
-                    {deleteMut.isError && (
-                        <Alert severity="error" sx={{ mt: 2 }}>
-                            Impossible de supprimer la réponse. Veuillez réessayer.
-                        </Alert>
-                    )}
-                </DialogContent>
-                <DialogActions sx={{ px: 3, pb: 3, pt: 1, gap: 1 }}>
-                    <Button
-                        onClick={() => setEraseRow(null)}
-                        disabled={deleteMut.isPending}
-                        variant="outlined"
-                        color="inherit"
-                        sx={{ borderColor: 'divider' }}
-                    >
-                        Annuler
-                    </Button>
-                    <Button
-                        variant="contained"
-                        color="error"
-                        startIcon={<Trash2 size={18} />}
-                        disabled={deleteMut.isPending || eraseConfirmText.trim() !== ERASE_CONFIRM_PHRASE}
-                        onClick={async () => {
-                            if (!eraseRow) return;
-                            await deleteMut.mutateAsync({ responseId: eraseRow.id });
-                            setEraseRow(null);
-                            setEraseConfirmText('');
-                        }}
-                        sx={{ fontWeight: 700 }}
-                    >
-                        {deleteMut.isPending ? 'Suppression en cours…' : 'Supprimer définitivement'}
-                    </Button>
-                </DialogActions>
-            </Dialog>
-        </Box>
-    );
+        <Card variant="outlined">
+          <CardContent sx={{ p: 2.5 }}>
+            <SectionTitle title="Lecture rapide" subtitle="La page doit aider à repérer ce qui bloque la collecte." />
+            <Box sx={{ border: "1px solid rgba(15,23,42,0.10)", borderRadius: 4, p: 2, mt: 2 }}>
+              <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.8 }}>
+                Un admin doit pouvoir identifier immédiatement les réponses complétées, celles en cours, et les éléments encore attendus avant restitution.
+              </Typography>
+            </Box>
+          </CardContent>
+        </Card>
+      </Box>
+    </Stack>
+  );
 }

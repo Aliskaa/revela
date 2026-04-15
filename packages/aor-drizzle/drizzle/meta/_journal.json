@@ -78,6 +78,20 @@
       "when": 1776287187573,
       "tag": "0010_perpetual_puma",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1776290862456,
+      "tag": "0011_regular_beyonder",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1776291273021,
+      "tag": "0012_marvelous_midnight",
+      "breakpoints": true
     }
   ]
 }

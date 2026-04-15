@@ -1,566 +1,366 @@
-import { downloadAdminBlob } from '@/api/downloads';
-import type { Company } from '@/api/types';
-import { DataTable } from '@/components/common/DataTable';
-import CompanyForm, { type CompanyFormHandle } from '@/components/company/form';
-import { useCompanies, useDeleteCompany, useUpdateCompany } from '@/hooks/admin';
-import { useAdminQuestionnaires } from '@/hooks/questionnaires';
+import { AdminCompanyDrawerForm, CompanyFormValues } from "@/components/admin/AdminCompanyDrawerForm";
 import {
-    Alert,
     Box,
     Button,
-    Dialog,
-    DialogActions,
-    DialogContent,
-    DialogTitle,
-    FormControl,
-    IconButton,
-    InputAdornment,
-    InputLabel,
-    MenuItem,
-    Select,
+    Card,
+    CardContent,
+    Chip,
     Stack,
+    Table,
+    TableBody,
     TableCell,
+    TableHead,
     TableRow,
     TextField,
-    Tooltip,
     Typography,
-} from '@mui/material';
-import { Link, createFileRoute } from '@tanstack/react-router';
-import type { ColumnDef } from '@tanstack/react-table';
-import { Building2, Download, Filter, Pencil, Plus, Search, Trash2, Users } from 'lucide-react';
-import { useMemo, useRef, useState } from 'react';
+} from "@mui/material";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import {
+    ArrowRight,
+    BadgeCheck,
+    Building2,
+    CalendarDays,
+    ClipboardList,
+    Mail,
+    Plus,
+    Sparkles,
+    Users
+} from "lucide-react";
+import * as React from "react";
 
-export const Route = createFileRoute('/admin/companies/')({
-    component: AdminCompaniesPage,
+export const Route = createFileRoute("/admin/companies/")({
+    component: AdminCompaniesRoute,
 });
 
-const readApiError = (err: unknown): string => {
-    if (typeof err === 'object' && err !== null && 'response' in err) {
-        const data = (err as { response?: { data?: { error?: string } } }).response?.data;
-        if (data?.error) {
-            return data.error;
-        }
-    }
-    return err instanceof Error ? err.message : 'Erreur inconnue.';
+const COLORS = {
+    blue: "rgb(15,24,152)",
+    yellow: "rgb(255,204,0)",
+    border: "rgba(15,23,42,0.10)",
 };
 
-function AdminCompaniesPage() {
-    const { data, isLoading } = useCompanies();
-    const { data: questionnaires } = useAdminQuestionnaires();
-    const updateCompany = useUpdateCompany();
-    const deleteCompany = useDeleteCompany();
-    const companyFormRef = useRef<CompanyFormHandle>(null);
+type CompanyRow = {
+    name: string;
+    contact: string;
+    email: string;
+    campaigns: number;
+    participants: number;
+    status: "active" | "inactive";
+    updatedAt: string;
+};
 
-    // États de l'export
-    const [exportCompany, setExportCompany] = useState<Company | null>(null);
-    const [exportQid, setExportQid] = useState('');
-    const [exportLoading, setExportLoading] = useState(false);
-    const [exportError, setExportError] = useState<string | null>(null);
+const companies: CompanyRow[] = [
+    {
+        name: "Ville de Lyon",
+        contact: "Sophie Bernard",
+        email: "sophie.bernard@ville-lyon.fr",
+        campaigns: 2,
+        participants: 2,
+        status: "active",
+        updatedAt: "Mis à jour il y a 2 jours",
+    },
+    {
+        name: "Métropole du Nord",
+        contact: "Hugo Martin",
+        email: "hugo.martin@metropole-nord.fr",
+        campaigns: 1,
+        participants: 1,
+        status: "active",
+        updatedAt: "Mis à jour hier",
+    },
+    {
+        name: "Cabinet AOR Test",
+        contact: "Laura Petit",
+        email: "laura.petit@aor.fr",
+        campaigns: 0,
+        participants: 0,
+        status: "inactive",
+        updatedAt: "Créé la semaine dernière",
+    },
+];
 
-    const [searchQuery, setSearchQuery] = useState('');
-    const [companyFormOpen, setCompanyFormOpen] = useState(false);
-    const [editingCompanyId, setEditingCompanyId] = useState<number | null>(null);
-    const [formName, setFormName] = useState('');
-    const [formContactName, setFormContactName] = useState('');
-    const [formContactEmail, setFormContactEmail] = useState('');
-    const [formError, setFormError] = useState<string | null>(null);
-    const [deleteTarget, setDeleteTarget] = useState<Company | null>(null);
-    const [deleteError, setDeleteError] = useState<string | null>(null);
-
-    // Filtrage des données
-    const filteredData = useMemo(() => {
-        if (!data) return [];
-        if (!searchQuery.trim()) return data;
-        const lowerQuery = searchQuery.toLowerCase();
-        return data.filter(c => c.name.toLowerCase().includes(lowerQuery));
-    }, [data, searchQuery]);
-
-    const columns = useMemo<ColumnDef<Company>[]>(
-        () => [
-            {
-                accessorKey: 'name',
-                header: 'Entreprise',
-                cell: ({ row }) => (
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                        <Box
-                            sx={{
-                                p: 1.2,
-                                borderRadius: 2,
-                                bgcolor: 'rgba(21, 21, 176, 0.08)', // primary main avec opacité
-                                color: 'primary.main',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                            }}
-                        >
-                            <Building2 size={20} />
-                        </Box>
-                        <Typography variant="body1" fontWeight={700} sx={{ color: 'text.primary' }}>
-                            {row.original.name}
-                        </Typography>
-                    </Box>
-                ),
-            },
-            {
-                id: 'contact',
-                header: 'Contact Principal',
-                cell: ({ row }) => {
-                    const c = row.original;
-                    if (!c.contact_name && !c.contact_email) {
-                        return (
-                            <Typography variant="body2" color="text.disabled" fontStyle="italic">
-                                Non renseigné
-                            </Typography>
-                        );
-                    }
-                    return (
-                        <Box>
-                            {c.contact_name && (
-                                <Typography variant="body2" fontWeight={600} color="text.primary">
-                                    {c.contact_name}
-                                </Typography>
-                            )}
-                            {c.contact_email && (
-                                <Typography variant="caption" color="text.secondary">
-                                    {c.contact_email}
-                                </Typography>
-                            )}
-                        </Box>
-                    );
-                },
-            },
-            {
-                accessorKey: 'participant_count',
-                header: 'Participants',
-                cell: ({ getValue }) => (
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Users size={16} className="text-secondary" color="#6b7280" />
-                        <Typography variant="body2" fontWeight={700} color="primary.main">
-                            {getValue() as number}
-                        </Typography>
-                    </Box>
-                ),
-            },
-            {
-                id: 'actions',
-                header: '',
-                cell: ({ row }) => (
-                    <Stack direction="row" spacing={1} justifyContent="flex-end" flexWrap="wrap" useFlexGap>
-                        <Tooltip title="Modifier">
-                            <IconButton
-                                size="small"
-                                onClick={() => {
-                                    setEditingCompanyId(row.original.id);
-                                    setFormName(row.original.name);
-                                    setFormContactName(row.original.contact_name ?? '');
-                                    setFormContactEmail(row.original.contact_email ?? '');
-                                    setFormError(null);
-                                    setCompanyFormOpen(true);
-                                }}
-                                sx={{
-                                    color: 'text.disabled',
-                                    '&:hover': { color: 'primary.main', bgcolor: 'primary.lighter' },
-                                }}
-                            >
-                                <Pencil size={18} />
-                            </IconButton>
-                        </Tooltip>
-                        <Link
-                            to="/admin/participants"
-                            search={{ companyId: row.original.id }}
-                            style={{ textDecoration: 'none' }}
-                        >
-                            <Tooltip title="Voir les participants">
-                                <IconButton
-                                    size="small"
-                                    sx={{
-                                        color: 'text.disabled',
-                                        '&:hover': { color: 'primary.main', bgcolor: 'primary.lighter' },
-                                    }}
-                                >
-                                    <Users size={18} />
-                                </IconButton>
-                            </Tooltip>
-                        </Link>
-                        <Tooltip title="Export">
-                            <IconButton
-                                size="small"
-                                onClick={() => {
-                                    setExportCompany(row.original);
-                                    setExportQid('');
-                                    setExportError(null);
-                                }}
-                                sx={{
-                                    color: 'text.disabled',
-                                    '&:hover': { color: 'primary.main', bgcolor: 'primary.lighter' },
-                                }}
-                            >
-                                <Download size={18} />
-                            </IconButton>
-                        </Tooltip>
-                        <Tooltip title="Supprimer (RGPD)">
-                            <IconButton
-                                size="small"
-                                onClick={() => {
-                                    setDeleteTarget(row.original);
-                                    setDeleteError(null);
-                                }}
-                                sx={{
-                                    color: 'text.disabled',
-                                    '&:hover': { color: 'error.main', bgcolor: 'error.lighter' },
-                                }}
-                            >
-                                <Trash2 size={18} />
-                            </IconButton>
-                        </Tooltip>
-                    </Stack>
-                ),
-            },
-        ],
-        []
-    );
-
-    const closeCompanyForm = () => {
-        setCompanyFormOpen(false);
-        setEditingCompanyId(null);
-        setFormError(null);
-    };
-
-    const openCreateCompany = () => {
-        companyFormRef.current?.open();
-    };
-
-    const handleSaveCompany = async () => {
-        if (editingCompanyId === null) {
-            return;
-        }
-        setFormError(null);
-        try {
-            await updateCompany.mutateAsync({
-                companyId: editingCompanyId,
-                name: formName.trim(),
-                contactName: formContactName.trim() || null,
-                contactEmail: formContactEmail.trim() || null,
-            });
-            closeCompanyForm();
-        } catch (e) {
-            setFormError(readApiError(e));
-        }
-    };
-
-    const handleConfirmDelete = async () => {
-        if (!deleteTarget) {
-            return;
-        }
-        setDeleteError(null);
-        try {
-            await deleteCompany.mutateAsync({ companyId: deleteTarget.id });
-            setDeleteTarget(null);
-        } catch (e) {
-            setDeleteError(readApiError(e));
-        }
-    };
-
-    async function handleExportAnonymized() {
-        if (!exportCompany || !exportQid) return;
-        setExportLoading(true);
-        setExportError(null);
-        try {
-            await downloadAdminBlob('/admin/export/responses/anonymized', {
-                qid: exportQid,
-                company_id: exportCompany.id,
-            });
-            setExportCompany(null);
-        } catch {
-            setExportError('Échec du téléchargement. Vérifiez le questionnaire et votre session.');
-        } finally {
-            setExportLoading(false);
-        }
-    }
-
+function SectionTitle({ title, subtitle, action }: { title: string; subtitle?: string; action?: React.ReactNode }) {
     return (
-        <Box sx={{ maxWidth: 1400, mx: 'auto', p: { xs: 2, sm: 3, md: 4 } }}>
-            {/* En-tête avec barre de recherche */}
-            <Stack
-                direction={{ xs: 'column', md: 'row' }}
-                justifyContent="space-between"
-                alignItems={{ xs: 'flex-start', md: 'flex-end' }}
-                spacing={3}
-                sx={{ mb: 4 }}
-            >
-                <Box>
-                    <Typography variant="h4" fontWeight={800} sx={{ color: 'primary.main', mb: 0.5 }}>
-                        Entreprises
+        <Stack direction="row" alignItems="start" justifyContent="space-between" spacing={2} sx={{ mb: 2 }}>
+            <Box>
+                <Typography variant="h5" fontWeight={800} color="text.primary" sx={{ letterSpacing: -0.4 }}>
+                    {title}
+                </Typography>
+                {subtitle ? (
+                    <Typography variant="body2" color="text.secondary" sx={{ mt: 0.7, lineHeight: 1.7 }}>
+                        {subtitle}
                     </Typography>
-                    <Typography variant="body1" color="text.secondary">
-                        Gérez vos {data?.length ?? 0} entreprise{(data?.length ?? 0) > 1 ? 's' : ''} clientes et
-                        exportez les données anonymisées.
-                    </Typography>
-                </Box>
-                <CompanyForm ref={companyFormRef} />
-            </Stack>
+                ) : null}
+            </Box>
+            {action}
+        </Stack>
+    );
+}
 
-            <DataTable
-                data={filteredData}
-                columns={columns}
-                isLoading={isLoading}
-                toolbar={
-                    <Box
-                        sx={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                            gap: 2,
-                            flexWrap: 'wrap',
-                        }}
-                    >
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: 'text.secondary' }}>
-                            <Filter size={18} />
-                            <Typography variant="body2" fontWeight={600}>
-                                Recherche :
+function StatCard({ label, value, helper, icon: Icon }: { label: string; value: string; helper: string; icon: React.ElementType }) {
+    return (
+        <Card variant="outlined">
+            <CardContent sx={{ p: 2.5 }}>
+                <Stack direction="row" justifyContent="space-between" alignItems="end">
+                    <Box>
+                        <Typography variant="body2" color="text.secondary">
+                            {label}
+                        </Typography>
+                        <Typography variant="h4" fontWeight={800} color="text.primary" sx={{ mt: 0.4, letterSpacing: -0.5 }}>
+                            {value}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                            {helper}
+                        </Typography>
+                    </Box>
+                    <Box sx={{ width: 42, height: 42, borderRadius: 3, bgcolor: "rgba(15,24,152,0.08)", color: COLORS.blue, display: "grid", placeItems: "center" }}>
+                        <Icon size={18} />
+                    </Box>
+                </Stack>
+            </CardContent>
+        </Card>
+    );
+}
+
+function StatusChip({ status }: { status: CompanyRow["status"] }) {
+    if (status === "active") return <Chip label="Active" size="small" sx={{ borderRadius: 99, bgcolor: "rgba(16,185,129,0.12)", color: "rgb(4,120,87)" }} />;
+    return <Chip label="Inactif" size="small" sx={{ borderRadius: 99, bgcolor: "rgba(148,163,184,0.16)", color: "rgb(100,116,139)" }} />;
+}
+
+function CompanyRowView({ company }: { company: CompanyRow }) {
+    return (
+        <TableRow hover>
+            <TableCell>
+                <Typography fontWeight={700} color="text.primary">
+                    {company.name}
+                </Typography>
+            </TableCell>
+            <TableCell>
+                <Typography fontWeight={600} color="text.primary">
+                    {company.contact}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                    {company.email}
+                </Typography>
+            </TableCell>
+            <TableCell>{company.campaigns}</TableCell>
+            <TableCell>{company.participants}</TableCell>
+            <TableCell>
+                <StatusChip status={company.status} />
+            </TableCell>
+            <TableCell>{company.updatedAt}</TableCell>
+            <TableCell align="right">
+                <Button component={Link} to="/admin/campaigns/camp-2026-lyon" variant="text" endIcon={<ArrowRight size={16} />} sx={{ textTransform: "none" }}>
+                    Ouvrir
+                </Button>
+            </TableCell>
+        </TableRow>
+    );
+}
+
+function CompanyCard({ company }: { company: CompanyRow }) {
+    return (
+        <Card variant="outlined">
+            <CardContent sx={{ p: 2.5 }}>
+                <Stack spacing={1.8}>
+                    <Stack direction="row" justifyContent="space-between" alignItems="start" spacing={2}>
+                        <Box>
+                            <Typography variant="h6" fontWeight={800} color="text.primary">
+                                {company.name}
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.4 }}>
+                                {company.contact}
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary">
+                                {company.email}
+                            </Typography>
+                        </Box>
+                        <StatusChip status={company.status} />
+                    </Stack>
+
+                    <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "repeat(3, minmax(0, 1fr))" }, gap: 1.2 }}>
+                        <MiniStat label="Campagnes" value={String(company.campaigns)} />
+                        <MiniStat label="Participants" value={String(company.participants)} />
+                        <MiniStat label="Maj" value={company.updatedAt} />
+                    </Box>
+
+                    <Stack direction={{ xs: "column", sm: "row" }} spacing={1.2}>
+                        <Button variant="contained" disableElevation component={Link} to="/admin/campaigns/camp-2026-lyon" startIcon={<ArrowRight size={16} />} sx={{ borderRadius: 3, bgcolor: COLORS.blue, textTransform: "none" }}>
+                            Ouvrir
+                        </Button>
+                        <Button variant="outlined" sx={{ borderRadius: 3, textTransform: "none" }}>
+                            Éditer
+                        </Button>
+                    </Stack>
+                </Stack>
+            </CardContent>
+        </Card>
+    );
+}
+
+function MiniStat({ label, value }: { label: string; value: string }) {
+    return (
+        <Box sx={{ border: "1px solid rgba(15,23,42,0.10)", borderRadius: 4, p: 1.5 }}>
+            <Typography variant="caption" color="text.secondary">
+                {label}
+            </Typography>
+            <Typography variant="body2" fontWeight={700} color="text.primary" sx={{ mt: 0.25, lineHeight: 1.6 }}>
+                {value}
+            </Typography>
+        </Box>
+    );
+}
+
+function AdminCompaniesRoute() {
+    const [drawerOpen, setDrawerOpen] = React.useState(false);
+    const [editingCompany, setEditingCompany] = React.useState<CompanyRow | null>(null);
+
+    const handleCreate = () => {
+        setEditingCompany(null);
+        setDrawerOpen(true);
+    };
+
+    const handleEdit = (company: CompanyRow) => {
+        setEditingCompany(company);
+        setDrawerOpen(true);
+    };
+
+    const initialValues: Partial<CompanyFormValues> | undefined = editingCompany
+        ? {
+            name: editingCompany.name,
+            contactName: editingCompany.contact,
+            contactEmail: editingCompany.email,
+            campaignCount: editingCompany.campaigns,
+            participantCount: editingCompany.participants,
+            status: editingCompany.status,
+            notes: `${editingCompany.name} · ${editingCompany.updatedAt}`,
+        }
+        : undefined;
+    return (
+        <Stack spacing={3}>
+            <AdminCompanyDrawerForm
+                open={drawerOpen}
+                mode={editingCompany ? "edit" : "create"}
+                initialValues={initialValues}
+                onClose={() => setDrawerOpen(false)}
+                onSubmit={(values) => {
+                    console.log(values);
+                    setDrawerOpen(false);
+                }}
+            />
+            <Card variant="outlined">
+                <CardContent sx={{ p: { xs: 2.5, md: 3 } }}>
+                    <Stack spacing={2.5} direction={{ xs: "column", lg: "row" }} justifyContent="space-between" alignItems={{ xs: "start", lg: "start" }}>
+                        <Box>
+                            <Chip label="Entreprises" sx={{ borderRadius: 99, bgcolor: "rgba(15,24,152,0.08)", color: COLORS.blue, mb: 1.5 }} />
+                            <Typography variant="h4" fontWeight={800} color="text.primary" sx={{ letterSpacing: -0.5 }}>
+                                Entreprises
+                            </Typography>
+                            <Typography variant="body1" color="text.secondary" sx={{ mt: 1, lineHeight: 1.7, maxWidth: 860 }}>
+                                Référentiel des entreprises clientes, avec leurs campagnes, leurs participants et leurs contacts.
                             </Typography>
                         </Box>
 
-                        <TextField
-                            size="small"
-                            placeholder="Rechercher une entreprise..."
-                            value={searchQuery}
-                            onChange={e => setSearchQuery(e.target.value)}
-                            InputProps={{
-                                startAdornment: (
-                                    <InputAdornment position="start">
-                                        <Search size={18} />
-                                    </InputAdornment>
-                                ),
-                                sx: { borderRadius: 2, bgcolor: 'background.default' },
-                            }}
-                            sx={{ width: { xs: '100%', md: 400 } }}
-                        />
-                    </Box>
-                }
-                afterRows={
-                    <>
-                        {!isLoading && (data?.length ?? 0) === 0 && (
-                            <TableRow>
-                                <TableCell colSpan={columns.length} align="center" sx={{ py: 6 }}>
-                                    <Building2 size={48} color="#e5e7eb" style={{ marginBottom: 16 }} />
-                                    <Typography variant="h6" color="text.primary" fontWeight={700} gutterBottom>
-                                        Aucune entreprise
-                                    </Typography>
-                                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                                        Importez un fichier CSV de participants contenant une colonne{' '}
-                                        <code>company_name</code> pour créer votre première entreprise, ou utilisez le
-                                        bouton « Nouvelle entreprise ».
-                                    </Typography>
-                                    <Button
-                                        variant="contained"
-                                        color="primary"
-                                        startIcon={<Plus size={18} />}
-                                        onClick={openCreateCompany}
-                                    >
-                                        Nouvelle entreprise
-                                    </Button>
-                                </TableCell>
-                            </TableRow>
-                        )}
-                        {!isLoading && (data?.length ?? 0) > 0 && filteredData.length === 0 && (
-                            <TableRow>
-                                <TableCell colSpan={columns.length} align="center" sx={{ py: 6 }}>
-                                    <Search size={48} color="#e5e7eb" style={{ marginBottom: 16 }} />
-                                    <Typography variant="body1" color="text.secondary">
-                                        Aucune entreprise ne correspond à "<strong>{searchQuery}</strong>".
-                                    </Typography>
-                                </TableCell>
-                            </TableRow>
-                        )}
-                    </>
-                }
-            />
-
-            <Dialog
-                open={companyFormOpen}
-                onClose={closeCompanyForm}
-                maxWidth="sm"
-                fullWidth
-                PaperProps={{
-                    sx: {
-                        borderRadius: 3,
-                        boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
-                    },
-                }}
-            >
-                <DialogTitle sx={{ fontWeight: 800, pb: 1, pt: 3, px: 3, color: 'primary.main' }}>
-                    {"Modifier l'entreprise"}
-                </DialogTitle>
-                <DialogContent sx={{ px: 3 }}>
-                    <Stack spacing={2.5} sx={{ mt: 1 }}>
-                        <TextField
-                            label="Nom"
-                            fullWidth
-                            required
-                            value={formName}
-                            onChange={e => setFormName(e.target.value)}
-                        />
-                        <TextField
-                            label="Contact principal (nom)"
-                            fullWidth
-                            value={formContactName}
-                            onChange={e => setFormContactName(e.target.value)}
-                        />
-                        <TextField
-                            label="Contact principal (e-mail)"
-                            fullWidth
-                            type="email"
-                            value={formContactEmail}
-                            onChange={e => setFormContactEmail(e.target.value)}
-                        />
-                        {formError && (
-                            <Alert severity="error" sx={{ borderRadius: 2 }}>
-                                {formError}
-                            </Alert>
-                        )}
+                        <Button onClick={handleCreate} variant="contained" disableElevation startIcon={<Plus size={16} />} sx={{ borderRadius: 3, bgcolor: COLORS.blue, textTransform: "none" }}>
+                            Ajouter une entreprise
+                        </Button>
                     </Stack>
-                </DialogContent>
-                <DialogActions sx={{ px: 3, pb: 3, pt: 2, gap: 1 }}>
-                    <Button
-                        onClick={closeCompanyForm}
-                        color="inherit"
-                        variant="outlined"
-                        sx={{ borderColor: 'divider' }}
-                    >
-                        Annuler
-                    </Button>
-                    <Button
-                        variant="contained"
-                        color="primary"
-                        disabled={updateCompany.isPending || formName.trim().length === 0}
-                        onClick={handleSaveCompany}
-                        sx={{ fontWeight: 700 }}
-                    >
-                        {updateCompany.isPending ? 'Enregistrement…' : 'Enregistrer'}
-                    </Button>
-                </DialogActions>
-            </Dialog>
+                </CardContent>
+            </Card>
 
-            <Dialog
-                open={!!deleteTarget}
-                onClose={() => !deleteCompany.isPending && setDeleteTarget(null)}
-                maxWidth="xs"
-                fullWidth
-                PaperProps={{ sx: { borderRadius: 3 } }}
-            >
-                <DialogTitle sx={{ fontWeight: 800, color: 'error.main' }}>{"Supprimer l'entreprise ?"}</DialogTitle>
-                <DialogContent>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                        L&apos;entreprise <strong>{deleteTarget?.name}</strong> sera supprimée définitivement, ainsi que
-                        toutes ses campagnes. Les réponses déjà enregistrées sont conservées, sans lien vers une
-                        campagne. Impossible tant qu&apos;il reste des participants rattachés à cette entreprise.
-                    </Typography>
-                    {deleteError && (
-                        <Alert severity="error" sx={{ borderRadius: 2 }}>
-                            {deleteError}
-                        </Alert>
-                    )}
-                </DialogContent>
-                <DialogActions sx={{ px: 3, pb: 2 }}>
-                    <Button onClick={() => setDeleteTarget(null)} disabled={deleteCompany.isPending} color="inherit">
-                        Annuler
-                    </Button>
-                    <Button
-                        variant="contained"
-                        color="error"
-                        disabled={deleteCompany.isPending}
-                        onClick={handleConfirmDelete}
-                    >
-                        {deleteCompany.isPending ? 'Suppression…' : 'Supprimer'}
-                    </Button>
-                </DialogActions>
-            </Dialog>
+            <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "repeat(4, minmax(0, 1fr))" }, gap: 2 }}>
+                <StatCard label="Entreprises" value="3" helper="référencées" icon={Building2} />
+                <StatCard label="Actives" value="2" helper="en campagne" icon={BadgeCheck} />
+                <StatCard label="Campagnes" value="3" helper="rattachées" icon={ClipboardList} />
+                <StatCard label="Participants" value="3" helper="connectés" icon={Users} />
+            </Box>
 
-            {/* Modale d'export */}
-            <Dialog
-                open={!!exportCompany}
-                onClose={() => !exportLoading && setExportCompany(null)}
-                maxWidth="sm"
-                fullWidth
-                PaperProps={{
-                    sx: {
-                        borderRadius: 3,
-                        boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
-                    },
-                }}
-            >
-                <DialogTitle sx={{ fontWeight: 800, pb: 1, pt: 3, px: 3, color: 'primary.main' }}>
-                    Export anonymisé — {exportCompany?.name}
-                </DialogTitle>
-                <DialogContent sx={{ px: 3 }}>
-                    <Alert
-                        severity="info"
-                        sx={{ mb: 3, mt: 1, borderRadius: 2, '& .MuiAlert-message': { fontWeight: 500 } }}
-                    >
-                        Le fichier CSV généré contiendra uniquement un numéro de ligne, la date de soumission et les
-                        scores finaux. <strong>Aucune donnée nominative</strong> (nom, email) ne sera incluse.
-                    </Alert>
+            <Card variant="outlined">
+                <CardContent sx={{ p: 2.5 }}>
+                    <SectionTitle
+                        title="Liste des entreprises"
+                        subtitle="Recherche rapide et accès au détail des campagnes associées."
+                        action={<TextField size="small" placeholder="Rechercher une entreprise…" sx={{ minWidth: 300 }} />}
+                    />
 
-                    <Box sx={{ mb: 1 }}>
-                        <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1.5, color: 'text.primary' }}>
-                            Sélectionnez la source des données :
-                        </Typography>
-                        <FormControl fullWidth size="medium">
-                            <InputLabel>Questionnaire cible</InputLabel>
-                            <Select
-                                label="Questionnaire cible"
-                                value={exportQid}
-                                onChange={e => setExportQid(e.target.value)}
-                                sx={{ borderRadius: 2 }}
-                            >
-                                <MenuItem value="" disabled>
-                                    <em>Choisir un questionnaire...</em>
-                                </MenuItem>
-                                {questionnaires?.map(q => (
-                                    <MenuItem key={q.id} value={q.id} sx={{ py: 1.5 }}>
-                                        <Box>
-                                            <Typography variant="body2" fontWeight={700}>
-                                                {q.title}
-                                            </Typography>
-                                            <Typography variant="caption" color="text.secondary">
-                                                ID: {q.id}
-                                            </Typography>
-                                        </Box>
-                                    </MenuItem>
+                    <Box sx={{ display: { xs: "none", lg: "block" }, overflowX: "auto" }}>
+                        <Table sx={{ minWidth: 1100 }}>
+                            <TableHead>
+                                <TableRow>
+                                    <TableCell>Entreprise</TableCell>
+                                    <TableCell>Contact</TableCell>
+                                    <TableCell>Campagnes</TableCell>
+                                    <TableCell>Participants</TableCell>
+                                    <TableCell>Statut</TableCell>
+                                    <TableCell>Mis à jour</TableCell>
+                                    <TableCell />
+                                </TableRow>
+                            </TableHead>
+                            <TableBody>
+                                {companies.map((company) => (
+                                    <CompanyRowView key={company.name} company={company} />
                                 ))}
-                            </Select>
-                        </FormControl>
+                            </TableBody>
+                        </Table>
                     </Box>
 
-                    {exportError && (
-                        <Alert severity="error" sx={{ mt: 3, borderRadius: 2 }}>
-                            {exportError}
-                        </Alert>
-                    )}
-                </DialogContent>
-                <DialogActions sx={{ px: 3, pb: 3, pt: 2, gap: 1 }}>
-                    <Button
-                        onClick={() => setExportCompany(null)}
-                        disabled={exportLoading}
-                        color="inherit"
-                        variant="outlined"
-                        sx={{ borderColor: 'divider' }}
-                    >
-                        Annuler
-                    </Button>
-                    <Button
-                        variant="contained"
-                        color="primary"
-                        startIcon={<Download size={18} />}
-                        disabled={!exportQid || exportLoading}
-                        onClick={handleExportAnonymized}
-                        sx={{ fontWeight: 700 }}
-                    >
-                        {exportLoading ? 'Génération en cours...' : 'Télécharger le fichier'}
-                    </Button>
-                </DialogActions>
-            </Dialog>
-        </Box>
+                    <Stack spacing={2} sx={{ display: { xs: "flex", lg: "none" }, mt: 2 }}>
+                        {companies.map((company) => (
+                            <CompanyCard key={company.name} company={company} />
+                        ))}
+                    </Stack>
+                </CardContent>
+            </Card>
+
+            <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", xl: "1.2fr 0.8fr" }, gap: 3, alignItems: "start" }}>
+                <Card variant="outlined">
+                    <CardContent sx={{ p: 2.5 }}>
+                        <SectionTitle title="Lecture rapide" subtitle="Ce que cette page doit aider à piloter." />
+                        <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "repeat(3, minmax(0, 1fr))" }, gap: 2, mt: 2 }}>
+                            <Card variant="outlined" sx={{ p: 2 }}>
+                                <Typography variant="caption" color="text.secondary">
+                                    Priorité
+                                </Typography>
+                                <Typography variant="body2" fontWeight={700} color="text.primary" sx={{ mt: 0.4 }}>
+                                    Les entreprises en campagne active
+                                </Typography>
+                            </Card>
+                            <Card variant="outlined" sx={{ p: 2 }}>
+                                <Typography variant="caption" color="text.secondary">
+                                    Suivi
+                                </Typography>
+                                <Typography variant="body2" fontWeight={700} color="text.primary" sx={{ mt: 0.4 }}>
+                                    Le nombre de participants rattachés
+                                </Typography>
+                            </Card>
+                            <Card variant="outlined" sx={{ p: 2 }}>
+                                <Typography variant="caption" color="text.secondary">
+                                    Action
+                                </Typography>
+                                <Typography variant="body2" fontWeight={700} color="text.primary" sx={{ mt: 0.4 }}>
+                                    Ouvrir la campagne liée
+                                </Typography>
+                            </Card>
+                        </Box>
+                    </CardContent>
+                </Card>
+
+                <Card variant="outlined">
+                    <CardContent sx={{ p: 2.5 }}>
+                        <SectionTitle title="Accès rapides" subtitle="Les actions les plus utiles." />
+                        <Stack spacing={1.2} sx={{ mt: 2 }}>
+                            <Button variant="outlined" startIcon={<CalendarDays size={16} />} sx={{ justifyContent: "space-between", borderRadius: 3, textTransform: "none" }}>
+                                Voir les campagnes de l’entreprise
+                            </Button>
+                            <Button variant="outlined" startIcon={<Mail size={16} />} sx={{ justifyContent: "space-between", borderRadius: 3, textTransform: "none" }}>
+                                Relancer un contact
+                            </Button>
+                            <Button variant="outlined" startIcon={<Sparkles size={16} />} sx={{ justifyContent: "space-between", borderRadius: 3, textTransform: "none" }}>
+                                Voir les participants actifs
+                            </Button>
+                        </Stack>
+                    </CardContent>
+                </Card>
+            </Box>
+        </Stack>
     );
 }

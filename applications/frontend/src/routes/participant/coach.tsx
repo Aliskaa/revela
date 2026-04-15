@@ -1,4 +1,6 @@
 import * as React from "react";
+import { useParticipantSession } from "@/hooks/participantSession";
+import type { ParticipantSession } from "@/api/types";
 import { createFileRoute } from "@tanstack/react-router";
 import {
   CalendarCheck2,
@@ -11,12 +13,13 @@ import {
   Video,
 } from "lucide-react";
 import {
+  Alert,
   Box,
   Button,
   Card,
   CardContent,
   Chip,
-  Divider,
+  LinearProgress,
   Stack,
   TextField,
   Typography,
@@ -36,6 +39,17 @@ type ContactChannel = {
   label: string;
   value: string;
   icon: React.ElementType;
+};
+
+type ParticipantAssignment = ParticipantSession["assignments"][number];
+type CoachView = {
+  name: string;
+  title: string;
+  company: string;
+  status: string;
+  bio: string;
+  campaignName: string;
+  questionnaire: string;
 };
 
 const coach = {
@@ -59,6 +73,18 @@ const channels: ContactChannel[] = [
   { label: "Visio", value: "Lien envoyé par email", icon: Video },
 ];
 
+const coachFromAssignment = (assignment?: ParticipantAssignment): CoachView => ({
+  ...coach,
+  name: assignment?.coach_name ?? "Coach non attribue",
+  company: assignment?.company_name ?? "Organisation non renseignee",
+  status: assignment?.campaign_status === "active" ? "Disponible" : "En attente",
+  campaignName: assignment?.campaign_name ?? "Aucune campagne active",
+  questionnaire: assignment?.questionnaire_title ?? assignment?.questionnaire_id ?? "Aucun questionnaire assigne",
+  bio: assignment?.coach_name
+    ? "Votre coach accompagne la lecture des resultats et la preparation de la restitution de campagne."
+    : "Aucun coach n'est encore rattache a votre campagne participant.",
+});
+
 function SectionTitle({ title, subtitle }: { title: string; subtitle?: string }) {
   return (
     <Box>
@@ -74,13 +100,13 @@ function SectionTitle({ title, subtitle }: { title: string; subtitle?: string })
   );
 }
 
-function CoachHeader() {
+function CoachHeader({ coachView }: { coachView: CoachView }) {
   return (
     <Card variant="outlined">
       <CardContent sx={{ p: { xs: 2.5, md: 3 } }}>
         <Stack spacing={2.5} direction={{ xs: "column", lg: "row" }} justifyContent="space-between" alignItems={{ xs: "start", lg: "start" }}>
           <Box>
-            <Chip label={coach.status} sx={{ borderRadius: 99, bgcolor: "rgba(15,24,152,0.08)", color: COLORS.blue, mb: 1.5 }} />
+            <Chip label={coachView.status} sx={{ borderRadius: 99, bgcolor: "rgba(15,24,152,0.08)", color: COLORS.blue, mb: 1.5 }} />
             <Typography variant="h4" fontWeight={800} color="text.primary" sx={{ letterSpacing: -0.5 }}>
               Mon coach
             </Typography>
@@ -96,10 +122,10 @@ function CoachHeader() {
               </Box>
               <Box sx={{ minWidth: 0 }}>
                 <Typography fontWeight={800} color="text.primary">
-                  {coach.name}
+                  {coachView.name}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  {coach.title} · {coach.company}
+                  {coachView.title} · {coachView.company}
                 </Typography>
               </Box>
             </CardContent>
@@ -110,7 +136,7 @@ function CoachHeader() {
   );
 }
 
-function CoachProfileCard() {
+function CoachProfileCard({ coachView }: { coachView: CoachView }) {
   return (
     <Card variant="outlined">
       <CardContent sx={{ p: 2.5 }}>
@@ -119,7 +145,7 @@ function CoachProfileCard() {
         <Stack spacing={2.5} sx={{ mt: 1.5 }}>
           <Box sx={{ borderRadius: 4, bgcolor: "rgba(15,23,42,0.03)", p: 2.2 }}>
             <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.8 }}>
-              {coach.bio}
+              {coachView.bio}
             </Typography>
           </Box>
 
@@ -253,9 +279,34 @@ function MessageCard() {
 }
 
 function ParticipantCoachRoute() {
+  const { data: session, isLoading, isError } = useParticipantSession();
+  const activeAssignment =
+    session?.assignments.find(assignment => assignment.campaign_status === "active") ?? session?.assignments[0];
+  const coachView = coachFromAssignment(activeAssignment);
+
+  if (isLoading) {
+    return (
+      <Card variant="outlined">
+        <CardContent sx={{ p: 3 }}>
+          <Typography variant="h6" fontWeight={800} color="text.primary">
+            Chargement de votre coach
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 1, mb: 2 }}>
+            Recuperation du coach rattache a votre campagne.
+          </Typography>
+          <LinearProgress />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (isError || !session) {
+    return <Alert severity="error">Impossible de charger votre coach pour le moment.</Alert>;
+  }
+
   return (
     <Stack spacing={3}>
-      <CoachHeader />
+      <CoachHeader coachView={coachView} />
 
       <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "repeat(3, minmax(0, 1fr))" }, gap: 2 }}>
         <Card variant="outlined">
@@ -264,7 +315,7 @@ function ParticipantCoachRoute() {
               Statut
             </Typography>
             <Typography variant="h5" fontWeight={800} color="text.primary" sx={{ mt: 0.5 }}>
-              Disponible
+              {coachView.status}
             </Typography>
           </CardContent>
         </Card>
@@ -274,7 +325,7 @@ function ParticipantCoachRoute() {
               Prochaine séance
             </Typography>
             <Typography variant="h5" fontWeight={800} color="text.primary" sx={{ mt: 0.5 }}>
-              {nextSession.date}
+              {coachView.campaignName}
             </Typography>
           </CardContent>
         </Card>
@@ -284,7 +335,7 @@ function ParticipantCoachRoute() {
               Format
             </Typography>
             <Typography variant="h5" fontWeight={800} color="text.primary" sx={{ mt: 0.5 }}>
-              Visioconférence
+              {coachView.questionnaire}
             </Typography>
           </CardContent>
         </Card>
@@ -292,7 +343,7 @@ function ParticipantCoachRoute() {
 
       <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", xl: "1.2fr 0.8fr" }, gap: 3, alignItems: "start" }}>
         <Stack spacing={2.5}>
-          <CoachProfileCard />
+          <CoachProfileCard coachView={coachView} />
           <MessageCard />
         </Stack>
 

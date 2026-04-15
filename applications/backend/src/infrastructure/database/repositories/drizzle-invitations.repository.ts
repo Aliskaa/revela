@@ -11,7 +11,7 @@
  */
 
 import { DRIZZLE_DB_SYMBOL, type DrizzleDb, inviteTokensTable } from '@aor/drizzle';
-import { desc, eq } from '@aor/drizzle';
+import { and, desc, eq, gt, isNull, lt, or } from '@aor/drizzle';
 import { Inject, Injectable } from '@nestjs/common';
 
 import type {
@@ -34,17 +34,57 @@ export class DrizzleInvitationsRepository implements IInvitationsRepositoryPort 
     }
 
     public async create(command: CreateInvitationCommand): Promise<InvitationRecord> {
-        const [invitation] = await this.db
-            .insert(inviteTokensTable)
-            .values({
-                token: command.token,
-                participantId: command.participantId,
-                campaignId: command.campaignId ?? null,
-                questionnaireId: command.questionnaireId,
-                expiresAt: command.expiresAt,
-            })
-            .returning();
-        return invitation;
+        return this.db.transaction(async tx => {
+            const campaignId = command.campaignId ?? null;
+            const qid = command.questionnaireId.toUpperCase();
+            const assignmentMatch = and(
+                eq(inviteTokensTable.participantId, command.participantId),
+                campaignId === null ? isNull(inviteTokensTable.campaignId) : eq(inviteTokensTable.campaignId, campaignId),
+                eq(inviteTokensTable.questionnaireId, qid)
+            );
+            const now = new Date();
+
+            await tx
+                .update(inviteTokensTable)
+                .set({ isActive: false })
+                .where(
+                    and(
+                        assignmentMatch,
+                        eq(inviteTokensTable.isActive, true),
+                        isNull(inviteTokensTable.usedAt),
+                        lt(inviteTokensTable.expiresAt, now)
+                    )
+                );
+
+            const [existing] = await tx
+                .select()
+                .from(inviteTokensTable)
+                .where(
+                    and(
+                        assignmentMatch,
+                        eq(inviteTokensTable.isActive, true),
+                        isNull(inviteTokensTable.usedAt),
+                        or(isNull(inviteTokensTable.expiresAt), gt(inviteTokensTable.expiresAt, now))
+                    )
+                )
+                .orderBy(desc(inviteTokensTable.createdAt), desc(inviteTokensTable.id))
+                .limit(1);
+            if (existing) {
+                return existing;
+            }
+
+            const [invitation] = await tx
+                .insert(inviteTokensTable)
+                .values({
+                    token: command.token,
+                    participantId: command.participantId,
+                    campaignId,
+                    questionnaireId: qid,
+                    expiresAt: command.expiresAt,
+                })
+                .returning();
+            return invitation;
+        });
     }
 
     public async markUsed(id: number): Promise<void> {

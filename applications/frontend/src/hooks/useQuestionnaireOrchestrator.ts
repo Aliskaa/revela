@@ -53,7 +53,8 @@ export function useQuestionnaireOrchestrator({ qid, type, campaignId }: UseQuest
         }
 
         if (type === 'scientific') {
-            if (progression.self_rating_status !== 'completed') {
+            const canSkipManualInputs = assignment.allow_test_without_manual_inputs === true;
+            if (!canSkipManualInputs && progression.self_rating_status !== 'completed') {
                 navigate({
                     to: '/questionnaire/$qid',
                     params: { qid },
@@ -62,7 +63,7 @@ export function useQuestionnaireOrchestrator({ qid, type, campaignId }: UseQuest
                 });
                 return;
             }
-            if (progression.peer_feedback_status !== 'completed') {
+            if (!canSkipManualInputs && progression.peer_feedback_status !== 'completed') {
                 navigate({
                     to: '/questionnaire/$qid',
                     params: { qid },

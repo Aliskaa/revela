@@ -170,8 +170,15 @@ export type ParticipantSession = {
     last_name: string;
     assignments: Array<{
         campaign_id: number | null;
+        campaign_name: string | null;
+        company_id: number | null;
+        company_name: string | null;
+        coach_id: number | null;
+        coach_name: string | null;
         questionnaire_id: string;
+        questionnaire_title: string;
         campaign_status: CampaignStatus | null;
+        allow_test_without_manual_inputs: boolean;
         invitation_confirmed: boolean;
         progression: {
             self_rating_status: 'locked' | 'pending' | 'completed';

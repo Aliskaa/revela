@@ -1,4 +1,5 @@
-import { boolean, index, integer, pgTable, serial, timestamp, varchar } from 'drizzle-orm/pg-core';
+import { sql } from 'drizzle-orm';
+import { boolean, index, integer, pgTable, serial, timestamp, uniqueIndex, varchar } from 'drizzle-orm/pg-core';
 
 import { campaignsTable } from './campaign.schema';
 import { participantsTable } from './participant.schema';
@@ -21,5 +22,11 @@ export const inviteTokensTable = pgTable(
     table => [
         index('invite_tokens_token_idx').on(table.token),
         index('invite_tokens_campaign_id_idx').on(table.campaignId),
+        uniqueIndex('invite_tokens_active_campaign_assignment_unique')
+            .on(table.participantId, table.campaignId, table.questionnaireId)
+            .where(sql`${table.isActive} = true and ${table.usedAt} is null and ${table.campaignId} is not null`),
+        uniqueIndex('invite_tokens_active_standalone_assignment_unique')
+            .on(table.participantId, table.questionnaireId)
+            .where(sql`${table.isActive} = true and ${table.usedAt} is null and ${table.campaignId} is null`),
     ]
 );

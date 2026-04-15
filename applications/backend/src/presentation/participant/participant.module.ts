@@ -31,6 +31,10 @@ import {
     type ICompaniesReadPort,
 } from '@src/interfaces/companies/ICompaniesRepository.port';
 import {
+    COACHES_REPOSITORY_PORT_SYMBOL,
+    type ICoachesReadPort,
+} from '@src/interfaces/coaches/ICoachesRepository.port';
+import {
     type IParticipantJwtSignerPort,
     PARTICIPANT_JWT_SIGNER_PORT_SYMBOL,
 } from '@src/interfaces/participant/IParticipantJwtSigner.port';
@@ -109,10 +113,17 @@ import {
                 participants: IParticipantsIdentityReaderPort &
                     IParticipantsInviteAssignmentsReaderPort &
                     IParticipantsCampaignStateReaderPort,
-                campaigns: ICampaignsReadPort
+                campaigns: ICampaignsReadPort,
+                companies: ICompaniesReadPort,
+                coaches: ICoachesReadPort
             ) =>
-                new GetParticipantSessionUseCase({ participants, campaigns }),
-            inject: [PARTICIPANTS_REPOSITORY_PORT_SYMBOL, CAMPAIGNS_REPOSITORY_PORT_SYMBOL],
+                new GetParticipantSessionUseCase({ participants, campaigns, companies, coaches }),
+            inject: [
+                PARTICIPANTS_REPOSITORY_PORT_SYMBOL,
+                CAMPAIGNS_REPOSITORY_PORT_SYMBOL,
+                COMPANIES_REPOSITORY_PORT_SYMBOL,
+                COACHES_REPOSITORY_PORT_SYMBOL,
+            ],
         },
         {
             provide: GET_PARTICIPANT_SESSION_QUESTIONNAIRE_MATRIX_USE_CASE_SYMBOL,

@@ -1,4 +1,6 @@
 import * as React from "react";
+import { useParticipantSession } from "@/hooks/participantSession";
+import type { ParticipantSession } from "@/api/types";
 import { createFileRoute } from "@tanstack/react-router";
 import {
   ArrowRight,
@@ -13,6 +15,7 @@ import {
   Users,
 } from "lucide-react";
 import {
+  Alert,
   Box,
   Button,
   Card,
@@ -20,6 +23,7 @@ import {
   Chip,
   Divider,
   InputAdornment,
+  LinearProgress,
   Stack,
   TextField,
   Typography,
@@ -35,7 +39,8 @@ const COLORS = {
   border: "rgba(15,23,42,0.10)",
 };
 
-type CampaignStatus = "active" | "draft" | "closed";
+type CampaignStatus = "active" | "draft" | "closed" | "archived";
+type ParticipantAssignment = ParticipantSession["assignments"][number];
 
 type Campaign = {
   id: string;
@@ -50,7 +55,7 @@ type Campaign = {
   nextAction: string;
 };
 
-const campaigns: Campaign[] = [
+const fallbackCampaigns: Campaign[] = [
   {
     id: "camp-2026-lyon",
     name: "Leadership DSJ 2026",
@@ -94,6 +99,72 @@ const stats = [
   { label: "Campagnes actives", value: "1", icon: Gauge },
   { label: "Questionnaires complétés", value: "2", icon: CheckCircle2 },
   { label: "Feedbacks reçus", value: "3", icon: Users },
+];
+
+const completedValue = (status?: "locked" | "pending" | "completed") => (status === "completed" ? 1 : 0);
+
+const progressFromAssignment = (assignment: ParticipantAssignment): number => {
+  const progression = assignment.progression;
+  if (!progression) {
+    return 0;
+  }
+  const completed =
+    completedValue(progression.self_rating_status) +
+    completedValue(progression.peer_feedback_status) +
+    completedValue(progression.element_humain_status) +
+    completedValue(progression.results_status);
+  return Math.round((completed / 4) * 100);
+};
+
+const nextActionFromAssignment = (assignment: ParticipantAssignment): string => {
+  if (!assignment.invitation_confirmed) {
+    return "Confirmer votre participation";
+  }
+  const progression = assignment.progression;
+  if (!progression) {
+    return assignment.allow_test_without_manual_inputs ? "Passer le test Element Humain" : "Demarrer le parcours";
+  }
+  if (progression.self_rating_status !== "completed") {
+    return "Completer l'auto-evaluation";
+  }
+  if (progression.peer_feedback_status !== "completed") {
+    return "Finaliser le feedback des pairs";
+  }
+  if (progression.element_humain_status !== "completed") {
+    return "Passer le test Element Humain";
+  }
+  if (progression.results_status !== "completed") {
+    return "Consulter les resultats";
+  }
+  return "Preparer la restitution";
+};
+
+const campaignFromAssignment = (assignment: ParticipantAssignment): Campaign => ({
+  id: `${assignment.campaign_id ?? "none"}-${assignment.questionnaire_id}`,
+  name: assignment.campaign_name ?? "Campagne sans nom",
+  company: assignment.company_name ?? "Organisation non renseignee",
+  coach: assignment.coach_name ?? "Coach non attribue",
+  questionnaire: assignment.questionnaire_title ?? assignment.questionnaire_id,
+  status: assignment.campaign_status ?? "draft",
+  progress: progressFromAssignment(assignment),
+  participants: assignment.invitation_confirmed ? "Participation confirmee" : "Participation a confirmer",
+  lastUpdate: "Suivi actualise avec votre session",
+  nextAction: nextActionFromAssignment(assignment),
+});
+
+const statsFromAssignments = (assignments: ParticipantAssignment[]) => [
+  { label: "Campagnes rattachees", value: String(assignments.length), icon: Layers3 },
+  { label: "Campagnes actives", value: String(assignments.filter(a => a.campaign_status === "active").length), icon: Gauge },
+  {
+    label: "Questionnaires completes",
+    value: String(assignments.filter(a => a.progression?.element_humain_status === "completed").length),
+    icon: CheckCircle2,
+  },
+  {
+    label: "Feedbacks recus",
+    value: String(assignments.filter(a => a.progression?.peer_feedback_status === "completed").length),
+    icon: Users,
+  },
 ];
 
 function SectionTitle({ title, subtitle }: { title: string; subtitle?: string }) {
@@ -262,8 +333,44 @@ function EmptyCampaignsState() {
 }
 
 function ParticipantCampaignsRoute() {
-  const activeCount = campaigns.filter((c) => c.status === "active").length;
-  const completedCount = campaigns.filter((c) => c.status === "closed").length;
+  const { data: session, isLoading, isError } = useParticipantSession();
+  const [query, setQuery] = React.useState("");
+  const assignments = session?.assignments ?? [];
+  const sourceCampaigns = session ? assignments.map(campaignFromAssignment) : fallbackCampaigns;
+  const normalizedQuery = query.trim().toLowerCase();
+  const visibleCampaigns = sourceCampaigns.filter((campaign) => {
+    if (!normalizedQuery) {
+      return true;
+    }
+    return [campaign.name, campaign.company, campaign.coach, campaign.questionnaire]
+      .join(" ")
+      .toLowerCase()
+      .includes(normalizedQuery);
+  });
+  const statsView = session ? statsFromAssignments(assignments) : stats;
+  const activeCount = sourceCampaigns.filter((c) => c.status === "active").length;
+  const completedCount = sourceCampaigns.filter((c) => c.status === "closed").length;
+  const questionnaireList = [...new Set(sourceCampaigns.map(c => c.questionnaire))].join(" / ") || "Aucun";
+
+  if (isLoading) {
+    return (
+      <Card variant="outlined">
+        <CardContent sx={{ p: 3 }}>
+          <Typography variant="h6" fontWeight={800} color="text.primary">
+            Chargement de vos campagnes
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 1, mb: 2 }}>
+            Recuperation des campagnes rattachees a votre espace participant.
+          </Typography>
+          <LinearProgress />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (isError || !session) {
+    return <Alert severity="error">Impossible de charger vos campagnes pour le moment.</Alert>;
+  }
 
   return (
     <Stack spacing={3}>
@@ -279,6 +386,8 @@ function ParticipantCampaignsRoute() {
               fullWidth
               size="small"
               placeholder="Rechercher une campagne, un coach, une organisation…"
+              value={query}
+              onChange={event => setQuery(event.target.value)}
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
@@ -290,7 +399,7 @@ function ParticipantCampaignsRoute() {
             />
 
             <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "repeat(4, minmax(0, 1fr))" }, gap: 2 }}>
-              {stats.map((stat) => (
+              {statsView.map((stat) => (
                 <StatCard key={stat.label} {...stat} />
               ))}
             </Box>
@@ -300,7 +409,7 @@ function ParticipantCampaignsRoute() {
 
       <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", xl: "1.25fr 0.75fr" }, gap: 3, alignItems: "start" }}>
         <Stack spacing={2.5}>
-          {campaigns.length > 0 ? campaigns.map((campaign) => <CampaignCard key={campaign.id} campaign={campaign} />) : <EmptyCampaignsState />}
+          {visibleCampaigns.length > 0 ? visibleCampaigns.map((campaign) => <CampaignCard key={campaign.id} campaign={campaign} />) : <EmptyCampaignsState />}
         </Stack>
 
         <Stack spacing={2.5}>
@@ -316,7 +425,7 @@ function ParticipantCampaignsRoute() {
               <Stack spacing={1.4} sx={{ mt: 2 }}>
                 <SummaryLine label="Campagnes actives" value={`${activeCount}`} />
                 <SummaryLine label="Campagnes terminées" value={`${completedCount}`} />
-                <SummaryLine label="Questionnaires différents" value="B / F / S" />
+                <SummaryLine label="Questionnaires differents" value={questionnaireList} />
               </Stack>
             </CardContent>
           </Card>

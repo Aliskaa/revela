@@ -1,9 +1,10 @@
 import * as React from "react";
+import { useParticipantSession } from "@/hooks/participantSession";
+import type { ParticipantSession } from "@/api/types";
 import { createFileRoute } from "@tanstack/react-router";
 import {
   BadgeCheck,
   Bell,
-  BookOpen,
   ChevronRight,
   ClipboardCheck,
   ClipboardList,
@@ -12,11 +13,11 @@ import {
   Lock,
   MessageSquareQuote,
   Radar,
-  Sparkles,
   UserRound,
   Users,
 } from "lucide-react";
 import {
+  Alert,
   Box,
   Button,
   Card,
@@ -111,6 +112,136 @@ const metrics: Metric[] = [
   { label: "Questionnaire", value: campaign.questionnaire, helper: "lié à la campagne", icon: Brain },
 ];
 
+type ParticipantAssignment = ParticipantSession["assignments"][number];
+
+type CampaignView = typeof campaign & {
+  questionnaireId: string | null;
+  hasAssignment: boolean;
+};
+
+const statusLabels = {
+  draft: "Brouillon",
+  active: "En cours",
+  closed: "Cloturee",
+  archived: "Archivee",
+} as const;
+
+const stepStateFromStatus = (status?: "locked" | "pending" | "completed"): StepState => {
+  if (status === "completed") {
+    return "completed";
+  }
+  if (status === "pending") {
+    return "current";
+  }
+  return "locked";
+};
+
+const completedStepValue = (status?: "locked" | "pending" | "completed") => (status === "completed" ? 1 : 0);
+
+const buildProgress = (assignment?: ParticipantAssignment): number => {
+  const progression = assignment?.progression;
+  if (!progression) {
+    return 0;
+  }
+  const completed =
+    completedStepValue(progression.self_rating_status) +
+    completedStepValue(progression.peer_feedback_status) +
+    completedStepValue(progression.element_humain_status) +
+    completedStepValue(progression.results_status);
+  return Math.round((completed / 4) * 100);
+};
+
+const buildNextAction = (assignment?: ParticipantAssignment): string => {
+  if (!assignment) {
+    return "Aucune action requise pour le moment";
+  }
+  if (!assignment.invitation_confirmed) {
+    return "Confirmer votre participation";
+  }
+  const progression = assignment.progression;
+  if (!progression) {
+    return assignment.allow_test_without_manual_inputs
+      ? "Passer le test Element Humain"
+      : "Demarrer votre parcours";
+  }
+  if (progression.self_rating_status !== "completed") {
+    return "Completer votre auto-evaluation";
+  }
+  if (progression.peer_feedback_status !== "completed") {
+    return "Finaliser le feedback des pairs";
+  }
+  if (progression.element_humain_status !== "completed") {
+    return "Passer le test Element Humain";
+  }
+  if (progression.results_status !== "completed") {
+    return "Consulter la publication des resultats";
+  }
+  return "Preparer la restitution coaching";
+};
+
+const buildCampaignView = (session?: ParticipantSession, assignment?: ParticipantAssignment): CampaignView => {
+  if (!session || !assignment) {
+    return {
+      ...campaign,
+      name: "Aucune campagne active",
+      company: "Organisation non renseignee",
+      coach: "Coach non attribue",
+      questionnaire: "Aucun questionnaire assigne",
+      questionnaireId: null,
+      status: "A venir",
+      progress: 0,
+      nextAction: "Aucune action requise pour le moment",
+      hasAssignment: false,
+    };
+  }
+  return {
+    name: assignment.campaign_name ?? "Campagne sans nom",
+    company: assignment.company_name ?? "Organisation non renseignee",
+    coach: assignment.coach_name ?? "Coach non attribue",
+    questionnaire: assignment.questionnaire_title ?? assignment.questionnaire_id,
+    questionnaireId: assignment.questionnaire_id,
+    status: assignment.campaign_status ? statusLabels[assignment.campaign_status] : "Sans statut",
+    progress: buildProgress(assignment),
+    nextAction: buildNextAction(assignment),
+    hasAssignment: true,
+  };
+};
+
+const buildJourney = (assignment?: ParticipantAssignment): JourneyStep[] => {
+  if (!assignment?.progression) {
+    const manualInputState: StepState = assignment ? "current" : "locked";
+    return [
+      { ...journey[0], state: manualInputState },
+      { ...journey[1], state: manualInputState },
+      { ...journey[2], state: assignment?.allow_test_without_manual_inputs ? "current" : "locked" },
+      { ...journey[3], state: "locked" },
+      { ...journey[4], state: "locked" },
+    ];
+  }
+  return [
+    { ...journey[0], state: stepStateFromStatus(assignment.progression.self_rating_status) },
+    { ...journey[1], state: stepStateFromStatus(assignment.progression.peer_feedback_status) },
+    { ...journey[2], state: stepStateFromStatus(assignment.progression.element_humain_status) },
+    { ...journey[3], state: stepStateFromStatus(assignment.progression.results_status) },
+    journey[4],
+  ];
+};
+
+const buildMetrics = (campaignView: CampaignView, assignment?: ParticipantAssignment): Metric[] => [
+  { ...metrics[0], value: `${campaignView.progress}%`, helper: "parcours complete" },
+  {
+    ...metrics[1],
+    value: assignment?.progression?.self_rating_status === "completed" ? "Termine" : "A faire",
+    helper: "premiere etape du parcours",
+  },
+  {
+    ...metrics[2],
+    value: assignment?.progression?.peer_feedback_status === "completed" ? "Termine" : "En attente",
+    helper: "retours lies a la campagne",
+  },
+  { ...metrics[3], value: campaignView.questionnaire, helper: "lie a la campagne" },
+];
+
 const dimensions: Dimension[] = [
   { title: "Importance / Valeur", expressed: 3, wanted: 5, delta: 2 },
   { title: "Compétence", expressed: 7, wanted: 7, delta: 0 },
@@ -135,7 +266,7 @@ function SectionTitle({ title, subtitle, action }: { title: string; subtitle?: s
   );
 }
 
-function MetricCard({ metric }: { metric: Metric }) {
+function MetricCard({ metric, progress }: { metric: Metric; progress: number }) {
   const Icon = metric.icon;
   return (
     <Card variant="outlined">
@@ -159,7 +290,7 @@ function MetricCard({ metric }: { metric: Metric }) {
         {metric.label === "Progression" ? (
           <LinearProgress
             variant="determinate"
-            value={campaign.progress}
+            value={progress}
             sx={{ mt: 2.2, height: 8, borderRadius: 99, bgcolor: "rgba(15,23,42,0.06)", "& .MuiLinearProgress-bar": { bgcolor: COLORS.blue } }}
           />
         ) : null}
@@ -213,18 +344,18 @@ function JourneyItem({ step }: { step: JourneyStep }) {
   );
 }
 
-function PageHeader() {
+function PageHeader({ campaignView, participantFirstName }: { campaignView: CampaignView; participantFirstName: string }) {
   return (
     <Card variant="outlined">
       <CardContent sx={{ p: { xs: 2.5, md: 3 } }}>
         <Stack direction={{ xs: "column", lg: "row" }} spacing={3} justifyContent="space-between" alignItems={{ xs: "start", lg: "start" }}>
           <Box sx={{ minWidth: 0 }}>
-            <Chip label={campaign.status} sx={{ borderRadius: 99, bgcolor: "rgba(15,24,152,0.08)", color: COLORS.blue, mb: 1.5 }} />
+            <Chip label={campaignView.status} sx={{ borderRadius: 99, bgcolor: "rgba(15,24,152,0.08)", color: COLORS.blue, mb: 1.5 }} />
             <Typography variant="h4" fontWeight={700} color="text.primary" sx={{ letterSpacing: -0.5 }}>
-              Bonjour Thomas,
+              Bonjour {participantFirstName},
             </Typography>
             <Typography variant="body1" color="text.secondary" sx={{ mt: 1, lineHeight: 1.7, maxWidth: 860 }}>
-              Vous êtes dans l’espace participant de la campagne <Box component="span" sx={{ fontWeight: 700, color: "text.primary" }}>{campaign.name}</Box>. Le tableau de bord vous montre le contexte, la progression et la prochaine étape.
+              Vous êtes dans l’espace participant de la campagne <Box component="span" sx={{ fontWeight: 700, color: "text.primary" }}>{campaignView.name}</Box>. Le tableau de bord vous montre le contexte, la progression et la prochaine étape.
             </Typography>
           </Box>
 
@@ -236,7 +367,7 @@ function PageHeader() {
                 </Box>
                 <Box>
                   <Typography variant="caption" color="text.secondary">Coach</Typography>
-                  <Typography variant="body2" fontWeight={700} color="text.primary">{campaign.coach}</Typography>
+                  <Typography variant="body2" fontWeight={700} color="text.primary">{campaignView.coach}</Typography>
                 </Box>
               </CardContent>
             </Card>
@@ -247,7 +378,7 @@ function PageHeader() {
                 </Box>
                 <Box>
                   <Typography variant="caption" color="text.secondary">Prochaine action</Typography>
-                  <Typography variant="body2" fontWeight={700} color="text.primary">{campaign.nextAction}</Typography>
+                  <Typography variant="body2" fontWeight={700} color="text.primary">{campaignView.nextAction}</Typography>
                 </Box>
               </CardContent>
             </Card>
@@ -258,18 +389,18 @@ function PageHeader() {
   );
 }
 
-function QuestionnaireCard() {
+function QuestionnaireCard({ campaignView }: { campaignView: CampaignView }) {
   return (
     <Card variant="outlined">
       <CardContent sx={{ p: 2.5 }}>
         <SectionTitle
           title="Questionnaire associé à la campagne"
           subtitle="1 campagne = 1 questionnaire. Le dashboard reste une vue de synthèse."
-          action={<Button variant="outlined" sx={{ borderRadius: 3, textTransform: "none" }}>Ouvrir le questionnaire</Button>}
+          action={<Button variant="outlined" disabled={!campaignView.hasAssignment} sx={{ borderRadius: 3, textTransform: "none" }}>Ouvrir le questionnaire</Button>}
         />
         <Box sx={{ borderRadius: 4, bgcolor: "rgba(15,23,42,0.03)", p: 2 }}>
           <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.7 }}>
-            Le contenu détaillé du formulaire vit dans une page dédiée, alimentée par le catalogue de questionnaire.
+            {campaignView.questionnaire}
           </Typography>
         </Box>
       </CardContent>
@@ -277,7 +408,7 @@ function QuestionnaireCard() {
   );
 }
 
-function CampaignCard() {
+function CampaignCard({ campaignView }: { campaignView: CampaignView }) {
   return (
     <Card variant="outlined">
       <CardContent sx={{ p: 2.5 }}>
@@ -285,13 +416,13 @@ function CampaignCard() {
 
         <Card variant="outlined" sx={{ bgcolor: COLORS.blue, color: "#fff", p: 2.2 }}>
           <Typography variant="caption" sx={{ opacity: 0.8 }}>Campagne</Typography>
-          <Typography variant="h6" fontWeight={700} sx={{ mt: 0.5 }}>{campaign.name}</Typography>
-          <Typography variant="body2" sx={{ opacity: 0.9, mt: 0.75 }}>{campaign.company} · {campaign.status}</Typography>
+          <Typography variant="h6" fontWeight={700} sx={{ mt: 0.5 }}>{campaignView.name}</Typography>
+          <Typography variant="body2" sx={{ opacity: 0.9, mt: 0.75 }}>{campaignView.company} · {campaignView.status}</Typography>
         </Card>
 
         <Box sx={{ mt: 2 }}>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>Progression</Typography>
-          <LinearProgress variant="determinate" value={campaign.progress} sx={{ height: 10, borderRadius: 99, bgcolor: "rgba(15,23,42,0.06)", "& .MuiLinearProgress-bar": { bgcolor: COLORS.blue } }} />
+          <LinearProgress variant="determinate" value={campaignView.progress} sx={{ height: 10, borderRadius: 99, bgcolor: "rgba(15,23,42,0.06)", "& .MuiLinearProgress-bar": { bgcolor: COLORS.blue } }} />
         </Box>
       </CardContent>
     </Card>
@@ -330,7 +461,7 @@ function RadarPreview() {
   );
 }
 
-function CoachCard() {
+function CoachCard({ campaignView }: { campaignView: CampaignView }) {
   return (
     <Card variant="outlined">
       <CardContent sx={{ p: 2.5 }}>
@@ -340,7 +471,7 @@ function CoachCard() {
             <UserRound size={22} />
           </Box>
           <Box>
-            <Typography fontWeight={700} color="text.primary">Claire Martin</Typography>
+            <Typography fontWeight={700} color="text.primary">{campaignView.coach}</Typography>
             <Typography variant="body2" color="text.secondary">Coach référente Révéla</Typography>
           </Box>
         </Stack>
@@ -381,13 +512,43 @@ function QuickActions() {
 }
 
 export function ParticipantDashboardRoute() {
+  const { data: session, isLoading, isError } = useParticipantSession();
+  const activeAssignment = React.useMemo(
+    () => session?.assignments.find(assignment => assignment.campaign_status === "active") ?? session?.assignments[0],
+    [session]
+  );
+  const campaignView = React.useMemo(() => buildCampaignView(session, activeAssignment), [session, activeAssignment]);
+  const journeyView = React.useMemo(() => buildJourney(activeAssignment), [activeAssignment]);
+  const metricsView = React.useMemo(() => buildMetrics(campaignView, activeAssignment), [campaignView, activeAssignment]);
+  const participantFirstName = session?.first_name?.trim() || "Participant";
+
+  if (isLoading) {
+    return (
+      <Card variant="outlined">
+        <CardContent sx={{ p: 3 }}>
+          <Typography variant="h6" fontWeight={700} color="text.primary">
+            Chargement de votre espace
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 1, mb: 2 }}>
+            Recuperation de votre campagne, de votre progression et de vos prochaines actions.
+          </Typography>
+          <LinearProgress />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (isError || !session) {
+    return <Alert severity="error">Impossible de charger votre espace participant pour le moment.</Alert>;
+  }
+
   return (
     <Stack spacing={3}>
-      <PageHeader />
+      <PageHeader campaignView={campaignView} participantFirstName={participantFirstName} />
 
       <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "repeat(2, minmax(0, 1fr))", xl: "repeat(4, minmax(0, 1fr))" }, gap: 2 }}>
-        {metrics.map((metric) => (
-          <MetricCard key={metric.label} metric={metric} />
+        {metricsView.map((metric) => (
+          <MetricCard key={metric.label} metric={metric} progress={campaignView.progress} />
         ))}
       </Box>
 
@@ -397,20 +558,20 @@ export function ParticipantDashboardRoute() {
             <CardContent sx={{ p: 2.5 }}>
               <SectionTitle title="Parcours Révéla" subtitle="Le flux reste lisible : terminé / en cours / verrouillé." />
               <Stack spacing={1.4}>
-                {journey.map((step) => (
+                {journeyView.map((step) => (
                   <JourneyItem key={step.label} step={step} />
                 ))}
               </Stack>
             </CardContent>
           </Card>
 
-          <QuestionnaireCard />
-          <CampaignCard />
+          <QuestionnaireCard campaignView={campaignView} />
+          <CampaignCard campaignView={campaignView} />
         </Stack>
 
         <Stack spacing={3}>
           <RadarPreview />
-          <CoachCard />
+          <CoachCard campaignView={campaignView} />
           <QuickActions />
         </Stack>
       </Box>

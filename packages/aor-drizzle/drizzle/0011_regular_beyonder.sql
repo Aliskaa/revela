@@ -1,0 +1,1 @@
+ALTER TABLE "scores" ADD CONSTRAINT "scores_response_id_score_key_unique" UNIQUE("response_id","score_key");
