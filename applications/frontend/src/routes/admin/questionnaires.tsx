@@ -10,7 +10,6 @@ import {
   Sparkles,
   Users,
   Heart,
-  Star,
 } from "lucide-react";
 import {
   Box,

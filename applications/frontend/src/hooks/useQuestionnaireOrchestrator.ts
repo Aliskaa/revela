@@ -35,7 +35,7 @@ export function useQuestionnaireOrchestrator({ qid, type, campaignId }: UseQuest
         }
 
         if (type === 'self' && progression.self_rating_status === 'completed') {
-            navigate({ to: '/', replace: true });
+            navigate({ to: '/participant', replace: true });
             return;
         }
 
@@ -44,9 +44,7 @@ export function useQuestionnaireOrchestrator({ qid, type, campaignId }: UseQuest
             (progression.self_rating_status !== 'completed' || progression.peer_feedback_status === 'completed')
         ) {
             navigate({
-                to: progression.self_rating_status === 'completed' ? '/' : '/questionnaire/$qid',
-                params: { qid },
-                search: { type: 'self', campaign_id: resolvedCampaignId ?? undefined },
+                to: progression.self_rating_status === 'completed' ? '/participant' : '/participant/self-rating',
                 replace: true,
             });
             return;
@@ -56,24 +54,20 @@ export function useQuestionnaireOrchestrator({ qid, type, campaignId }: UseQuest
             const canSkipManualInputs = assignment.allow_test_without_manual_inputs === true;
             if (!canSkipManualInputs && progression.self_rating_status !== 'completed') {
                 navigate({
-                    to: '/questionnaire/$qid',
-                    params: { qid },
-                    search: { type: 'self', campaign_id: resolvedCampaignId ?? undefined },
+                    to: '/participant/self-rating',
                     replace: true,
                 });
                 return;
             }
             if (!canSkipManualInputs && progression.peer_feedback_status !== 'completed') {
                 navigate({
-                    to: '/questionnaire/$qid',
-                    params: { qid },
-                    search: { type: 'peer', campaign_id: resolvedCampaignId ?? undefined },
+                    to: '/participant/peer-feedback',
                     replace: true,
                 });
                 return;
             }
             if (progression.element_humain_status === 'completed') {
-                navigate({ to: '/', replace: true });
+                navigate({ to: '/participant', replace: true });
             }
         }
     }, [assignment, navigate, progression, qid, resolvedCampaignId, session, type]);

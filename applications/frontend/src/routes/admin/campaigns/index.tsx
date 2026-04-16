@@ -1,16 +1,12 @@
 import * as React from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
-    ArrowRight,
-    CalendarDays,
     ChevronRight,
     ClipboardList,
     Plus,
-    Search,
     Sparkles,
     Target,
     Users,
-    UserRound,
 } from "lucide-react";
 import {
     Box,
@@ -19,6 +15,7 @@ import {
     CardContent,
     Chip,
     LinearProgress,
+    Skeleton,
     Stack,
     Table,
     TableBody,
@@ -28,249 +25,81 @@ import {
     TextField,
     Typography,
 } from "@mui/material";
-import { AdminCampaignDrawerForm, CampaignFormValues } from "@/components/admin/AdminCampaignDrawerForm";
+import { AdminCampaignDrawerForm } from "@/components/admin/AdminCampaignDrawerForm";
+import { ADMIN_COLORS as COLORS } from "@/components/common/colors";
+import { SectionTitle } from "@/components/common/SectionTitle";
+import { StatCard } from "@/components/common/StatCard";
+import { MiniStat } from "@/components/common/MiniStat";
+import { useAdminCampaigns, useAdminDashboard, useCoaches, useCompanies, useCreateAdminCampaign } from "@/hooks/admin";
+import type { CampaignStatus } from "@/api/types";
 
 export const Route = createFileRoute("/admin/campaigns/")({
     component: AdminCampaignsRoute,
 });
 
-const COLORS = {
-    blue: "rgb(15,24,152)",
-    yellow: "rgb(255,204,0)",
-    border: "rgba(15,23,42,0.10)",
+
+const QUESTIONNAIRE_LABELS: Record<string, string> = {
+    B: "B — Comportement",
+    F: "F — Ressentis",
+    S: "S — Soi",
 };
 
-type CampaignStatus = "active" | "draft" | "closed";
-
-type CampaignRow = {
-    name: string;
-    company: string;
-    coach: string;
-    questionnaire: string;
-    status: CampaignStatus;
-    progress: number;
-    updatedAt: string;
-    participants: number;
-};
-
-const campaigns: CampaignRow[] = [
-    {
-        name: "Leadership DSJ 2026",
-        company: "Ville de Lyon",
-        coach: "Claire Martin",
-        questionnaire: "B — Comportement",
-        status: "active",
-        progress: 58,
-        updatedAt: "Mise à jour il y a 2 jours",
-        participants: 1,
-    },
-    {
-        name: "Pilotage relationnel 2025",
-        company: "Ville de Lyon",
-        coach: "Claire Martin",
-        questionnaire: "F — Ressentis",
-        status: "closed",
-        progress: 100,
-        updatedAt: "Clôturée le 14/12/2025",
-        participants: 1,
-    },
-    {
-        name: "Transformation managériale",
-        company: "Métropole du Nord",
-        coach: "Julien Morel",
-        questionnaire: "S — Soi",
-        status: "draft",
-        progress: 0,
-        updatedAt: "Brouillon enregistré hier",
-        participants: 0,
-    },
-];
-
-function SectionTitle({ title, subtitle, action }: { title: string; subtitle?: string; action?: React.ReactNode }) {
-    return (
-        <Stack direction="row" alignItems="start" justifyContent="space-between" spacing={2} sx={{ mb: 2 }}>
-            <Box>
-                <Typography variant="h5" fontWeight={800} color="text.primary" sx={{ letterSpacing: -0.4 }}>
-                    {title}
-                </Typography>
-                {subtitle ? (
-                    <Typography variant="body2" color="text.secondary" sx={{ mt: 0.7, lineHeight: 1.7 }}>
-                        {subtitle}
-                    </Typography>
-                ) : null}
-            </Box>
-            {action}
-        </Stack>
-    );
-}
-
-function StatCard({ label, value, helper, icon: Icon }: { label: string; value: string; helper: string; icon: React.ElementType }) {
-    return (
-        <Card variant="outlined">
-            <CardContent sx={{ p: 2.5 }}>
-                <Stack direction="row" justifyContent="space-between" alignItems="end">
-                    <Box>
-                        <Typography variant="body2" color="text.secondary">
-                            {label}
-                        </Typography>
-                        <Typography variant="h4" fontWeight={800} color="text.primary" sx={{ mt: 0.4, letterSpacing: -0.5 }}>
-                            {value}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                            {helper}
-                        </Typography>
-                    </Box>
-                    <Box sx={{ width: 42, height: 42, borderRadius: 3, bgcolor: "rgba(15,24,152,0.08)", color: COLORS.blue, display: "grid", placeItems: "center" }}>
-                        <Icon size={18} />
-                    </Box>
-                </Stack>
-            </CardContent>
-        </Card>
-    );
-}
 
 function StatusChip({ status }: { status: CampaignStatus }) {
     if (status === "active") return <Chip label="Active" size="small" sx={{ borderRadius: 99, bgcolor: "rgba(16,185,129,0.12)", color: "rgb(4,120,87)" }} />;
-    if (status === "closed") return <Chip label="Archivée" size="small" sx={{ borderRadius: 99, bgcolor: "rgba(148,163,184,0.16)", color: "rgb(100,116,139)" }} />;
+    if (status === "closed" || status === "archived") return <Chip label="Archivée" size="small" sx={{ borderRadius: 99, bgcolor: "rgba(148,163,184,0.16)", color: "rgb(100,116,139)" }} />;
     return <Chip label="Brouillon" size="small" sx={{ borderRadius: 99, bgcolor: "rgba(255,204,0,0.16)", color: "rgb(180,120,0)" }} />;
 }
 
-function CampaignRowView({ campaign }: { campaign: CampaignRow }) {
-    return (
-        <TableRow hover>
-            <TableCell>
-                <Typography fontWeight={700} color="text.primary">
-                    {campaign.name}
-                </Typography>
-            </TableCell>
-            <TableCell>{campaign.company}</TableCell>
-            <TableCell>{campaign.coach}</TableCell>
-            <TableCell>{campaign.questionnaire}</TableCell>
-            <TableCell>{campaign.participants}</TableCell>
-            <TableCell>
-                <StatusChip status={campaign.status} />
-            </TableCell>
-            <TableCell>
-                <Box sx={{ minWidth: 140 }}>
-                    <Typography variant="body2" fontWeight={700} color="text.primary">
-                        {campaign.progress}%
-                    </Typography>
-                    <LinearProgress
-                        variant="determinate"
-                        value={campaign.progress}
-                        sx={{ mt: 1, height: 8, borderRadius: 99, bgcolor: "rgba(15,23,42,0.06)", "& .MuiLinearProgress-bar": { bgcolor: COLORS.blue } }}
-                    />
-                </Box>
-            </TableCell>
-            <TableCell>{campaign.updatedAt}</TableCell>
-            <TableCell align="right">
-                <Button component={Link} to="/admin/campaigns" variant="text" endIcon={<ChevronRight size={16} />} sx={{ textTransform: "none" }}>
-                    Détail
-                </Button>
-            </TableCell>
-        </TableRow>
-    );
-}
-
-function CampaignCard({ campaign }: { campaign: CampaignRow }) {
-    return (
-        <Card variant="outlined">
-            <CardContent sx={{ p: 2.5 }}>
-                <Stack spacing={2}>
-                    <Stack direction="row" justifyContent="space-between" alignItems="start" spacing={2}>
-                        <Box>
-                            <Typography variant="h6" fontWeight={800} color="text.primary">
-                                {campaign.name}
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, lineHeight: 1.7 }}>
-                                {campaign.company} · Coach {campaign.coach}
-                            </Typography>
-                        </Box>
-                        <StatusChip status={campaign.status} />
-                    </Stack>
-
-                    <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "repeat(3, minmax(0, 1fr))" }, gap: 1.2 }}>
-                        <MiniStat label="Questionnaire" value={campaign.questionnaire} />
-                        <MiniStat label="Participants" value={String(campaign.participants)} />
-                        <MiniStat label="Mis à jour" value={campaign.updatedAt} />
-                    </Box>
-
-                    <Box>
-                        <Typography variant="body2" color="text.secondary">
-                            Progression
-                        </Typography>
-                        <LinearProgress
-                            variant="determinate"
-                            value={campaign.progress}
-                            sx={{ mt: 1, height: 9, borderRadius: 99, bgcolor: "rgba(15,23,42,0.06)", "& .MuiLinearProgress-bar": { bgcolor: COLORS.blue } }}
-                        />
-                    </Box>
-
-                    <Stack direction={{ xs: "column", sm: "row" }} spacing={1.2}>
-                        <Button variant="contained" disableElevation component={Link} to="/admin/campaigns" startIcon={<ArrowRight size={16} />} sx={{ borderRadius: 3, bgcolor: COLORS.blue, textTransform: "none" }}>
-                            Ouvrir
-                        </Button>
-                        <Button variant="outlined" sx={{ borderRadius: 3, textTransform: "none" }}>
-                            Archiver
-                        </Button>
-                    </Stack>
-                </Stack>
-            </CardContent>
-        </Card>
-    );
-}
-
-function MiniStat({ label, value }: { label: string; value: string }) {
-    return (
-        <Box sx={{ border: "1px solid rgba(15,23,42,0.10)", borderRadius: 4, p: 1.5 }}>
-            <Typography variant="caption" color="text.secondary">
-                {label}
-            </Typography>
-            <Typography variant="body2" fontWeight={700} color="text.primary" sx={{ mt: 0.25, lineHeight: 1.6 }}>
-                {value}
-            </Typography>
-        </Box>
-    );
-}
 
 function AdminCampaignsRoute() {
+    const [search, setSearch] = React.useState("");
     const [drawerOpen, setDrawerOpen] = React.useState(false);
-    const [editingCampaign, setEditingCampaign] = React.useState<CampaignRow | null>(null);
 
-    const handleCreate = () => {
-        setEditingCampaign(null);
-        setDrawerOpen(true);
-    };
+    const { data: campaigns = [], isLoading: campaignsLoading } = useAdminCampaigns();
+    const { data: coaches = [], isLoading: coachesLoading } = useCoaches();
+    const { data: companies = [] } = useCompanies();
+    const { data: dashboard, isLoading: dashboardLoading } = useAdminDashboard();
+    const createCampaign = useCreateAdminCampaign();
 
-    const handleEdit = (campaign: CampaignRow) => {
-        setEditingCampaign(campaign);
-        setDrawerOpen(true);
-    };
+    const isLoading = campaignsLoading || coachesLoading;
 
-    const initialValues: Partial<CampaignFormValues> | undefined = editingCampaign
-        ? {
-            name: editingCampaign.name,
-            company: editingCampaign.company,
-            coach: editingCampaign.coach,
-            questionnaire: editingCampaign.questionnaire.split(" ")[0],
-            startDate: "2026-02-12",
-            endDate: "2026-05-12",
-            status: editingCampaign.status,
-            description: `${editingCampaign.name} · ${editingCampaign.company}`,
-        }
-        : undefined;
+    const companyName = (id: number) => companies.find((c) => c.id === id)?.name ?? "–";
+    const coachName = (id: number) => coaches.find((c) => c.id === id)?.displayName ?? "–";
+    const questionnairesUsed = new Set(campaigns.map((c) => c.questionnaireId).filter(Boolean)).size;
+
+    const filtered = campaigns.filter((c) =>
+        c.name.toLowerCase().includes(search.toLowerCase()) ||
+        companyName(c.companyId).toLowerCase().includes(search.toLowerCase()) ||
+        coachName(c.coachId).toLowerCase().includes(search.toLowerCase())
+    );
+
     return (
         <Stack spacing={3}>
             <AdminCampaignDrawerForm
                 open={drawerOpen}
-                mode={editingCampaign ? "edit" : "create"}
-                initialValues={initialValues}
-                onClose={() => setDrawerOpen(false)}
-                onSubmit={(values) => {
-                    console.log(values);
+                mode="create"
+                onClose={() => {
+                    setDrawerOpen(false);
+                    createCampaign.reset();
+                }}
+                onSubmit={async (values) => {
+                    await createCampaign.mutateAsync({
+                        name: values.name,
+                        companyId: Number(values.companyId),
+                        coachId: Number(values.coachId),
+                        questionnaireId: values.questionnaireId,
+                        startsAt: values.startDate ? new Date(values.startDate).toISOString() : null,
+                        endsAt: values.endDate ? new Date(values.endDate).toISOString() : null,
+                        allowTestWithoutManualInputs: values.allowTestWithoutManualInputs,
+                        status: values.status,
+                    });
                     setDrawerOpen(false);
                 }}
+                isSubmitting={createCampaign.isPending}
+                error={createCampaign.isError ? (createCampaign.error?.message ?? "Erreur lors de la création.") : null}
             />
+
             <Card variant="outlined">
                 <CardContent sx={{ p: { xs: 2.5, md: 3 } }}>
                     <Stack spacing={2.5} direction={{ xs: "column", lg: "row" }} justifyContent="space-between" alignItems={{ xs: "start", lg: "start" }}>
@@ -283,8 +112,13 @@ function AdminCampaignsRoute() {
                                 Visualisez les campagnes existantes, leur statut et leur progression.
                             </Typography>
                         </Box>
-
-                        <Button onClick={handleCreate} variant="contained" disableElevation startIcon={<Plus size={16} />} sx={{ borderRadius: 3, bgcolor: COLORS.blue, textTransform: "none" }}>
+                        <Button
+                            variant="contained"
+                            disableElevation
+                            startIcon={<Plus size={16} />}
+                            onClick={() => setDrawerOpen(true)}
+                            sx={{ borderRadius: 3, bgcolor: COLORS.blue, textTransform: "none" }}
+                        >
                             Nouvelle campagne
                         </Button>
                     </Stack>
@@ -292,79 +126,204 @@ function AdminCampaignsRoute() {
             </Card>
 
             <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "repeat(4, minmax(0, 1fr))" }, gap: 2 }}>
-                <StatCard label="Campagnes" value="3" helper="dans le système" icon={ClipboardList} />
-                <StatCard label="Actives" value="1" helper="en cours" icon={Target} />
-                <StatCard label="Participants" value="2" helper="rattachés" icon={Users} />
-                <StatCard label="Questionnaires" value="3" helper="B / F / S" icon={Sparkles} />
+                <StatCard
+                    label="Campagnes"
+                    value={campaigns.length}
+                    helper="dans le système"
+                    icon={ClipboardList}
+                    loading={campaignsLoading}
+                />
+                <StatCard
+                    label="Actives"
+                    value={campaigns.filter((c) => c.status === "active").length}
+                    helper="en cours"
+                    icon={Target}
+                    loading={campaignsLoading}
+                />
+                <StatCard
+                    label="Participants"
+                    value={dashboard?.total_participants ?? "–"}
+                    helper="rattachés"
+                    icon={Users}
+                    loading={dashboardLoading}
+                />
+                <StatCard
+                    label="Questionnaires"
+                    value={questionnairesUsed}
+                    helper="B / F / S"
+                    icon={Sparkles}
+                    loading={campaignsLoading}
+                />
             </Box>
 
             <Card variant="outlined">
                 <CardContent sx={{ p: 2.5 }}>
                     <SectionTitle
                         title="Liste des campagnes"
-                        subtitle="La table permet de comparer rapidement les campagnes et d’ouvrir leur détail."
+                        subtitle="La table permet de comparer rapidement les campagnes et d'ouvrir leur détail."
                         action={
-                            <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
-                                <TextField size="small" placeholder="Rechercher une campagne…" sx={{ minWidth: 280 }} />
-                            </Box>
+                            <TextField
+                                size="small"
+                                placeholder="Rechercher…"
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                                sx={{ minWidth: 260 }}
+                            />
                         }
                     />
 
+                    {/* Desktop table */}
                     <Box sx={{ display: { xs: "none", lg: "block" }, overflowX: "auto" }}>
-                        <Table sx={{ minWidth: 1100 }}>
+                        <Table sx={{ minWidth: 1000 }}>
                             <TableHead>
                                 <TableRow>
                                     <TableCell>Campagne</TableCell>
                                     <TableCell>Entreprise</TableCell>
                                     <TableCell>Coach</TableCell>
                                     <TableCell>Questionnaire</TableCell>
-                                    <TableCell>Participants</TableCell>
                                     <TableCell>Statut</TableCell>
-                                    <TableCell>Progression</TableCell>
-                                    <TableCell>Mis à jour</TableCell>
+                                    <TableCell>Créée le</TableCell>
                                     <TableCell />
                                 </TableRow>
                             </TableHead>
                             <TableBody>
-                                {campaigns.map((campaign) => (
-                                    <CampaignRowView key={campaign.name} campaign={campaign} />
-                                ))}
+                                {isLoading
+                                    ? Array.from({ length: 4 }).map((_, i) => (
+                                        <TableRow key={i}>
+                                            {Array.from({ length: 6 }).map((__, j) => (
+                                                <TableCell key={j}><Skeleton variant="text" /></TableCell>
+                                            ))}
+                                            <TableCell />
+                                        </TableRow>
+                                    ))
+                                    : filtered.map((campaign) => (
+                                        <TableRow hover key={campaign.id}>
+                                            <TableCell>
+                                                <Typography fontWeight={700} color="text.primary">
+                                                    {campaign.name}
+                                                </Typography>
+                                            </TableCell>
+                                            <TableCell>{companyName(campaign.companyId)}</TableCell>
+                                            <TableCell>{coachName(campaign.coachId)}</TableCell>
+                                            <TableCell>
+                                                {campaign.questionnaireId
+                                                    ? (QUESTIONNAIRE_LABELS[campaign.questionnaireId] ?? campaign.questionnaireId)
+                                                    : "–"}
+                                            </TableCell>
+                                            <TableCell>
+                                                <StatusChip status={campaign.status} />
+                                            </TableCell>
+                                            <TableCell>
+                                                {campaign.createdAt
+                                                    ? new Date(campaign.createdAt).toLocaleDateString("fr-FR")
+                                                    : "–"}
+                                            </TableCell>
+                                            <TableCell align="right">
+                                                <Button
+                                                    component={Link}
+                                                    to="/admin/campaigns/$campaignId"
+                                                    params={{ campaignId: String(campaign.id) }}
+                                                    variant="text"
+                                                    endIcon={<ChevronRight size={16} />}
+                                                    sx={{ textTransform: "none" }}
+                                                >
+                                                    Détail
+                                                </Button>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                {!isLoading && filtered.length === 0 && (
+                                    <TableRow>
+                                        <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
+                                            <Typography variant="body2" color="text.secondary">
+                                                {search ? "Aucune campagne ne correspond à la recherche." : "Aucune campagne pour le moment."}
+                                            </Typography>
+                                        </TableCell>
+                                    </TableRow>
+                                )}
                             </TableBody>
                         </Table>
                     </Box>
 
+                    {/* Mobile cards */}
                     <Stack spacing={2} sx={{ display: { xs: "flex", lg: "none" }, mt: 2 }}>
-                        {campaigns.map((campaign) => (
-                            <CampaignCard key={campaign.name} campaign={campaign} />
-                        ))}
+                        {isLoading
+                            ? Array.from({ length: 3 }).map((_, i) => (
+                                <Skeleton key={i} variant="rounded" height={160} />
+                            ))
+                            : filtered.map((campaign) => (
+                                <Card variant="outlined" key={campaign.id}>
+                                    <CardContent sx={{ p: 2.5 }}>
+                                        <Stack spacing={2}>
+                                            <Stack direction="row" justifyContent="space-between" alignItems="start" spacing={2}>
+                                                <Box>
+                                                    <Typography variant="h6" fontWeight={800} color="text.primary">
+                                                        {campaign.name}
+                                                    </Typography>
+                                                    <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, lineHeight: 1.7 }}>
+                                                        {companyName(campaign.companyId)} · Coach {coachName(campaign.coachId)}
+                                                    </Typography>
+                                                </Box>
+                                                <StatusChip status={campaign.status} />
+                                            </Stack>
+
+                                            <Box sx={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 1.2 }}>
+                                                <MiniStat
+                                                    label="Questionnaire"
+                                                    value={campaign.questionnaireId
+                                                        ? (QUESTIONNAIRE_LABELS[campaign.questionnaireId] ?? campaign.questionnaireId)
+                                                        : "–"}
+                                                />
+                                                <MiniStat
+                                                    label="Créée le"
+                                                    value={campaign.createdAt
+                                                        ? new Date(campaign.createdAt).toLocaleDateString("fr-FR")
+                                                        : "–"}
+                                                />
+                                            </Box>
+
+                                            <Button
+                                                variant="contained"
+                                                disableElevation
+                                                component={Link}
+                                                to="/admin/campaigns/$campaignId"
+                                                params={{ campaignId: String(campaign.id) }}
+                                                endIcon={<ChevronRight size={16} />}
+                                                sx={{ borderRadius: 3, bgcolor: COLORS.blue, textTransform: "none", width: "fit-content" }}
+                                            >
+                                                Ouvrir
+                                            </Button>
+                                        </Stack>
+                                    </CardContent>
+                                </Card>
+                            ))}
+                        {!isLoading && filtered.length === 0 && (
+                            <Typography variant="body2" color="text.secondary" sx={{ py: 2, textAlign: "center" }}>
+                                {search ? "Aucune campagne ne correspond à la recherche." : "Aucune campagne pour le moment."}
+                            </Typography>
+                        )}
                     </Stack>
                 </CardContent>
             </Card>
 
             <Card variant="outlined">
                 <CardContent sx={{ p: 2.5 }}>
-                    <SectionTitle title="Lecture rapide" subtitle="Les campagnes doivent être pilotées par le questionnaire et l’état de collecte." />
+                    <SectionTitle title="Lecture rapide" subtitle="Les campagnes doivent être pilotées par le questionnaire et l'état de collecte." />
                     <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "repeat(3, minmax(0, 1fr))" }, gap: 2, mt: 2 }}>
                         <Card variant="outlined" sx={{ p: 2 }}>
-                            <Typography variant="caption" color="text.secondary">
-                                À surveiller
-                            </Typography>
+                            <Typography variant="caption" color="text.secondary">À surveiller</Typography>
                             <Typography variant="body2" fontWeight={700} color="text.primary" sx={{ mt: 0.4 }}>
                                 Les brouillons sans participant
                             </Typography>
                         </Card>
                         <Card variant="outlined" sx={{ p: 2 }}>
-                            <Typography variant="caption" color="text.secondary">
-                                Actif
-                            </Typography>
+                            <Typography variant="caption" color="text.secondary">Actif</Typography>
                             <Typography variant="body2" fontWeight={700} color="text.primary" sx={{ mt: 0.4 }}>
                                 Les campagnes en collecte
                             </Typography>
                         </Card>
                         <Card variant="outlined" sx={{ p: 2 }}>
-                            <Typography variant="caption" color="text.secondary">
-                                Suivi
-                            </Typography>
+                            <Typography variant="caption" color="text.secondary">Suivi</Typography>
                             <Typography variant="body2" fontWeight={700} color="text.primary" sx={{ mt: 0.4 }}>
                                 Le questionnaire assigné à chaque campagne
                             </Typography>

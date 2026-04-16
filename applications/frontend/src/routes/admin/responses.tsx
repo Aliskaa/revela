@@ -1,5 +1,5 @@
 import * as React from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import {
   ArrowRight,
   BadgeCheck,
@@ -7,7 +7,6 @@ import {
   Download,
   FileText,
   MessageSquareText,
-  Search,
   Sparkles,
   Users,
 } from "lucide-react";

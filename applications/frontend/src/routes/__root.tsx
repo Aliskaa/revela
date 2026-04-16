@@ -6,7 +6,6 @@ import {
 import {
   CssBaseline,
   ThemeProvider,
-  createTheme,
 } from "@mui/material";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { theme } from "@/lib/theme";

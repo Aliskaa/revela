@@ -143,7 +143,7 @@ export function PeerRatingStep({ qid, q, campaignId }: PeerRatingStepProps) {
         },
         onSuccess: () => {
             invalidateParticipantSessionQueries(queryClient);
-            navigate({ to: '/' });
+            navigate({ to: '/participant' });
         },
     });
 

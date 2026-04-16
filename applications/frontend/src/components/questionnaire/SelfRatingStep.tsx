@@ -51,7 +51,7 @@ export function SelfRatingStep({ qid, q, campaignId }: SelfRatingStepProps) {
             {
                 onSuccess: () => {
                     invalidateParticipantSessionQueries(queryClient);
-                    navigate({ to: '/' });
+                    navigate({ to: '/participant' });
                 },
             }
         );

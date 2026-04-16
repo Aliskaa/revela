@@ -85,7 +85,7 @@ export function ScientificTestStep({ qid, q, campaignId }: ScientificTestStepPro
             {
                 onSuccess: () => {
                     invalidateParticipantSessionQueries(queryClient);
-                    navigate({ to: '/' });
+                    navigate({ to: '/participant' });
                 },
             }
         );

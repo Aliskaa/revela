@@ -3,7 +3,6 @@ import { createFileRoute } from "@tanstack/react-router";
 import {
   BadgeCheck,
   ChevronRight,
-  CircleDot,
   ClipboardList,
   Lock,
   MessageSquareQuote,
@@ -11,7 +10,6 @@ import {
   Sparkles,
   Users,
   Brain,
-  FileText,
 } from "lucide-react";
 import {
   Box,

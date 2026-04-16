@@ -38,9 +38,9 @@ export function ParticipantLayout({
     const navigate = useNavigate();
     const [mobileOpen, setMobileOpen] = useState(false);
 
-    const goHome = () => navigate({ to: '/' });
+    const goHome = () => navigate({ to: '/participant' });
     const goHash = (hash: string) => {
-        void navigate({ to: '/', hash });
+        void navigate({ to: '/participant', hash });
         queueMicrotask(() => document.getElementById(hash)?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
     };
 

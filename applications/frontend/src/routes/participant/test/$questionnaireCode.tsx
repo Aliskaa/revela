@@ -4,8 +4,6 @@ import {
   ArrowLeft,
   ArrowRight,
   BadgeCheck,
-  Brain,
-  CheckCircle2,
   CircleDot,
   Clock3,
   Hash,
@@ -142,8 +140,7 @@ function ErrorState() {
   );
 }
 
-function buildQuestionLabel(question: Question, questionnaireCode: string, questionIndex: number): string {
-  const n = questionIndex + 1;
+function buildQuestionLabel(question: Question, questionnaireCode: string): string {
   if (questionnaireCode === "B") {
     return question.question;
   }
@@ -242,7 +239,7 @@ function QuestionCard({
               Question actuelle
             </Typography>
             <Typography variant="h6" fontWeight={800} color="text.primary" sx={{ mt: 0.5, lineHeight: 1.55 }}>
-              {buildQuestionLabel(currentQuestion, questionnaireCode, questionIndex)}
+              {buildQuestionLabel(currentQuestion, questionnaireCode)}
             </Typography>
           </Box>
 
@@ -279,7 +276,7 @@ function QuestionCard({
   );
 }
 
-function SidebarSummary({ questionnaireCode, title, seriesLabels }: { questionnaireCode: string; title: string; seriesLabels: string[] }) {
+function SidebarSummary({ questionnaireCode, seriesLabels }: { questionnaireCode: string; seriesLabels: string[] }) {
   return (
     <Card variant="outlined" sx={{ borderRadius: 6, borderColor: COLORS.border, boxShadow: "0 6px 18px rgba(15,23,42,0.04)" }}>
       <CardContent sx={{ p: 2.5 }}>
@@ -376,7 +373,7 @@ function ParticipantTestSessionRoute() {
         </Stack>
 
         <Stack spacing={2.5}>
-          <SidebarSummary questionnaireCode={questionnaireCode} title={detail.title} seriesLabels={effectiveSeriesLabels} />
+          <SidebarSummary questionnaireCode={questionnaireCode} seriesLabels={effectiveSeriesLabels} />
 
           <Card variant="outlined" sx={{ borderRadius: 6, borderColor: COLORS.border, boxShadow: "0 6px 18px rgba(15,23,42,0.04)" }}>
             <CardContent sx={{ p: 2.5 }}>

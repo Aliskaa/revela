@@ -1,23 +1,17 @@
 import * as React from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
-import {
-    ArrowRight,
-    BadgeCheck,
-    Building2,
-    ClipboardList,
-    Mail,
-    Search,
-    Sparkles,
-    Users,
-    UserRound,
-    Plus,
-} from "lucide-react";
+import { createFileRoute } from "@tanstack/react-router";
+import { BadgeCheck, Building2, Mail, Plus, Users } from "lucide-react";
 import {
     Box,
     Button,
     Card,
     CardContent,
     Chip,
+    FormControl,
+    InputLabel,
+    MenuItem,
+    Select,
+    Skeleton,
     Stack,
     Table,
     TableBody,
@@ -27,224 +21,96 @@ import {
     TextField,
     Typography,
 } from "@mui/material";
-import { AdminParticipantDrawerForm, ParticipantFormValues } from "@/components/admin/AdminParticipantDrawerForm";
+import { AdminParticipantDrawerForm } from "@/components/admin/AdminParticipantDrawerForm";
+import { ADMIN_COLORS as COLORS } from "@/components/common/colors";
+import { SectionTitle } from "@/components/common/SectionTitle";
+import { StatCard } from "@/components/common/StatCard";
+import { MiniStat } from "@/components/common/MiniStat";
+import { useAdminDashboard, useCompanies, useParticipants } from "@/hooks/admin";
+import type { Participant } from "@/api/types";
 
 export const Route = createFileRoute("/admin/participants/")({
     component: AdminParticipantsRoute,
 });
 
-const COLORS = {
-    blue: "rgb(15,24,152)",
-    yellow: "rgb(255,204,0)",
-    border: "rgba(15,23,42,0.10)",
+const QUESTIONNAIRE_LABELS: Record<string, string> = {
+    B: "B",
+    F: "F",
+    S: "S",
 };
 
-type ParticipantStatus = "active" | "pending" | "archived";
+function getStatus(p: Participant): "active" | "invited" | "new" {
+    if (p.response_count > 0) return "active";
+    if (Object.keys(p.invite_status).length > 0) return "invited";
+    return "new";
+}
 
-type ParticipantRow = {
-    name: string;
-    email: string;
-    company: string;
-    campaign: string;
-    coach: string;
-    status: ParticipantStatus;
-    lastActivity: string;
-};
+function StatusChip({ participant }: { participant: Participant }) {
+    const status = getStatus(participant);
+    if (status === "active")
+        return <Chip label="Actif" size="small" sx={{ borderRadius: 99, bgcolor: "rgba(16,185,129,0.12)", color: "rgb(4,120,87)" }} />;
+    if (status === "invited")
+        return <Chip label="Invité" size="small" sx={{ borderRadius: 99, bgcolor: "rgba(255,204,0,0.16)", color: "rgb(180,120,0)" }} />;
+    return <Chip label="Nouveau" size="small" sx={{ borderRadius: 99, bgcolor: "rgba(148,163,184,0.16)", color: "rgb(100,116,139)" }} />;
+}
 
-const participants: ParticipantRow[] = [
-    {
-        name: "Thomas Dubois",
-        email: "thomas.dubois@ville-lyon.fr",
-        company: "Ville de Lyon",
-        campaign: "Leadership DSJ 2026",
-        coach: "Claire Martin",
-        status: "active",
-        lastActivity: "Auto terminée · pairs en cours",
-    },
-    {
-        name: "Marie Dupont",
-        email: "marie.dupont@ville-lyon.fr",
-        company: "Ville de Lyon",
-        campaign: "Pilotage relationnel 2025",
-        coach: "Claire Martin",
-        status: "archived",
-        lastActivity: "Campagne terminée",
-    },
-    {
-        name: "Paul Martin",
-        email: "paul.martin@ville-lyon.fr",
-        company: "Métropole du Nord",
-        campaign: "Transformation managériale",
-        coach: "Julien Morel",
-        status: "pending",
-        lastActivity: "Invitation envoyée hier",
-    },
-];
-
-function SectionTitle({ title, subtitle, action }: { title: string; subtitle?: string; action?: React.ReactNode }) {
+function InviteBadges({ inviteStatus }: { inviteStatus: Record<string, string> }) {
+    const keys = Object.keys(inviteStatus);
+    if (keys.length === 0)
+        return <Typography variant="caption" color="text.secondary">—</Typography>;
     return (
-        <Stack direction="row" alignItems="start" justifyContent="space-between" spacing={2} sx={{ mb: 2 }}>
-            <Box>
-                <Typography variant="h5" fontWeight={800} color="text.primary" sx={{ letterSpacing: -0.4 }}>
-                    {title}
-                </Typography>
-                {subtitle ? (
-                    <Typography variant="body2" color="text.secondary" sx={{ mt: 0.7, lineHeight: 1.7 }}>
-                        {subtitle}
-                    </Typography>
-                ) : null}
-            </Box>
-            {action}
+        <Stack direction="row" spacing={0.5} flexWrap="wrap">
+            {keys.map((k) => (
+                <Chip
+                    key={k}
+                    label={QUESTIONNAIRE_LABELS[k] ?? k}
+                    size="small"
+                    sx={{ borderRadius: 99, bgcolor: "rgba(15,24,152,0.08)", color: COLORS.blue, fontSize: 11 }}
+                />
+            ))}
         </Stack>
-    );
-}
-
-function StatCard({ label, value, helper, icon: Icon }: { label: string; value: string; helper: string; icon: React.ElementType }) {
-    return (
-        <Card variant="outlined">
-            <CardContent sx={{ p: 2.5 }}>
-                <Stack direction="row" justifyContent="space-between" alignItems="end">
-                    <Box>
-                        <Typography variant="body2" color="text.secondary">
-                            {label}
-                        </Typography>
-                        <Typography variant="h4" fontWeight={800} color="text.primary" sx={{ mt: 0.4, letterSpacing: -0.5 }}>
-                            {value}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                            {helper}
-                        </Typography>
-                    </Box>
-                    <Box sx={{ width: 42, height: 42, borderRadius: 3, bgcolor: "rgba(15,24,152,0.08)", color: COLORS.blue, display: "grid", placeItems: "center" }}>
-                        <Icon size={18} />
-                    </Box>
-                </Stack>
-            </CardContent>
-        </Card>
-    );
-}
-
-function StatusChip({ status }: { status: ParticipantStatus }) {
-    if (status === "active") return <Chip label="Actif" size="small" sx={{ borderRadius: 99, bgcolor: "rgba(16,185,129,0.12)", color: "rgb(4,120,87)" }} />;
-    if (status === "pending") return <Chip label="En attente" size="small" sx={{ borderRadius: 99, bgcolor: "rgba(255,204,0,0.16)", color: "rgb(180,120,0)" }} />;
-    return <Chip label="Archivé" size="small" sx={{ borderRadius: 99, bgcolor: "rgba(148,163,184,0.16)", color: "rgb(100,116,139)" }} />;
-}
-
-function ParticipantRowView({ participant }: { participant: ParticipantRow }) {
-    return (
-        <TableRow hover>
-            <TableCell>
-                <Typography fontWeight={700} color="text.primary">
-                    {participant.name}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                    {participant.email}
-                </Typography>
-            </TableCell>
-            <TableCell>{participant.company}</TableCell>
-            <TableCell>{participant.campaign}</TableCell>
-            <TableCell>{participant.coach}</TableCell>
-            <TableCell>
-                <StatusChip status={participant.status} />
-            </TableCell>
-            <TableCell>{participant.lastActivity}</TableCell>
-            <TableCell align="right">
-                <Button component={Link} to="/admin/campaigns/camp-2026-lyon" variant="text" endIcon={<ArrowRight size={16} />} sx={{ textTransform: "none" }}>
-                    Détail
-                </Button>
-            </TableCell>
-        </TableRow>
-    );
-}
-
-function ParticipantCard({ participant }: { participant: ParticipantRow }) {
-    return (
-        <Card variant="outlined">
-            <CardContent sx={{ p: 2.5 }}>
-                <Stack spacing={1.8}>
-                    <Stack direction="row" justifyContent="space-between" alignItems="start" spacing={2}>
-                        <Box>
-                            <Typography variant="h6" fontWeight={800} color="text.primary">
-                                {participant.name}
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.4 }}>
-                                {participant.email}
-                            </Typography>
-                        </Box>
-                        <StatusChip status={participant.status} />
-                    </Stack>
-
-                    <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "repeat(2, minmax(0, 1fr))" }, gap: 1.2 }}>
-                        <MiniStat label="Entreprise" value={participant.company} />
-                        <MiniStat label="Coach" value={participant.coach} />
-                        <MiniStat label="Campagne" value={participant.campaign} />
-                        <MiniStat label="Activité" value={participant.lastActivity} />
-                    </Box>
-
-                    <Stack direction={{ xs: "column", sm: "row" }} spacing={1.2}>
-                        <Button variant="contained" disableElevation component={Link} to="/admin/campaigns/camp-2026-lyon" startIcon={<ArrowRight size={16} />} sx={{ borderRadius: 3, bgcolor: COLORS.blue, textTransform: "none" }}>
-                            Ouvrir
-                        </Button>
-                        <Button variant="outlined" startIcon={<Mail size={16} />} sx={{ borderRadius: 3, textTransform: "none" }}>
-                            Relancer
-                        </Button>
-                    </Stack>
-                </Stack>
-            </CardContent>
-        </Card>
-    );
-}
-
-function MiniStat({ label, value }: { label: string; value: string }) {
-    return (
-        <Box sx={{ border: "1px solid rgba(15,23,42,0.10)", borderRadius: 4, p: 1.5 }}>
-            <Typography variant="caption" color="text.secondary">
-                {label}
-            </Typography>
-            <Typography variant="body2" fontWeight={700} color="text.primary" sx={{ mt: 0.25, lineHeight: 1.6 }}>
-                {value}
-            </Typography>
-        </Box>
     );
 }
 
 function AdminParticipantsRoute() {
     const [drawerOpen, setDrawerOpen] = React.useState(false);
-    const [editingParticipant, setEditingParticipant] = React.useState<ParticipantRow | null>(null);
+    const [page, setPage] = React.useState(1);
+    const [search, setSearch] = React.useState("");
+    const [companyFilter, setCompanyFilter] = React.useState<number | "">("");
 
-    const handleCreate = () => {
-        setEditingParticipant(null);
-        setDrawerOpen(true);
-    };
+    const { data, isLoading } = useParticipants(page, companyFilter || undefined);
+    const { data: companies = [] } = useCompanies();
+    const { data: dashboard } = useAdminDashboard();
 
-    const handleEdit = (participant: ParticipantRow) => {
-        setEditingParticipant(participant);
-        setDrawerOpen(true);
-    };
+    const participants = data?.items ?? [];
+    const totalPages = data?.pages ?? 1;
 
-    const initialValues: Partial<ParticipantFormValues> | undefined = editingParticipant
-        ? {
-            firstName: editingParticipant.name.split(" ")[0] ?? "",
-            lastName: editingParticipant.name.split(" ").slice(1).join(" ") ?? "",
-            email: editingParticipant.email,
-            company: editingParticipant.company,
-            campaign: editingParticipant.campaign,
-            coach: editingParticipant.coach,
-            status: editingParticipant.status,
-        }
-        : undefined;
+    const activeCount = participants.filter((p) => p.response_count > 0).length;
+    const invitedCount = participants.filter(
+        (p) => Object.keys(p.invite_status).length > 0 && p.response_count === 0
+    ).length;
+
+    const filtered = search.trim()
+        ? participants.filter(
+              (p) =>
+                  p.full_name.toLowerCase().includes(search.toLowerCase()) ||
+                  p.email.toLowerCase().includes(search.toLowerCase()) ||
+                  (p.company?.name ?? "").toLowerCase().includes(search.toLowerCase())
+          )
+        : participants;
+
     return (
         <Stack spacing={3}>
             <AdminParticipantDrawerForm
                 open={drawerOpen}
-                mode={editingParticipant ? "edit" : "create"}
-                initialValues={initialValues}
+                mode="create"
                 onClose={() => setDrawerOpen(false)}
                 onSubmit={(values) => {
                     console.log(values);
                     setDrawerOpen(false);
                 }}
             />
+
             <Card variant="outlined">
                 <CardContent sx={{ p: { xs: 2.5, md: 3 } }}>
                     <Stack spacing={2.5} direction={{ xs: "column", lg: "row" }} justifyContent="space-between" alignItems={{ xs: "start", lg: "start" }}>
@@ -254,11 +120,16 @@ function AdminParticipantsRoute() {
                                 Participants
                             </Typography>
                             <Typography variant="body1" color="text.secondary" sx={{ mt: 1, lineHeight: 1.7, maxWidth: 860 }}>
-                                Gestion des participants, de leurs campagnes rattachées et de leur statut de collecte.
+                                Gestion des participants, de leurs invitations et de leur statut de collecte.
                             </Typography>
                         </Box>
-
-                        <Button onClick={handleCreate} variant="contained" disableElevation startIcon={<Plus size={16} />} sx={{ borderRadius: 3, bgcolor: COLORS.blue, textTransform: "none" }}>
+                        <Button
+                            onClick={() => setDrawerOpen(true)}
+                            variant="contained"
+                            disableElevation
+                            startIcon={<Plus size={16} />}
+                            sx={{ borderRadius: 3, bgcolor: COLORS.blue, textTransform: "none" }}
+                        >
                             Ajouter un participant
                         </Button>
                     </Stack>
@@ -266,82 +137,160 @@ function AdminParticipantsRoute() {
             </Card>
 
             <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "repeat(4, minmax(0, 1fr))" }, gap: 2 }}>
-                <StatCard label="Participants" value="3" helper="dans le système" icon={Users} />
-                <StatCard label="Actifs" value="1" helper="en campagne" icon={BadgeCheck} />
-                <StatCard label="En attente" value="1" helper="invitation envoyée" icon={Mail} />
-                <StatCard label="Campagnes" value="3" helper="rattachées" icon={ClipboardList} />
+                <StatCard label="Participants" value={data?.total ?? "–"} helper="dans le système" icon={Users} loading={isLoading} />
+                <StatCard label="Avec réponses" value={activeCount} helper="sur cette page" icon={BadgeCheck} loading={isLoading} />
+                <StatCard label="En attente" value={invitedCount} helper="invitation envoyée" icon={Mail} loading={isLoading} />
+                <StatCard label="Entreprises" value={dashboard?.total_companies ?? "–"} helper="référencées" icon={Building2} />
             </Box>
 
             <Card variant="outlined">
                 <CardContent sx={{ p: 2.5 }}>
                     <SectionTitle
                         title="Liste des participants"
-                        subtitle="Rechercher, relancer et ouvrir la campagne liée."
+                        subtitle="Rechercher et consulter les participants et leurs invitations."
                         action={
-                            <Box sx={{ minWidth: 300 }}>
-                                <TextField fullWidth size="small" placeholder="Rechercher un participant…" />
-                            </Box>
+                            <Stack direction={{ xs: "column", sm: "row" }} spacing={1.2}>
+                                <FormControl size="small" sx={{ minWidth: 180 }}>
+                                    <InputLabel>Entreprise</InputLabel>
+                                    <Select
+                                        label="Entreprise"
+                                        value={companyFilter}
+                                        onChange={(e) => {
+                                            setCompanyFilter(e.target.value as number | "");
+                                            setPage(1);
+                                        }}
+                                    >
+                                        <MenuItem value="">Toutes</MenuItem>
+                                        {companies.map((c) => (
+                                            <MenuItem key={c.id} value={c.id}>{c.name}</MenuItem>
+                                        ))}
+                                    </Select>
+                                </FormControl>
+                                <TextField
+                                    size="small"
+                                    placeholder="Rechercher…"
+                                    value={search}
+                                    onChange={(e) => setSearch(e.target.value)}
+                                    sx={{ minWidth: 220 }}
+                                />
+                            </Stack>
                         }
                     />
 
+                    {/* Desktop table */}
                     <Box sx={{ display: { xs: "none", lg: "block" }, overflowX: "auto" }}>
-                        <Table sx={{ minWidth: 1100 }}>
+                        <Table sx={{ minWidth: 800 }}>
                             <TableHead>
                                 <TableRow>
                                     <TableCell>Participant</TableCell>
                                     <TableCell>Entreprise</TableCell>
-                                    <TableCell>Campagne</TableCell>
-                                    <TableCell>Coach</TableCell>
+                                    <TableCell>Questionnaires</TableCell>
+                                    <TableCell>Réponses</TableCell>
                                     <TableCell>Statut</TableCell>
-                                    <TableCell>Dernière activité</TableCell>
-                                    <TableCell />
                                 </TableRow>
                             </TableHead>
                             <TableBody>
-                                {participants.map((participant) => (
-                                    <ParticipantRowView key={participant.email} participant={participant} />
-                                ))}
+                                {isLoading
+                                    ? Array.from({ length: 5 }).map((_, i) => (
+                                          <TableRow key={i}>
+                                              {Array.from({ length: 5 }).map((__, j) => (
+                                                  <TableCell key={j}><Skeleton variant="text" /></TableCell>
+                                              ))}
+                                          </TableRow>
+                                      ))
+                                    : filtered.map((participant) => (
+                                          <TableRow hover key={participant.id}>
+                                              <TableCell>
+                                                  <Typography fontWeight={700} color="text.primary">
+                                                      {participant.full_name}
+                                                  </Typography>
+                                                  <Typography variant="caption" color="text.secondary">
+                                                      {participant.email}
+                                                  </Typography>
+                                              </TableCell>
+                                              <TableCell>{participant.company?.name ?? "–"}</TableCell>
+                                              <TableCell>
+                                                  <InviteBadges inviteStatus={participant.invite_status} />
+                                              </TableCell>
+                                              <TableCell>{participant.response_count}</TableCell>
+                                              <TableCell>
+                                                  <StatusChip participant={participant} />
+                                              </TableCell>
+                                          </TableRow>
+                                      ))}
+                                {!isLoading && filtered.length === 0 && (
+                                    <TableRow>
+                                        <TableCell colSpan={5} align="center" sx={{ py: 4 }}>
+                                            <Typography variant="body2" color="text.secondary">
+                                                {search
+                                                    ? "Aucun participant ne correspond à la recherche."
+                                                    : "Aucun participant pour le moment."}
+                                            </Typography>
+                                        </TableCell>
+                                    </TableRow>
+                                )}
                             </TableBody>
                         </Table>
                     </Box>
 
+                    {/* Mobile cards */}
                     <Stack spacing={2} sx={{ display: { xs: "flex", lg: "none" }, mt: 2 }}>
-                        {participants.map((participant) => (
-                            <ParticipantCard key={participant.email} participant={participant} />
-                        ))}
+                        {isLoading
+                            ? Array.from({ length: 3 }).map((_, i) => (
+                                  <Skeleton key={i} variant="rounded" height={160} />
+                              ))
+                            : filtered.map((participant) => (
+                                  <Card variant="outlined" key={participant.id}>
+                                      <CardContent sx={{ p: 2.5 }}>
+                                          <Stack spacing={1.8}>
+                                              <Stack direction="row" justifyContent="space-between" alignItems="start" spacing={2}>
+                                                  <Box>
+                                                      <Typography variant="h6" fontWeight={800} color="text.primary">
+                                                          {participant.full_name}
+                                                      </Typography>
+                                                      <Typography variant="body2" color="text.secondary" sx={{ mt: 0.4 }}>
+                                                          {participant.email}
+                                                      </Typography>
+                                                  </Box>
+                                                  <StatusChip participant={participant} />
+                                              </Stack>
+                                              <Box sx={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 1.2 }}>
+                                                  <MiniStat label="Entreprise" value={participant.company?.name ?? "–"} />
+                                                  <MiniStat label="Réponses" value={String(participant.response_count)} />
+                                              </Box>
+                                          </Stack>
+                                      </CardContent>
+                                  </Card>
+                              ))}
                     </Stack>
-                </CardContent>
-            </Card>
 
-            <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", xl: "1.2fr 0.8fr" }, gap: 3, alignItems: "start" }}>
-                <Card variant="outlined">
-                    <CardContent sx={{ p: 2.5 }}>
-                        <SectionTitle title="Raccourcis" subtitle="Accès rapide aux actions les plus fréquentes." />
-                        <Stack spacing={1.2} sx={{ mt: 2 }}>
-                            <Button variant="outlined" startIcon={<Mail size={16} />} sx={{ justifyContent: "space-between", borderRadius: 3, textTransform: "none" }}>
-                                Relancer les invitations
+                    {totalPages > 1 && (
+                        <Stack direction="row" justifyContent="center" alignItems="center" spacing={1.5} sx={{ mt: 2.5 }}>
+                            <Button
+                                variant="outlined"
+                                size="small"
+                                disabled={page <= 1}
+                                onClick={() => setPage((p) => p - 1)}
+                                sx={{ borderRadius: 3, textTransform: "none" }}
+                            >
+                                Précédent
                             </Button>
-                            <Button variant="outlined" startIcon={<Building2 size={16} />} sx={{ justifyContent: "space-between", borderRadius: 3, textTransform: "none" }}>
-                                Filtrer par entreprise
-                            </Button>
-                            <Button variant="outlined" startIcon={<Sparkles size={16} />} sx={{ justifyContent: "space-between", borderRadius: 3, textTransform: "none" }}>
-                                Voir les participants actifs
+                            <Typography variant="body2" color="text.secondary">
+                                Page {page} / {totalPages}
+                            </Typography>
+                            <Button
+                                variant="outlined"
+                                size="small"
+                                disabled={page >= totalPages}
+                                onClick={() => setPage((p) => p + 1)}
+                                sx={{ borderRadius: 3, textTransform: "none" }}
+                            >
+                                Suivant
                             </Button>
                         </Stack>
-                    </CardContent>
-                </Card>
-
-                <Card variant="outlined">
-                    <CardContent sx={{ p: 2.5 }}>
-                        <SectionTitle title="Lecture rapide" subtitle="Ce que cette page doit apporter à l’admin." />
-                        <Box sx={{ border: "1px solid rgba(15,23,42,0.10)", borderRadius: 4, p: 2, mt: 2 }}>
-                            <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.8 }}>
-                                Un participant doit toujours être relié à une campagne claire, avec le statut de collecte visible, et un moyen simple de relance.
-                            </Typography>
-                        </Box>
-                    </CardContent>
-                </Card>
-            </Box>
+                    )}
+                </CardContent>
+            </Card>
         </Stack>
     );
 }

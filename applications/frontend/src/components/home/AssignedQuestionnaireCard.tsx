@@ -202,15 +202,7 @@ export const AssignedQuestionnaireCard = ({
                         muted={false}
                         footer={
                             hasSelfRating ? (
-                                <Link
-                                    to="/results/$qid/$responseId"
-                                    params={{
-                                        qid: questionnaire.id,
-                                        responseId: String(matrix?.self_response_id ?? ''),
-                                    }}
-                                    search={{ campaign_id: campaignId ?? undefined }}
-                                    style={{ textDecoration: 'none' }}
-                                >
+                                <Link to="/participant/results" style={{ textDecoration: 'none' }}>
                                     <Button
                                         fullWidth
                                         variant="outlined"
@@ -222,12 +214,7 @@ export const AssignedQuestionnaireCard = ({
                                     </Button>
                                 </Link>
                             ) : canFillQuestionnaires ? (
-                                <Link
-                                    to="/questionnaire/$qid"
-                                    params={{ qid }}
-                                    search={{ type: 'self', campaign_id: campaignId ?? undefined }}
-                                    style={{ textDecoration: 'none' }}
-                                >
+                                <Link to="/participant/self-rating" style={{ textDecoration: 'none' }}>
                                     <Button
                                         fullWidth
                                         variant="contained"
@@ -306,12 +293,7 @@ export const AssignedQuestionnaireCard = ({
                                     ✓ {peerCount} retours validés
                                 </Typography>
                             ) : canFillQuestionnaires ? (
-                                <Link
-                                    to="/questionnaire/$qid"
-                                    params={{ qid }}
-                                    search={{ type: 'peer', campaign_id: campaignId ?? undefined }}
-                                    style={{ textDecoration: 'none' }}
-                                >
+                                <Link to="/participant/peer-feedback" style={{ textDecoration: 'none' }}>
                                     <Button
                                         fullWidth
                                         variant="contained"
@@ -401,15 +383,7 @@ export const AssignedQuestionnaireCard = ({
                         muted={!isScientificUnlocked && !hasScientific}
                         footer={
                             hasScientific ? (
-                                <Link
-                                    to="/results/$qid/$responseId"
-                                    params={{
-                                        qid: questionnaire.id,
-                                        responseId: String(matrix?.scientific_response_id ?? ''),
-                                    }}
-                                    search={{ campaign_id: campaignId ?? undefined }}
-                                    style={{ textDecoration: 'none' }}
-                                >
+                                <Link to="/participant/results" style={{ textDecoration: 'none' }}>
                                     <Button
                                         fullWidth
                                         variant="outlined"
@@ -422,9 +396,8 @@ export const AssignedQuestionnaireCard = ({
                                 </Link>
                             ) : isScientificUnlocked && canFillQuestionnaires ? (
                                 <Link
-                                    to="/questionnaire/$qid"
-                                    params={{ qid }}
-                                    search={{ type: 'scientific', campaign_id: campaignId ?? undefined }}
+                                    to="/participant/test/$questionnaireCode"
+                                    params={{ questionnaireCode: qid }}
                                     style={{ textDecoration: 'none' }}
                                 >
                                     <Button

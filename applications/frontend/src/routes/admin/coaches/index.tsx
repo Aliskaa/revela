@@ -1,4 +1,8 @@
 import { AdminCoachDrawerForm, CoachFormValues } from "@/components/admin/AdminCoachDrawerForm";
+import { ADMIN_COLORS as COLORS } from "@/components/common/colors";
+import { SectionTitle } from "@/components/common/SectionTitle";
+import { StatCard } from "@/components/common/StatCard";
+import { MiniStat } from "@/components/common/MiniStat";
 import {
     Box,
     Button,
@@ -31,11 +35,6 @@ export const Route = createFileRoute("/admin/coaches/")({
   component: AdminCoachesRoute,
 });
 
-const COLORS = {
-  blue: "rgb(15,24,152)",
-  yellow: "rgb(255,204,0)",
-  border: "rgba(15,23,42,0.10)",
-};
 
 type CoachStatus = "active" | "inactive";
 
@@ -79,48 +78,6 @@ const coaches: CoachRow[] = [
   },
 ];
 
-function SectionTitle({ title, subtitle, action }: { title: string; subtitle?: string; action?: React.ReactNode }) {
-  return (
-    <Stack direction="row" alignItems="start" justifyContent="space-between" spacing={2} sx={{ mb: 2 }}>
-      <Box>
-        <Typography variant="h5" fontWeight={800} color="text.primary" sx={{ letterSpacing: -0.4 }}>
-          {title}
-        </Typography>
-        {subtitle ? (
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.7, lineHeight: 1.7 }}>
-            {subtitle}
-          </Typography>
-        ) : null}
-      </Box>
-      {action}
-    </Stack>
-  );
-}
-
-function StatCard({ label, value, helper, icon: Icon }: { label: string; value: string; helper: string; icon: React.ElementType }) {
-  return (
-    <Card variant="outlined">
-      <CardContent sx={{ p: 2.5 }}>
-        <Stack direction="row" justifyContent="space-between" alignItems="end">
-          <Box>
-            <Typography variant="body2" color="text.secondary">
-              {label}
-            </Typography>
-            <Typography variant="h4" fontWeight={800} color="text.primary" sx={{ mt: 0.4, letterSpacing: -0.5 }}>
-              {value}
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              {helper}
-            </Typography>
-          </Box>
-          <Box sx={{ width: 42, height: 42, borderRadius: 3, bgcolor: "rgba(15,24,152,0.08)", color: COLORS.blue, display: "grid", placeItems: "center" }}>
-            <Icon size={18} />
-          </Box>
-        </Stack>
-      </CardContent>
-    </Card>
-  );
-}
 
 function StatusChip({ status }: { status: CoachStatus }) {
   if (status === "active") return <Chip label="Actif" size="small" sx={{ borderRadius: 99, bgcolor: "rgba(16,185,129,0.12)", color: "rgb(4,120,87)" }} />;
@@ -198,18 +155,6 @@ function CoachCard({ coach }: { coach: CoachRow }) {
   );
 }
 
-function MiniStat({ label, value }: { label: string; value: string }) {
-  return (
-    <Box sx={{ border: "1px solid rgba(15,23,42,0.10)", borderRadius: 4, p: 1.5 }}>
-      <Typography variant="caption" color="text.secondary">
-        {label}
-      </Typography>
-      <Typography variant="body2" fontWeight={700} color="text.primary" sx={{ mt: 0.25, lineHeight: 1.6 }}>
-        {value}
-      </Typography>
-    </Box>
-  );
-}
 
 function AdminCoachesRoute() {
     const [drawerOpen, setDrawerOpen] = React.useState(false);
@@ -217,11 +162,6 @@ function AdminCoachesRoute() {
   
     const handleCreate = () => {
       setEditingCoach(null);
-      setDrawerOpen(true);
-    };
-  
-    const handleEdit = (coach: CoachRow) => {
-      setEditingCoach(coach);
       setDrawerOpen(true);
     };
   

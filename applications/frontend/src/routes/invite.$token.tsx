@@ -96,7 +96,7 @@ function InvitePage() {
             if (jwtParticipantId !== null && jwtParticipantId !== invite.participant_id) {
                 userParticipant.removeToken();
             }
-            void navigate({ to: '/', replace: true });
+            void navigate({ to: '/participant', replace: true });
         }
     }, [invite, inviteError, loadingInvite, navigate]);
 
@@ -242,12 +242,10 @@ function InvitePage() {
 
                 if (campaignOpen) {
                     navigate({
-                        to: '/questionnaire/$qid',
-                        params: { qid: activationInvite.questionnaire_id },
-                        search: { type: 'self', campaign_id: activationInvite.campaign_id ?? undefined },
+                        to: '/participant/self-rating',
                     });
                 } else {
-                    navigate({ to: '/', replace: true });
+                    navigate({ to: '/participant', replace: true });
                 }
             } catch (err) {
                 const ax = err as { response?: { status?: number; data?: { error?: string } } };
@@ -456,11 +454,11 @@ function InvitePage() {
     async function handleSubmit() {
         setStep('submitting');
         try {
-            const result = await submitInvite.mutateAsync({
+            await submitInvite.mutateAsync({
                 series0: series0 as number[],
                 series1: series1 as number[],
             });
-            navigate({ to: '/results/$qid/$responseId', params: { qid, responseId: String(result.response_id) } });
+            navigate({ to: '/participant/results' });
         } catch {
             setStep('series1');
         }

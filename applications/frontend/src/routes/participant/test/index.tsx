@@ -180,8 +180,6 @@ function QuestionnairePreview() {
 }
 
 function ParticipantTestIndexRoute() {
-  const startHref = `/participant/test/${campaignQuestionnaireCode}`;
-
   return (
     <Stack spacing={3}>
       <Card variant="outlined" sx={{ borderRadius: 6, borderColor: COLORS.border, boxShadow: "0 6px 18px rgba(15,23,42,0.04)" }}>
@@ -253,16 +251,20 @@ function ParticipantTestIndexRoute() {
             <CardContent sx={{ p: 2.5 }}>
               <SectionTitle title="Actions" subtitle="Passer au questionnaire ou revenir au parcours." />
               <Stack spacing={1.2} sx={{ mt: 2 }}>
-                <Button
-                  variant="contained"
-                  disableElevation
-                  component={Link}
-                  to={startHref}
-                  startIcon={<ArrowRight size={16} />}
-                  sx={{ borderRadius: 3, bgcolor: COLORS.blue, textTransform: "none" }}
+                <Link
+                  to="/participant/test/$questionnaireCode"
+                  params={{ questionnaireCode: campaignQuestionnaireCode }}
+                  style={{ textDecoration: "none" }}
                 >
-                  Commencer le test
-                </Button>
+                  <Button
+                    variant="contained"
+                    disableElevation
+                    startIcon={<ArrowRight size={16} />}
+                    sx={{ borderRadius: 3, bgcolor: COLORS.blue, textTransform: "none" }}
+                  >
+                    Commencer le test
+                  </Button>
+                </Link>
                 <Button variant="outlined" sx={{ borderRadius: 3, textTransform: "none" }}>
                   Retour au parcours
                 </Button>
