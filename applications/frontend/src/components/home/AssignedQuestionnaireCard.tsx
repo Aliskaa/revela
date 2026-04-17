@@ -1,4 +1,4 @@
-import type { CampaignStatus } from '@/api/types';
+import type { CampaignStatus } from '@aor/types';
 import { useParticipantSessionMatrix } from '@/hooks/participantSession';
 import { useQuestionnaire } from '@/hooks/questionnaires';
 import { Alert, Box, Button, Card, CardContent, Chip, Skeleton, Stack, Typography } from '@mui/material';

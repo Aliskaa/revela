@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useParticipantSession } from "@/hooks/participantSession";
-import type { ParticipantSession } from "@/api/types";
+import type { ParticipantSession } from "@aor/types";
 import { createFileRoute } from "@tanstack/react-router";
 import {
   BadgeCheck,

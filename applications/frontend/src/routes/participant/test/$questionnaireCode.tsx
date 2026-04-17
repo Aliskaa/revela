@@ -27,7 +27,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useQuestionnaire } from "@/hooks/questionnaires";
-import type { Question } from "@/api/types";
+import type { Question } from "@aor/types";
 
 export const Route = createFileRoute("/participant/test/$questionnaireCode")({
   component: ParticipantTestSessionRoute,

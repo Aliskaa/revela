@@ -1,4 +1,4 @@
-import type { QuestionnaireDetail } from '@/api/types';
+import type { QuestionnaireDetail } from '@aor/types';
 import { DimensionCards } from '@/components/common/DimensionCards';
 import { useParticipantSessionMatrix } from '@/hooks/participantSession';
 import { useSubmitParticipantQuestionnaire } from '@/hooks/questionnaires';

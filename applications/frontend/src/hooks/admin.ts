@@ -14,7 +14,7 @@ import type {
     Participant,
     ParticipantQuestionnaireMatrix,
     ResponseDetail,
-} from '@/api/types';
+} from '@aor/types';
 import { userAdmin } from '@/lib/auth';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 

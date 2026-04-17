@@ -31,7 +31,7 @@ import { SectionTitle } from "@/components/common/SectionTitle";
 import { StatCard } from "@/components/common/StatCard";
 import { MiniStat } from "@/components/common/MiniStat";
 import { useAdminCampaigns, useAdminDashboard, useCoaches, useCompanies, useCreateAdminCampaign } from "@/hooks/admin";
-import type { CampaignStatus } from "@/api/types";
+import type { CampaignStatus } from "@aor/types";
 
 export const Route = createFileRoute("/admin/campaigns/")({
     component: AdminCampaignsRoute,

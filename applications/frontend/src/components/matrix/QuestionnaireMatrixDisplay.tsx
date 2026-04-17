@@ -1,4 +1,4 @@
-import type { ParticipantQuestionnaireMatrix } from '@/api/types';
+import type { ParticipantQuestionnaireMatrix } from '@aor/types';
 import { Box, Chip, Stack, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material';
 import { BarChart3, Info, Table2 } from 'lucide-react';
 import { useState } from 'react';

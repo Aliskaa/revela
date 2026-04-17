@@ -1,4 +1,4 @@
-import type { QuestionnaireDetail } from '@/api/types';
+import type { QuestionnaireDetail } from '@aor/types';
 import { Box, Paper, Slider, Typography, useTheme } from '@mui/material';
 
 type DimensionCardsProps = {

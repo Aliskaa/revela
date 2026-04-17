@@ -28,7 +28,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useAdminDashboard, useAdminCampaigns, useCoaches, useCompanies } from "@/hooks/admin";
-import type { CampaignStatus } from "@/api/types";
+import type { CampaignStatus } from "@aor/types";
 import { ADMIN_COLORS as COLORS } from "@/components/common/colors";
 import { SectionTitle } from "@/components/common/SectionTitle";
 import { StatCard } from "@/components/common/StatCard";

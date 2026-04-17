@@ -10,9 +10,10 @@
  * See LICENSE.md for the full license terms.
  */
 
-export const CAMPAIGNS_REPOSITORY_PORT_SYMBOL = Symbol('CAMPAIGNS_REPOSITORY_PORT_SYMBOL');
+import type { CampaignStatus } from '@aor/types';
+export type { CampaignStatus };
 
-export type CampaignStatus = 'draft' | 'active' | 'closed' | 'archived';
+export const CAMPAIGNS_REPOSITORY_PORT_SYMBOL = Symbol('CAMPAIGNS_REPOSITORY_PORT_SYMBOL');
 
 export type CampaignRecord = {
     id: number;

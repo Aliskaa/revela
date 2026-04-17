@@ -1,5 +1,5 @@
 import { participantApiClient } from '@/api/participantClient';
-import type { CampaignPeerChoice, ParticipantQuestionnaireMatrix, ParticipantSession } from '@/api/types';
+import type { CampaignPeerChoice, ParticipantQuestionnaireMatrix, ParticipantSession } from '@aor/types';
 import { useQuery } from '@tanstack/react-query';
 
 export const participantSessionKeys = {

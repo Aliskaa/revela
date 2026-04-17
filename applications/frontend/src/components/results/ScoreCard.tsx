@@ -1,4 +1,4 @@
-import type { ResultDim } from '@/api/types';
+import type { ResultDim } from '@aor/types';
 import { Box, Card, CardContent, LinearProgress, Typography, useTheme } from '@mui/material';
 
 interface ScoreCardProps {

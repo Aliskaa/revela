@@ -12,6 +12,7 @@
         "format": "biome format --write ."
     },
     "dependencies": {
+        "@aor/types": "workspace:*",
         "@emotion/react": "catalog:",
         "@emotion/styled": "catalog:",
         "@mui/material": "catalog:",

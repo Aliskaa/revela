@@ -1,4 +1,4 @@
-import type { DiffPair } from '@/api/types';
+import type { DiffPair } from '@aor/types';
 import { Box, Card, CardContent, Chip, LinearProgress, Stack, Typography, useTheme } from '@mui/material';
 import { Minus, TrendingDown, TrendingUp } from 'lucide-react';
 

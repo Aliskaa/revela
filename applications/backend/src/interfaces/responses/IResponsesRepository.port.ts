@@ -12,8 +12,10 @@
 
 import type { Paginated } from '@src/shared/pagination';
 
+import { ResponseSubmissionKind as SubmissionKind } from '@aor/types';
+export type { SubmissionKind };
+
 export const RESPONSES_REPOSITORY_PORT_SYMBOL = Symbol('RESPONSES_REPOSITORY_PORT_SYMBOL');
-export type SubmissionKind = 'self_rating' | 'peer_rating' | 'element_humain';
 
 export type ResponseScoreRecord = {
     scoreKey: number;

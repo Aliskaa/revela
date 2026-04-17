@@ -1,4 +1,4 @@
-import type { ParticipantQuestionnaireMatrix } from '@/api/types';
+import type { ParticipantQuestionnaireMatrix } from '@aor/types';
 import { Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from '@mui/material';
 
 type MatrixTableModeProps = {

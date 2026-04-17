@@ -27,7 +27,7 @@ import { SectionTitle } from "@/components/common/SectionTitle";
 import { StatCard } from "@/components/common/StatCard";
 import { MiniStat } from "@/components/common/MiniStat";
 import { useAdminDashboard, useCompanies, useParticipants } from "@/hooks/admin";
-import type { Participant } from "@/api/types";
+import type { Participant } from "@aor/types";
 
 export const Route = createFileRoute("/admin/participants/")({
     component: AdminParticipantsRoute,

@@ -1,4 +1,4 @@
-import type { DiffPair, ResultDim } from '@/api/types';
+import type { DiffPair, ResultDim } from '@aor/types';
 
 /**
  * Résout les paires (e, w) utilisées par {@link CalculationBlock}.

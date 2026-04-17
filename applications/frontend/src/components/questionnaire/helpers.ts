@@ -1,4 +1,4 @@
-import type { QuestionnaireDetail } from '@/api/types';
+import type { QuestionnaireDetail } from '@aor/types';
 import { participantSessionKeys } from '@/hooks/participantSession';
 import type { QueryClient } from '@tanstack/react-query';
 

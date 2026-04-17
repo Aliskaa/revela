@@ -11,6 +11,12 @@
  */
 
 import { getQuestionnaireEntry } from '@aor/questionnaires';
+import type {
+    ParticipantQuestionnaireMatrix,
+    ParticipantQuestionnaireMatrixPeerColumn,
+    ParticipantQuestionnaireMatrixRow,
+    ResultDim,
+} from '@aor/types';
 
 import {
     displayPeerRatingStoredLabel,
@@ -23,35 +29,6 @@ import type {
     ResponseRecord,
     SubmissionKind,
 } from '@src/interfaces/responses/IResponsesRepository.port';
-
-export type MatrixPeerColumnDto = {
-    response_id: number;
-    label: string;
-    rater_participant_id: number | null;
-    rated_participant_id: number | null;
-};
-
-export type MatrixRowDto = {
-    score_key: number;
-    label: string;
-    self: number | null;
-    peers: (number | null)[];
-    scientific: number | null;
-};
-
-export type ParticipantQuestionnaireMatrixDto = {
-    subject_id: number;
-    questionnaire_id: string;
-    questionnaire_title: string;
-    likert_max: number;
-    scientific_value_max: number;
-    peer_columns: MatrixPeerColumnDto[];
-    self_response_id: number | null;
-    scientific_response_id: number | null;
-    rows: MatrixRowDto[];
-    result_dims: unknown;
-    short_labels: Readonly<Record<string, string>>;
-};
 
 const LIKERT_MAX = 9;
 
@@ -92,7 +69,7 @@ export class GetParticipantQuestionnaireMatrixUseCase {
         participantId: number;
         qid: string;
         campaignId?: number;
-    }): Promise<ParticipantQuestionnaireMatrixDto> {
+    }): Promise<ParticipantQuestionnaireMatrix> {
         const participant = await this.ports.participants.findById(params.participantId);
         if (!participant) {
             throw new AdminResourceNotFoundError('Participant introuvable.');
@@ -116,7 +93,7 @@ export class GetParticipantQuestionnaireMatrixUseCase {
         peerCandidates.sort((a, b) => (b.submittedAt?.getTime() ?? 0) - (a.submittedAt?.getTime() ?? 0));
         const peerRecords = peerCandidates.slice(0, 5).reverse();
 
-        const peer_columns: MatrixPeerColumnDto[] = peerRecords.map(r => {
+        const peer_columns: ParticipantQuestionnaireMatrixPeerColumn[] = peerRecords.map(r => {
             const rawName = r.name.trim() || `Pair #${String(r.id)}`;
             return {
                 response_id: r.id,
@@ -135,7 +112,7 @@ export class GetParticipantQuestionnaireMatrixUseCase {
         const scientificMap = scoresToMap(scientificRecord);
         const peerMaps = peerRecords.map(r => scoresToMap(r));
 
-        const rows: MatrixRowDto[] = scoreKeys.map(score_key => ({
+        const rows: ParticipantQuestionnaireMatrixRow[] = scoreKeys.map(score_key => ({
             score_key,
             label: catalog.short_labels[String(score_key)] ?? String(score_key),
             self: selfMap.get(score_key) ?? null,
@@ -157,7 +134,7 @@ export class GetParticipantQuestionnaireMatrixUseCase {
             self_response_id: selfRecord?.id ?? null,
             scientific_response_id: scientificRecord?.id ?? null,
             rows,
-            result_dims: catalog.result_dims,
+            result_dims: catalog.result_dims as ResultDim[],
             short_labels: catalog.short_labels,
         };
     }

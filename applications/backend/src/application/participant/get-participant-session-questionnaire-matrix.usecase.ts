@@ -10,10 +10,8 @@
  * See LICENSE.md for the full license terms.
  */
 
-import type {
-    GetParticipantQuestionnaireMatrixUseCase,
-    ParticipantQuestionnaireMatrixDto,
-} from '@src/application/participant/get-participant-questionnaire-matrix.usecase';
+import type { ParticipantQuestionnaireMatrix } from '@aor/types';
+import type { GetParticipantQuestionnaireMatrixUseCase } from '@src/application/participant/get-participant-questionnaire-matrix.usecase';
 import {
     ParticipantAssignedQuestionnaireMissingError,
     ParticipantQuestionnaireNotAllowedError,
@@ -34,7 +32,7 @@ export class GetParticipantSessionQuestionnaireMatrixUseCase {
         participantId: number,
         qid?: string,
         campaignId?: number
-    ): Promise<ParticipantQuestionnaireMatrixDto> {
+    ): Promise<ParticipantQuestionnaireMatrix> {
         const assignments = await this.ports.participants.listInviteAssignmentsForParticipant(participantId);
         if (assignments.length === 0) {
             throw new ParticipantAssignedQuestionnaireMissingError();

@@ -1,5 +1,5 @@
 import { participantApiClient } from '@/api/participantClient';
-import type { CampaignPeerChoice, QuestionnaireDetail, SubmitParticipantPeerRatingBody } from '@/api/types';
+import type { CampaignPeerChoice, QuestionnaireDetail, SubmitParticipantPeerRatingBody } from '@aor/types';
 import { AiPlaceholder } from '@/components/common/AiPlaceholder';
 import { DimensionCards } from '@/components/common/DimensionCards';
 import { useParticipantCampaignPeers, useParticipantSessionMatrix } from '@/hooks/participantSession';

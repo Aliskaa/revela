@@ -1,4 +1,4 @@
-import type { ParticipantQuestionnaireMatrix, ResultDim } from '@/api/types';
+import type { ParticipantQuestionnaireMatrix, ResultDim } from '@aor/types';
 import { Box, LinearProgress, Paper, Stack, Typography } from '@mui/material';
 
 type MatrixChartModeProps = {

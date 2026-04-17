@@ -5,7 +5,7 @@ import type {
     QuestionnaireListItem,
     SubmitParticipantQuestionnaireBody,
     SubmitResult,
-} from '@/api/types';
+} from '@aor/types';
 import { useMutation, useQuery } from '@tanstack/react-query';
 
 export const questionnaireKeys = {

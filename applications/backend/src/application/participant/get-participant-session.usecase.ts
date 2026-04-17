@@ -12,6 +12,7 @@
 
 import { ParticipantAccountNotFoundError } from '@src/domain/participant/participant-session.errors';
 import { getQuestionnaireEntry } from '@aor/questionnaires';
+import type { ParticipantSession } from '@aor/types';
 import type { CampaignStatus, ICampaignsReadPort } from '@src/interfaces/campaigns/ICampaignsRepository.port';
 import type { ICoachesReadPort } from '@src/interfaces/coaches/ICoachesRepository.port';
 import type { ICompaniesReadPort } from '@src/interfaces/companies/ICompaniesRepository.port';
@@ -24,31 +25,6 @@ const normalizeStepStatus = (status: 'locked' | 'pending' | 'completed'): 'locke
     return 'pending';
 };
 
-export type ParticipantSessionDto = {
-    participant_id: number;
-    email: string;
-    first_name: string;
-    last_name: string;
-    assignments: Array<{
-        campaign_id: number | null;
-        campaign_name: string | null;
-        company_id: number | null;
-        company_name: string | null;
-        coach_id: number | null;
-        coach_name: string | null;
-        questionnaire_id: string;
-        questionnaire_title: string;
-        campaign_status: CampaignStatus | null;
-        allow_test_without_manual_inputs: boolean;
-        invitation_confirmed: boolean;
-        progression: {
-            self_rating_status: 'locked' | 'pending' | 'completed';
-            peer_feedback_status: 'locked' | 'pending' | 'completed';
-            element_humain_status: 'locked' | 'pending' | 'completed';
-            results_status: 'locked' | 'pending' | 'completed';
-        } | null;
-    }>;
-};
 
 export class GetParticipantSessionUseCase {
     public constructor(
@@ -60,7 +36,7 @@ export class GetParticipantSessionUseCase {
         }
     ) {}
 
-    public async execute(participantId: number): Promise<ParticipantSessionDto> {
+    public async execute(participantId: number): Promise<ParticipantSession> {
         const participant = await this.ports.participants.findById(participantId);
         if (!participant) {
             throw new ParticipantAccountNotFoundError();

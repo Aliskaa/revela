@@ -1,4 +1,4 @@
-import type { QuestionnaireDetail } from '@/api/types';
+import type { QuestionnaireDetail } from '@aor/types';
 import { AiPlaceholder } from '@/components/common/AiPlaceholder';
 import { ScaleInput } from '@/components/common/ScaleInput';
 import { ScientificProgressBar } from '@/components/common/ScientificProgressBar';
