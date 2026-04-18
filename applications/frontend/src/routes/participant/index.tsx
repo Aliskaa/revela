@@ -1,25 +1,8 @@
-import * as React from "react";
 import { useParticipantSession } from "@/hooks/participantSession";
 import type { ParticipantSession } from "@aor/types";
-import { createFileRoute, Link } from "@tanstack/react-router";
-import {
-  BadgeCheck,
-  Bell,
-  ChevronRight,
-  ClipboardCheck,
-  ClipboardList,
-  Gauge,
-  Brain,
-  Lock,
-  MessageSquareQuote,
-  Radar,
-  UserRound,
-  Users,
-} from "lucide-react";
 import {
   Alert,
   Box,
-  Button,
   Card,
   CardContent,
   Chip,
@@ -29,8 +12,23 @@ import {
   MenuItem,
   Select,
   Stack,
-  Typography,
+  Typography
 } from "@mui/material";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import {
+  BadgeCheck,
+  Bell,
+  Brain,
+  ChevronRight,
+  ClipboardCheck,
+  Gauge,
+  Lock,
+  MessageSquareQuote,
+  Radar,
+  UserRound,
+  Users
+} from "lucide-react";
+import * as React from "react";
 
 export const Route = createFileRoute("/participant/")({
   component: ParticipantDashboardRoute,
@@ -471,37 +469,6 @@ function CoachCard({ campaignView }: { campaignView: CampaignView }) {
   );
 }
 
-function QuickActions() {
-  return (
-    <Card variant="outlined">
-      <CardContent sx={{ p: 2.5 }}>
-        <SectionTitle title="Actions rapides" subtitle="Les liens les plus utilisés" />
-        <Stack spacing={1.2}>
-          {[
-            { label: "Inviter des pairs", icon: Users },
-            { label: "Reprendre l’auto-évaluation", icon: ClipboardList },
-            { label: "Consulter les résultats", icon: Radar },
-          ].map((item) => {
-            const Icon = item.icon;
-            return (
-              <Button
-                key={item.label}
-                variant="outlined"
-                fullWidth
-                startIcon={<Icon size={16} />}
-                endIcon={<ChevronRight size={16} />}
-                sx={{ justifyContent: "space-between", borderRadius: 4, borderColor: COLORS.border, textTransform: "none", color: "text.primary", py: 1.3 }}
-              >
-                {item.label}
-              </Button>
-            );
-          })}
-        </Stack>
-      </CardContent>
-    </Card>
-  );
-}
-
 export function ParticipantDashboardRoute() {
   const { data: session, isLoading, isError } = useParticipantSession();
   const [selectedIndex, setSelectedIndex] = React.useState<number>(0);
@@ -569,13 +536,11 @@ export function ParticipantDashboardRoute() {
               </Stack>
             </CardContent>
           </Card>
-
-          <CampaignCard campaignView={campaignView} />
         </Stack>
 
         <Stack spacing={3}>
+          <CampaignCard campaignView={campaignView} />
           <CoachCard campaignView={campaignView} />
-          <QuickActions />
         </Stack>
       </Box>
     </Stack>

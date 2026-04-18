@@ -377,15 +377,6 @@ function ParticipantTestSessionRoute() {
 
           <Card variant="outlined" sx={{ borderRadius: 6, borderColor: COLORS.border, boxShadow: "0 6px 18px rgba(15,23,42,0.04)" }}>
             <CardContent sx={{ p: 2.5 }}>
-              <SectionTitle title="Rappel métier" subtitle="Les réponses sont enregistrées question par question." />
-              <Typography variant="body2" color="text.secondary" sx={{ mt: 1.5, lineHeight: 1.8 }}>
-                L’auto-évaluation et les pairs utilisent les short labels notés de 1 à 9. Ici, on bascule sur le test Élément Humain assigné par la campagne.
-              </Typography>
-            </CardContent>
-          </Card>
-
-          <Card variant="outlined" sx={{ borderRadius: 6, borderColor: COLORS.border, boxShadow: "0 6px 18px rgba(15,23,42,0.04)" }}>
-            <CardContent sx={{ p: 2.5 }}>
               <SectionTitle title="Actions" subtitle="Sauvegarder la réponse ou revenir au flux." />
               <Stack spacing={1.2} sx={{ mt: 2 }}>
                 <Button variant="contained" disableElevation startIcon={<Save size={16} />} sx={{ borderRadius: 3, bgcolor: COLORS.blue, textTransform: "none" }}>

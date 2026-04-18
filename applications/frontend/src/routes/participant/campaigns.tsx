@@ -228,11 +228,11 @@ function CampaignCard({ campaign }: { campaign: Campaign }) {
                 variant="contained"
                 disableElevation
                 component={Link}
-                to={`/participant/test/${campaign.questionnaireId.toUpperCase()}`}
+                to="/participant/journey"
                 sx={{ borderRadius: 3, bgcolor: COLORS.blue, textTransform: "none" }}
                 endIcon={<ArrowRight size={16} />}
               >
-                Commencer le parcours
+                {campaign.progress > 0 ? "Continuer le parcours" : "Commencer le parcours"}
               </Button>
             )}
             {campaign.status === "closed" && (
@@ -250,10 +250,10 @@ function CampaignCard({ campaign }: { campaign: Campaign }) {
             <Button
               variant="outlined"
               component={Link}
-              to="/participant/journey"
+              to="/participant/results"
               sx={{ borderRadius: 3, textTransform: "none" }}
             >
-              Voir le suivi
+              Voir les résultats
             </Button>
           </Stack>
         </Stack>

@@ -1,6 +1,5 @@
 import * as React from "react";
-import { useParticipantSession } from "@/hooks/participantSession";
-import { useParticipantSessionMatrix } from "@/hooks/participantSession";
+import { useParticipantSession, useParticipantSessionMatrix } from "@/hooks/participantSession";
 import type { ParticipantQuestionnaireMatrix } from "@aor/types";
 import { createFileRoute } from "@tanstack/react-router";
 import {
@@ -31,71 +30,99 @@ export const Route = createFileRoute("/participant/results")({
 const COLORS = {
   blue: "rgb(15,24,152)",
   yellow: "rgb(255,204,0)",
+  green: "rgb(4,120,87)",
   border: "rgba(15,23,42,0.10)",
 };
 
-type MetricItem = {
+type ScoreRow = {
   label: string;
-  value: number | null;
-  accent: "blue" | "yellow";
+  self: number | null;
+  peersAvg: number | null;
+  scientific: number | null;
 };
 
 type DimensionView = {
   name: string;
-  metrics: MetricItem[];
+  rows: ScoreRow[];
 };
 
-const buildDimensionsFromMatrix = (matrix: ParticipantQuestionnaireMatrix): DimensionView[] => {
+const avg = (values: (number | null)[]): number | null => {
+  const nums = values.filter((v): v is number => v !== null);
+  if (nums.length === 0) return null;
+  return Math.round((nums.reduce((s, v) => s + v, 0) / nums.length) * 10) / 10;
+};
+
+const buildDimensions = (matrix: ParticipantQuestionnaireMatrix): DimensionView[] => {
   const dims: DimensionView[] = [];
   for (const rd of matrix.result_dims) {
-    const metrics: MetricItem[] = [];
-    for (let i = 0; i < rd.scores.length; i++) {
-      const scoreKey = rd.scores[i];
+    const rows: ScoreRow[] = [];
+    for (const scoreKey of rd.scores) {
       const row = matrix.rows.find(r => r.score_key === scoreKey);
       if (row) {
-        metrics.push({
+        rows.push({
           label: row.label,
-          value: row.self,
-          accent: i % 2 === 0 ? "blue" : "yellow",
+          self: row.self,
+          peersAvg: avg(row.peers),
+          scientific: row.scientific,
         });
       }
     }
-    dims.push({ name: rd.name, metrics });
+    dims.push({ name: rd.name, rows });
   }
   return dims;
 };
 
-function MiniValue({ item, likertMax }: { item: MetricItem; likertMax: number }) {
-  const barColor = item.accent === "blue" ? COLORS.blue : COLORS.yellow;
-  const pct = item.value != null ? Math.round((item.value / likertMax) * 100) : 0;
-
+function ScoreBar({ value, max, color }: { value: number | null; max: number; color: string }) {
+  const pct = value != null ? Math.round((value / max) * 100) : 0;
   return (
-    <Card variant="outlined" sx={{ p: 1.5 }}>
-      <Typography variant="caption" color="text.secondary">{item.label}</Typography>
-      <Typography variant="h6" fontWeight={800} color="text.primary">{item.value ?? "–"}</Typography>
+    <Stack direction="row" spacing={1} alignItems="center" sx={{ flex: 1 }}>
+      <Typography variant="body2" fontWeight={700} color="text.primary" sx={{ minWidth: 24, textAlign: "right" }}>
+        {value ?? "–"}
+      </Typography>
       <LinearProgress
         variant="determinate"
         value={pct}
-        sx={{ mt: 1.1, height: 8, borderRadius: 99, bgcolor: "rgba(15,23,42,0.06)", "& .MuiLinearProgress-bar": { bgcolor: barColor } }}
+        sx={{ flex: 1, height: 8, borderRadius: 99, bgcolor: "rgba(15,23,42,0.06)", "& .MuiLinearProgress-bar": { bgcolor: color } }}
       />
-    </Card>
+    </Stack>
   );
 }
 
 function DimensionCard({ dimension, likertMax }: { dimension: DimensionView; likertMax: number }) {
+  const hasPeers = dimension.rows.some(r => r.peersAvg !== null);
+  const hasScientific = dimension.rows.some(r => r.scientific !== null);
+
   return (
     <Card variant="outlined">
       <CardContent sx={{ p: 2.5 }}>
+        <Typography variant="h6" fontWeight={800} color="text.primary" sx={{ mb: 2 }}>{dimension.name}</Typography>
+
         <Stack spacing={2}>
-          <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={2}>
-            <Typography variant="h6" fontWeight={800} color="text.primary">{dimension.name}</Typography>
-            <Chip label="Détail" size="small" sx={{ borderRadius: 99, bgcolor: "rgba(15,24,152,0.08)", color: COLORS.blue }} />
-          </Stack>
-          <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "repeat(2, minmax(0, 1fr))" }, gap: 1.2 }}>
-            {dimension.metrics.map((item) => (
-              <MiniValue key={item.label} item={item} likertMax={likertMax} />
-            ))}
-          </Box>
+          {dimension.rows.map((row) => (
+            <Box key={row.label} sx={{ border: `1px solid ${COLORS.border}`, borderRadius: 3, p: 2 }}>
+              <Typography variant="body2" fontWeight={700} color="text.primary" sx={{ mb: 1.5 }}>
+                {row.label}
+              </Typography>
+              <Stack spacing={1}>
+                <Stack direction="row" spacing={1.5} alignItems="center">
+                  <Chip label="Auto" size="small" sx={{ borderRadius: 99, bgcolor: "rgba(15,24,152,0.08)", color: COLORS.blue, minWidth: 70, fontWeight: 700, fontSize: 11 }} />
+                  <ScoreBar value={row.self} max={likertMax} color={COLORS.blue} />
+                </Stack>
+                {hasPeers && (
+                  <Stack direction="row" spacing={1.5} alignItems="center">
+                    <Chip label="Pairs" size="small" sx={{ borderRadius: 99, bgcolor: "rgba(255,204,0,0.16)", color: "rgb(180,120,0)", minWidth: 70, fontWeight: 700, fontSize: 11 }} />
+                    <ScoreBar value={row.peersAvg} max={likertMax} color={COLORS.yellow} />
+                  </Stack>
+                )}
+                {hasScientific && (
+                  <Stack direction="row" spacing={1.5} alignItems="center">
+                    <Chip label="Test" size="small" sx={{ borderRadius: 99, bgcolor: "rgba(16,185,129,0.12)", color: COLORS.green, minWidth: 70, fontWeight: 700, fontSize: 11 }} />
+                    <ScoreBar value={row.scientific} max={likertMax} color={COLORS.green} />
+                  </Stack>
+                )}
+              </Stack>
+            </Box>
+          ))}
         </Stack>
       </CardContent>
     </Card>
@@ -108,7 +135,6 @@ function ParticipantResultsRoute() {
 
   const assignments = session?.assignments ?? [];
 
-  // Auto-select the first active campaign on load
   React.useEffect(() => {
     if (assignments.length > 0) {
       const activeIdx = assignments.findIndex(a => a.campaign_status === "active");
@@ -126,9 +152,10 @@ function ParticipantResultsRoute() {
   const isLoading = sessionLoading || matrixLoading;
   const coachName = selectedAssignment?.coach_name ?? "–";
   const campaignName = selectedAssignment?.campaign_name ?? "Résultats";
+  const peerCount = matrix?.peer_columns.length ?? 0;
 
   const dimensions = React.useMemo(
-    () => matrix ? buildDimensionsFromMatrix(matrix) : [],
+    () => matrix ? buildDimensions(matrix) : [],
     [matrix]
   );
 
@@ -153,12 +180,12 @@ function ParticipantResultsRoute() {
         <CardContent sx={{ p: { xs: 2.5, md: 3 } }}>
           <Stack direction={{ xs: "column", lg: "row" }} spacing={3} justifyContent="space-between" alignItems={{ xs: "start", lg: "start" }}>
             <Box>
-              <Chip label="Résultats disponibles" sx={{ borderRadius: 99, bgcolor: "rgba(15,24,152,0.08)", color: COLORS.blue, mb: 1.5 }} />
+              <Chip label="Résultats" sx={{ borderRadius: 99, bgcolor: "rgba(15,24,152,0.08)", color: COLORS.blue, mb: 1.5 }} />
               <Typography variant="h4" fontWeight={800} color="text.primary" sx={{ letterSpacing: -0.5 }}>
                 {campaignName}
               </Typography>
               <Typography variant="body1" color="text.secondary" sx={{ mt: 1, lineHeight: 1.7, maxWidth: 860 }}>
-                Cette page affiche une lecture de synthèse des écarts, avec plusieurs métriques par dimension.
+                Synthèse des scores par dimension : auto-évaluation, moyenne des pairs et test scientifique.
               </Typography>
               {assignments.length > 1 && (
                 <FormControl size="small" sx={{ mt: 2, minWidth: 300 }}>
@@ -196,9 +223,9 @@ function ParticipantResultsRoute() {
                     <Radar size={16} />
                   </Box>
                   <Box>
-                    <Typography variant="caption" color="text.secondary">Dimensions</Typography>
+                    <Typography variant="caption" color="text.secondary">Sources</Typography>
                     <Typography variant="body2" fontWeight={700} color="text.primary">
-                      {dimensions.length} axe{dimensions.length !== 1 ? "s" : ""} suivi{dimensions.length !== 1 ? "s" : ""}
+                      Auto-éval · {peerCount} pair{peerCount !== 1 ? "s" : ""} · Test
                     </Typography>
                   </Box>
                 </CardContent>
@@ -208,6 +235,13 @@ function ParticipantResultsRoute() {
         </CardContent>
       </Card>
 
+      {/* Legend */}
+      <Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap>
+        <Chip label="Auto-évaluation" size="small" sx={{ borderRadius: 99, bgcolor: "rgba(15,24,152,0.08)", color: COLORS.blue, fontWeight: 700 }} />
+        <Chip label={`Pairs (moy. ${peerCount})`} size="small" sx={{ borderRadius: 99, bgcolor: "rgba(255,204,0,0.16)", color: "rgb(180,120,0)", fontWeight: 700 }} />
+        <Chip label="Test scientifique" size="small" sx={{ borderRadius: 99, bgcolor: "rgba(16,185,129,0.12)", color: COLORS.green, fontWeight: 700 }} />
+      </Stack>
+
       <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "repeat(3, minmax(0, 1fr))" }, gap: 2 }}>
         <Card variant="outlined">
           <CardContent sx={{ p: 2.3 }}>
@@ -215,7 +249,6 @@ function ParticipantResultsRoute() {
               <Box>
                 <Typography variant="body2" color="text.secondary">Dimensions</Typography>
                 <Typography variant="h4" fontWeight={800} color="text.primary" sx={{ mt: 0.5, letterSpacing: -0.5 }}>{dimensions.length}</Typography>
-                <Typography variant="caption" color="text.secondary">ICO suivies</Typography>
               </Box>
               <Box sx={{ width: 42, height: 42, borderRadius: 3, bgcolor: "rgba(15,24,152,0.08)", color: COLORS.blue, display: "grid", placeItems: "center" }}>
                 <Radar size={18} />
@@ -227,11 +260,8 @@ function ParticipantResultsRoute() {
           <CardContent sx={{ p: 2.3 }}>
             <Stack direction="row" justifyContent="space-between" alignItems="end">
               <Box>
-                <Typography variant="body2" color="text.secondary">Coaching</Typography>
-                <Typography variant="h4" fontWeight={800} color="text.primary" sx={{ mt: 0.5, letterSpacing: -0.5 }}>
-                  {selectedAssignment?.progression?.results_status === "completed" ? "Prêt" : "En attente"}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">restitution</Typography>
+                <Typography variant="body2" color="text.secondary">Pairs</Typography>
+                <Typography variant="h4" fontWeight={800} color="text.primary" sx={{ mt: 0.5, letterSpacing: -0.5 }}>{peerCount}</Typography>
               </Box>
               <Box sx={{ width: 42, height: 42, borderRadius: 3, bgcolor: "rgba(15,24,152,0.08)", color: COLORS.blue, display: "grid", placeItems: "center" }}>
                 <UserRound size={18} />
@@ -247,7 +277,6 @@ function ParticipantResultsRoute() {
                 <Typography variant="h4" fontWeight={800} color="text.primary" sx={{ mt: 0.5, letterSpacing: -0.5 }}>
                   {matrix?.questionnaire_id ?? "–"}
                 </Typography>
-                <Typography variant="caption" color="text.secondary">{matrix?.questionnaire_title ?? ""}</Typography>
               </Box>
               <Box sx={{ width: 42, height: 42, borderRadius: 3, bgcolor: "rgba(15,24,152,0.08)", color: COLORS.blue, display: "grid", placeItems: "center" }}>
                 <Sparkles size={18} />
@@ -266,21 +295,11 @@ function ParticipantResultsRoute() {
           </CardContent>
         </Card>
       ) : (
-        <Card variant="outlined">
-          <CardContent sx={{ p: 2.5 }}>
-            <Typography variant="h5" fontWeight={800} color="text.primary" sx={{ letterSpacing: -0.4 }}>
-              Métriques détaillées par dimension
-            </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.7, lineHeight: 1.7 }}>
-              Chaque dimension affiche vos scores auto-évaluation.
-            </Typography>
-            <Stack spacing={2} sx={{ mt: 2 }}>
-              {dimensions.map((dimension) => (
-                <DimensionCard key={dimension.name} dimension={dimension} likertMax={matrix?.likert_max ?? 9} />
-              ))}
-            </Stack>
-          </CardContent>
-        </Card>
+        <Stack spacing={2}>
+          {dimensions.map((dimension) => (
+            <DimensionCard key={dimension.name} dimension={dimension} likertMax={matrix?.likert_max ?? 9} />
+          ))}
+        </Stack>
       )}
     </Stack>
   );
