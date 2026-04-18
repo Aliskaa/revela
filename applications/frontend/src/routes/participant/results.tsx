@@ -27,10 +27,15 @@ export const Route = createFileRoute('/participant/results')({
     component: ParticipantResultsRoute,
 });
 
+type PeerScore = {
+    label: string;
+    value: number | null;
+};
+
 type ScoreRow = {
     label: string;
     self: number | null;
-    peersAvg: number | null;
+    peers: PeerScore[];
     scientific: number | null;
 };
 
@@ -51,9 +56,13 @@ const avg = (values: (number | null)[]): number | null => {
     return Math.round((nums.reduce((s, v) => s + v, 0) / nums.length) * 10) / 10;
 };
 
+const bestScore = (row: { scientific: number | null; self: number | null; peers: (number | null)[] }): number | null =>
+    row.scientific ?? row.self ?? avg(row.peers);
+
 const buildDimensions = (matrix: ParticipantQuestionnaireMatrix): DimensionView[] => {
     const dims: DimensionView[] = [];
-    const scoreMap = new Map(matrix.rows.map(r => [r.score_key, r.scientific]));
+    const rowMap = new Map(matrix.rows.map(r => [r.score_key, r]));
+    const peerLabels = matrix.peer_columns.map(pc => pc.label);
 
     for (const rd of matrix.result_dims) {
         const rows: ScoreRow[] = [];
@@ -63,7 +72,7 @@ const buildDimensions = (matrix: ParticipantQuestionnaireMatrix): DimensionView[
                 rows.push({
                     label: row.label,
                     self: row.self,
-                    peersAvg: avg(row.peers),
+                    peers: row.peers.map((v, i) => ({ label: peerLabels[i] ?? `Pair ${String(i + 1)}`, value: v })),
                     scientific: row.scientific,
                 });
             }
@@ -72,8 +81,10 @@ const buildDimensions = (matrix: ParticipantQuestionnaireMatrix): DimensionView[
         const ecarts: EcartView[] = [];
         if (rd.diff_pairs) {
             for (const dp of rd.diff_pairs) {
-                const eVal = scoreMap.get(dp.e);
-                const wVal = scoreMap.get(dp.w);
+                const eRow = rowMap.get(dp.e);
+                const wRow = rowMap.get(dp.w);
+                const eVal = eRow ? bestScore(eRow) : null;
+                const wVal = wRow ? bestScore(wRow) : null;
                 if (eVal != null && wVal != null) {
                     const diff = eVal - wVal;
                     const message = diff > 0 ? dp.if_e_gt : diff < 0 ? dp.if_w_gt : '';
@@ -109,8 +120,10 @@ function ScoreBar({ value, max, color }: { value: number | null; max: number; co
     );
 }
 
+const PEER_COLORS = ['rgb(255,204,0)', 'rgb(255,170,0)', 'rgb(230,150,0)', 'rgb(200,130,0)', 'rgb(180,115,0)'];
+
 function DimensionCard({ dimension, likertMax }: { dimension: DimensionView; likertMax: number }) {
-    const hasPeers = dimension.rows.some(r => r.peersAvg !== null);
+    const hasPeers = dimension.rows.some(r => r.peers.some(p => p.value !== null));
     const hasScientific = dimension.rows.some(r => r.scientific !== null);
 
     return (
@@ -142,23 +155,33 @@ function DimensionCard({ dimension, likertMax }: { dimension: DimensionView; lik
                                     />
                                     <ScoreBar value={row.self} max={likertMax} color="rgb(15,24,152)" />
                                 </Stack>
-                                {hasPeers && (
-                                    <Stack direction="row" spacing={1.5} alignItems="center">
-                                        <Chip
-                                            label="Pairs"
-                                            size="small"
-                                            sx={{
-                                                borderRadius: 99,
-                                                bgcolor: 'tint.secondaryBg',
-                                                color: 'tint.secondaryText',
-                                                minWidth: 70,
-                                                fontWeight: 700,
-                                                fontSize: 11,
-                                            }}
-                                        />
-                                        <ScoreBar value={row.peersAvg} max={likertMax} color="rgb(255,204,0)" />
-                                    </Stack>
-                                )}
+                                {hasPeers &&
+                                    row.peers.map((peer, i) =>
+                                        peer.value !== null ? (
+                                            <Stack key={peer.label} direction="row" spacing={1.5} alignItems="center">
+                                                <Chip
+                                                    label={peer.label}
+                                                    size="small"
+                                                    sx={{
+                                                        borderRadius: 99,
+                                                        bgcolor: 'tint.secondaryBg',
+                                                        color: 'tint.secondaryText',
+                                                        minWidth: 70,
+                                                        fontWeight: 700,
+                                                        fontSize: 11,
+                                                        maxWidth: 100,
+                                                        overflow: 'hidden',
+                                                        textOverflow: 'ellipsis',
+                                                    }}
+                                                />
+                                                <ScoreBar
+                                                    value={peer.value}
+                                                    max={likertMax}
+                                                    color={PEER_COLORS[i % PEER_COLORS.length]}
+                                                />
+                                            </Stack>
+                                        ) : null
+                                    )}
                                 {hasScientific && (
                                     <Stack direction="row" spacing={1.5} alignItems="center">
                                         <Chip
@@ -181,7 +204,7 @@ function DimensionCard({ dimension, likertMax }: { dimension: DimensionView; lik
                     ))}
                 </Stack>
 
-                {hasScientific && dimension.ecarts.length > 0 && (
+                {dimension.ecarts.length > 0 && (
                     <Box sx={{ mt: 2.5, p: 2, bgcolor: 'tint.subtleBg', borderRadius: 3 }}>
                         <Typography variant="body2" fontWeight={700} color="text.primary" sx={{ mb: 1.5 }}>
                             Analyse des écarts
@@ -236,6 +259,7 @@ function ParticipantResultsRoute() {
     const coachName = selectedAssignment?.coach_name ?? '–';
     const campaignName = selectedAssignment?.campaign_name ?? 'Résultats';
     const peerCount = matrix?.peer_columns.length ?? 0;
+    const peerLabels = React.useMemo(() => matrix?.peer_columns.map(pc => pc.label) ?? [], [matrix]);
 
     const dimensions = React.useMemo(() => (matrix ? buildDimensions(matrix) : []), [matrix]);
 
@@ -394,11 +418,20 @@ function ParticipantResultsRoute() {
                     size="small"
                     sx={{ borderRadius: 99, bgcolor: 'tint.primaryBg', color: 'primary.main', fontWeight: 700 }}
                 />
-                <Chip
-                    label={`Pairs (moy. ${peerCount})`}
-                    size="small"
-                    sx={{ borderRadius: 99, bgcolor: 'tint.secondaryBg', color: 'tint.secondaryText', fontWeight: 700 }}
-                />
+                {peerLabels.map((name, i) => (
+                    <Chip
+                        key={name}
+                        label={name}
+                        size="small"
+                        sx={{
+                            borderRadius: 99,
+                            bgcolor: 'tint.secondaryBg',
+                            color: 'tint.secondaryText',
+                            fontWeight: 700,
+                            borderLeft: `3px solid ${PEER_COLORS[i % PEER_COLORS.length]}`,
+                        }}
+                    />
+                ))}
                 <Chip
                     label="Test scientifique"
                     size="small"

@@ -7,11 +7,24 @@ const GREEN = { r: 4, g: 120, b: 87 } as const;
 const GREY = { r: 100, g: 116, b: 139 } as const;
 const LIGHT_BG = { r: 244, g: 246, b: 251 } as const;
 
+const PEER_COLORS_PDF = [
+    { r: 255, g: 204, b: 0 },
+    { r: 255, g: 170, b: 0 },
+    { r: 230, g: 150, b: 0 },
+    { r: 200, g: 130, b: 0 },
+    { r: 180, g: 115, b: 0 },
+];
+
 // ── Types ───────────────────────────────────────────────────────────
+type PeerScore = {
+    label: string;
+    value: number | null;
+};
+
 type ScoreRow = {
     label: string;
     self: number | null;
-    peersAvg: number | null;
+    peers: PeerScore[];
     scientific: number | null;
 };
 
@@ -133,11 +146,24 @@ export const exportResultsPdf = (params: ExportParams) => {
     y += 8;
 
     // ── Legend ───────────────────────────────────────────────────────
+    const allPeerLabels = new Set<string>();
+    for (const dim of dimensions) {
+        for (const row of dim.rows) {
+            for (const p of row.peers) {
+                if (p.value !== null) allPeerLabels.add(p.label);
+            }
+        }
+    }
+
     const legendItems: Array<{ label: string; color: { r: number; g: number; b: number } }> = [
         { label: 'Auto-évaluation', color: BLUE },
-        { label: `Pairs (moy. ${String(peerCount)})`, color: YELLOW },
-        { label: 'Test scientifique', color: GREEN },
     ];
+    let peerIdx = 0;
+    for (const pLabel of allPeerLabels) {
+        legendItems.push({ label: pLabel, color: PEER_COLORS_PDF[peerIdx % PEER_COLORS_PDF.length] });
+        peerIdx++;
+    }
+    legendItems.push({ label: 'Test scientifique', color: GREEN });
 
     doc.setFontSize(8);
     let legendX = marginX;
@@ -147,6 +173,10 @@ export const exportResultsPdf = (params: ExportParams) => {
         doc.setTextColor(GREY.r, GREY.g, GREY.b);
         doc.text(item.label, legendX + 5, y);
         legendX += doc.getTextWidth(item.label) + 14;
+        if (legendX > pageW - 40) {
+            legendX = marginX;
+            y += 5;
+        }
     }
     y += 8;
 
@@ -186,11 +216,15 @@ export const exportResultsPdf = (params: ExportParams) => {
             drawBar(doc, barX, y, row.self, likertMax, BLUE);
             y += 6;
 
-            // Peers bar
-            if (row.peersAvg !== null) {
-                doc.setTextColor(YELLOW.r - 40, YELLOW.g - 40, 0);
-                doc.text('Pairs', marginX + 2, y + 3);
-                drawBar(doc, barX, y, row.peersAvg, likertMax, YELLOW);
+            // Individual peer bars
+            for (let pi = 0; pi < row.peers.length; pi++) {
+                const peer = row.peers[pi];
+                if (peer.value === null) continue;
+                const pColor = PEER_COLORS_PDF[pi % PEER_COLORS_PDF.length];
+                doc.setTextColor(pColor.r - 40, pColor.g - 40, Math.max(0, pColor.b - 40));
+                const peerName = peer.label.length > 10 ? `${peer.label.slice(0, 9)}…` : peer.label;
+                doc.text(peerName, marginX + 2, y + 3);
+                drawBar(doc, barX, y, peer.value, likertMax, pColor);
                 y += 6;
             }
 
