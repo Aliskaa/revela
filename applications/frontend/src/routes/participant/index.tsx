@@ -23,7 +23,11 @@ import {
   Card,
   CardContent,
   Chip,
+  FormControl,
+  InputLabel,
   LinearProgress,
+  MenuItem,
+  Select,
   Stack,
   Typography,
 } from "@mui/material";
@@ -357,7 +361,15 @@ function JourneyItem({ step }: { step: JourneyStep }) {
   return content;
 }
 
-function PageHeader({ campaignView, participantFirstName }: { campaignView: CampaignView; participantFirstName: string }) {
+type PageHeaderProps = {
+  campaignView: CampaignView;
+  participantFirstName: string;
+  assignments: ParticipantSession["assignments"];
+  selectedIndex: number;
+  onSelectIndex: (index: number) => void;
+};
+
+function PageHeader({ campaignView, participantFirstName, assignments, selectedIndex, onSelectIndex }: PageHeaderProps) {
   return (
     <Card variant="outlined">
       <CardContent sx={{ p: { xs: 2.5, md: 3 } }}>
@@ -370,6 +382,22 @@ function PageHeader({ campaignView, participantFirstName }: { campaignView: Camp
             <Typography variant="body1" color="text.secondary" sx={{ mt: 1, lineHeight: 1.7, maxWidth: 860 }}>
               Vous êtes dans l’espace participant de la campagne <Box component="span" sx={{ fontWeight: 700, color: "text.primary" }}>{campaignView.name}</Box>. Le tableau de bord vous montre le contexte, la progression et la prochaine étape.
             </Typography>
+            {assignments.length > 1 && (
+              <FormControl size="small" sx={{ mt: 2, minWidth: 300 }}>
+                <InputLabel>Campagne</InputLabel>
+                <Select
+                  label="Campagne"
+                  value={selectedIndex}
+                  onChange={(e) => onSelectIndex(e.target.value as number)}
+                >
+                  {assignments.map((a, i) => (
+                    <MenuItem key={`${a.campaign_id}-${a.questionnaire_id}`} value={i}>
+                      {a.campaign_name ?? "Campagne"} — {a.questionnaire_title ?? a.questionnaire_id}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            )}
           </Box>
 
           <Stack spacing={1.4} sx={{ width: { xs: "100%", sm: 320 } }}>
@@ -476,13 +504,21 @@ function QuickActions() {
 
 export function ParticipantDashboardRoute() {
   const { data: session, isLoading, isError } = useParticipantSession();
-  const activeAssignment = React.useMemo(
-    () => session?.assignments.find(assignment => assignment.campaign_status === "active") ?? session?.assignments[0],
-    [session]
-  );
-  const campaignView = React.useMemo(() => buildCampaignView(session, activeAssignment), [session, activeAssignment]);
-  const journeyView = React.useMemo(() => buildJourney(activeAssignment), [activeAssignment]);
-  const metricsView = React.useMemo(() => buildMetrics(campaignView, activeAssignment), [campaignView, activeAssignment]);
+  const [selectedIndex, setSelectedIndex] = React.useState<number>(0);
+
+  const assignments = session?.assignments ?? [];
+
+  React.useEffect(() => {
+    if (assignments.length > 0) {
+      const activeIdx = assignments.findIndex(a => a.campaign_status === "active");
+      if (activeIdx >= 0) setSelectedIndex(activeIdx);
+    }
+  }, [assignments.length]);
+
+  const selectedAssignment = assignments[selectedIndex] ?? assignments[0];
+  const campaignView = React.useMemo(() => buildCampaignView(session, selectedAssignment), [session, selectedAssignment]);
+  const journeyView = React.useMemo(() => buildJourney(selectedAssignment), [selectedAssignment]);
+  const metricsView = React.useMemo(() => buildMetrics(campaignView, selectedAssignment), [campaignView, selectedAssignment]);
   const participantFirstName = session?.first_name?.trim() || "Participant";
 
   if (isLoading) {
@@ -507,7 +543,13 @@ export function ParticipantDashboardRoute() {
 
   return (
     <Stack spacing={3}>
-      <PageHeader campaignView={campaignView} participantFirstName={participantFirstName} />
+      <PageHeader
+        campaignView={campaignView}
+        participantFirstName={participantFirstName}
+        assignments={assignments}
+        selectedIndex={selectedIndex}
+        onSelectIndex={setSelectedIndex}
+      />
 
       <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "repeat(2, minmax(0, 1fr))", xl: "repeat(4, minmax(0, 1fr))" }, gap: 2 }}>
         {metricsView.map((metric) => (
