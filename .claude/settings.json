@@ -8,7 +8,10 @@
       "Bash(grep -n \"const.*=.*\\\\[\" /c/Users/kevin/Documents/DataLoco/Nora/base/questionnaire-platform/applications/frontend/src/routes/**/*.tsx)",
       "Bash(pnpm add *)",
       "Read(//c/Users/kevin/.claude/projects/c--Users-kevin-Documents-DataLoco-Nora-base-questionnaire-platform/memory/**)",
-      "Bash(npx vite *)"
+      "Bash(npx vite *)",
+      "Bash(grep -E \"\\\\.\\(ts|js\\)$\")",
+      "Bash(pnpm lint *)",
+      "Bash(npx biome *)"
     ],
     "additionalDirectories": [
       "c:\\Users\\kevin\\Documents\\DataLoco\\Nora\\base\\questionnaire-platform\\applications\\frontend\\src\\components\\common"

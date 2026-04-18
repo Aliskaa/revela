@@ -42,7 +42,7 @@ export const LayoutSidebar = ({ subtitle, items, onLogout }: LayoutSidebarProps)
                         lineHeight={1.1}
                         letterSpacing={-0.5}
                     >
-                        AOR CONSEIL
+                        RÉVÉLA
                     </Typography>
                     <Typography
                         variant="caption"

@@ -21,6 +21,7 @@
         "@tanstack/react-router": "catalog:",
         "@tanstack/react-table": "catalog:",
         "axios": "catalog:",
+        "jspdf": "^4.2.1",
         "lucide-react": "catalog:",
         "react": "catalog:",
         "react-dom": "catalog:",

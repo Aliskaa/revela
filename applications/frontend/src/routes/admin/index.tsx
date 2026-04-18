@@ -84,7 +84,7 @@ function AdminDashboardRoute() {
                 sx={{ borderRadius: 99, bgcolor: "rgba(15,24,152,0.08)", color: COLORS.blue, mb: 1.5 }}
               />
               <Typography variant="h4" fontWeight={800} color="text.primary" sx={{ letterSpacing: -0.5 }}>
-                Bienvenue, Admin AOR !
+                Bienvenue sur Révéla !
               </Typography>
               <Typography variant="body1" color="text.secondary" sx={{ mt: 1, lineHeight: 1.7, maxWidth: 860 }}>
                 Le tableau de bord centralisé vous permet de visualiser rapidement l'état des campagnes, des participants,

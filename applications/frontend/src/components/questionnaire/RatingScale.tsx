@@ -4,21 +4,24 @@ type RatingScaleProps = {
     value: number | null;
     onChange: (value: number | null) => void;
     max?: number;
+    min?: number;
     size?: 'small' | 'medium';
 };
 
-export const RatingScale = ({ value, onChange, max = 9, size = 'small' }: RatingScaleProps) => (
+export const RatingScale = ({ value, onChange, max = 9, min = 1, size = 'small' }: RatingScaleProps) => (
     <ToggleButtonGroup
         value={value}
         exclusive
         size={size}
-        onChange={(_e, next) => { if (next !== null) onChange(next); }}
+        onChange={(_e, next) => {
+            if (next !== null) onChange(next);
+        }}
         sx={{ flexWrap: 'wrap', gap: 0.75 }}
     >
-        {Array.from({ length: max }, (_, i) => (
+        {Array.from({ length: max - min + 1 }, (_, i) => (
             <ToggleButton
-                key={i + 1}
-                value={i + 1}
+                key={min + i}
+                value={min + i}
                 sx={{
                     minWidth: 38,
                     height: 38,
@@ -29,7 +32,7 @@ export const RatingScale = ({ value, onChange, max = 9, size = 'small' }: Rating
                     '&.Mui-selected:hover': { bgcolor: 'primary.dark' },
                 }}
             >
-                {i + 1}
+                {min + i}
             </ToggleButton>
         ))}
     </ToggleButtonGroup>

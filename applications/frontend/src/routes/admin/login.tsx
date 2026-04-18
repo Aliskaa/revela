@@ -42,7 +42,7 @@ function AdminLoginPage() {
                             mb: 2,
                         }}
                     >
-                        AOR
+                        Révéla
                     </Box>
                     <Typography variant="h6" fontWeight={700}>
                         Espace Admin

@@ -17,9 +17,15 @@ import { getQuestionnaireEntry, isQuestionnaireUserFacing } from '@aor/questionn
 import { AdminCsvFileRequiredError } from '@src/domain/admin/admin.errors';
 import type { ICompaniesReadPort, ICompaniesWritePort } from '@src/interfaces/companies/ICompaniesRepository.port';
 import type { IInvitationsWritePort } from '@src/interfaces/invitations/IInvitationsRepository.port';
-import type { IParticipantsIdentityReaderPort, IParticipantsWriterPort } from '@src/interfaces/participants/IParticipantsRepository.port';
+import type {
+    IParticipantsIdentityReaderPort,
+    IParticipantsWriterPort,
+    ParticipantFunctionLevel,
+} from '@src/interfaces/participants/IParticipantsRepository.port';
 
 import { parseSemicolonCsv } from '@aor/utils';
+
+const VALID_FUNCTION_LEVELS = new Set<string>(['direction', 'middle_management', 'frontline_manager']);
 
 export class ImportParticipantsCsvUseCase {
     public constructor(
@@ -52,6 +58,13 @@ export class ImportParticipantsCsvUseCase {
                 const lastName = (row.last_name ?? '').trim();
                 const email = (row.email ?? '').trim().toLowerCase();
                 const qid = (row.questionnaire_type ?? '').trim().toUpperCase();
+                const organisation = (row.organisation ?? '').trim() || null;
+                const direction = (row.direction ?? '').trim() || null;
+                const service = (row.service ?? '').trim() || null;
+                const rawFunctionLevel = (row.function_level ?? '').trim().toLowerCase();
+                const functionLevel: ParticipantFunctionLevel | null = VALID_FUNCTION_LEVELS.has(rawFunctionLevel)
+                    ? (rawFunctionLevel as ParticipantFunctionLevel)
+                    : null;
 
                 if (!firstName || !lastName || !email) {
                     errors.push(`Ligne ${String(line)} : prénom, nom et email requis.`);
@@ -79,6 +92,16 @@ export class ImportParticipantsCsvUseCase {
                 } else {
                     await this.ports.participants.updateCompanyId(participant.id, companyId);
                     updated += 1;
+                }
+
+                const hasProfileData = organisation || direction || service || functionLevel;
+                if (hasProfileData) {
+                    await this.ports.participants.updateProfile(participant.id, {
+                        ...(organisation !== null && { organisation }),
+                        ...(direction !== null && { direction }),
+                        ...(service !== null && { service }),
+                        ...(functionLevel !== null && { functionLevel }),
+                    });
                 }
 
                 if (qid) {

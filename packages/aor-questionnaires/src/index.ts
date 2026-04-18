@@ -38,12 +38,8 @@ export const QUESTIONNAIRE_CATALOG: Readonly<Record<string, QuestionnaireCatalog
 
 export const QUESTIONNAIRE_IDS = Object.freeze(Object.keys(QUESTIONNAIRE_CATALOG));
 
-/** Excluded from public listing, anonymous submission, and new invitations (catalog entry may remain). */
-export const QUESTIONNAIRE_IDS_EXCLUDED_FROM_USER_FLOWS = Object.freeze(['C'] as const);
-
 export function isQuestionnaireUserFacing(qid: string): boolean {
-    const id = qid.toUpperCase();
-    return Boolean(QUESTIONNAIRE_CATALOG[id]) && !QUESTIONNAIRE_IDS_EXCLUDED_FROM_USER_FLOWS.includes(id as 'C');
+    return Boolean(QUESTIONNAIRE_CATALOG[qid.toUpperCase()]);
 }
 
 export function getQuestionnaireEntry(qid: string): QuestionnaireCatalogEntry | undefined {
@@ -64,7 +60,7 @@ export function listQuestionnairesSummary(): Array<{
     }));
 }
 
-/** Public app and invite flows: same shape as {@link listQuestionnairesSummary} without excluded ids (e.g. `C`). */
+/** Public app and invite flows: same shape as {@link listQuestionnairesSummary}, filtered to user-facing questionnaires. */
 export function listQuestionnairesSummaryForUserApp(): Array<{
     id: string;
     title: string;
