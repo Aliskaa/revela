@@ -1,5 +1,6 @@
 import * as React from "react";
 import { useParticipantSession } from "@/hooks/participantSession";
+import { useSelectedAssignment } from "@/hooks/useSelectedAssignment";
 import type { ParticipantSession } from "@aor/types";
 import { createFileRoute } from "@tanstack/react-router";
 import {
@@ -69,8 +70,7 @@ function InfoPill({ label, value, icon: Icon }: { label: string; value: string; 
 
 function ParticipantCoachRoute() {
   const { data: session, isLoading, isError } = useParticipantSession();
-  const activeAssignment =
-    session?.assignments.find(a => a.campaign_status === "active") ?? session?.assignments[0];
+  const { assignment: activeAssignment } = useSelectedAssignment(session);
   const coachView = coachFromAssignment(activeAssignment);
 
   if (isLoading) {

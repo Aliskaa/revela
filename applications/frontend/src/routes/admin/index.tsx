@@ -1,17 +1,8 @@
-import * as React from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
-import {
-  ArrowRight,
-  Building2,
-  ClipboardList,
-  FileText,
-  MessageSquareText,
-  Plus,
-  Sparkles,
-  Target,
-  Users,
-  UserRound,
-} from "lucide-react";
+import { ADMIN_COLORS as COLORS } from "@/components/common/colors";
+import { SectionTitle } from "@/components/common/SectionTitle";
+import { StatCard } from "@/components/common/StatCard";
+import { useAdminCampaigns, useAdminDashboard, useCoaches, useCompanies } from "@/hooks/admin";
+import type { CampaignStatus } from "@aor/types";
 import {
   Box,
   Button,
@@ -27,11 +18,16 @@ import {
   TableRow,
   Typography,
 } from "@mui/material";
-import { useAdminDashboard, useAdminCampaigns, useCoaches, useCompanies } from "@/hooks/admin";
-import type { CampaignStatus } from "@aor/types";
-import { ADMIN_COLORS as COLORS } from "@/components/common/colors";
-import { SectionTitle } from "@/components/common/SectionTitle";
-import { StatCard } from "@/components/common/StatCard";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import {
+  ArrowRight,
+  Building2,
+  FileText,
+  Plus,
+  Target,
+  UserRound,
+  Users
+} from "lucide-react";
 
 export const Route = createFileRoute("/admin/")({
   component: AdminDashboardRoute,
@@ -55,54 +51,6 @@ function StatusChip({ status }: { status: CampaignStatus }) {
   return <Chip label="Brouillon" size="small" sx={{ borderRadius: 99, bgcolor: "rgba(255,204,0,0.16)", color: "rgb(180,120,0)" }} />;
 }
 
-function QuickAction({
-  icon: Icon,
-  title,
-  subtitle,
-  to,
-}: {
-  icon: React.ElementType;
-  title: string;
-  subtitle: string;
-  to: string;
-}) {
-  return (
-    <Card variant="outlined">
-      <CardContent sx={{ p: 2.2 }}>
-        <Stack spacing={1.3}>
-          <Stack direction="row" spacing={1.3} alignItems="start">
-            <Box
-              sx={{
-                width: 40,
-                height: 40,
-                borderRadius: 3,
-                bgcolor: "rgba(15,24,152,0.08)",
-                color: COLORS.blue,
-                display: "grid",
-                placeItems: "center",
-                flex: "none",
-              }}
-            >
-              <Icon size={16} />
-            </Box>
-            <Box sx={{ minWidth: 0 }}>
-              <Typography fontWeight={700} color="text.primary">
-                {title}
-              </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mt: 0.35, lineHeight: 1.7 }}>
-                {subtitle}
-              </Typography>
-            </Box>
-          </Stack>
-          <Button component={Link} to={to} variant="outlined" sx={{ borderRadius: 3, textTransform: "none", width: "fit-content" }}>
-            Ouvrir
-          </Button>
-        </Stack>
-      </CardContent>
-    </Card>
-  );
-}
-
 function AdminDashboardRoute() {
   const { data: dashboard, isLoading: dashboardLoading } = useAdminDashboard();
   const { data: campaigns = [], isLoading: campaignsLoading } = useAdminCampaigns();
@@ -119,8 +67,6 @@ function AdminDashboardRoute() {
   const recentCampaigns = [...campaigns]
     .sort((a, b) => (b.createdAt ?? "").localeCompare(a.createdAt ?? ""))
     .slice(0, 5);
-
-  const questionnaireEntries = Object.entries(dashboard?.by_questionnaire ?? {});
 
   return (
     <Stack spacing={3}>
@@ -181,14 +127,14 @@ function AdminDashboardRoute() {
         />
         <StatCard
           label="Participants"
-          value={dashboard?.total_participants ?? "–"}
+          value={dashboard?.total_participants ?? "-"}
           helper="accès ouverts"
           icon={Users}
           loading={dashboardLoading}
         />
         <StatCard
           label="Entreprises"
-          value={dashboard?.total_companies ?? "–"}
+          value={dashboard?.total_companies ?? "-"}
           helper="clients suivis"
           icon={Building2}
           loading={dashboardLoading}

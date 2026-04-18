@@ -1,5 +1,6 @@
 import * as React from "react";
 import { useParticipantSession, useParticipantSessionMatrix } from "@/hooks/participantSession";
+import { useSelectedAssignment } from "@/hooks/useSelectedAssignment";
 import { useSubmitParticipantQuestionnaire } from "@/hooks/questionnaires";
 import type { ParticipantQuestionnaireMatrix } from "@aor/types";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
@@ -146,10 +147,7 @@ function ParticipantSelfRatingRoute() {
   const navigate = useNavigate();
   const { data: session, isLoading: sessionLoading, isError } = useParticipantSession();
 
-  const activeAssignment = React.useMemo(
-    () => session?.assignments.find(a => a.campaign_status === "active") ?? session?.assignments[0],
-    [session]
-  );
+  const { assignment: activeAssignment } = useSelectedAssignment(session);
   const qid = activeAssignment?.questionnaire_id ?? "";
   const campaignId = activeAssignment?.campaign_id ?? undefined;
 

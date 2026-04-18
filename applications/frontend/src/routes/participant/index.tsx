@@ -1,4 +1,6 @@
 import { useParticipantSession } from "@/hooks/participantSession";
+import { useSelectedAssignment } from "@/hooks/useSelectedAssignment";
+import { useCampaignStore } from "@/stores/campaignStore";
 import type { ParticipantSession } from "@aor/types";
 import {
   Alert,
@@ -14,6 +16,7 @@ import {
   Stack,
   Typography
 } from "@mui/material";
+import { SectionTitle } from "@/components/common/SectionTitle";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   BadgeCheck,
@@ -241,25 +244,6 @@ const buildMetrics = (campaignView: CampaignView, assignment?: ParticipantAssign
   { ...metrics[3], value: campaignView.questionnaire, helper: "lie a la campagne" },
 ];
 
-
-function SectionTitle({ title, subtitle, action }: { title: string; subtitle?: string; action?: React.ReactNode }) {
-  return (
-    <Stack direction="row" alignItems="start" justifyContent="space-between" spacing={2} sx={{ mb: 2 }}>
-      <Box>
-        <Typography variant="h6" fontWeight={700} color="text.primary">
-          {title}
-        </Typography>
-        {subtitle ? (
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-            {subtitle}
-          </Typography>
-        ) : null}
-      </Box>
-      {action}
-    </Stack>
-  );
-}
-
 function MetricCard({ metric, progress }: { metric: Metric; progress: number }) {
   const Icon = metric.icon;
   return (
@@ -471,18 +455,9 @@ function CoachCard({ campaignView }: { campaignView: CampaignView }) {
 
 export function ParticipantDashboardRoute() {
   const { data: session, isLoading, isError } = useParticipantSession();
-  const [selectedIndex, setSelectedIndex] = React.useState<number>(0);
+  const { assignment: selectedAssignment, index: selectedIndex, assignments } = useSelectedAssignment(session);
+  const selectCampaign = useCampaignStore(s => s.select);
 
-  const assignments = session?.assignments ?? [];
-
-  React.useEffect(() => {
-    if (assignments.length > 0) {
-      const activeIdx = assignments.findIndex(a => a.campaign_status === "active");
-      if (activeIdx >= 0) setSelectedIndex(activeIdx);
-    }
-  }, [assignments.length]);
-
-  const selectedAssignment = assignments[selectedIndex] ?? assignments[0];
   const campaignView = React.useMemo(() => buildCampaignView(session, selectedAssignment), [session, selectedAssignment]);
   const journeyView = React.useMemo(() => buildJourney(selectedAssignment), [selectedAssignment]);
   const metricsView = React.useMemo(() => buildMetrics(campaignView, selectedAssignment), [campaignView, selectedAssignment]);
@@ -515,7 +490,10 @@ export function ParticipantDashboardRoute() {
         participantFirstName={participantFirstName}
         assignments={assignments}
         selectedIndex={selectedIndex}
-        onSelectIndex={setSelectedIndex}
+        onSelectIndex={(idx) => {
+          const a = assignments[idx];
+          if (a?.campaign_id != null) selectCampaign(a.campaign_id);
+        }}
       />
 
       <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "repeat(2, minmax(0, 1fr))", xl: "repeat(4, minmax(0, 1fr))" }, gap: 2 }}>

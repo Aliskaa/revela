@@ -1,7 +1,8 @@
 import * as React from "react";
 import { useParticipantSession } from "@/hooks/participantSession";
+import { useCampaignStore } from "@/stores/campaignStore";
 import type { ParticipantSession } from "@aor/types";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import {
   ArrowRight,
   CalendarDays,
@@ -28,6 +29,8 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
+import { SectionTitle } from "@/components/common/SectionTitle";
+import { StatCard } from "@/components/common/StatCard";
 
 export const Route = createFileRoute("/participant/campaigns")({
   component: ParticipantCampaignsRoute,
@@ -126,43 +129,6 @@ const statsFromAssignments = (assignments: ParticipantAssignment[]) => [
   },
 ];
 
-function SectionTitle({ title, subtitle }: { title: string; subtitle?: string }) {
-  return (
-    <Box>
-      <Typography variant="h5" fontWeight={800} color="text.primary" sx={{ letterSpacing: -0.4 }}>
-        {title}
-      </Typography>
-      {subtitle ? (
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.7, lineHeight: 1.7 }}>
-          {subtitle}
-        </Typography>
-      ) : null}
-    </Box>
-  );
-}
-
-function StatCard({ label, value, icon: Icon }: { label: string; value: string; icon: React.ElementType }) {
-  return (
-    <Card variant="outlined">
-      <CardContent sx={{ p: 2.3 }}>
-        <Stack direction="row" justifyContent="space-between" alignItems="end">
-          <Box>
-            <Typography variant="body2" color="text.secondary">
-              {label}
-            </Typography>
-            <Typography variant="h4" fontWeight={800} color="text.primary" sx={{ mt: 0.5, letterSpacing: -0.5 }}>
-              {value}
-            </Typography>
-          </Box>
-          <Box sx={{ width: 42, height: 42, borderRadius: 3, bgcolor: "rgba(15,24,152,0.08)", color: COLORS.blue, display: "grid", placeItems: "center" }}>
-            <Icon size={18} />
-          </Box>
-        </Stack>
-      </CardContent>
-    </Card>
-  );
-}
-
 function statusChip(status: CampaignStatus) {
   if (status === "active") {
     return <Chip label="En cours" size="small" sx={{ borderRadius: 99, bgcolor: "rgba(16,185,129,0.12)", color: "rgb(4,120,87)" }} />;
@@ -176,7 +142,14 @@ function statusChip(status: CampaignStatus) {
 }
 
 function CampaignCard({ campaign }: { campaign: Campaign }) {
+  const selectCampaign = useCampaignStore(s => s.select);
+  const navigate = useNavigate();
   const isActive = campaign.status === "active";
+
+  const goTo = (to: string) => {
+    if (campaign.campaignId != null) selectCampaign(campaign.campaignId);
+    navigate({ to });
+  };
 
   return (
     <Card variant="outlined">
@@ -227,8 +200,7 @@ function CampaignCard({ campaign }: { campaign: Campaign }) {
               <Button
                 variant="contained"
                 disableElevation
-                component={Link}
-                to="/participant/journey"
+                onClick={() => goTo("/participant/journey")}
                 sx={{ borderRadius: 3, bgcolor: COLORS.blue, textTransform: "none" }}
                 endIcon={<ArrowRight size={16} />}
               >
@@ -239,8 +211,7 @@ function CampaignCard({ campaign }: { campaign: Campaign }) {
               <Button
                 variant="contained"
                 disableElevation
-                component={Link}
-                to="/participant/results"
+                onClick={() => goTo("/participant/results")}
                 sx={{ borderRadius: 3, bgcolor: COLORS.blue, textTransform: "none" }}
                 endIcon={<ArrowRight size={16} />}
               >
@@ -249,8 +220,7 @@ function CampaignCard({ campaign }: { campaign: Campaign }) {
             )}
             <Button
               variant="outlined"
-              component={Link}
-              to="/participant/results"
+              onClick={() => goTo("/participant/results")}
               sx={{ borderRadius: 3, textTransform: "none" }}
             >
               Voir les résultats

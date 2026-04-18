@@ -1,5 +1,6 @@
 import * as React from "react";
 import { useParticipantSession, useParticipantSessionMatrix, useParticipantCampaignPeers } from "@/hooks/participantSession";
+import { useSelectedAssignment } from "@/hooks/useSelectedAssignment";
 import { useSubmitParticipantQuestionnaire } from "@/hooks/questionnaires";
 import type { ParticipantQuestionnaireMatrix, CampaignPeerChoice } from "@aor/types";
 import { createFileRoute } from "@tanstack/react-router";
@@ -169,10 +170,7 @@ function PeerCard({
 function ParticipantPeerFeedbackRoute() {
   const { data: session, isLoading: sessionLoading, isError } = useParticipantSession();
 
-  const activeAssignment = React.useMemo(
-    () => session?.assignments.find(a => a.campaign_status === "active") ?? session?.assignments[0],
-    [session]
-  );
+  const { assignment: activeAssignment } = useSelectedAssignment(session);
   const qid = activeAssignment?.questionnaire_id ?? "";
   const campaignId = activeAssignment?.campaign_id ?? undefined;
 

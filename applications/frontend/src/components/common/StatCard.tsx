@@ -5,7 +5,7 @@ import { ADMIN_COLORS } from "@/components/common/colors";
 export function StatCard({ label, value, helper, icon: Icon, loading }: {
     label: string;
     value: string | number;
-    helper: string;
+    helper?: string;
     icon: React.ElementType;
     loading?: boolean;
 }) {
@@ -24,9 +24,9 @@ export function StatCard({ label, value, helper, icon: Icon, loading }: {
                                 {value}
                             </Typography>
                         )}
-                        <Typography variant="caption" color="text.secondary">
+                        {helper && <Typography variant="caption" color="text.secondary">
                             {helper}
-                        </Typography>
+                        </Typography>}
                     </Box>
                     <Box sx={{ width: 42, height: 42, borderRadius: 3, bgcolor: "rgba(15,24,152,0.08)", color: ADMIN_COLORS.blue, display: "grid", placeItems: "center" }}>
                         <Icon size={18} />

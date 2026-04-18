@@ -23,7 +23,8 @@
         "axios": "catalog:",
         "lucide-react": "catalog:",
         "react": "catalog:",
-        "react-dom": "catalog:"
+        "react-dom": "catalog:",
+        "zustand": "^5.0.12"
     },
     "devDependencies": {
         "@biomejs/biome": "catalog:",

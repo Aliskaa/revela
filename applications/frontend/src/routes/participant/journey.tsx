@@ -1,34 +1,31 @@
-import * as React from "react";
 import { useParticipantSession } from "@/hooks/participantSession";
+import { useSelectedAssignment } from "@/hooks/useSelectedAssignment";
+import { useCampaignStore } from "@/stores/campaignStore";
 import type { ParticipantSession } from "@aor/types";
-import { createFileRoute } from "@tanstack/react-router";
-import {
-  BadgeCheck,
-  ChevronRight,
-  ClipboardList,
-  Lock,
-  MessageSquareQuote,
-  Radar,
-  Sparkles,
-  Users,
-  Brain,
-} from "lucide-react";
 import {
   Alert,
   Box,
-  Button,
   Card,
   CardContent,
   Chip,
-  Divider,
   FormControl,
   InputLabel,
   LinearProgress,
   MenuItem,
   Select,
   Stack,
-  Typography,
+  Typography
 } from "@mui/material";
+import { createFileRoute } from "@tanstack/react-router";
+import {
+  Brain,
+  ClipboardList,
+  MessageSquareQuote,
+  Radar,
+  Sparkles,
+  Users
+} from "lucide-react";
+import * as React from "react";
 
 export const Route = createFileRoute("/participant/journey")({
   component: ParticipantJourneyRoute,
@@ -182,18 +179,8 @@ function MiniLine({ icon: Icon, text }: { icon: React.ElementType; text: string 
 
 function ParticipantJourneyRoute() {
   const { data: session, isLoading, isError } = useParticipantSession();
-  const [selectedIndex, setSelectedIndex] = React.useState<number>(0);
-
-  const assignments = session?.assignments ?? [];
-
-  React.useEffect(() => {
-    if (assignments.length > 0) {
-      const activeIdx = assignments.findIndex(a => a.campaign_status === "active");
-      if (activeIdx >= 0) setSelectedIndex(activeIdx);
-    }
-  }, [assignments.length]);
-
-  const selectedAssignment = assignments[selectedIndex] ?? assignments[0];
+  const { assignment: selectedAssignment, index: selectedIndex, assignments } = useSelectedAssignment(session);
+  const selectCampaign = useCampaignStore(s => s.select);
   const steps = React.useMemo(() => buildSteps(selectedAssignment), [selectedAssignment]);
 
   if (isLoading) {
@@ -230,7 +217,11 @@ function ParticipantJourneyRoute() {
                   <Select
                     label="Campagne"
                     value={selectedIndex}
-                    onChange={(e) => setSelectedIndex(e.target.value as number)}
+                    onChange={(e) => {
+                      const idx = e.target.value as number;
+                      const a = assignments[idx];
+                      if (a?.campaign_id != null) selectCampaign(a.campaign_id);
+                    }}
                   >
                     {assignments.map((a, i) => (
                       <MenuItem key={`${a.campaign_id}-${a.questionnaire_id}`} value={i}>
