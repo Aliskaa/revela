@@ -37,11 +37,6 @@ export const Route = createFileRoute("/participant/")({
   component: ParticipantDashboardRoute,
 });
 
-const COLORS = {
-  blue: "rgb(15,24,152)",
-  yellow: "rgb(255,204,0)",
-  border: "rgba(15,23,42,0.10)",
-};
 
 type StepState = "completed" | "current" | "locked";
 
@@ -261,7 +256,7 @@ function MetricCard({ metric, progress }: { metric: Metric; progress: number }) 
               {metric.helper}
             </Typography>
           </Box>
-          <Box sx={{ width: 42, height: 42, borderRadius: 3, bgcolor: "rgba(15,24,152,0.08)", color: COLORS.blue, display: "grid", placeItems: "center" }}>
+          <Box sx={{ width: 42, height: 42, borderRadius: 3, bgcolor: "tint.primaryBg", color: "primary.main", display: "grid", placeItems: "center" }}>
             <Icon size={18} />
           </Box>
         </Stack>
@@ -269,7 +264,7 @@ function MetricCard({ metric, progress }: { metric: Metric; progress: number }) 
           <LinearProgress
             variant="determinate"
             value={progress}
-            sx={{ mt: 2.2, height: 8, borderRadius: 99, bgcolor: "rgba(15,23,42,0.06)", "& .MuiLinearProgress-bar": { bgcolor: COLORS.blue } }}
+            sx={{ mt: 2.2, height: 8, borderRadius: 99, bgcolor: "tint.subtleBg", "& .MuiLinearProgress-bar": { bgcolor: "primary.main" } }}
           />
         ) : null}
       </CardContent>
@@ -283,23 +278,23 @@ function JourneyItem({ step }: { step: JourneyStep }) {
   const chipLabel = step.state === "completed" ? "Terminé" : step.state === "current" ? "En cours" : "Verrouillé";
   const chipSx =
     step.state === "completed"
-      ? { bgcolor: "rgba(16,185,129,0.12)", color: "rgb(4,120,87)" }
+      ? { bgcolor: "tint.successBg", color: "tint.successText" }
       : step.state === "current"
-        ? { bgcolor: "rgba(255,204,0,0.16)", color: "rgb(180,120,0)" }
-        : { bgcolor: "rgba(148,163,184,0.16)", color: "rgb(100,116,139)" };
+        ? { bgcolor: "tint.secondaryBg", color: "tint.secondaryText" }
+        : { bgcolor: "tint.mutedBg", color: "tint.mutedText" };
 
   const content = (
     <Stack
       spacing={1.2}
       sx={{
         p: 2,
-        border: `1px solid ${COLORS.border}`,
+        border: `1px solid ${"border"}`,
         borderRadius: 4,
         bgcolor: "#fff",
         cursor: clickable ? "pointer" : "default",
         opacity: step.state === "locked" ? 0.6 : 1,
         transition: "all 0.15s ease",
-        ...(clickable ? { "&:hover": { borderColor: COLORS.blue, boxShadow: "0 2px 8px rgba(15,24,152,0.08)" } } : {}),
+        ...(clickable ? { "&:hover": { borderColor: "primary.main", boxShadow: "0 2px 8px rgba(15,24,152,0.08)" } } : {}),
       }}
     >
       <Stack direction="row" spacing={1.5} alignItems="start">
@@ -326,7 +321,7 @@ function JourneyItem({ step }: { step: JourneyStep }) {
             </Typography>
             <Stack direction="row" spacing={0.8} alignItems="center">
               <Chip label={chipLabel} size="small" sx={{ borderRadius: 99, ...chipSx }} />
-              {clickable && <ChevronRight size={16} style={{ color: COLORS.blue }} />}
+              {clickable && <ChevronRight size={16} style={{ color: "primary.main" }} />}
             </Stack>
           </Stack>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, lineHeight: 1.6 }}>
@@ -357,7 +352,7 @@ function PageHeader({ campaignView, participantFirstName, assignments, selectedI
       <CardContent sx={{ p: { xs: 2.5, md: 3 } }}>
         <Stack direction={{ xs: "column", lg: "row" }} spacing={3} justifyContent="space-between" alignItems={{ xs: "start", lg: "start" }}>
           <Box sx={{ minWidth: 0 }}>
-            <Chip label={campaignView.status} sx={{ borderRadius: 99, bgcolor: "rgba(15,24,152,0.08)", color: COLORS.blue, mb: 1.5 }} />
+            <Chip label={campaignView.status} sx={{ borderRadius: 99, bgcolor: "tint.primaryBg", color: "primary.main", mb: 1.5 }} />
             <Typography variant="h4" fontWeight={700} color="text.primary" sx={{ letterSpacing: -0.5 }}>
               Bonjour {participantFirstName},
             </Typography>
@@ -385,7 +380,7 @@ function PageHeader({ campaignView, participantFirstName, assignments, selectedI
           <Stack spacing={1.4} sx={{ width: { xs: "100%", sm: 320 } }}>
             <Card variant="outlined">
               <CardContent sx={{ p: 2, display: "flex", gap: 1.5, alignItems: "center" }}>
-                <Box sx={{ width: 40, height: 40, borderRadius: 3, bgcolor: "rgba(15,24,152,0.08)", color: COLORS.blue, display: "grid", placeItems: "center" }}>
+                <Box sx={{ width: 40, height: 40, borderRadius: 3, bgcolor: "tint.primaryBg", color: "primary.main", display: "grid", placeItems: "center" }}>
                   <Users size={16} />
                 </Box>
                 <Box>
@@ -396,7 +391,7 @@ function PageHeader({ campaignView, participantFirstName, assignments, selectedI
             </Card>
             <Card variant="outlined">
               <CardContent sx={{ p: 2, display: "flex", gap: 1.5, alignItems: "center" }}>
-                <Box sx={{ width: 40, height: 40, borderRadius: 3, bgcolor: "rgba(255,204,0,0.16)", color: "rgb(180,120,0)", display: "grid", placeItems: "center" }}>
+                <Box sx={{ width: 40, height: 40, borderRadius: 3, bgcolor: "tint.secondaryBg", color: "tint.secondaryText", display: "grid", placeItems: "center" }}>
                   <Bell size={16} />
                 </Box>
                 <Box>
@@ -418,7 +413,7 @@ function CampaignCard({ campaignView }: { campaignView: CampaignView }) {
       <CardContent sx={{ p: 2.5 }}>
         <SectionTitle title="Campagne active" subtitle="Contexte du parcours participant" />
 
-        <Card variant="outlined" sx={{ bgcolor: COLORS.blue, color: "#fff", p: 2.2 }}>
+        <Card variant="outlined" sx={{ bgcolor: "primary.main", color: "#fff", p: 2.2 }}>
           <Typography variant="caption" sx={{ opacity: 0.8 }}>Campagne</Typography>
           <Typography variant="h6" fontWeight={700} sx={{ mt: 0.5 }}>{campaignView.name}</Typography>
           <Typography variant="body2" sx={{ opacity: 0.9, mt: 0.75 }}>{campaignView.company} · {campaignView.status}</Typography>
@@ -426,7 +421,7 @@ function CampaignCard({ campaignView }: { campaignView: CampaignView }) {
 
         <Box sx={{ mt: 2 }}>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>Progression</Typography>
-          <LinearProgress variant="determinate" value={campaignView.progress} sx={{ height: 10, borderRadius: 99, bgcolor: "rgba(15,23,42,0.06)", "& .MuiLinearProgress-bar": { bgcolor: COLORS.blue } }} />
+          <LinearProgress variant="determinate" value={campaignView.progress} sx={{ height: 10, borderRadius: 99, bgcolor: "tint.subtleBg", "& .MuiLinearProgress-bar": { bgcolor: "primary.main" } }} />
         </Box>
       </CardContent>
     </Card>
@@ -440,7 +435,7 @@ function CoachCard({ campaignView }: { campaignView: CampaignView }) {
       <CardContent sx={{ p: 2.5 }}>
         <SectionTitle title="Mon coach" subtitle="La personne qui accompagne la restitution" />
         <Stack direction="row" spacing={1.5} alignItems="center" sx={{ borderRadius: 4, bgcolor: "rgba(15,23,42,0.03)", p: 2 }}>
-          <Box sx={{ width: 54, height: 54, borderRadius: 4, bgcolor: COLORS.blue, color: "#fff", display: "grid", placeItems: "center" }}>
+          <Box sx={{ width: 54, height: 54, borderRadius: 4, bgcolor: "primary.main", color: "#fff", display: "grid", placeItems: "center" }}>
             <UserRound size={22} />
           </Box>
           <Box>

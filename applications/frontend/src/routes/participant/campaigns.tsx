@@ -36,11 +36,6 @@ export const Route = createFileRoute("/participant/campaigns")({
   component: ParticipantCampaignsRoute,
 });
 
-const COLORS = {
-  blue: "rgb(15,24,152)",
-  yellow: "rgb(255,204,0)",
-  border: "rgba(15,23,42,0.10)",
-};
 
 type CampaignStatus = "active" | "draft" | "closed" | "archived";
 type ParticipantAssignment = ParticipantSession["assignments"][number];
@@ -131,14 +126,14 @@ const statsFromAssignments = (assignments: ParticipantAssignment[]) => [
 
 function statusChip(status: CampaignStatus) {
   if (status === "active") {
-    return <Chip label="En cours" size="small" sx={{ borderRadius: 99, bgcolor: "rgba(16,185,129,0.12)", color: "rgb(4,120,87)" }} />;
+    return <Chip label="En cours" size="small" sx={{ borderRadius: 99, bgcolor: "tint.successBg", color: "tint.successText" }} />;
   }
 
   if (status === "closed") {
-    return <Chip label="Terminée" size="small" sx={{ borderRadius: 99, bgcolor: "rgba(148,163,184,0.16)", color: "rgb(100,116,139)" }} />;
+    return <Chip label="Terminée" size="small" sx={{ borderRadius: 99, bgcolor: "tint.mutedBg", color: "tint.mutedText" }} />;
   }
 
-  return <Chip label="Brouillon" size="small" sx={{ borderRadius: 99, bgcolor: "rgba(255,204,0,0.16)", color: "rgb(180,120,0)" }} />;
+  return <Chip label="Brouillon" size="small" sx={{ borderRadius: 99, bgcolor: "tint.secondaryBg", color: "tint.secondaryText" }} />;
 }
 
 function CampaignCard({ campaign }: { campaign: Campaign }) {
@@ -168,7 +163,7 @@ function CampaignCard({ campaign }: { campaign: Campaign }) {
               </Typography>
             </Box>
 
-            <Box sx={{ width: 44, height: 44, borderRadius: 3, bgcolor: isActive ? "rgba(15,24,152,0.08)" : "rgba(15,23,42,0.04)", color: isActive ? COLORS.blue : "rgb(100,116,139)", display: "grid", placeItems: "center", flex: "none" }}>
+            <Box sx={{ width: 44, height: 44, borderRadius: 3, bgcolor: isActive ? "rgba(15,24,152,0.08)" : "rgba(15,23,42,0.04)", color: isActive ? "primary.main" : "rgb(100,116,139)", display: "grid", placeItems: "center", flex: "none" }}>
               <Sparkles size={18} />
             </Box>
           </Stack>
@@ -201,7 +196,7 @@ function CampaignCard({ campaign }: { campaign: Campaign }) {
                 variant="contained"
                 disableElevation
                 onClick={() => goTo("/participant/journey")}
-                sx={{ borderRadius: 3, bgcolor: COLORS.blue, textTransform: "none" }}
+                sx={{ borderRadius: 3, bgcolor: "primary.main", textTransform: "none" }}
                 endIcon={<ArrowRight size={16} />}
               >
                 {campaign.progress > 0 ? "Continuer le parcours" : "Commencer le parcours"}
@@ -212,7 +207,7 @@ function CampaignCard({ campaign }: { campaign: Campaign }) {
                 variant="contained"
                 disableElevation
                 onClick={() => goTo("/participant/results")}
-                sx={{ borderRadius: 3, bgcolor: COLORS.blue, textTransform: "none" }}
+                sx={{ borderRadius: 3, bgcolor: "primary.main", textTransform: "none" }}
                 endIcon={<ArrowRight size={16} />}
               >
                 Voir les résultats
@@ -235,7 +230,7 @@ function CampaignCard({ campaign }: { campaign: Campaign }) {
 function Row({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value: string }) {
   return (
     <Stack direction="row" spacing={1.3} alignItems="start">
-      <Box sx={{ width: 36, height: 36, borderRadius: 3, bgcolor: "rgba(15,24,152,0.08)", color: COLORS.blue, display: "grid", placeItems: "center", flex: "none" }}>
+      <Box sx={{ width: 36, height: 36, borderRadius: 3, bgcolor: "tint.primaryBg", color: "primary.main", display: "grid", placeItems: "center", flex: "none" }}>
         <Icon size={16} />
       </Box>
       <Box sx={{ minWidth: 0 }}>
@@ -255,7 +250,7 @@ function EmptyCampaignsState() {
     <Card variant="outlined">
       <CardContent sx={{ p: 3 }}>
         <Stack spacing={2} alignItems="start">
-          <Box sx={{ width: 48, height: 48, borderRadius: 3, bgcolor: "rgba(255,204,0,0.16)", color: "rgb(180,120,0)", display: "grid", placeItems: "center" }}>
+          <Box sx={{ width: 48, height: 48, borderRadius: 3, bgcolor: "tint.secondaryBg", color: "tint.secondaryText", display: "grid", placeItems: "center" }}>
             <Lock size={18} />
           </Box>
           <Box>

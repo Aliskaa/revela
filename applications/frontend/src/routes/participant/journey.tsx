@@ -31,10 +31,6 @@ export const Route = createFileRoute("/participant/journey")({
   component: ParticipantJourneyRoute,
 });
 
-const COLORS = {
-  blue: "rgb(15,24,152)",
-  border: "rgba(15,23,42,0.10)",
-};
 
 type StepState = "completed" | "current" | "locked";
 
@@ -111,22 +107,22 @@ function StepCard({ step }: { step: JourneyStep }) {
   const chipLabel = step.state === "completed" ? "Terminé" : step.state === "current" ? "En cours" : "Verrouillé";
   const chipSx =
     step.state === "completed"
-      ? { bgcolor: "rgba(16,185,129,0.12)", color: "rgb(4,120,87)" }
+      ? { bgcolor: "tint.successBg", color: "tint.successText" }
       : step.state === "current"
-        ? { bgcolor: "rgba(255,204,0,0.16)", color: "rgb(180,120,0)" }
-        : { bgcolor: "rgba(148,163,184,0.16)", color: "rgb(100,116,139)" };
+        ? { bgcolor: "tint.secondaryBg", color: "tint.secondaryText" }
+        : { bgcolor: "tint.mutedBg", color: "tint.mutedText" };
 
   return (
-    <Box sx={{ border: `1px solid ${COLORS.border}`, borderRadius: 4, p: 2, bgcolor: "#fff" }}>
+    <Box sx={{ border: `1px solid ${"border"}`, borderRadius: 4, p: 2, bgcolor: "#fff" }}>
       <Stack direction="row" spacing={1.5} alignItems="start">
         <Box
           sx={{
             width: 44, height: 44, borderRadius: 4, display: "grid", placeItems: "center",
             ...(step.state === "completed"
-              ? { bgcolor: "rgba(16,185,129,0.10)", color: "rgb(4,120,87)" }
+              ? { bgcolor: "tint.successBg", color: "tint.successText" }
               : step.state === "current"
-                ? { bgcolor: "rgba(255,204,0,0.14)", color: "rgb(180,120,0)" }
-                : { bgcolor: "rgba(148,163,184,0.12)", color: "rgb(100,116,139)" }),
+                ? { bgcolor: "rgba(255,204,0,0.14)", color: "tint.secondaryText" }
+                : { bgcolor: "tint.mutedBg", color: "tint.mutedText" }),
           }}
         >
           <Icon size={18} />
@@ -153,7 +149,7 @@ function RuleCard({ title, description, icon: Icon }: { title: string; descripti
     <Card variant="outlined">
       <CardContent sx={{ p: 2.2 }}>
         <Stack direction="row" spacing={1.3} alignItems="start">
-          <Box sx={{ width: 40, height: 40, borderRadius: 3, bgcolor: "rgba(15,24,152,0.08)", color: COLORS.blue, display: "grid", placeItems: "center", flex: "none" }}>
+          <Box sx={{ width: 40, height: 40, borderRadius: 3, bgcolor: "tint.primaryBg", color: "primary.main", display: "grid", placeItems: "center", flex: "none" }}>
             <Icon size={16} />
           </Box>
           <Box>
@@ -169,7 +165,7 @@ function RuleCard({ title, description, icon: Icon }: { title: string; descripti
 function MiniLine({ icon: Icon, text }: { icon: React.ElementType; text: string }) {
   return (
     <Stack direction="row" spacing={1.2} alignItems="start">
-      <Box sx={{ width: 34, height: 34, borderRadius: 3, bgcolor: "rgba(15,24,152,0.08)", color: COLORS.blue, display: "grid", placeItems: "center", flex: "none" }}>
+      <Box sx={{ width: 34, height: 34, borderRadius: 3, bgcolor: "tint.primaryBg", color: "primary.main", display: "grid", placeItems: "center", flex: "none" }}>
         <Icon size={15} />
       </Box>
       <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.7, pt: 0.2 }}>{text}</Typography>
@@ -204,7 +200,7 @@ function ParticipantJourneyRoute() {
         <CardContent sx={{ p: { xs: 2.5, md: 3 } }}>
           <Stack spacing={2.5} direction={{ xs: "column", lg: "row" }} justifyContent="space-between" alignItems={{ xs: "start", lg: "start" }}>
             <Box>
-              <Chip label="Parcours participant" sx={{ borderRadius: 99, bgcolor: "rgba(15,24,152,0.08)", color: COLORS.blue, mb: 1.5 }} />
+              <Chip label="Parcours participant" sx={{ borderRadius: 99, bgcolor: "tint.primaryBg", color: "primary.main", mb: 1.5 }} />
               <Typography variant="h4" fontWeight={800} color="text.primary" sx={{ letterSpacing: -0.5 }}>
                 Mon parcours Révéla
               </Typography>
@@ -236,7 +232,7 @@ function ParticipantJourneyRoute() {
             <Card variant="outlined" sx={{ width: { xs: "100%", sm: 340 } }}>
               <CardContent sx={{ p: 2 }}>
                 <Stack direction="row" spacing={1.5} alignItems="center">
-                  <Box sx={{ width: 48, height: 48, borderRadius: 4, bgcolor: COLORS.blue, color: "#fff", display: "grid", placeItems: "center" }}>
+                  <Box sx={{ width: 48, height: 48, borderRadius: 4, bgcolor: "primary.main", color: "#fff", display: "grid", placeItems: "center" }}>
                     <Sparkles size={20} />
                   </Box>
                   <Box>

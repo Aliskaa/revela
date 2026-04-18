@@ -35,10 +35,6 @@ export const Route = createFileRoute("/participant/profile")({
   component: ParticipantProfileRoute,
 });
 
-const COLORS = {
-  blue: "rgb(15,24,152)",
-  border: "rgba(15,23,42,0.10)",
-};
 
 function ParticipantProfileRoute() {
   const { data: session, isLoading, isError } = useParticipantSession();
@@ -113,7 +109,7 @@ function ParticipantProfileRoute() {
         <CardContent sx={{ p: { xs: 2.5, md: 3 } }}>
           <Stack spacing={2.5} direction={{ xs: "column", lg: "row" }} justifyContent="space-between" alignItems={{ xs: "start", lg: "start" }}>
             <Box>
-              <Chip label="Profil participant" sx={{ borderRadius: 99, bgcolor: "rgba(15,24,152,0.08)", color: COLORS.blue, mb: 1.5 }} />
+              <Chip label="Profil participant" sx={{ borderRadius: 99, bgcolor: "tint.primaryBg", color: "primary.main", mb: 1.5 }} />
               <Typography variant="h4" fontWeight={800} color="text.primary" sx={{ letterSpacing: -0.5 }}>
                 Mon profil
               </Typography>
@@ -123,7 +119,7 @@ function ParticipantProfileRoute() {
             </Box>
             <Card variant="outlined" sx={{ bgcolor: "rgba(15,23,42,0.03)", p: 2.2, width: { xs: "100%", sm: 340 } }}>
               <Stack direction="row" spacing={1.5} alignItems="center">
-                <Box sx={{ width: 48, height: 48, borderRadius: 4, bgcolor: COLORS.blue, color: "#fff", display: "grid", placeItems: "center" }}>
+                <Box sx={{ width: 48, height: 48, borderRadius: 4, bgcolor: "primary.main", color: "#fff", display: "grid", placeItems: "center" }}>
                   <UserRound size={20} />
                 </Box>
                 <Box>
@@ -202,7 +198,7 @@ function ParticipantProfileRoute() {
                 startIcon={<PencilLine size={16} />}
                 onClick={handleSave}
                 disabled={updateProfile.isPending}
-                sx={{ borderRadius: 3, bgcolor: COLORS.blue, textTransform: "none" }}
+                sx={{ borderRadius: 3, bgcolor: "primary.main", textTransform: "none" }}
               >
                 {updateProfile.isPending ? "Enregistrement…" : "Mettre à jour"}
               </Button>

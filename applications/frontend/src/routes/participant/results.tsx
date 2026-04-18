@@ -29,12 +29,6 @@ export const Route = createFileRoute("/participant/results")({
   component: ParticipantResultsRoute,
 });
 
-const COLORS = {
-  blue: "rgb(15,24,152)",
-  yellow: "rgb(255,204,0)",
-  green: "rgb(4,120,87)",
-  border: "rgba(15,23,42,0.10)",
-};
 
 type ScoreRow = {
   label: string;
@@ -84,7 +78,7 @@ function ScoreBar({ value, max, color }: { value: number | null; max: number; co
       <LinearProgress
         variant="determinate"
         value={pct}
-        sx={{ flex: 1, height: 8, borderRadius: 99, bgcolor: "rgba(15,23,42,0.06)", "& .MuiLinearProgress-bar": { bgcolor: color } }}
+        sx={{ flex: 1, height: 8, borderRadius: 99, bgcolor: "tint.subtleBg", "& .MuiLinearProgress-bar": { bgcolor: color } }}
       />
     </Stack>
   );
@@ -101,25 +95,25 @@ function DimensionCard({ dimension, likertMax }: { dimension: DimensionView; lik
 
         <Stack spacing={2}>
           {dimension.rows.map((row) => (
-            <Box key={row.label} sx={{ border: `1px solid ${COLORS.border}`, borderRadius: 3, p: 2 }}>
+            <Box key={row.label} sx={{ border: '1px solid', borderColor: 'border', borderRadius: 3, p: 2 }}>
               <Typography variant="body2" fontWeight={700} color="text.primary" sx={{ mb: 1.5 }}>
                 {row.label}
               </Typography>
               <Stack spacing={1}>
                 <Stack direction="row" spacing={1.5} alignItems="center">
-                  <Chip label="Auto" size="small" sx={{ borderRadius: 99, bgcolor: "rgba(15,24,152,0.08)", color: COLORS.blue, minWidth: 70, fontWeight: 700, fontSize: 11 }} />
-                  <ScoreBar value={row.self} max={likertMax} color={COLORS.blue} />
+                  <Chip label="Auto" size="small" sx={{ borderRadius: 99, bgcolor: 'tint.primaryBg', color: 'primary.main', minWidth: 70, fontWeight: 700, fontSize: 11 }} />
+                  <ScoreBar value={row.self} max={likertMax} color="rgb(15,24,152)" />
                 </Stack>
                 {hasPeers && (
                   <Stack direction="row" spacing={1.5} alignItems="center">
-                    <Chip label="Pairs" size="small" sx={{ borderRadius: 99, bgcolor: "rgba(255,204,0,0.16)", color: "rgb(180,120,0)", minWidth: 70, fontWeight: 700, fontSize: 11 }} />
-                    <ScoreBar value={row.peersAvg} max={likertMax} color={COLORS.yellow} />
+                    <Chip label="Pairs" size="small" sx={{ borderRadius: 99, bgcolor: 'tint.secondaryBg', color: 'tint.secondaryText', minWidth: 70, fontWeight: 700, fontSize: 11 }} />
+                    <ScoreBar value={row.peersAvg} max={likertMax} color="rgb(255,204,0)" />
                   </Stack>
                 )}
                 {hasScientific && (
                   <Stack direction="row" spacing={1.5} alignItems="center">
-                    <Chip label="Test" size="small" sx={{ borderRadius: 99, bgcolor: "rgba(16,185,129,0.12)", color: COLORS.green, minWidth: 70, fontWeight: 700, fontSize: 11 }} />
-                    <ScoreBar value={row.scientific} max={likertMax} color={COLORS.green} />
+                    <Chip label="Test" size="small" sx={{ borderRadius: 99, bgcolor: 'tint.successBg', color: 'tint.successText', minWidth: 70, fontWeight: 700, fontSize: 11 }} />
+                    <ScoreBar value={row.scientific} max={likertMax} color="rgb(4,120,87)" />
                   </Stack>
                 )}
               </Stack>
@@ -172,7 +166,7 @@ function ParticipantResultsRoute() {
         <CardContent sx={{ p: { xs: 2.5, md: 3 } }}>
           <Stack direction={{ xs: "column", lg: "row" }} spacing={3} justifyContent="space-between" alignItems={{ xs: "start", lg: "start" }}>
             <Box>
-              <Chip label="Résultats" sx={{ borderRadius: 99, bgcolor: "rgba(15,24,152,0.08)", color: COLORS.blue, mb: 1.5 }} />
+              <Chip label="Résultats" sx={{ borderRadius: 99, bgcolor: "tint.primaryBg", color: "primary.main", mb: 1.5 }} />
               <Typography variant="h4" fontWeight={800} color="text.primary" sx={{ letterSpacing: -0.5 }}>
                 {campaignName}
               </Typography>
@@ -204,7 +198,7 @@ function ParticipantResultsRoute() {
             <Stack spacing={1.2} sx={{ width: { xs: "100%", sm: 340 } }}>
               <Card variant="outlined">
                 <CardContent sx={{ p: 2, display: "flex", gap: 1.5, alignItems: "center" }}>
-                  <Box sx={{ width: 40, height: 40, borderRadius: 3, bgcolor: "rgba(15,24,152,0.08)", color: COLORS.blue, display: "grid", placeItems: "center" }}>
+                  <Box sx={{ width: 40, height: 40, borderRadius: 3, bgcolor: "tint.primaryBg", color: "primary.main", display: "grid", placeItems: "center" }}>
                     <Users size={16} />
                   </Box>
                   <Box>
@@ -215,7 +209,7 @@ function ParticipantResultsRoute() {
               </Card>
               <Card variant="outlined">
                 <CardContent sx={{ p: 2, display: "flex", gap: 1.5, alignItems: "center" }}>
-                  <Box sx={{ width: 40, height: 40, borderRadius: 3, bgcolor: "rgba(255,204,0,0.16)", color: "rgb(180,120,0)", display: "grid", placeItems: "center" }}>
+                  <Box sx={{ width: 40, height: 40, borderRadius: 3, bgcolor: "tint.secondaryBg", color: "tint.secondaryText", display: "grid", placeItems: "center" }}>
                     <Radar size={16} />
                   </Box>
                   <Box>
@@ -233,9 +227,9 @@ function ParticipantResultsRoute() {
 
       {/* Legend */}
       <Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap>
-        <Chip label="Auto-évaluation" size="small" sx={{ borderRadius: 99, bgcolor: "rgba(15,24,152,0.08)", color: COLORS.blue, fontWeight: 700 }} />
-        <Chip label={`Pairs (moy. ${peerCount})`} size="small" sx={{ borderRadius: 99, bgcolor: "rgba(255,204,0,0.16)", color: "rgb(180,120,0)", fontWeight: 700 }} />
-        <Chip label="Test scientifique" size="small" sx={{ borderRadius: 99, bgcolor: "rgba(16,185,129,0.12)", color: COLORS.green, fontWeight: 700 }} />
+        <Chip label="Auto-évaluation" size="small" sx={{ borderRadius: 99, bgcolor: "tint.primaryBg", color: "primary.main", fontWeight: 700 }} />
+        <Chip label={`Pairs (moy. ${peerCount})`} size="small" sx={{ borderRadius: 99, bgcolor: "tint.secondaryBg", color: "tint.secondaryText", fontWeight: 700 }} />
+        <Chip label="Test scientifique" size="small" sx={{ borderRadius: 99, bgcolor: "tint.successBg", color: "tint.successText", fontWeight: 700 }} />
       </Stack>
 
       <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "repeat(3, minmax(0, 1fr))" }, gap: 2 }}>
@@ -246,7 +240,7 @@ function ParticipantResultsRoute() {
                 <Typography variant="body2" color="text.secondary">Dimensions</Typography>
                 <Typography variant="h4" fontWeight={800} color="text.primary" sx={{ mt: 0.5, letterSpacing: -0.5 }}>{dimensions.length}</Typography>
               </Box>
-              <Box sx={{ width: 42, height: 42, borderRadius: 3, bgcolor: "rgba(15,24,152,0.08)", color: COLORS.blue, display: "grid", placeItems: "center" }}>
+              <Box sx={{ width: 42, height: 42, borderRadius: 3, bgcolor: "tint.primaryBg", color: "primary.main", display: "grid", placeItems: "center" }}>
                 <Radar size={18} />
               </Box>
             </Stack>
@@ -259,7 +253,7 @@ function ParticipantResultsRoute() {
                 <Typography variant="body2" color="text.secondary">Pairs</Typography>
                 <Typography variant="h4" fontWeight={800} color="text.primary" sx={{ mt: 0.5, letterSpacing: -0.5 }}>{peerCount}</Typography>
               </Box>
-              <Box sx={{ width: 42, height: 42, borderRadius: 3, bgcolor: "rgba(15,24,152,0.08)", color: COLORS.blue, display: "grid", placeItems: "center" }}>
+              <Box sx={{ width: 42, height: 42, borderRadius: 3, bgcolor: "tint.primaryBg", color: "primary.main", display: "grid", placeItems: "center" }}>
                 <UserRound size={18} />
               </Box>
             </Stack>
@@ -274,7 +268,7 @@ function ParticipantResultsRoute() {
                   {matrix?.questionnaire_id ?? "–"}
                 </Typography>
               </Box>
-              <Box sx={{ width: 42, height: 42, borderRadius: 3, bgcolor: "rgba(15,24,152,0.08)", color: COLORS.blue, display: "grid", placeItems: "center" }}>
+              <Box sx={{ width: 42, height: 42, borderRadius: 3, bgcolor: "tint.primaryBg", color: "primary.main", display: "grid", placeItems: "center" }}>
                 <Sparkles size={18} />
               </Box>
             </Stack>

@@ -27,13 +27,6 @@ export const Route = createFileRoute("/participant")({
   component: ParticipantRouteLayout,
 });
 
-const COLORS = {
-  blue: "rgb(15,24,152)",
-  yellow: "rgb(255,204,0)",
-  border: "rgba(15,23,42,0.10)",
-  surface: "#ffffff",
-  background: "#f8fafc",
-};
 
 type NavItem = {
   label: string;
@@ -64,7 +57,7 @@ function BrandMark() {
           width: 44,
           height: 44,
           borderRadius: 3,
-          bgcolor: COLORS.blue,
+          bgcolor: "primary.main",
           color: "#fff",
           display: "grid",
           placeItems: "center",
@@ -102,8 +95,8 @@ function ParticipantSidebar() {
         width: 280,
         display: { xs: "none", lg: "flex" },
         flexDirection: "column",
-        bgcolor: COLORS.surface,
-        borderRight: `1px solid ${COLORS.border}`,
+        bgcolor: "background.paper",
+        borderRight: "1px solid rgba(15,23,42,0.10)",
         px: 2.5,
         py: 3,
       }}
@@ -130,7 +123,7 @@ function ParticipantSidebar() {
                 py: 1.35,
                 px: 2,
                 textTransform: "none",
-                bgcolor: active ? COLORS.blue : "transparent",
+                bgcolor: active ? "primary.main" : "transparent",
                 color: active ? "#fff" : "text.secondary",
                 boxShadow: active ? "0 10px 25px rgba(15,24,152,0.16)" : "none",
                 "&:hover": {
@@ -180,7 +173,7 @@ function MobileTopBar() {
         bgcolor: "rgba(248,250,252,0.92)",
         backdropFilter: "blur(10px)",
         color: "text.primary",
-        borderBottom: `1px solid ${COLORS.border}`,
+        borderBottom: "1px solid rgba(15,23,42,0.10)",
       }}
     >
       <Toolbar sx={{ minHeight: 68, px: 2 }}>
@@ -190,7 +183,7 @@ function MobileTopBar() {
               width: 38,
               height: 38,
               borderRadius: 3,
-              bgcolor: COLORS.blue,
+              bgcolor: "primary.main",
               color: "#fff",
               display: "grid",
               placeItems: "center",
@@ -208,7 +201,7 @@ function MobileTopBar() {
           </Box>
         </Stack>
 
-        <Avatar sx={{ width: 34, height: 34, bgcolor: COLORS.blue }}>P</Avatar>
+        <Avatar sx={{ width: 34, height: 34, bgcolor: "primary.main" }}>P</Avatar>
       </Toolbar>
     </AppBar>
   );
@@ -261,7 +254,7 @@ function TopBar() {
 
 function ParticipantShell({ children }: { children: React.ReactNode }) {
   return (
-    <Box sx={{ minHeight: "100vh", bgcolor: COLORS.background }}>
+    <Box sx={{ minHeight: "100vh", bgcolor: "background.default" }}>
       <MobileTopBar />
       <Box sx={{ display: "flex", minHeight: "100vh", maxWidth: 1600, mx: "auto" }}>
         <ParticipantSidebar />

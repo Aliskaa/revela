@@ -25,11 +25,6 @@ export const Route = createFileRoute("/participant/test/")({
   component: ParticipantTestIndexRoute,
 });
 
-const COLORS = {
-  blue: "rgb(15,24,152)",
-  yellow: "rgb(255,204,0)",
-  border: "rgba(15,23,42,0.10)",
-};
 
 type QuestionnaireCode = "B" | "F" | "S";
 
@@ -96,7 +91,7 @@ function InfoPill({ icon: Icon, label, value }: { icon: React.ElementType; label
   return (
     <Box sx={{ border: "1px solid rgba(15,23,42,0.10)", borderRadius: 4, p: 1.8 }}>
       <Stack direction="row" spacing={1.2} alignItems="start">
-        <Box sx={{ width: 38, height: 38, borderRadius: 3, bgcolor: "rgba(15,24,152,0.08)", color: COLORS.blue, display: "grid", placeItems: "center", flex: "none" }}>
+        <Box sx={{ width: 38, height: 38, borderRadius: 3, bgcolor: "tint.primaryBg", color: "primary.main", display: "grid", placeItems: "center", flex: "none" }}>
           <Icon size={16} />
         </Box>
         <Box>
@@ -114,7 +109,7 @@ function InfoPill({ icon: Icon, label, value }: { icon: React.ElementType; label
 
 function TestChecklist() {
   return (
-    <Card variant="outlined" sx={{ borderRadius: 6, borderColor: COLORS.border, boxShadow: "0 6px 18px rgba(15,23,42,0.04)" }}>
+    <Card variant="outlined" sx={{ borderRadius: 6, borderColor: "border", boxShadow: "0 6px 18px rgba(15,23,42,0.04)" }}>
       <CardContent sx={{ p: 2.5 }}>
         <SectionTitle title="Avant de commencer" subtitle="Quelques rappels utiles pour un parcours fluide." />
         <Stack spacing={1.4} sx={{ mt: 2 }}>
@@ -131,7 +126,7 @@ function TestChecklist() {
 function ChecklistItem({ text }: { text: string }) {
   return (
     <Stack direction="row" spacing={1.2} alignItems="start">
-      <Box sx={{ width: 34, height: 34, borderRadius: 3, bgcolor: "rgba(15,24,152,0.08)", color: COLORS.blue, display: "grid", placeItems: "center", flex: "none" }}>
+      <Box sx={{ width: 34, height: 34, borderRadius: 3, bgcolor: "tint.primaryBg", color: "primary.main", display: "grid", placeItems: "center", flex: "none" }}>
         <CheckCircle2 size={15} />
       </Box>
       <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.7, pt: 0.2 }}>
@@ -145,7 +140,7 @@ function QuestionnairePreview() {
   const Icon = questionnaire.icon;
 
   return (
-    <Card variant="outlined" sx={{ borderRadius: 6, borderColor: COLORS.border, boxShadow: "0 6px 18px rgba(15,23,42,0.04)" }}>
+    <Card variant="outlined" sx={{ borderRadius: 6, borderColor: "border", boxShadow: "0 6px 18px rgba(15,23,42,0.04)" }}>
       <CardContent sx={{ p: 2.5 }}>
         <Stack spacing={2}>
           <Stack direction="row" justifyContent="space-between" alignItems="start" spacing={2}>
@@ -157,14 +152,14 @@ function QuestionnairePreview() {
                 {questionnaire.subtitle}
               </Typography>
             </Box>
-            <Box sx={{ width: 42, height: 42, borderRadius: 3, bgcolor: "rgba(15,24,152,0.10)", color: COLORS.blue, display: "grid", placeItems: "center" }}>
+            <Box sx={{ width: 42, height: 42, borderRadius: 3, bgcolor: "rgba(15,24,152,0.10)", color: "primary.main", display: "grid", placeItems: "center" }}>
               <Icon size={18} />
             </Box>
           </Stack>
 
           <Stack direction="row" spacing={0.8} flexWrap="wrap" useFlexGap>
             {questionnaire.dimensions.map((dimension) => (
-              <Chip key={dimension} label={dimension} size="small" sx={{ borderRadius: 99, bgcolor: "rgba(15,24,152,0.08)", color: COLORS.blue }} />
+              <Chip key={dimension} label={dimension} size="small" sx={{ borderRadius: 99, bgcolor: "tint.primaryBg", color: "primary.main" }} />
             ))}
           </Stack>
 
@@ -182,11 +177,11 @@ function QuestionnairePreview() {
 function ParticipantTestIndexRoute() {
   return (
     <Stack spacing={3}>
-      <Card variant="outlined" sx={{ borderRadius: 6, borderColor: COLORS.border, boxShadow: "0 6px 18px rgba(15,23,42,0.04)" }}>
+      <Card variant="outlined" sx={{ borderRadius: 6, borderColor: "border", boxShadow: "0 6px 18px rgba(15,23,42,0.04)" }}>
         <CardContent sx={{ p: { xs: 2.5, md: 3 } }}>
           <Stack spacing={2.5} direction={{ xs: "column", lg: "row" }} justifyContent="space-between" alignItems={{ xs: "start", lg: "start" }}>
             <Box>
-              <Chip label="Test Élément Humain" sx={{ borderRadius: 99, bgcolor: "rgba(15,24,152,0.08)", color: COLORS.blue, mb: 1.5 }} />
+              <Chip label="Test Élément Humain" sx={{ borderRadius: 99, bgcolor: "tint.primaryBg", color: "primary.main", mb: 1.5 }} />
               <Typography variant="h4" fontWeight={800} color="text.primary" sx={{ letterSpacing: -0.5 }}>
                 Questionnaire de la campagne
               </Typography>
@@ -195,10 +190,10 @@ function ParticipantTestIndexRoute() {
               </Typography>
             </Box>
 
-            <Card variant="outlined" sx={{ borderRadius: 4, borderColor: COLORS.border, width: { xs: "100%", sm: 340 } }}>
+            <Card variant="outlined" sx={{ borderRadius: 4, borderColor: "border", width: { xs: "100%", sm: 340 } }}>
               <CardContent sx={{ p: 2 }}>
                 <Stack direction="row" spacing={1.5} alignItems="center">
-                  <Box sx={{ width: 48, height: 48, borderRadius: 4, bgcolor: COLORS.blue, color: "#fff", display: "grid", placeItems: "center" }}>
+                  <Box sx={{ width: 48, height: 48, borderRadius: 4, bgcolor: "primary.main", color: "#fff", display: "grid", placeItems: "center" }}>
                     <Brain size={20} />
                   </Box>
                   <Box>
@@ -225,7 +220,7 @@ function ParticipantTestIndexRoute() {
 
       <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", xl: "1.2fr 0.8fr" }, gap: 3, alignItems: "start" }}>
         <Stack spacing={2.5}>
-          <Card variant="outlined" sx={{ borderRadius: 6, borderColor: COLORS.border, boxShadow: "0 6px 18px rgba(15,23,42,0.04)" }}>
+          <Card variant="outlined" sx={{ borderRadius: 6, borderColor: "border", boxShadow: "0 6px 18px rgba(15,23,42,0.04)" }}>
             <CardContent sx={{ p: 2.5 }}>
               <SectionTitle title="Questionnaire de la campagne" subtitle="Le questionnaire actif dépend de l’invitation reçue." />
               <Stack spacing={2} sx={{ mt: 2 }}>
@@ -234,7 +229,7 @@ function ParticipantTestIndexRoute() {
             </CardContent>
           </Card>
 
-          <Card variant="outlined" sx={{ borderRadius: 6, borderColor: COLORS.border, boxShadow: "0 6px 18px rgba(15,23,42,0.04)" }}>
+          <Card variant="outlined" sx={{ borderRadius: 6, borderColor: "border", boxShadow: "0 6px 18px rgba(15,23,42,0.04)" }}>
             <CardContent sx={{ p: 2.5 }}>
               <SectionTitle title="Ce que le test implique" subtitle="Le parcours est séquentiel." />
               <Typography variant="body2" color="text.secondary" sx={{ mt: 1.5, lineHeight: 1.8 }}>
@@ -247,7 +242,7 @@ function ParticipantTestIndexRoute() {
         <Stack spacing={2.5}>
           <TestChecklist />
 
-          <Card variant="outlined" sx={{ borderRadius: 6, borderColor: COLORS.border, boxShadow: "0 6px 18px rgba(15,23,42,0.04)" }}>
+          <Card variant="outlined" sx={{ borderRadius: 6, borderColor: "border", boxShadow: "0 6px 18px rgba(15,23,42,0.04)" }}>
             <CardContent sx={{ p: 2.5 }}>
               <SectionTitle title="Actions" subtitle="Passer au questionnaire ou revenir au parcours." />
               <Stack spacing={1.2} sx={{ mt: 2 }}>
@@ -260,7 +255,7 @@ function ParticipantTestIndexRoute() {
                     variant="contained"
                     disableElevation
                     startIcon={<ArrowRight size={16} />}
-                    sx={{ borderRadius: 3, bgcolor: COLORS.blue, textTransform: "none" }}
+                    sx={{ borderRadius: 3, bgcolor: "primary.main", textTransform: "none" }}
                   >
                     Commencer le test
                   </Button>
@@ -272,7 +267,7 @@ function ParticipantTestIndexRoute() {
             </CardContent>
           </Card>
 
-          <Card variant="outlined" sx={{ borderRadius: 6, borderColor: COLORS.border, boxShadow: "0 6px 18px rgba(15,23,42,0.04)" }}>
+          <Card variant="outlined" sx={{ borderRadius: 6, borderColor: "border", boxShadow: "0 6px 18px rgba(15,23,42,0.04)" }}>
             <CardContent sx={{ p: 2.5 }}>
               <SectionTitle title="Rappel métier" subtitle="La page est un point d’entrée, pas le questionnaire complet." />
               <Typography variant="body2" color="text.secondary" sx={{ mt: 1.5, lineHeight: 1.8 }}>

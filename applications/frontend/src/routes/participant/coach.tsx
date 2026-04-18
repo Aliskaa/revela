@@ -23,10 +23,6 @@ export const Route = createFileRoute("/participant/coach")({
   component: ParticipantCoachRoute,
 });
 
-const COLORS = {
-  blue: "rgb(15,24,152)",
-  border: "rgba(15,23,42,0.10)",
-};
 
 type ParticipantAssignment = ParticipantSession["assignments"][number];
 
@@ -56,7 +52,7 @@ function InfoPill({ label, value, icon: Icon }: { label: string; value: string; 
   return (
     <Card variant="outlined" sx={{ p: 1.8 }}>
       <Stack direction="row" spacing={1.2} alignItems="start">
-        <Box sx={{ width: 36, height: 36, borderRadius: 3, bgcolor: "rgba(255,204,0,0.16)", color: "rgb(180,120,0)", display: "grid", placeItems: "center", flex: "none" }}>
+        <Box sx={{ width: 36, height: 36, borderRadius: 3, bgcolor: "tint.secondaryBg", color: "tint.secondaryText", display: "grid", placeItems: "center", flex: "none" }}>
           <Icon size={16} />
         </Box>
         <Box>
@@ -94,7 +90,7 @@ function ParticipantCoachRoute() {
         <CardContent sx={{ p: { xs: 2.5, md: 3 } }}>
           <Stack spacing={2.5} direction={{ xs: "column", lg: "row" }} justifyContent="space-between" alignItems={{ xs: "start", lg: "start" }}>
             <Box>
-              <Chip label={coachView.status} sx={{ borderRadius: 99, bgcolor: "rgba(15,24,152,0.08)", color: COLORS.blue, mb: 1.5 }} />
+              <Chip label={coachView.status} sx={{ borderRadius: 99, bgcolor: "tint.primaryBg", color: "primary.main", mb: 1.5 }} />
               <Typography variant="h4" fontWeight={800} color="text.primary" sx={{ letterSpacing: -0.5 }}>
                 Mon coach
               </Typography>
@@ -105,7 +101,7 @@ function ParticipantCoachRoute() {
 
             <Card variant="outlined" sx={{ width: { xs: "100%", sm: 340 } }}>
               <CardContent sx={{ p: 2, display: "flex", gap: 1.5, alignItems: "center" }}>
-                <Box sx={{ width: 48, height: 48, borderRadius: 4, bgcolor: COLORS.blue, color: "#fff", display: "grid", placeItems: "center" }}>
+                <Box sx={{ width: 48, height: 48, borderRadius: 4, bgcolor: "primary.main", color: "#fff", display: "grid", placeItems: "center" }}>
                   <UserRound size={20} />
                 </Box>
                 <Box sx={{ minWidth: 0 }}>

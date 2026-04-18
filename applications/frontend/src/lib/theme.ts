@@ -1,9 +1,41 @@
 import { createTheme } from '@mui/material/styles';
 
+declare module '@mui/material/styles' {
+    interface Palette {
+        border: string;
+        tint: {
+            primaryBg: string;
+            primaryHover: string;
+            secondaryBg: string;
+            secondaryText: string;
+            successBg: string;
+            successText: string;
+            mutedBg: string;
+            mutedText: string;
+            subtleBg: string;
+        };
+    }
+    interface PaletteOptions {
+        border?: string;
+        tint?: {
+            primaryBg?: string;
+            primaryHover?: string;
+            secondaryBg?: string;
+            secondaryText?: string;
+            successBg?: string;
+            successText?: string;
+            mutedBg?: string;
+            mutedText?: string;
+            subtleBg?: string;
+        };
+    }
+}
+
 export const theme = createTheme({
     palette: {
         primary: {
             main: '#0F1898',
+            dark: 'rgb(10,18,130)',
             contrastText: '#ffffff',
         },
         secondary: {
@@ -21,6 +53,18 @@ export const theme = createTheme({
         text: {
             primary: '#1a1a2e',
             secondary: '#6b7280',
+        },
+        border: 'rgba(15,23,42,0.10)',
+        tint: {
+            primaryBg: 'rgba(15,24,152,0.08)',
+            primaryHover: 'rgba(15,24,152,0.04)',
+            secondaryBg: 'rgba(255,204,0,0.16)',
+            secondaryText: 'rgb(180,120,0)',
+            successBg: 'rgba(16,185,129,0.12)',
+            successText: 'rgb(4,120,87)',
+            mutedBg: 'rgba(148,163,184,0.16)',
+            mutedText: 'rgb(100,116,139)',
+            subtleBg: 'rgba(15,23,42,0.06)',
         },
     },
     typography: {
