@@ -263,6 +263,20 @@ export class DrizzleParticipantsRepository implements IParticipantsRepositoryPor
         await this.db.update(participantsTable).set({ companyId }).where(eq(participantsTable.id, participantId));
     }
 
+    public async updateProfile(
+        participantId: number,
+        command: import('@src/interfaces/participants/IParticipantsRepository.port').UpdateParticipantProfileCommand
+    ): Promise<void> {
+        const set: Record<string, unknown> = {};
+        if (command.organisation !== undefined) set.organisation = command.organisation;
+        if (command.direction !== undefined) set.direction = command.direction;
+        if (command.service !== undefined) set.service = command.service;
+        if (command.functionLevel !== undefined) set.functionLevel = command.functionLevel;
+        if (Object.keys(set).length > 0) {
+            await this.db.update(participantsTable).set(set).where(eq(participantsTable.id, participantId));
+        }
+    }
+
     public async setPasswordHash(participantId: number, passwordHash: string): Promise<void> {
         await this.db.update(participantsTable).set({ passwordHash }).where(eq(participantsTable.id, participantId));
     }
@@ -517,6 +531,21 @@ export class DrizzleParticipantsRepository implements IParticipantsRepositoryPor
             }
 
             await tx.delete(questionnaireResponsesTable).where(eq(questionnaireResponsesTable.participantId, id));
+
+            // Anonymise FK references on responses authored by or about this participant
+            await tx
+                .update(questionnaireResponsesTable)
+                .set({ subjectParticipantId: null })
+                .where(eq(questionnaireResponsesTable.subjectParticipantId, id));
+            await tx
+                .update(questionnaireResponsesTable)
+                .set({ raterParticipantId: null })
+                .where(eq(questionnaireResponsesTable.raterParticipantId, id));
+            await tx
+                .update(questionnaireResponsesTable)
+                .set({ ratedParticipantId: null })
+                .where(eq(questionnaireResponsesTable.ratedParticipantId, id));
+
             await tx.delete(inviteTokensTable).where(eq(inviteTokensTable.participantId, id));
             await tx.delete(participantsTable).where(eq(participantsTable.id, id));
 

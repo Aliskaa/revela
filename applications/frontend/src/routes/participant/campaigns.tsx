@@ -1,7 +1,7 @@
 import * as React from "react";
 import { useParticipantSession } from "@/hooks/participantSession";
 import type { ParticipantSession } from "@aor/types";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   ArrowRight,
   CalendarDays,
@@ -44,6 +44,8 @@ type ParticipantAssignment = ParticipantSession["assignments"][number];
 
 type Campaign = {
   id: string;
+  campaignId: number | null;
+  questionnaireId: string;
   name: string;
   company: string;
   coach: string;
@@ -55,51 +57,6 @@ type Campaign = {
   nextAction: string;
 };
 
-const fallbackCampaigns: Campaign[] = [
-  {
-    id: "camp-2026-lyon",
-    name: "Leadership DSJ 2026",
-    company: "Ville de Lyon",
-    coach: "Claire Martin",
-    questionnaire: "B — Comportement",
-    status: "active",
-    progress: 58,
-    participants: "1 participant principal · 5 pairs",
-    lastUpdate: "Mise à jour il y a 2 jours",
-    nextAction: "Inviter 2 pairs supplémentaires",
-  },
-  {
-    id: "camp-2025-lyon",
-    name: "Pilotage relationnel 2025",
-    company: "Ville de Lyon",
-    coach: "Claire Martin",
-    questionnaire: "F — Ressentis",
-    status: "closed",
-    progress: 100,
-    participants: "1 participant principal · 5 pairs",
-    lastUpdate: "Campagne clôturée le 14/12/2025",
-    nextAction: "Consulter les résultats archivés",
-  },
-  {
-    id: "camp-2026-nord",
-    name: "Transformation managériale",
-    company: "Métropole du Nord",
-    coach: "Julien Morel",
-    questionnaire: "S — Soi",
-    status: "draft",
-    progress: 0,
-    participants: "Participants importés, campagne non lancée",
-    lastUpdate: "Brouillon enregistré hier",
-    nextAction: "En attente du lancement par l’admin",
-  },
-];
-
-const stats = [
-  { label: "Campagnes rattachées", value: "3", icon: Layers3 },
-  { label: "Campagnes actives", value: "1", icon: Gauge },
-  { label: "Questionnaires complétés", value: "2", icon: CheckCircle2 },
-  { label: "Feedbacks reçus", value: "3", icon: Users },
-];
 
 const completedValue = (status?: "locked" | "pending" | "completed") => (status === "completed" ? 1 : 0);
 
@@ -141,6 +98,8 @@ const nextActionFromAssignment = (assignment: ParticipantAssignment): string => 
 
 const campaignFromAssignment = (assignment: ParticipantAssignment): Campaign => ({
   id: `${assignment.campaign_id ?? "none"}-${assignment.questionnaire_id}`,
+  campaignId: assignment.campaign_id,
+  questionnaireId: assignment.questionnaire_id,
   name: assignment.campaign_name ?? "Campagne sans nom",
   company: assignment.company_name ?? "Organisation non renseignee",
   coach: assignment.coach_name ?? "Coach non attribue",
@@ -264,24 +223,35 @@ function CampaignCard({ campaign }: { campaign: Campaign }) {
           </Box>
 
           <Stack direction={{ xs: "column", sm: "row" }} spacing={1.2}>
-            <Button
-              variant="contained"
-              disableElevation
-              sx={{
-                borderRadius: 3,
-                bgcolor: COLORS.blue,
-                textTransform: "none",
-              }}
-              endIcon={<ArrowRight size={16} />}
-            >
-              Ouvrir la campagne
-            </Button>
+            {campaign.status === "active" && (
+              <Button
+                variant="contained"
+                disableElevation
+                component={Link}
+                to={`/participant/test/${campaign.questionnaireId.toUpperCase()}`}
+                sx={{ borderRadius: 3, bgcolor: COLORS.blue, textTransform: "none" }}
+                endIcon={<ArrowRight size={16} />}
+              >
+                Commencer le parcours
+              </Button>
+            )}
+            {campaign.status === "closed" && (
+              <Button
+                variant="contained"
+                disableElevation
+                component={Link}
+                to="/participant/results"
+                sx={{ borderRadius: 3, bgcolor: COLORS.blue, textTransform: "none" }}
+                endIcon={<ArrowRight size={16} />}
+              >
+                Voir les résultats
+              </Button>
+            )}
             <Button
               variant="outlined"
-              sx={{
-                borderRadius: 3,
-                textTransform: "none",
-              }}
+              component={Link}
+              to="/participant/journey"
+              sx={{ borderRadius: 3, textTransform: "none" }}
             >
               Voir le suivi
             </Button>
@@ -336,7 +306,7 @@ function ParticipantCampaignsRoute() {
   const { data: session, isLoading, isError } = useParticipantSession();
   const [query, setQuery] = React.useState("");
   const assignments = session?.assignments ?? [];
-  const sourceCampaigns = session ? assignments.map(campaignFromAssignment) : fallbackCampaigns;
+  const sourceCampaigns = assignments.map(campaignFromAssignment);
   const normalizedQuery = query.trim().toLowerCase();
   const visibleCampaigns = sourceCampaigns.filter((campaign) => {
     if (!normalizedQuery) {
@@ -347,7 +317,7 @@ function ParticipantCampaignsRoute() {
       .toLowerCase()
       .includes(normalizedQuery);
   });
-  const statsView = session ? statsFromAssignments(assignments) : stats;
+  const statsView = statsFromAssignments(assignments);
   const activeCount = sourceCampaigns.filter((c) => c.status === "active").length;
   const completedCount = sourceCampaigns.filter((c) => c.status === "closed").length;
   const questionnaireList = [...new Set(sourceCampaigns.map(c => c.questionnaire))].join(" / ") || "Aucun";
@@ -430,16 +400,6 @@ function ParticipantCampaignsRoute() {
             </CardContent>
           </Card>
 
-          <Card variant="outlined">
-            <CardContent sx={{ p: 2.5 }}>
-              <Typography variant="h6" fontWeight={800} color="text.primary">
-                Rappel produit
-              </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mt: 0.75, lineHeight: 1.7 }}>
-                L’écran campagne doit rester simple : il aide à comprendre où en est le participant, sans charger la lecture métier du questionnaire.
-              </Typography>
-            </CardContent>
-          </Card>
         </Stack>
       </Box>
     </Stack>

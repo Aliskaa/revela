@@ -305,32 +305,6 @@ function AdminCampaignsRoute() {
                     </Stack>
                 </CardContent>
             </Card>
-
-            <Card variant="outlined">
-                <CardContent sx={{ p: 2.5 }}>
-                    <SectionTitle title="Lecture rapide" subtitle="Les campagnes doivent être pilotées par le questionnaire et l'état de collecte." />
-                    <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "repeat(3, minmax(0, 1fr))" }, gap: 2, mt: 2 }}>
-                        <Card variant="outlined" sx={{ p: 2 }}>
-                            <Typography variant="caption" color="text.secondary">À surveiller</Typography>
-                            <Typography variant="body2" fontWeight={700} color="text.primary" sx={{ mt: 0.4 }}>
-                                Les brouillons sans participant
-                            </Typography>
-                        </Card>
-                        <Card variant="outlined" sx={{ p: 2 }}>
-                            <Typography variant="caption" color="text.secondary">Actif</Typography>
-                            <Typography variant="body2" fontWeight={700} color="text.primary" sx={{ mt: 0.4 }}>
-                                Les campagnes en collecte
-                            </Typography>
-                        </Card>
-                        <Card variant="outlined" sx={{ p: 2 }}>
-                            <Typography variant="caption" color="text.secondary">Suivi</Typography>
-                            <Typography variant="body2" fontWeight={700} color="text.primary" sx={{ mt: 0.4 }}>
-                                Le questionnaire assigné à chaque campagne
-                            </Typography>
-                        </Card>
-                    </Box>
-                </CardContent>
-            </Card>
         </Stack>
     );
 }

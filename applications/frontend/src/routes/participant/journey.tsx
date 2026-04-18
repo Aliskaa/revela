@@ -1,4 +1,6 @@
 import * as React from "react";
+import { useParticipantSession } from "@/hooks/participantSession";
+import type { ParticipantSession } from "@aor/types";
 import { createFileRoute } from "@tanstack/react-router";
 import {
   BadgeCheck,
@@ -12,12 +14,18 @@ import {
   Brain,
 } from "lucide-react";
 import {
+  Alert,
   Box,
   Button,
   Card,
   CardContent,
   Chip,
   Divider,
+  FormControl,
+  InputLabel,
+  LinearProgress,
+  MenuItem,
+  Select,
   Stack,
   Typography,
 } from "@mui/material";
@@ -28,75 +36,78 @@ export const Route = createFileRoute("/participant/journey")({
 
 const COLORS = {
   blue: "rgb(15,24,152)",
-  yellow: "rgb(255,204,0)",
   border: "rgba(15,23,42,0.10)",
 };
+
+type StepState = "completed" | "current" | "locked";
 
 type JourneyStep = {
   label: string;
   subtitle: string;
   description: string;
   icon: React.ElementType;
-  state: "completed" | "current" | "locked";
+  state: StepState;
 };
 
-const steps: JourneyStep[] = [
+type ParticipantAssignment = ParticipantSession["assignments"][number];
+
+const stepStateFromStatus = (status?: "locked" | "pending" | "completed"): StepState => {
+  if (status === "completed") return "completed";
+  if (status === "pending") return "current";
+  return "locked";
+};
+
+const STEP_TEMPLATES = [
   {
     label: "Auto-évaluation",
     subtitle: "Notes de 1 à 9 sur les short labels",
-    description:
-      "Le participant note chaque short label de chaque dimension sur une échelle de 1 à 9.",
+    description: "Le participant note chaque short label de chaque dimension sur une échelle de 1 à 9.",
     icon: ClipboardList,
-    state: "completed",
   },
   {
     label: "Feedback des pairs",
     subtitle: "Même logique de notation",
-    description:
-      "Les pairs renseignent les short labels sur une échelle de 1 à 9 pour compléter la lecture.",
+    description: "Les pairs renseignent les short labels sur une échelle de 1 à 9 pour compléter la lecture.",
     icon: Users,
-    state: "current",
   },
   {
     label: "Test Élément Humain",
     subtitle: "2 × 54 questions",
-    description:
-      "Le test consiste à répondre à deux séries de 54 questions pour chaque questionnaire B, F et S.",
+    description: "Le test consiste à répondre à deux séries de 54 questions pour chaque questionnaire B, F et S.",
     icon: Brain,
-    state: "locked",
   },
   {
     label: "Résultats",
     subtitle: "Lecture des écarts et synthèse",
-    description:
-      "Les résultats rassemblent les métriques, les écarts et les questions de restitution.",
+    description: "Les résultats rassemblent les métriques, les écarts et les questions de restitution.",
     icon: Radar,
-    state: "locked",
   },
   {
     label: "Restitution coaching",
-    subtitle: "Temps d’échange avec le coach",
-    description:
-      "Le coach accompagne la mise en sens des résultats et prépare les prochaines questions utiles.",
+    subtitle: "Temps d'échange avec le coach",
+    description: "Le coach accompagne la mise en sens des résultats et prépare les prochaines questions utiles.",
     icon: MessageSquareQuote,
-    state: "locked",
   },
 ];
 
-function SectionTitle({ title, subtitle }: { title: string; subtitle?: string }) {
-  return (
-    <Box>
-      <Typography variant="h5" fontWeight={800} color="text.primary" sx={{ letterSpacing: -0.4 }}>
-        {title}
-      </Typography>
-      {subtitle ? (
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.7, lineHeight: 1.7 }}>
-          {subtitle}
-        </Typography>
-      ) : null}
-    </Box>
-  );
-}
+const buildSteps = (assignment?: ParticipantAssignment): JourneyStep[] => {
+  const progression = assignment?.progression;
+  if (!progression) {
+    return STEP_TEMPLATES.map((t, i) => ({
+      ...t,
+      state: (i <= 1 && assignment) ? "current" as const
+        : (i === 2 && assignment?.allow_test_without_manual_inputs) ? "current" as const
+          : "locked" as const,
+    }));
+  }
+  return [
+    { ...STEP_TEMPLATES[0], state: stepStateFromStatus(progression.self_rating_status) },
+    { ...STEP_TEMPLATES[1], state: stepStateFromStatus(progression.peer_feedback_status) },
+    { ...STEP_TEMPLATES[2], state: stepStateFromStatus(progression.element_humain_status) },
+    { ...STEP_TEMPLATES[3], state: stepStateFromStatus(progression.results_status) },
+    { ...STEP_TEMPLATES[4], state: progression.results_status === "completed" ? "current" as const : "locked" as const },
+  ];
+};
 
 function StepCard({ step }: { step: JourneyStep }) {
   const Icon = step.icon;
@@ -113,11 +124,7 @@ function StepCard({ step }: { step: JourneyStep }) {
       <Stack direction="row" spacing={1.5} alignItems="start">
         <Box
           sx={{
-            width: 44,
-            height: 44,
-            borderRadius: 4,
-            display: "grid",
-            placeItems: "center",
+            width: 44, height: 44, borderRadius: 4, display: "grid", placeItems: "center",
             ...(step.state === "completed"
               ? { bgcolor: "rgba(16,185,129,0.10)", color: "rgb(4,120,87)" }
               : step.state === "current"
@@ -127,20 +134,14 @@ function StepCard({ step }: { step: JourneyStep }) {
         >
           <Icon size={18} />
         </Box>
-
         <Box sx={{ minWidth: 0, flex: 1 }}>
           <Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between" flexWrap="wrap" gap={1}>
             <Box>
-              <Typography fontWeight={700} color="text.primary">
-                {step.label}
-              </Typography>
-              <Typography variant="caption" color="text.secondary">
-                {step.subtitle}
-              </Typography>
+              <Typography fontWeight={700} color="text.primary">{step.label}</Typography>
+              <Typography variant="caption" color="text.secondary">{step.subtitle}</Typography>
             </Box>
             <Chip label={chipLabel} size="small" sx={{ borderRadius: 99, ...chipSx }} />
           </Stack>
-
           <Typography variant="body2" color="text.secondary" sx={{ mt: 1, lineHeight: 1.7 }}>
             {step.description}
           </Typography>
@@ -159,12 +160,8 @@ function RuleCard({ title, description, icon: Icon }: { title: string; descripti
             <Icon size={16} />
           </Box>
           <Box>
-            <Typography fontWeight={700} color="text.primary">
-              {title}
-            </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.35, lineHeight: 1.7 }}>
-              {description}
-            </Typography>
+            <Typography fontWeight={700} color="text.primary">{title}</Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.35, lineHeight: 1.7 }}>{description}</Typography>
           </Box>
         </Stack>
       </CardContent>
@@ -172,7 +169,48 @@ function RuleCard({ title, description, icon: Icon }: { title: string; descripti
   );
 }
 
+function MiniLine({ icon: Icon, text }: { icon: React.ElementType; text: string }) {
+  return (
+    <Stack direction="row" spacing={1.2} alignItems="start">
+      <Box sx={{ width: 34, height: 34, borderRadius: 3, bgcolor: "rgba(15,24,152,0.08)", color: COLORS.blue, display: "grid", placeItems: "center", flex: "none" }}>
+        <Icon size={15} />
+      </Box>
+      <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.7, pt: 0.2 }}>{text}</Typography>
+    </Stack>
+  );
+}
+
 function ParticipantJourneyRoute() {
+  const { data: session, isLoading, isError } = useParticipantSession();
+  const [selectedIndex, setSelectedIndex] = React.useState<number>(0);
+
+  const assignments = session?.assignments ?? [];
+
+  React.useEffect(() => {
+    if (assignments.length > 0) {
+      const activeIdx = assignments.findIndex(a => a.campaign_status === "active");
+      if (activeIdx >= 0) setSelectedIndex(activeIdx);
+    }
+  }, [assignments.length]);
+
+  const selectedAssignment = assignments[selectedIndex] ?? assignments[0];
+  const steps = React.useMemo(() => buildSteps(selectedAssignment), [selectedAssignment]);
+
+  if (isLoading) {
+    return (
+      <Card variant="outlined">
+        <CardContent sx={{ p: 3 }}>
+          <Typography variant="h6" fontWeight={700} color="text.primary">Chargement du parcours</Typography>
+          <LinearProgress sx={{ mt: 2 }} />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (isError || !session) {
+    return <Alert severity="error">Impossible de charger votre parcours pour le moment.</Alert>;
+  }
+
   return (
     <Stack spacing={3}>
       <Card variant="outlined">
@@ -186,6 +224,22 @@ function ParticipantJourneyRoute() {
               <Typography variant="body1" color="text.secondary" sx={{ mt: 1, lineHeight: 1.7, maxWidth: 860 }}>
                 Cette page explique simplement le chemin du participant : auto-évaluation, feedback des pairs, test, résultats et restitution.
               </Typography>
+              {assignments.length > 1 && (
+                <FormControl size="small" sx={{ mt: 2, minWidth: 300 }}>
+                  <InputLabel>Campagne</InputLabel>
+                  <Select
+                    label="Campagne"
+                    value={selectedIndex}
+                    onChange={(e) => setSelectedIndex(e.target.value as number)}
+                  >
+                    {assignments.map((a, i) => (
+                      <MenuItem key={`${a.campaign_id}-${a.questionnaire_id}`} value={i}>
+                        {a.campaign_name ?? "Campagne"} — {a.questionnaire_title ?? a.questionnaire_id}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              )}
             </Box>
 
             <Card variant="outlined" sx={{ width: { xs: "100%", sm: 340 } }}>
@@ -195,12 +249,8 @@ function ParticipantJourneyRoute() {
                     <Sparkles size={20} />
                   </Box>
                   <Box>
-                    <Typography fontWeight={800} color="text.primary">
-                      Révéla
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Un parcours en 5 étapes
-                    </Typography>
+                    <Typography fontWeight={800} color="text.primary">Révéla</Typography>
+                    <Typography variant="body2" color="text.secondary">Un parcours en 5 étapes</Typography>
                   </Box>
                 </Stack>
               </CardContent>
@@ -210,102 +260,24 @@ function ParticipantJourneyRoute() {
       </Card>
 
       <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "repeat(3, minmax(0, 1fr))" }, gap: 2 }}>
-        <RuleCard
-          icon={ClipboardList}
-          title="Auto-évaluation"
-          description="Notation de 1 à 9 sur les short labels de chaque dimension."
-        />
-        <RuleCard
-          icon={Users}
-          title="Pairs"
-          description="Même logique de notation, pour compléter la lecture du participant."
-        />
-        <RuleCard
-          icon={Brain}
-          title="Test Élément Humain"
-          description="2 × 54 questions pour chaque questionnaire B, F et S."
-        />
-      </Box>
-
-      <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", xl: "1.2fr 0.8fr" }, gap: 3, alignItems: "start" }}>
-        <Card variant="outlined">
-          <CardContent sx={{ p: 2.5 }}>
-            <SectionTitle title="Les étapes du parcours" subtitle="Le participant avance dans cet ordre, avec des étapes verrouillées tant que les prérequis ne sont pas remplis." />
-            <Stack spacing={1.4} sx={{ mt: 2 }}>
-              {steps.map((step) => (
-                <StepCard key={step.label} step={step} />
-              ))}
-            </Stack>
-          </CardContent>
-        </Card>
-
-        <Stack spacing={2.5}>
-          <Card variant="outlined">
-            <CardContent sx={{ p: 2.5 }}>
-              <SectionTitle title="Ce que le participant voit" subtitle="Une vue simple et rassurante, sans surcharge métier." />
-              <Divider sx={{ my: 2 }} />
-              <Stack spacing={1.4}>
-                <MiniLine icon={BadgeCheck} text="Ce qui est terminé est clairement affiché." />
-                <MiniLine icon={Lock} text="Ce qui est verrouillé reste visible mais non accessible." />
-                <MiniLine icon={ChevronRight} text="La prochaine action est toujours identifiable." />
-              </Stack>
-            </CardContent>
-          </Card>
-
-          <Card variant="outlined">
-            <CardContent sx={{ p: 2.5 }}>
-              <SectionTitle title="Raccourci métier" subtitle="Le parcours alimente les pages dédiées sans les mélanger." />
-              <Stack spacing={1.2} sx={{ mt: 2 }}>
-                <QuickLink label="Auto-évaluation" />
-                <QuickLink label="Feedback des pairs" />
-                <QuickLink label="Test Élément Humain" />
-                <QuickLink label="Résultats" />
-              </Stack>
-            </CardContent>
-          </Card>
-        </Stack>
+        <RuleCard icon={ClipboardList} title="Auto-évaluation" description="Notation de 1 à 9 sur les short labels de chaque dimension." />
+        <RuleCard icon={Users} title="Pairs" description="Même logique de notation, pour compléter la lecture du participant." />
+        <RuleCard icon={Brain} title="Test Élément Humain" description="2 × 54 questions pour chaque questionnaire B, F et S." />
       </Box>
 
       <Card variant="outlined">
         <CardContent sx={{ p: 2.5 }}>
-          <SectionTitle title="Rappel important" subtitle="Le parcours ne mélange pas les formulaires et la restitution." />
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 1.5, lineHeight: 1.8 }}>
-            L’auto-évaluation et les feedbacks utilisent les short labels notés de 1 à 9. Le test Élément Humain repose sur deux séries de 54 questions pour chacun des questionnaires B, F et S. Les résultats sont ensuite préparés pour la lecture et le coaching.
+          <Typography variant="h5" fontWeight={800} color="text.primary" sx={{ letterSpacing: -0.4 }}>Les étapes du parcours</Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.7, lineHeight: 1.7 }}>
+            Le participant avance dans cet ordre, avec des étapes verrouillées tant que les prérequis ne sont pas remplis.
           </Typography>
+          <Stack spacing={1.4} sx={{ mt: 2 }}>
+            {steps.map((step) => (
+              <StepCard key={step.label} step={step} />
+            ))}
+          </Stack>
         </CardContent>
       </Card>
     </Stack>
-  );
-}
-
-function MiniLine({ icon: Icon, text }: { icon: React.ElementType; text: string }) {
-  return (
-    <Stack direction="row" spacing={1.2} alignItems="start">
-      <Box sx={{ width: 34, height: 34, borderRadius: 3, bgcolor: "rgba(15,24,152,0.08)", color: COLORS.blue, display: "grid", placeItems: "center", flex: "none" }}>
-        <Icon size={15} />
-      </Box>
-      <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.7, pt: 0.2 }}>
-        {text}
-      </Typography>
-    </Stack>
-  );
-}
-
-function QuickLink({ label }: { label: string }) {
-  return (
-    <Button
-      variant="outlined"
-      endIcon={<ChevronRight size={16} />}
-      sx={{
-        justifyContent: "space-between",
-        borderRadius: 4,
-        borderColor: COLORS.border,
-        color: "text.primary",
-        textTransform: "none",
-        py: 1.25,
-      }}
-    >
-      {label}
-    </Button>
   );
 }

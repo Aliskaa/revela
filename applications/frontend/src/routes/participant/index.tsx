@@ -1,7 +1,7 @@
 import * as React from "react";
 import { useParticipantSession } from "@/hooks/participantSession";
 import type { ParticipantSession } from "@aor/types";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   BadgeCheck,
   Bell,
@@ -23,7 +23,6 @@ import {
   Card,
   CardContent,
   Chip,
-  Divider,
   LinearProgress,
   Stack,
   Typography,
@@ -46,6 +45,7 @@ type JourneyStep = {
   state: StepState;
   description: string;
   icon: React.ElementType;
+  to?: string;
 };
 
 type Metric = {
@@ -55,12 +55,6 @@ type Metric = {
   icon: React.ElementType;
 };
 
-type Dimension = {
-  title: string;
-  expressed: number;
-  wanted: number;
-  delta: number;
-};
 
 const campaign = {
   name: "Leadership DSJ 2026",
@@ -208,22 +202,25 @@ const buildCampaignView = (session?: ParticipantSession, assignment?: Participan
 };
 
 const buildJourney = (assignment?: ParticipantAssignment): JourneyStep[] => {
+  const qCode = assignment?.questionnaire_id?.toUpperCase() ?? "";
+  const testRoute = qCode ? `/participant/test/${qCode}` : undefined;
+
   if (!assignment?.progression) {
     const manualInputState: StepState = assignment ? "current" : "locked";
     return [
-      { ...journey[0], state: manualInputState },
-      { ...journey[1], state: manualInputState },
-      { ...journey[2], state: assignment?.allow_test_without_manual_inputs ? "current" : "locked" },
-      { ...journey[3], state: "locked" },
-      { ...journey[4], state: "locked" },
+      { ...journey[0], state: manualInputState, to: "/participant/self-rating" },
+      { ...journey[1], state: manualInputState, to: "/participant/peer-feedback" },
+      { ...journey[2], state: assignment?.allow_test_without_manual_inputs ? "current" : "locked", to: testRoute },
+      { ...journey[3], state: "locked", to: "/participant/results" },
+      { ...journey[4], state: "locked", to: "/participant/coach" },
     ];
   }
   return [
-    { ...journey[0], state: stepStateFromStatus(assignment.progression.self_rating_status) },
-    { ...journey[1], state: stepStateFromStatus(assignment.progression.peer_feedback_status) },
-    { ...journey[2], state: stepStateFromStatus(assignment.progression.element_humain_status) },
-    { ...journey[3], state: stepStateFromStatus(assignment.progression.results_status) },
-    journey[4],
+    { ...journey[0], state: stepStateFromStatus(assignment.progression.self_rating_status), to: "/participant/self-rating" },
+    { ...journey[1], state: stepStateFromStatus(assignment.progression.peer_feedback_status), to: "/participant/peer-feedback" },
+    { ...journey[2], state: stepStateFromStatus(assignment.progression.element_humain_status), to: testRoute },
+    { ...journey[3], state: stepStateFromStatus(assignment.progression.results_status), to: "/participant/results" },
+    { ...journey[4], state: assignment.progression.results_status === "completed" ? "current" : "locked", to: "/participant/coach" },
   ];
 };
 
@@ -242,11 +239,6 @@ const buildMetrics = (campaignView: CampaignView, assignment?: ParticipantAssign
   { ...metrics[3], value: campaignView.questionnaire, helper: "lie a la campagne" },
 ];
 
-const dimensions: Dimension[] = [
-  { title: "Importance / Valeur", expressed: 3, wanted: 5, delta: 2 },
-  { title: "Compétence", expressed: 7, wanted: 7, delta: 0 },
-  { title: "Affection / Bienveillance", expressed: 5, wanted: 5, delta: 0 },
-];
 
 function SectionTitle({ title, subtitle, action }: { title: string; subtitle?: string; action?: React.ReactNode }) {
   return (
@@ -301,6 +293,7 @@ function MetricCard({ metric, progress }: { metric: Metric; progress: number }) 
 
 function JourneyItem({ step }: { step: JourneyStep }) {
   const Icon = step.icon;
+  const clickable = step.state !== "locked" && !!step.to;
   const chipLabel = step.state === "completed" ? "Terminé" : step.state === "current" ? "En cours" : "Verrouillé";
   const chipSx =
     step.state === "completed"
@@ -309,8 +302,20 @@ function JourneyItem({ step }: { step: JourneyStep }) {
         ? { bgcolor: "rgba(255,204,0,0.16)", color: "rgb(180,120,0)" }
         : { bgcolor: "rgba(148,163,184,0.16)", color: "rgb(100,116,139)" };
 
-  return (
-    <Stack spacing={1.2} sx={{ p: 2, border: `1px solid ${COLORS.border}`, borderRadius: 4, bgcolor: "#fff" }}>
+  const content = (
+    <Stack
+      spacing={1.2}
+      sx={{
+        p: 2,
+        border: `1px solid ${COLORS.border}`,
+        borderRadius: 4,
+        bgcolor: "#fff",
+        cursor: clickable ? "pointer" : "default",
+        opacity: step.state === "locked" ? 0.6 : 1,
+        transition: "all 0.15s ease",
+        ...(clickable ? { "&:hover": { borderColor: COLORS.blue, boxShadow: "0 2px 8px rgba(15,24,152,0.08)" } } : {}),
+      }}
+    >
       <Stack direction="row" spacing={1.5} alignItems="start">
         <Box
           sx={{
@@ -333,7 +338,10 @@ function JourneyItem({ step }: { step: JourneyStep }) {
             <Typography fontWeight={600} color="text.primary">
               {step.label}
             </Typography>
-            <Chip label={chipLabel} size="small" sx={{ borderRadius: 99, ...chipSx }} />
+            <Stack direction="row" spacing={0.8} alignItems="center">
+              <Chip label={chipLabel} size="small" sx={{ borderRadius: 99, ...chipSx }} />
+              {clickable && <ChevronRight size={16} style={{ color: COLORS.blue }} />}
+            </Stack>
           </Stack>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, lineHeight: 1.6 }}>
             {step.description}
@@ -342,6 +350,11 @@ function JourneyItem({ step }: { step: JourneyStep }) {
       </Stack>
     </Stack>
   );
+
+  if (clickable && step.to) {
+    return <Link to={step.to} style={{ textDecoration: "none" }}>{content}</Link>;
+  }
+  return content;
 }
 
 function PageHeader({ campaignView, participantFirstName }: { campaignView: CampaignView; participantFirstName: string }) {
@@ -389,25 +402,6 @@ function PageHeader({ campaignView, participantFirstName }: { campaignView: Camp
   );
 }
 
-function QuestionnaireCard({ campaignView }: { campaignView: CampaignView }) {
-  return (
-    <Card variant="outlined">
-      <CardContent sx={{ p: 2.5 }}>
-        <SectionTitle
-          title="Questionnaire associé à la campagne"
-          subtitle="1 campagne = 1 questionnaire. Le dashboard reste une vue de synthèse."
-          action={<Button variant="outlined" disabled={!campaignView.hasAssignment} sx={{ borderRadius: 3, textTransform: "none" }}>Ouvrir le questionnaire</Button>}
-        />
-        <Box sx={{ borderRadius: 4, bgcolor: "rgba(15,23,42,0.03)", p: 2 }}>
-          <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.7 }}>
-            {campaignView.questionnaire}
-          </Typography>
-        </Box>
-      </CardContent>
-    </Card>
-  );
-}
-
 function CampaignCard({ campaignView }: { campaignView: CampaignView }) {
   return (
     <Card variant="outlined">
@@ -429,37 +423,6 @@ function CampaignCard({ campaignView }: { campaignView: CampaignView }) {
   );
 }
 
-function RadarPreview() {
-  return (
-    <Card variant="outlined" sx={{ borderRadius: 6, borderColor: COLORS.border, boxShadow: "0 6px 18px rgba(15,23,42,0.04)" }}>
-      <CardContent sx={{ p: 2.5 }}>
-        <SectionTitle title="Aperçu des écarts" subtitle="Synthèse rapide des dimensions clés" />
-
-        <Box sx={{ borderRadius: 4, bgcolor: "rgba(15,23,42,0.02)", p: 2 }}>
-          {dimensions.map((dimension, index) => (
-            <Box key={dimension.title} sx={{ mb: index === dimensions.length - 1 ? 0 : 2 }}>
-              <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
-                <Typography variant="body2" fontWeight={600} color="text.primary">{dimension.title}</Typography>
-                <Chip label={dimension.delta === 0 ? "Écart 0" : `Écart ${dimension.delta}`} size="small" sx={{ borderRadius: 99, bgcolor: dimension.delta === 0 ? "rgba(16,185,129,0.12)" : "rgba(255,204,0,0.16)", color: dimension.delta === 0 ? "rgb(4,120,87)" : "rgb(180,120,0)" }} />
-              </Stack>
-              <Stack spacing={0.8}>
-                <Box>
-                  <Typography variant="caption" color="text.secondary">Exprimé</Typography>
-                  <LinearProgress variant="determinate" value={dimension.expressed * 10} sx={{ height: 8, borderRadius: 99, bgcolor: "rgba(15,23,42,0.06)", "& .MuiLinearProgress-bar": { bgcolor: COLORS.blue } }} />
-                </Box>
-                <Box>
-                  <Typography variant="caption" color="text.secondary">Souhaité</Typography>
-                  <LinearProgress variant="determinate" value={dimension.wanted * 10} sx={{ height: 8, borderRadius: 99, bgcolor: "rgba(15,23,42,0.06)", "& .MuiLinearProgress-bar": { bgcolor: COLORS.yellow } }} />
-                </Box>
-              </Stack>
-              {index < dimensions.length - 1 ? <Divider sx={{ mt: 2 }} /> : null}
-            </Box>
-          ))}
-        </Box>
-      </CardContent>
-    </Card>
-  );
-}
 
 function CoachCard({ campaignView }: { campaignView: CampaignView }) {
   return (
@@ -565,12 +528,10 @@ export function ParticipantDashboardRoute() {
             </CardContent>
           </Card>
 
-          <QuestionnaireCard campaignView={campaignView} />
           <CampaignCard campaignView={campaignView} />
         </Stack>
 
         <Stack spacing={3}>
-          <RadarPreview />
           <CoachCard campaignView={campaignView} />
           <QuickActions />
         </Stack>

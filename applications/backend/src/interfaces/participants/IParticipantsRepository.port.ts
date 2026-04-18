@@ -14,14 +14,27 @@ import type { Paginated } from '@src/shared/pagination';
 
 export const PARTICIPANTS_REPOSITORY_PORT_SYMBOL = Symbol('PARTICIPANTS_REPOSITORY_PORT_SYMBOL');
 
+export type ParticipantFunctionLevel = 'direction' | 'middle_management' | 'frontline_manager';
+
 export type ParticipantRecord = {
     id: number;
     companyId: number | null;
     firstName: string;
     lastName: string;
     email: string;
+    organisation: string | null;
+    direction: string | null;
+    service: string | null;
+    functionLevel: ParticipantFunctionLevel | null;
     passwordHash: string | null;
     createdAt: Date | null;
+};
+
+export type UpdateParticipantProfileCommand = {
+    organisation?: string | null;
+    direction?: string | null;
+    service?: string | null;
+    functionLevel?: ParticipantFunctionLevel | null;
 };
 
 export type ParticipantInviteAssignment = {
@@ -136,6 +149,7 @@ export interface IParticipantsCampaignStateReaderPort {
 export interface IParticipantsWriterPort {
     create(command: CreateParticipantCommand): Promise<ParticipantRecord>;
     updateCompanyId(participantId: number, companyId: number | null): Promise<void>;
+    updateProfile(participantId: number, command: UpdateParticipantProfileCommand): Promise<void>;
     setPasswordHash(participantId: number, passwordHash: string): Promise<void>;
     deleteById(id: number): Promise<boolean>;
     /**

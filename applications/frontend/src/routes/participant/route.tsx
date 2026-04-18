@@ -3,16 +3,13 @@ import {
   Avatar,
   Box,
   Button,
-  Card,
-  CardContent,
   IconButton,
   Stack,
   Toolbar,
   Typography,
 } from "@mui/material";
-import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useLocation, useNavigate } from "@tanstack/react-router";
 import {
-  Bell,
   BookOpen,
   ChevronRight,
   ClipboardList,
@@ -24,6 +21,7 @@ import {
   UserRound,
 } from "lucide-react";
 import * as React from "react";
+import { userParticipant } from "@/lib/auth";
 
 export const Route = createFileRoute("/participant")({
   component: ParticipantRouteLayout,
@@ -41,17 +39,22 @@ type NavItem = {
   label: string;
   to: string;
   icon: React.ElementType;
-  active?: boolean;
+  exact?: boolean;
 };
 
 const participantNav: NavItem[] = [
-  { label: "Dashboard", to: "/participant", icon: Gauge, active: true },
+  { label: "Dashboard", to: "/participant", icon: Gauge, exact: true },
   { label: "Mes campagnes", to: "/participant/campaigns", icon: ClipboardList },
   { label: "Mon parcours", to: "/participant/journey", icon: BookOpen },
   { label: "Mes résultats", to: "/participant/results", icon: Radar },
   { label: "Mon coach", to: "/participant/coach", icon: MessageSquareQuote },
   { label: "Mon profil", to: "/participant/profile", icon: UserRound },
 ];
+
+function isActive(item: NavItem, pathname: string): boolean {
+  if (item.exact) return pathname === item.to || pathname === item.to + "/";
+  return pathname.startsWith(item.to);
+}
 
 function BrandMark() {
   return (
@@ -72,7 +75,7 @@ function BrandMark() {
       </Box>
       <Box>
         <Typography fontWeight={800} color="text.primary" lineHeight={1.1}>
-          Revéla
+          Revéla
         </Typography>
         <Typography variant="caption" color="text.secondary">
           Espace participant
@@ -83,6 +86,15 @@ function BrandMark() {
 }
 
 function ParticipantSidebar() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const pathname = location.pathname;
+
+  const handleLogout = () => {
+    userParticipant.removeToken();
+    navigate({ to: "/login" });
+  };
+
   return (
     <Box
       component="aside"
@@ -101,6 +113,7 @@ function ParticipantSidebar() {
       <Stack spacing={1} sx={{ mt: 4 }}>
         {participantNav.map((item) => {
           const Icon = item.icon;
+          const active = isActive(item, pathname);
           return (
             <Button
               key={item.label}
@@ -108,20 +121,20 @@ function ParticipantSidebar() {
               to={item.to}
               preload="intent"
               fullWidth
-              variant={item.active ? "contained" : "text"}
+              variant={active ? "contained" : "text"}
               startIcon={<Icon size={16} />}
-              endIcon={item.active ? <ChevronRight size={16} /> : undefined}
+              endIcon={active ? <ChevronRight size={16} /> : undefined}
               sx={{
                 justifyContent: "flex-start",
                 borderRadius: 4,
                 py: 1.35,
                 px: 2,
                 textTransform: "none",
-                bgcolor: item.active ? COLORS.blue : "transparent",
-                color: item.active ? "#fff" : "text.secondary",
-                boxShadow: item.active ? "0 10px 25px rgba(15,24,152,0.16)" : "none",
+                bgcolor: active ? COLORS.blue : "transparent",
+                color: active ? "#fff" : "text.secondary",
+                boxShadow: active ? "0 10px 25px rgba(15,24,152,0.16)" : "none",
                 "&:hover": {
-                  bgcolor: item.active ? "rgb(10,18,130)" : "rgba(15,23,42,0.04)",
+                  bgcolor: active ? "rgb(10,18,130)" : "rgba(15,23,42,0.04)",
                 },
               }}
             >
@@ -131,41 +144,28 @@ function ParticipantSidebar() {
         })}
       </Stack>
 
-      <Card
-        variant="outlined"
-        sx={{
-          mt: "auto",
-          borderRadius: 5,
-          borderColor: COLORS.border,
-          bgcolor: "rgba(248,250,252,0.88)",
-        }}
-      >
-        <CardContent sx={{ p: 2 }}>
-          <Stack direction="row" spacing={1.5} alignItems="center">
-            <Box
-              sx={{
-                width: 40,
-                height: 40,
-                borderRadius: 3,
-                bgcolor: "rgba(255,204,0,0.18)",
-                color: "rgb(180,120,0)",
-                display: "grid",
-                placeItems: "center",
-              }}
-            >
-              <Bell size={16} />
-            </Box>
-            <Box>
-              <Typography variant="body2" fontWeight={700} color="text.primary">
-                3 notifications
-              </Typography>
-              <Typography variant="caption" color="text.secondary">
-                2 feedbacks reçus
-              </Typography>
-            </Box>
-          </Stack>
-        </CardContent>
-      </Card>
+      <Box sx={{ mt: "auto" }}>
+        <Button
+          onClick={handleLogout}
+          fullWidth
+          variant="text"
+          startIcon={<LogOut size={16} />}
+          sx={{
+            justifyContent: "flex-start",
+            borderRadius: 4,
+            py: 1.35,
+            px: 2,
+            textTransform: "none",
+            color: "text.secondary",
+            "&:hover": {
+              bgcolor: "rgba(239,68,68,0.08)",
+              color: "rgb(220,38,38)",
+            },
+          }}
+        >
+          Déconnexion
+        </Button>
+      </Box>
     </Box>
   );
 }
@@ -200,7 +200,7 @@ function MobileTopBar() {
           </Box>
           <Box>
             <Typography fontWeight={800} lineHeight={1.1}>
-              Revéla
+              Revéla
             </Typography>
             <Typography variant="caption" color="text.secondary">
               Participant
@@ -208,17 +208,20 @@ function MobileTopBar() {
           </Box>
         </Stack>
 
-        <IconButton size="small">
-          <Bell size={18} />
-        </IconButton>
-        <Box sx={{ width: 12 }} />
-        <Avatar sx={{ width: 34, height: 34, bgcolor: COLORS.blue }}>T</Avatar>
+        <Avatar sx={{ width: 34, height: 34, bgcolor: COLORS.blue }}>P</Avatar>
       </Toolbar>
     </AppBar>
   );
 }
 
 function TopBar() {
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    userParticipant.removeToken();
+    navigate({ to: "/login" });
+  };
+
   return (
     <Stack
       direction="row"
@@ -240,28 +243,8 @@ function TopBar() {
       </Box>
 
       <Stack direction="row" spacing={1.5} alignItems="center">
-        <IconButton
-          sx={{
-            border: `1px solid ${COLORS.border}`,
-            bgcolor: COLORS.surface,
-          }}
-        >
-          <Bell size={18} />
-        </IconButton>
-
-        <Stack direction="row" spacing={1.2} alignItems="center">
-          <Avatar sx={{ width: 40, height: 40, bgcolor: COLORS.blue }}>T</Avatar>
-          <Box>
-            <Typography variant="body2" fontWeight={700} color="text.primary">
-              Thomas Dubois
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              Participant
-            </Typography>
-          </Box>
-        </Stack>
-
         <Button
+          onClick={handleLogout}
           variant="outlined"
           startIcon={<LogOut size={16} />}
           sx={{
@@ -269,7 +252,7 @@ function TopBar() {
             textTransform: "none",
           }}
         >
-          Déconnexion
+          Déconnexion
         </Button>
       </Stack>
     </Stack>

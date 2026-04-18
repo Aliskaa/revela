@@ -1,4 +1,6 @@
 import * as React from "react";
+import { useParticipantSession, useUpdateParticipantProfile } from "@/hooks/participantSession";
+import type { ParticipantFunctionLevel } from "@aor/types";
 import { createFileRoute } from "@tanstack/react-router";
 import {
   Building2,
@@ -10,12 +12,19 @@ import {
   Users,
 } from "lucide-react";
 import {
+  Alert,
   Box,
   Button,
   Card,
   CardContent,
   Chip,
   Divider,
+  FormControl,
+  InputLabel,
+  LinearProgress,
+  MenuItem,
+  Select,
+  Snackbar,
   Stack,
   TextField,
   Typography,
@@ -27,34 +36,14 @@ export const Route = createFileRoute("/participant/profile")({
 
 const COLORS = {
   blue: "rgb(15,24,152)",
-  yellow: "rgb(255,204,0)",
   border: "rgba(15,23,42,0.10)",
 };
 
-const profile = {
-  firstName: "Thomas",
-  lastName: "Dubois",
-  email: "thomas.dubois@ville-lyon.fr",
-  company: "Ville de Lyon",
-  direction: "Direction Sports & Jeunesse",
-  service: "Développement des équipes",
-  functionLevel: "Management intermédiaire",
+const FUNCTION_LEVEL_LABELS: Record<string, string> = {
+  direction: "Direction",
+  middle_management: "Management intermédiaire",
+  frontline_manager: "Manager de proximité",
 };
-
-function SectionTitle({ title, subtitle }: { title: string; subtitle?: string }) {
-  return (
-    <Box>
-      <Typography variant="h5" fontWeight={800} color="text.primary" sx={{ letterSpacing: -0.4 }}>
-        {title}
-      </Typography>
-      {subtitle ? (
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.7, lineHeight: 1.7 }}>
-          {subtitle}
-        </Typography>
-      ) : null}
-    </Box>
-  );
-}
 
 function InfoCard({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value: string }) {
   return (
@@ -64,12 +53,8 @@ function InfoCard({ icon: Icon, label, value }: { icon: React.ElementType; label
           <Icon size={16} />
         </Box>
         <Box sx={{ minWidth: 0 }}>
-          <Typography variant="caption" color="text.secondary">
-            {label}
-          </Typography>
-          <Typography variant="body2" fontWeight={700} color="text.primary" sx={{ mt: 0.25, lineHeight: 1.6 }}>
-            {value}
-          </Typography>
+          <Typography variant="caption" color="text.secondary">{label}</Typography>
+          <Typography variant="body2" fontWeight={700} color="text.primary" sx={{ mt: 0.25, lineHeight: 1.6 }}>{value}</Typography>
         </Box>
       </Stack>
     </Card>
@@ -77,8 +62,74 @@ function InfoCard({ icon: Icon, label, value }: { icon: React.ElementType; label
 }
 
 function ParticipantProfileRoute() {
+  const { data: session, isLoading, isError } = useParticipantSession();
+  const updateProfile = useUpdateParticipantProfile();
+
+  const [organisation, setOrganisation] = React.useState("");
+  const [direction, setDirection] = React.useState("");
+  const [service, setService] = React.useState("");
+  const [functionLevel, setFunctionLevel] = React.useState<ParticipantFunctionLevel | "">("");
+  const [initialized, setInitialized] = React.useState(false);
+  const [successOpen, setSuccessOpen] = React.useState(false);
+
+  React.useEffect(() => {
+    if (session && !initialized) {
+      setOrganisation(session.organisation ?? "");
+      setDirection(session.direction ?? "");
+      setService(session.service ?? "");
+      setFunctionLevel(session.function_level ?? "");
+      setInitialized(true);
+    }
+  }, [session, initialized]);
+
+  if (isLoading) {
+    return (
+      <Card variant="outlined">
+        <CardContent sx={{ p: 3 }}>
+          <Typography variant="h6" fontWeight={700} color="text.primary">Chargement du profil</Typography>
+          <LinearProgress sx={{ mt: 2 }} />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (isError || !session) {
+    return <Alert severity="error">Impossible de charger votre profil pour le moment.</Alert>;
+  }
+
+  const firstName = session.first_name ?? "";
+  const lastName = session.last_name ?? "";
+  const fullName = `${firstName} ${lastName}`.trim() || "Participant";
+  const email = session.email ?? "–";
+  const activeAssignment = session.assignments.find(a => a.campaign_status === "active") ?? session.assignments[0];
+  const company = activeAssignment?.company_name ?? "–";
+
+  const handleSave = async () => {
+    await updateProfile.mutateAsync({
+      organisation: organisation.trim() || null,
+      direction: direction.trim() || null,
+      service: service.trim() || null,
+      function_level: functionLevel || null,
+    });
+    setSuccessOpen(true);
+  };
+
+  const handleReset = () => {
+    setOrganisation(session.organisation ?? "");
+    setDirection(session.direction ?? "");
+    setService(session.service ?? "");
+    setFunctionLevel(session.function_level ?? "");
+  };
+
   return (
     <Stack spacing={3}>
+      <Snackbar
+        open={successOpen}
+        autoHideDuration={3000}
+        onClose={() => setSuccessOpen(false)}
+        message="Profil mis à jour"
+      />
+
       <Card variant="outlined">
         <CardContent sx={{ p: { xs: 2.5, md: 3 } }}>
           <Stack spacing={2.5} direction={{ xs: "column", lg: "row" }} justifyContent="space-between" alignItems={{ xs: "start", lg: "start" }}>
@@ -88,22 +139,17 @@ function ParticipantProfileRoute() {
                 Mon profil
               </Typography>
               <Typography variant="body1" color="text.secondary" sx={{ mt: 1, lineHeight: 1.7, maxWidth: 860 }}>
-                Les données de base sont préremplies par la campagne. Le participant peut consulter ses informations et compléter les éléments utiles à son parcours.
+                Consultez et complétez vos informations personnelles liées à la campagne.
               </Typography>
             </Box>
-
             <Card variant="outlined" sx={{ bgcolor: "rgba(15,23,42,0.03)", p: 2.2, width: { xs: "100%", sm: 340 } }}>
               <Stack direction="row" spacing={1.5} alignItems="center">
                 <Box sx={{ width: 48, height: 48, borderRadius: 4, bgcolor: COLORS.blue, color: "#fff", display: "grid", placeItems: "center" }}>
                   <UserRound size={20} />
                 </Box>
                 <Box>
-                  <Typography fontWeight={800} color="text.primary">
-                    {profile.firstName} {profile.lastName}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Participant actif
-                  </Typography>
+                  <Typography fontWeight={800} color="text.primary">{fullName}</Typography>
+                  <Typography variant="body2" color="text.secondary">Participant actif</Typography>
                 </Box>
               </Stack>
             </Card>
@@ -111,33 +157,81 @@ function ParticipantProfileRoute() {
         </CardContent>
       </Card>
 
-      <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "repeat(4, minmax(0, 1fr))" }, gap: 2 }}>
-        <InfoCard icon={UserRound} label="Nom" value={`${profile.firstName} ${profile.lastName}`} />
-        <InfoCard icon={Mail} label="Email" value={profile.email} />
-        <InfoCard icon={Building2} label="Organisation" value={profile.company} />
-        <InfoCard icon={Users} label="Niveau" value={profile.functionLevel} />
+      <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "repeat(3, minmax(0, 1fr))" }, gap: 2 }}>
+        <InfoCard icon={UserRound} label="Nom" value={fullName} />
+        <InfoCard icon={Mail} label="Email" value={email} />
+        <InfoCard icon={Building2} label="Entreprise" value={company} />
       </Box>
 
       <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", xl: "1.15fr 0.85fr" }, gap: 3, alignItems: "start" }}>
         <Card variant="outlined">
           <CardContent sx={{ p: 2.5 }}>
-            <SectionTitle title="Informations préremplies" subtitle="Ces informations sont injectées à partir du fichier d’import de campagne." />
+            <Typography variant="h5" fontWeight={800} color="text.primary" sx={{ letterSpacing: -0.4 }}>
+              Informations complémentaires
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.7, lineHeight: 1.7 }}>
+              Ces informations enrichissent votre profil dans le cadre de la campagne.
+            </Typography>
 
-            <Stack spacing={2} sx={{ mt: 2 }}>
-              <TextField label="Prénom" defaultValue={profile.firstName} fullWidth />
-              <TextField label="Nom" defaultValue={profile.lastName} fullWidth />
-              <TextField label="Email" defaultValue={profile.email} fullWidth />
-              <TextField label="Organisation" defaultValue={profile.company} fullWidth />
-              <TextField label="Direction" defaultValue={profile.direction} fullWidth />
-              <TextField label="Service" defaultValue={profile.service} fullWidth />
-              <TextField label="Fonction" defaultValue={profile.functionLevel} fullWidth />
+            <Stack spacing={2} sx={{ mt: 2.5 }}>
+              <TextField
+                label="Organisation"
+                value={organisation}
+                onChange={(e) => setOrganisation(e.target.value)}
+                fullWidth
+                placeholder="Ex : Ville de Lyon"
+              />
+              <TextField
+                label="Direction"
+                value={direction}
+                onChange={(e) => setDirection(e.target.value)}
+                fullWidth
+                placeholder="Ex : Direction Sports & Jeunesse"
+              />
+              <TextField
+                label="Service"
+                value={service}
+                onChange={(e) => setService(e.target.value)}
+                fullWidth
+                placeholder="Ex : Développement des équipes"
+              />
+              <FormControl fullWidth>
+                <InputLabel>Niveau de fonction</InputLabel>
+                <Select
+                  label="Niveau de fonction"
+                  value={functionLevel}
+                  onChange={(e) => setFunctionLevel(e.target.value as ParticipantFunctionLevel | "")}
+                >
+                  <MenuItem value="">Non renseigné</MenuItem>
+                  <MenuItem value="direction">Direction</MenuItem>
+                  <MenuItem value="middle_management">Management intermédiaire</MenuItem>
+                  <MenuItem value="frontline_manager">Manager de proximité</MenuItem>
+                </Select>
+              </FormControl>
             </Stack>
 
+            {updateProfile.isError && (
+              <Alert severity="error" sx={{ mt: 2 }}>
+                Erreur lors de la mise à jour du profil.
+              </Alert>
+            )}
+
             <Stack direction={{ xs: "column", sm: "row" }} spacing={1.2} sx={{ mt: 2.5 }}>
-              <Button variant="contained" disableElevation startIcon={<PencilLine size={16} />} sx={{ borderRadius: 3, bgcolor: COLORS.blue, textTransform: "none" }}>
-                Mettre à jour
+              <Button
+                variant="contained"
+                disableElevation
+                startIcon={<PencilLine size={16} />}
+                onClick={handleSave}
+                disabled={updateProfile.isPending}
+                sx={{ borderRadius: 3, bgcolor: COLORS.blue, textTransform: "none" }}
+              >
+                {updateProfile.isPending ? "Enregistrement…" : "Mettre à jour"}
               </Button>
-              <Button variant="outlined" sx={{ borderRadius: 3, textTransform: "none" }}>
+              <Button
+                variant="outlined"
+                onClick={handleReset}
+                sx={{ borderRadius: 3, textTransform: "none" }}
+              >
                 Réinitialiser
               </Button>
             </Stack>
@@ -147,10 +241,10 @@ function ParticipantProfileRoute() {
         <Stack spacing={2.5}>
           <Card variant="outlined">
             <CardContent sx={{ p: 2.5 }}>
-              <SectionTitle title="Rôle dans la campagne" subtitle="Le profil participant reste simple et lisible." />
+              <Typography variant="h5" fontWeight={800} color="text.primary" sx={{ letterSpacing: -0.4 }}>Rôle dans la campagne</Typography>
               <Stack spacing={1.4} sx={{ mt: 1.5 }}>
                 <InfoCard icon={Sparkles} label="Accès" value="Participant uniquement" />
-                <InfoCard icon={MapPin} label="Contexte" value="Rattaché à une campagne active" />
+                <InfoCard icon={MapPin} label="Contexte" value={activeAssignment ? "Rattaché à une campagne active" : "Aucune campagne active"} />
                 <InfoCard icon={Users} label="Finalité" value="Auto-évaluation, pairs, test, restitution" />
               </Stack>
             </CardContent>
@@ -158,10 +252,10 @@ function ParticipantProfileRoute() {
 
           <Card variant="outlined">
             <CardContent sx={{ p: 2.5 }}>
-              <SectionTitle title="Confidentialité" subtitle="Les espaces sont séparés pour préserver la confiance du participant." />
+              <Typography variant="h5" fontWeight={800} color="text.primary" sx={{ letterSpacing: -0.4 }}>Confidentialité</Typography>
               <Divider sx={{ my: 2 }} />
               <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.8 }}>
-                Les données du participant ne sont visibles que dans son espace. Le coach et l’administration disposent de vues distinctes, avec des droits différents.
+                Les données du participant ne sont visibles que dans son espace. Le coach et l'administration disposent de vues distinctes, avec des droits différents.
               </Typography>
             </CardContent>
           </Card>

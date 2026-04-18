@@ -112,6 +112,10 @@ export class GetParticipantSessionUseCase {
             email: participant.email,
             first_name: participant.firstName,
             last_name: participant.lastName,
+            organisation: participant.organisation ?? null,
+            direction: participant.direction ?? null,
+            service: participant.service ?? null,
+            function_level: participant.functionLevel ?? null,
             assignments: visibleAssignments,
         };
     }

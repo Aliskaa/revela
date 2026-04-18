@@ -1,6 +1,11 @@
 import { participantApiClient } from '@/api/participantClient';
-import type { CampaignPeerChoice, ParticipantQuestionnaireMatrix, ParticipantSession } from '@aor/types';
-import { useQuery } from '@tanstack/react-query';
+import type {
+    CampaignPeerChoice,
+    ParticipantQuestionnaireMatrix,
+    ParticipantSession,
+    UpdateParticipantProfileBody,
+} from '@aor/types';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 export const participantSessionKeys = {
     session: ['participant', 'session'] as const,
@@ -49,5 +54,16 @@ export function useParticipantCampaignPeers(campaignId: number | null) {
             return r.data;
         },
         enabled,
+    });
+}
+
+export function useUpdateParticipantProfile() {
+    const qc = useQueryClient();
+    return useMutation<{ ok: boolean }, Error, UpdateParticipantProfileBody>({
+        mutationFn: (payload) =>
+            participantApiClient.patch('/participant/profile', payload).then(r => r.data),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: participantSessionKeys.session });
+        },
     });
 }

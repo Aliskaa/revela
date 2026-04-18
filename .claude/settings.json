@@ -4,7 +4,8 @@
       "Bash(npx tsc *)",
       "Bash(xargs grep *)",
       "Bash(pnpm --filter @aor/types typecheck)",
-      "Bash(pnpm --filter @aor/types build)"
+      "Bash(pnpm --filter @aor/types build)",
+      "Bash(grep -n \"const.*=.*\\\\[\" /c/Users/kevin/Documents/DataLoco/Nora/base/questionnaire-platform/applications/frontend/src/routes/**/*.tsx)"
     ]
   }
 }
