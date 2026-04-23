@@ -223,36 +223,6 @@ function AdminResponsesRoute() {
                     )}
                 </CardContent>
             </Card>
-
-            <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", xl: "1.2fr 0.8fr" }, gap: 3, alignItems: "start" }}>
-                <Card variant="outlined">
-                    <CardContent sx={{ p: 2.5 }}>
-                        <SectionTitle title="Accès rapides" subtitle="Les vues les plus utiles pour la collecte." />
-                        <Stack spacing={1.2} sx={{ mt: 2 }}>
-                            <Button variant="outlined" component={Link} to="/admin/campaigns" startIcon={<ClipboardList size={16} />} sx={{ justifyContent: "space-between", borderRadius: 3, textTransform: "none" }}>
-                                Voir les campagnes concernées
-                            </Button>
-                            <Button variant="outlined" component={Link} to="/admin/participants" startIcon={<Users size={16} />} sx={{ justifyContent: "space-between", borderRadius: 3, textTransform: "none" }}>
-                                Voir les participants actifs
-                            </Button>
-                            <Button variant="outlined" component={Link} to="/admin/questionnaires" startIcon={<Sparkles size={16} />} sx={{ justifyContent: "space-between", borderRadius: 3, textTransform: "none" }}>
-                                Voir les questionnaires assignés
-                            </Button>
-                        </Stack>
-                    </CardContent>
-                </Card>
-
-                <Card variant="outlined">
-                    <CardContent sx={{ p: 2.5 }}>
-                        <SectionTitle title="Lecture rapide" subtitle="La page doit aider à repérer ce qui bloque la collecte." />
-                        <Box sx={{ border: "1px solid rgba(15,23,42,0.10)", borderRadius: 4, p: 2, mt: 2 }}>
-                            <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.8 }}>
-                                Un admin doit pouvoir identifier immédiatement les réponses complétées, celles en cours, et les éléments encore attendus avant restitution.
-                            </Typography>
-                        </Box>
-                    </CardContent>
-                </Card>
-            </Box>
         </Stack>
     );
 }

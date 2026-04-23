@@ -1,20 +1,8 @@
-import * as React from "react";
+import { SectionTitle } from "@/components/common/SectionTitle";
+import { StatCard } from "@/components/common/StatCard";
 import { useParticipantSession } from "@/hooks/participantSession";
 import { useCampaignStore } from "@/stores/campaignStore";
 import type { ParticipantSession } from "@aor/types";
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import {
-  ArrowRight,
-  CalendarDays,
-  CheckCircle2,
-  ClipboardList,
-  Gauge,
-  Layers3,
-  Lock,
-  Search,
-  Sparkles,
-  Users,
-} from "lucide-react";
 import {
   Alert,
   Box,
@@ -29,8 +17,20 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { SectionTitle } from "@/components/common/SectionTitle";
-import { StatCard } from "@/components/common/StatCard";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import {
+  ArrowRight,
+  CalendarDays,
+  CheckCircle2,
+  ClipboardList,
+  Gauge,
+  Layers3,
+  Lock,
+  Search,
+  Sparkles,
+  Users,
+} from "lucide-react";
+import * as React from "react";
 
 export const Route = createFileRoute("/participant/campaigns")({
   component: ParticipantCampaignsRoute,
@@ -283,10 +283,6 @@ function ParticipantCampaignsRoute() {
       .includes(normalizedQuery);
   });
   const statsView = statsFromAssignments(assignments);
-  const activeCount = sourceCampaigns.filter((c) => c.status === "active").length;
-  const completedCount = sourceCampaigns.filter((c) => c.status === "closed").length;
-  const questionnaireList = [...new Set(sourceCampaigns.map(c => c.questionnaire))].join(" / ") || "Aucun";
-
   if (isLoading) {
     return (
       <Card variant="outlined">
@@ -342,44 +338,7 @@ function ParticipantCampaignsRoute() {
         </CardContent>
       </Card>
 
-      <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", xl: "1.25fr 0.75fr" }, gap: 3, alignItems: "start" }}>
-        <Stack spacing={2.5}>
-          {visibleCampaigns.length > 0 ? visibleCampaigns.map((campaign) => <CampaignCard key={campaign.id} campaign={campaign} />) : <EmptyCampaignsState />}
-        </Stack>
-
-        <Stack spacing={2.5}>
-          <Card variant="outlined">
-            <CardContent sx={{ p: 2.5 }}>
-              <Typography variant="h6" fontWeight={800} color="text.primary">
-                Résumé rapide
-              </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mt: 0.75, lineHeight: 1.7 }}>
-                Le participant peut consulter ici le périmètre de ses campagnes, puis entrer dans la campagne active pour reprendre le parcours.
-              </Typography>
-
-              <Stack spacing={1.4} sx={{ mt: 2 }}>
-                <SummaryLine label="Campagnes actives" value={`${activeCount}`} />
-                <SummaryLine label="Campagnes terminées" value={`${completedCount}`} />
-                <SummaryLine label="Questionnaires differents" value={questionnaireList} />
-              </Stack>
-            </CardContent>
-          </Card>
-
-        </Stack>
-      </Box>
-    </Stack>
-  );
-}
-
-function SummaryLine({ label, value }: { label: string; value: string }) {
-  return (
-    <Stack direction="row" justifyContent="space-between" spacing={2}>
-      <Typography variant="body2" color="text.secondary">
-        {label}
-      </Typography>
-      <Typography variant="body2" fontWeight={800} color="text.primary">
-        {value}
-      </Typography>
+      {visibleCampaigns.length > 0 ? visibleCampaigns.map((campaign) => <CampaignCard key={campaign.id} campaign={campaign} />) : <EmptyCampaignsState />}
     </Stack>
   );
 }

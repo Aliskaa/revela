@@ -459,20 +459,6 @@ function AdminCampaignDetailRoute() {
 
           <Card variant="outlined">
             <CardContent sx={{ p: 2.5 }}>
-              <SectionTitle title="Navigation" />
-              <Stack spacing={1.2} sx={{ mt: 1 }}>
-                <Button variant="outlined" component={Link} to="/admin/campaigns" startIcon={<ArrowRight size={16} />} sx={{ borderRadius: 3, textTransform: "none" }}>
-                  Retour aux campagnes
-                </Button>
-                <Button variant="outlined" component={Link} to="/admin" startIcon={<ArrowRight size={16} />} sx={{ borderRadius: 3, textTransform: "none" }}>
-                  Tableau de bord
-                </Button>
-              </Stack>
-            </CardContent>
-          </Card>
-
-          <Card variant="outlined">
-            <CardContent sx={{ p: 2.5 }}>
               <SectionTitle title="Gérer les participants" subtitle="Inviter les participants de l'entreprise ou importer un fichier CSV." />
               <Stack spacing={1.2} sx={{ mt: 2 }}>
                 <Button

@@ -1,16 +1,6 @@
-import * as React from "react";
+import { InfoCard } from "@/components/common/InfoCard";
 import { useParticipantSession, useUpdateParticipantProfile } from "@/hooks/participantSession";
 import type { ParticipantFunctionLevel } from "@aor/types";
-import { createFileRoute } from "@tanstack/react-router";
-import {
-  Building2,
-  Mail,
-  MapPin,
-  PencilLine,
-  Sparkles,
-  UserRound,
-  Users,
-} from "lucide-react";
 import {
   Alert,
   Box,
@@ -18,7 +8,6 @@ import {
   Card,
   CardContent,
   Chip,
-  Divider,
   FormControl,
   InputLabel,
   LinearProgress,
@@ -27,9 +16,16 @@ import {
   Snackbar,
   Stack,
   TextField,
-  Typography,
+  Typography
 } from "@mui/material";
-import { InfoCard } from "@/components/common/InfoCard";
+import { createFileRoute } from "@tanstack/react-router";
+import {
+  Building2,
+  Mail,
+  PencilLine,
+  UserRound
+} from "lucide-react";
+import * as React from "react";
 
 export const Route = createFileRoute("/participant/profile")({
   component: ParticipantProfileRoute,
@@ -138,104 +134,79 @@ function ParticipantProfileRoute() {
         <InfoCard icon={Building2} label="Entreprise" value={company} />
       </Box>
 
-      <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", xl: "1.15fr 0.85fr" }, gap: 3, alignItems: "start" }}>
-        <Card variant="outlined">
-          <CardContent sx={{ p: 2.5 }}>
-            <Typography variant="h5" fontWeight={800} color="text.primary" sx={{ letterSpacing: -0.4 }}>
-              Informations complémentaires
-            </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.7, lineHeight: 1.7 }}>
-              Ces informations enrichissent votre profil dans le cadre de la campagne.
-            </Typography>
+      <Card variant="outlined">
+        <CardContent sx={{ p: 2.5 }}>
+          <Typography variant="h5" fontWeight={800} color="text.primary" sx={{ letterSpacing: -0.4 }}>
+            Informations complémentaires
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.7, lineHeight: 1.7 }}>
+            Ces informations enrichissent votre profil dans le cadre de la campagne.
+          </Typography>
 
-            <Stack spacing={2} sx={{ mt: 2.5 }}>
-              <TextField
-                label="Organisation"
-                value={organisation}
-                onChange={(e) => setOrganisation(e.target.value)}
-                fullWidth
-                placeholder="Ex : Ville de Lyon"
-              />
-              <TextField
-                label="Direction"
-                value={direction}
-                onChange={(e) => setDirection(e.target.value)}
-                fullWidth
-                placeholder="Ex : Direction Sports & Jeunesse"
-              />
-              <TextField
-                label="Service"
-                value={service}
-                onChange={(e) => setService(e.target.value)}
-                fullWidth
-                placeholder="Ex : Développement des équipes"
-              />
-              <FormControl fullWidth>
-                <InputLabel>Niveau de fonction</InputLabel>
-                <Select
-                  label="Niveau de fonction"
-                  value={functionLevel}
-                  onChange={(e) => setFunctionLevel(e.target.value as ParticipantFunctionLevel | "")}
-                >
-                  <MenuItem value="">Non renseigné</MenuItem>
-                  <MenuItem value="direction">Direction</MenuItem>
-                  <MenuItem value="middle_management">Management intermédiaire</MenuItem>
-                  <MenuItem value="frontline_manager">Manager de proximité</MenuItem>
-                </Select>
-              </FormControl>
-            </Stack>
-
-            {updateProfile.isError && (
-              <Alert severity="error" sx={{ mt: 2 }}>
-                Erreur lors de la mise à jour du profil.
-              </Alert>
-            )}
-
-            <Stack direction={{ xs: "column", sm: "row" }} spacing={1.2} sx={{ mt: 2.5 }}>
-              <Button
-                variant="contained"
-                disableElevation
-                startIcon={<PencilLine size={16} />}
-                onClick={handleSave}
-                disabled={updateProfile.isPending}
-                sx={{ borderRadius: 3, bgcolor: "primary.main", textTransform: "none" }}
+          <Stack spacing={2} sx={{ mt: 2.5 }}>
+            <TextField
+              label="Organisation"
+              value={organisation}
+              onChange={(e) => setOrganisation(e.target.value)}
+              fullWidth
+              placeholder="Ex : Ville de Lyon"
+            />
+            <TextField
+              label="Direction"
+              value={direction}
+              onChange={(e) => setDirection(e.target.value)}
+              fullWidth
+              placeholder="Ex : Direction Sports & Jeunesse"
+            />
+            <TextField
+              label="Service"
+              value={service}
+              onChange={(e) => setService(e.target.value)}
+              fullWidth
+              placeholder="Ex : Développement des équipes"
+            />
+            <FormControl fullWidth>
+              <InputLabel>Niveau de fonction</InputLabel>
+              <Select
+                label="Niveau de fonction"
+                value={functionLevel}
+                onChange={(e) => setFunctionLevel(e.target.value as ParticipantFunctionLevel | "")}
               >
-                {updateProfile.isPending ? "Enregistrement…" : "Mettre à jour"}
-              </Button>
-              <Button
-                variant="outlined"
-                onClick={handleReset}
-                sx={{ borderRadius: 3, textTransform: "none" }}
-              >
-                Réinitialiser
-              </Button>
-            </Stack>
-          </CardContent>
-        </Card>
+                <MenuItem value="">Non renseigné</MenuItem>
+                <MenuItem value="direction">Direction</MenuItem>
+                <MenuItem value="middle_management">Management intermédiaire</MenuItem>
+                <MenuItem value="frontline_manager">Manager de proximité</MenuItem>
+              </Select>
+            </FormControl>
+          </Stack>
 
-        <Stack spacing={2.5}>
-          <Card variant="outlined">
-            <CardContent sx={{ p: 2.5 }}>
-              <Typography variant="h5" fontWeight={800} color="text.primary" sx={{ letterSpacing: -0.4 }}>Rôle dans la campagne</Typography>
-              <Stack spacing={1.4} sx={{ mt: 1.5 }}>
-                <InfoCard icon={Sparkles} label="Accès" value="Participant uniquement" />
-                <InfoCard icon={MapPin} label="Contexte" value={activeAssignment ? "Rattaché à une campagne active" : "Aucune campagne active"} />
-                <InfoCard icon={Users} label="Finalité" value="Auto-évaluation, pairs, test, restitution" />
-              </Stack>
-            </CardContent>
-          </Card>
+          {updateProfile.isError && (
+            <Alert severity="error" sx={{ mt: 2 }}>
+              Erreur lors de la mise à jour du profil.
+            </Alert>
+          )}
 
-          <Card variant="outlined">
-            <CardContent sx={{ p: 2.5 }}>
-              <Typography variant="h5" fontWeight={800} color="text.primary" sx={{ letterSpacing: -0.4 }}>Confidentialité</Typography>
-              <Divider sx={{ my: 2 }} />
-              <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.8 }}>
-                Les données du participant ne sont visibles que dans son espace. Le coach et l'administration disposent de vues distinctes, avec des droits différents.
-              </Typography>
-            </CardContent>
-          </Card>
-        </Stack>
-      </Box>
+          <Stack direction={{ xs: "column", sm: "row" }} spacing={1.2} sx={{ mt: 2.5 }}>
+            <Button
+              variant="contained"
+              disableElevation
+              startIcon={<PencilLine size={16} />}
+              onClick={handleSave}
+              disabled={updateProfile.isPending}
+              sx={{ borderRadius: 3, bgcolor: "primary.main", textTransform: "none" }}
+            >
+              {updateProfile.isPending ? "Enregistrement…" : "Mettre à jour"}
+            </Button>
+            <Button
+              variant="outlined"
+              onClick={handleReset}
+              sx={{ borderRadius: 3, textTransform: "none" }}
+            >
+              Réinitialiser
+            </Button>
+          </Stack>
+        </CardContent>
+      </Card>
     </Stack>
   );
 }

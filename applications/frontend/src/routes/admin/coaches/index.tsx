@@ -1,11 +1,9 @@
-import * as React from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
-import {
-    ClipboardList,
-    Plus,
-    Sparkles,
-    UserRound,
-} from "lucide-react";
+import { AdminCoachDrawerForm } from "@/components/admin/AdminCoachDrawerForm";
+import { ADMIN_COLORS as COLORS } from "@/components/common/colors";
+import { MiniStat } from "@/components/common/MiniStat";
+import { SectionTitle } from "@/components/common/SectionTitle";
+import { StatCard } from "@/components/common/StatCard";
+import { useAdminCampaigns, useCoaches, useCreateCoach } from "@/hooks/admin";
 import {
     Box,
     Button,
@@ -22,13 +20,13 @@ import {
     TextField,
     Typography,
 } from "@mui/material";
-import { AdminCoachDrawerForm } from "@/components/admin/AdminCoachDrawerForm";
-import { ADMIN_COLORS as COLORS } from "@/components/common/colors";
-import { SectionTitle } from "@/components/common/SectionTitle";
-import { StatCard } from "@/components/common/StatCard";
-import { MiniStat } from "@/components/common/MiniStat";
-import { useCoaches, useCreateCoach, useAdminCampaigns } from "@/hooks/admin";
-import type { Coach } from "@aor/types";
+import { createFileRoute } from "@tanstack/react-router";
+import {
+    ClipboardList,
+    Plus,
+    UserRound
+} from "lucide-react";
+import * as React from "react";
 
 export const Route = createFileRoute("/admin/coaches/")({
     component: AdminCoachesRoute,
@@ -231,33 +229,6 @@ function AdminCoachesRoute() {
                     </Stack>
                 </CardContent>
             </Card>
-
-            <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", xl: "1.2fr 0.8fr" }, gap: 3, alignItems: "start" }}>
-                <Card variant="outlined">
-                    <CardContent sx={{ p: 2.5 }}>
-                        <SectionTitle title="Raccourcis" subtitle="Les actions les plus fréquentes." />
-                        <Stack spacing={1.2} sx={{ mt: 2 }}>
-                            <Button variant="outlined" component={Link} to="/admin/campaigns" startIcon={<ClipboardList size={16} />} sx={{ justifyContent: "space-between", borderRadius: 3, textTransform: "none" }}>
-                                Voir les campagnes associées
-                            </Button>
-                            <Button variant="outlined" component={Link} to="/admin/participants" startIcon={<Sparkles size={16} />} sx={{ justifyContent: "space-between", borderRadius: 3, textTransform: "none" }}>
-                                Voir les participants suivis
-                            </Button>
-                        </Stack>
-                    </CardContent>
-                </Card>
-
-                <Card variant="outlined">
-                    <CardContent sx={{ p: 2.5 }}>
-                        <SectionTitle title="Lecture rapide" subtitle="Ce que cette page doit aider à piloter." />
-                        <Box sx={{ border: "1px solid rgba(15,23,42,0.10)", borderRadius: 4, p: 2, mt: 2 }}>
-                            <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.8 }}>
-                                Un coach doit toujours être relié à ses campagnes, à ses participants et à son périmètre d'intervention.
-                            </Typography>
-                        </Box>
-                    </CardContent>
-                </Card>
-            </Box>
         </Stack>
     );
 }

@@ -309,20 +309,6 @@ function AdminCompanyDetailRoute() {
                         </CardContent>
                     </Card>
 
-                    <Card variant="outlined">
-                        <CardContent sx={{ p: 2.5 }}>
-                            <SectionTitle title="Navigation" />
-                            <Stack spacing={1.2} sx={{ mt: 1 }}>
-                                <Button variant="outlined" component={Link} to="/admin/companies" startIcon={<ArrowRight size={16} />} sx={{ borderRadius: 3, textTransform: "none" }}>
-                                    Retour aux entreprises
-                                </Button>
-                                <Button variant="outlined" component={Link} to="/admin" startIcon={<ArrowRight size={16} />} sx={{ borderRadius: 3, textTransform: "none" }}>
-                                    Tableau de bord
-                                </Button>
-                            </Stack>
-                        </CardContent>
-                    </Card>
-
                     <Card variant="outlined" sx={{ borderColor: "rgba(239,68,68,0.3)" }}>
                         <CardContent sx={{ p: 2.5 }}>
                             <SectionTitle title="Zone dangereuse" subtitle="Actions irréversibles — RGPD." />

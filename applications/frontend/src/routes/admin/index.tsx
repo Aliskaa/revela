@@ -148,95 +148,91 @@ function AdminDashboardRoute() {
         />
       </Box>
 
-      <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", xl: "1.35fr 0.65fr" }, gap: 3, alignItems: "start" }}>
-        <Card variant="outlined">
-          <CardContent sx={{ p: 2.5 }}>
-            <SectionTitle
-              title="Suivi des campagnes"
-              subtitle="Vue rapide des campagnes récentes et de leur état opérationnel."
-              action={
-                <Button component={Link} to="/admin/campaigns" variant="outlined" sx={{ borderRadius: 3, textTransform: "none" }}>
-                  Voir toutes
-                </Button>
-              }
-            />
+      <Card variant="outlined">
+        <CardContent sx={{ p: 2.5 }}>
+          <SectionTitle
+            title="Suivi des campagnes"
+            subtitle="Vue rapide des campagnes récentes et de leur état opérationnel."
+            action={
+              <Button component={Link} to="/admin/campaigns" variant="outlined" sx={{ borderRadius: 3, textTransform: "none" }}>
+                Voir toutes
+              </Button>
+            }
+          />
 
-            <Box sx={{ overflowX: "auto" }}>
-              <Table sx={{ minWidth: 800 }}>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Campagne</TableCell>
-                    <TableCell>Entreprise</TableCell>
-                    <TableCell>Coach</TableCell>
-                    <TableCell>Questionnaire</TableCell>
-                    <TableCell>Statut</TableCell>
-                    <TableCell>Créée le</TableCell>
-                    <TableCell />
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {isLoading
-                    ? Array.from({ length: 3 }).map((_, i) => (
-                        <TableRow key={i}>
-                          {Array.from({ length: 6 }).map((__, j) => (
-                            <TableCell key={j}>
-                              <Skeleton variant="text" />
-                            </TableCell>
-                          ))}
-                          <TableCell />
-                        </TableRow>
-                      ))
-                    : recentCampaigns.map((campaign) => (
-                        <TableRow hover key={campaign.id}>
-                          <TableCell>
-                            <Typography fontWeight={700} color="text.primary">
-                              {campaign.name}
-                            </Typography>
-                          </TableCell>
-                          <TableCell>{companyName(campaign.companyId)}</TableCell>
-                          <TableCell>{coachName(campaign.coachId)}</TableCell>
-                          <TableCell>
-                            {campaign.questionnaireId
-                              ? (QUESTIONNAIRE_LABELS[campaign.questionnaireId] ?? campaign.questionnaireId)
-                              : "–"}
-                          </TableCell>
-                          <TableCell>
-                            <StatusChip status={campaign.status} />
-                          </TableCell>
-                          <TableCell>
-                            {campaign.createdAt
-                              ? new Date(campaign.createdAt).toLocaleDateString("fr-FR")
-                              : "–"}
-                          </TableCell>
-                          <TableCell align="right">
-                            <Button
-                              component={Link}
-                              to="/admin/campaigns/$campaignId"
-                              params={{ campaignId: String(campaign.id) }}
-                              variant="text"
-                              endIcon={<ArrowRight size={16} />}
-                              sx={{ textTransform: "none" }}
-                            >
-                              Ouvrir
-                            </Button>
-                          </TableCell>
-                        </TableRow>
+          <Box sx={{ overflowX: "auto" }}>
+            <Table sx={{ minWidth: 800 }}>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Campagne</TableCell>
+                  <TableCell>Entreprise</TableCell>
+                  <TableCell>Coach</TableCell>
+                  <TableCell>Questionnaire</TableCell>
+                  <TableCell>Statut</TableCell>
+                  <TableCell>Créée le</TableCell>
+                  <TableCell />
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {isLoading
+                  ? Array.from({ length: 3 }).map((_, i) => (
+                    <TableRow key={i}>
+                      {Array.from({ length: 6 }).map((__, j) => (
+                        <TableCell key={j}>
+                          <Skeleton variant="text" />
+                        </TableCell>
                       ))}
-                  {!isLoading && recentCampaigns.length === 0 && (
-                    <TableRow>
-                      <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
-                        <Typography variant="body2" color="text.secondary">
-                          Aucune campagne pour le moment.
+                      <TableCell />
+                    </TableRow>
+                  ))
+                  : recentCampaigns.map((campaign) => (
+                    <TableRow hover key={campaign.id}>
+                      <TableCell>
+                        <Typography fontWeight={700} color="text.primary">
+                          {campaign.name}
                         </Typography>
                       </TableCell>
+                      <TableCell>{companyName(campaign.companyId)}</TableCell>
+                      <TableCell>{coachName(campaign.coachId)}</TableCell>
+                      <TableCell>
+                        {campaign.questionnaireId
+                          ? (QUESTIONNAIRE_LABELS[campaign.questionnaireId] ?? campaign.questionnaireId)
+                          : "–"}
+                      </TableCell>
+                      <TableCell>
+                        <StatusChip status={campaign.status} />
+                      </TableCell>
+                      <TableCell>
+                        {campaign.createdAt
+                          ? new Date(campaign.createdAt).toLocaleDateString("fr-FR")
+                          : "–"}
+                      </TableCell>
+                      <TableCell align="right">
+                        <Button
+                          href={`/admin/campaigns/${campaign.id}`}
+                          variant="text"
+                          endIcon={<ArrowRight size={16} />}
+                          sx={{ textTransform: "none" }}
+                        >
+                          Ouvrir
+                        </Button>
+                      </TableCell>
                     </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </Box>
-          </CardContent>
-        </Card>
-      </Box>
+                  ))}
+                {!isLoading && recentCampaigns.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
+                      <Typography variant="body2" color="text.secondary">
+                        Aucune campagne pour le moment.
+                      </Typography>
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </Box>
+        </CardContent>
+      </Card>
     </Stack>
   );
 }

@@ -144,35 +144,6 @@ function StepCard({ step }: { step: JourneyStep }) {
   );
 }
 
-function RuleCard({ title, description, icon: Icon }: { title: string; description: string; icon: React.ElementType }) {
-  return (
-    <Card variant="outlined">
-      <CardContent sx={{ p: 2.2 }}>
-        <Stack direction="row" spacing={1.3} alignItems="start">
-          <Box sx={{ width: 40, height: 40, borderRadius: 3, bgcolor: "tint.primaryBg", color: "primary.main", display: "grid", placeItems: "center", flex: "none" }}>
-            <Icon size={16} />
-          </Box>
-          <Box>
-            <Typography fontWeight={700} color="text.primary">{title}</Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.35, lineHeight: 1.7 }}>{description}</Typography>
-          </Box>
-        </Stack>
-      </CardContent>
-    </Card>
-  );
-}
-
-function MiniLine({ icon: Icon, text }: { icon: React.ElementType; text: string }) {
-  return (
-    <Stack direction="row" spacing={1.2} alignItems="start">
-      <Box sx={{ width: 34, height: 34, borderRadius: 3, bgcolor: "tint.primaryBg", color: "primary.main", display: "grid", placeItems: "center", flex: "none" }}>
-        <Icon size={15} />
-      </Box>
-      <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.7, pt: 0.2 }}>{text}</Typography>
-    </Stack>
-  );
-}
-
 function ParticipantJourneyRoute() {
   const { data: session, isLoading, isError } = useParticipantSession();
   const { assignment: selectedAssignment, index: selectedIndex, assignments } = useSelectedAssignment(session);
@@ -245,12 +216,6 @@ function ParticipantJourneyRoute() {
           </Stack>
         </CardContent>
       </Card>
-
-      <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "repeat(3, minmax(0, 1fr))" }, gap: 2 }}>
-        <RuleCard icon={ClipboardList} title="Auto-évaluation" description="Notation de 1 à 9 sur les short labels de chaque dimension." />
-        <RuleCard icon={Users} title="Pairs" description="Même logique de notation, pour compléter la lecture du participant." />
-        <RuleCard icon={Brain} title="Test Élément Humain" description="2 × 54 questions pour chaque questionnaire B, F et S." />
-      </Box>
 
       <Card variant="outlined">
         <CardContent sx={{ p: 2.5 }}>

@@ -135,43 +135,25 @@ function ParticipantCoachRoute() {
         </Card>
       </Box>
 
-      <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", xl: "1.2fr 0.8fr" }, gap: 3, alignItems: "start" }}>
-        <Card variant="outlined">
-          <CardContent sx={{ p: 2.5 }}>
-            <Typography variant="h5" fontWeight={800} color="text.primary" sx={{ letterSpacing: -0.4 }}>Profil du coach</Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.7, lineHeight: 1.7 }}>
-              Lecture simple du rôle et du cadre d'accompagnement.
-            </Typography>
-            <Stack spacing={2.5} sx={{ mt: 1.5 }}>
-              <Box sx={{ borderRadius: 4, bgcolor: "rgba(15,23,42,0.03)", p: 2.2 }}>
-                <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.8 }}>
-                  {coachView.bio}
-                </Typography>
-              </Box>
-              <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "repeat(2, minmax(0, 1fr))" }, gap: 1.5 }}>
-                <InfoPill label="Rôle" value="Accompagnement / restitution" icon={Sparkles} />
-                <InfoPill label="Cadre" value="Confidentialité et lecture partagée" icon={Users} />
-              </Box>
-            </Stack>
-          </CardContent>
-        </Card>
-
-        <Card variant="outlined">
-          <CardContent sx={{ p: 2.5 }}>
-            <Typography variant="h5" fontWeight={800} color="text.primary" sx={{ letterSpacing: -0.4 }}>
-              Informations pratiques
-            </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.7, lineHeight: 1.7 }}>
-              Les détails de contact et de séance seront disponibles une fois la campagne avancée.
-            </Typography>
-            <Box sx={{ borderRadius: 4, bgcolor: "rgba(15,23,42,0.03)", p: 2.2, mt: 2 }}>
+      <Card variant="outlined">
+        <CardContent sx={{ p: 2.5 }}>
+          <Typography variant="h5" fontWeight={800} color="text.primary" sx={{ letterSpacing: -0.4 }}>Profil du coach</Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.7, lineHeight: 1.7 }}>
+            Lecture simple du rôle et du cadre d'accompagnement.
+          </Typography>
+          <Stack spacing={2.5} sx={{ mt: 1.5 }}>
+            <Box sx={{ borderRadius: 4, bgcolor: "rgba(15,23,42,0.03)", p: 2.2 }}>
               <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.8 }}>
-                La restitution est planifiée par le coach une fois les résultats disponibles. Vous serez notifié lorsque les détails de séance seront confirmés.
+                {coachView.bio}
               </Typography>
             </Box>
-          </CardContent>
-        </Card>
-      </Box>
+            <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "repeat(2, minmax(0, 1fr))" }, gap: 1.5 }}>
+              <InfoPill label="Rôle" value="Accompagnement / restitution" icon={Sparkles} />
+              <InfoPill label="Cadre" value="Confidentialité et lecture partagée" icon={Users} />
+            </Box>
+          </Stack>
+        </CardContent>
+      </Card>
     </Stack>
   );
 }
