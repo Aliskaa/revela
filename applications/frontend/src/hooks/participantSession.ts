@@ -60,8 +60,7 @@ export function useParticipantCampaignPeers(campaignId: number | null) {
 export function useUpdateParticipantProfile() {
     const qc = useQueryClient();
     return useMutation<{ ok: boolean }, Error, UpdateParticipantProfileBody>({
-        mutationFn: (payload) =>
-            participantApiClient.patch('/participant/profile', payload).then(r => r.data),
+        mutationFn: payload => participantApiClient.patch('/participant/profile', payload).then(r => r.data),
         onSuccess: () => {
             qc.invalidateQueries({ queryKey: participantSessionKeys.session });
         },

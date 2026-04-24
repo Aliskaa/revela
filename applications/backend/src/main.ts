@@ -10,6 +10,7 @@
  * See LICENSE.md for the full license terms.
  */
 
+import './load-env';
 import 'reflect-metadata';
 
 import { createConsoleLogger, resolveLogLevelFromEnv } from '@aor/logger';

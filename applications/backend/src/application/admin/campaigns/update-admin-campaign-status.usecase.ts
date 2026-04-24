@@ -8,11 +8,7 @@ export class UpdateAdminCampaignStatusUseCase {
         }
     ) {}
 
-    public async execute(
-        campaignId: number,
-        status: CampaignStatus,
-        options?: { alignStartsAtToNow?: boolean }
-    ) {
+    public async execute(campaignId: number, status: CampaignStatus, options?: { alignStartsAtToNow?: boolean }) {
         if (!['draft', 'active', 'closed', 'archived'].includes(status)) {
             throw new AdminValidationError('status invalide.');
         }

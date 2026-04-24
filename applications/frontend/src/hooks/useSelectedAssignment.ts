@@ -1,6 +1,6 @@
-import { useMemo } from 'react';
-import type { ParticipantSession } from '@aor/types';
 import { useCampaignStore } from '@/stores/campaignStore';
+import type { ParticipantSession } from '@aor/types';
+import { useMemo } from 'react';
 
 export type ParticipantAssignment = ParticipantSession['assignments'][number];
 

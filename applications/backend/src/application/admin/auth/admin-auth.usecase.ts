@@ -11,11 +11,11 @@
  */
 
 import { AdminLoginResult } from '@aor/domain';
+import type { IPasswordVerifierPort } from '@aor/ports';
 import { AdminInvalidCredentialsError } from '@src/domain/admin/admin.errors';
 import type { IAdminAuthConfigPort } from '@src/interfaces/admin/IAdminAuthConfig.port';
 import type { IAdminTokenSignerPort } from '@src/interfaces/admin/IAdminTokenSigner.port';
 import type { ICoachesReadPort } from '@src/interfaces/coaches/ICoachesRepository.port';
-import type { IPasswordVerifierPort } from '@aor/ports';
 
 export class AdminAuthUseCase {
     public constructor(

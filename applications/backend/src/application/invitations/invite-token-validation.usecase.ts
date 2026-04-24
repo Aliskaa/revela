@@ -10,10 +10,7 @@
  * See LICENSE.md for the full license terms.
  */
 
-import type {
-    IInvitationsReadPort,
-    InvitationRecord,
-} from '@src/interfaces/invitations/IInvitationsRepository.port';
+import type { IInvitationsReadPort, InvitationRecord } from '@src/interfaces/invitations/IInvitationsRepository.port';
 
 export class InviteTokenValidationUseCase {
     public constructor(private readonly ports: { readonly invitations: IInvitationsReadPort }) {}

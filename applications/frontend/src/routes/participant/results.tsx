@@ -4,7 +4,7 @@ import { useParticipantSession, useParticipantSessionMatrix } from '@/hooks/part
 import { useSelectedAssignment } from '@/hooks/useSelectedAssignment';
 import { exportResultsPdf } from '@/lib/exportResultsPdf';
 import { useCampaignStore } from '@/stores/campaignStore';
-import type { ParticipantQuestionnaireMatrix } from '@aor/types';
+import type { DimensionView, EcartView, ParticipantQuestionnaireMatrix, ScoreRow } from '@aor/types';
 import {
     Alert,
     Box,
@@ -19,6 +19,7 @@ import {
     Select,
     Stack,
     Typography,
+    useTheme,
 } from '@mui/material';
 import { createFileRoute } from '@tanstack/react-router';
 import { ArrowLeftRight, Download, Radar, Sparkles, UserRound, Users } from 'lucide-react';
@@ -26,29 +27,6 @@ import { ArrowLeftRight, Download, Radar, Sparkles, UserRound, Users } from 'luc
 export const Route = createFileRoute('/participant/results')({
     component: ParticipantResultsRoute,
 });
-
-type PeerScore = {
-    label: string;
-    value: number | null;
-};
-
-type ScoreRow = {
-    label: string;
-    self: number | null;
-    peers: PeerScore[];
-    scientific: number | null;
-};
-
-type EcartView = {
-    value: number;
-    message: string;
-};
-
-type DimensionView = {
-    name: string;
-    rows: ScoreRow[];
-    ecarts: EcartView[];
-};
 
 const avg = (values: (number | null)[]): number | null => {
     const nums = values.filter((v): v is number => v !== null);
@@ -123,6 +101,7 @@ function ScoreBar({ value, max, color }: { value: number | null; max: number; co
 const PEER_COLORS = ['rgb(255,204,0)', 'rgb(255,170,0)', 'rgb(230,150,0)', 'rgb(200,130,0)', 'rgb(180,115,0)'];
 
 function DimensionCard({ dimension, likertMax }: { dimension: DimensionView; likertMax: number }) {
+    const theme = useTheme();
     const hasPeers = dimension.rows.some(r => r.peers.some(p => p.value !== null));
     const hasScientific = dimension.rows.some(r => r.scientific !== null);
 
@@ -153,7 +132,7 @@ function DimensionCard({ dimension, likertMax }: { dimension: DimensionView; lik
                                             fontSize: 11,
                                         }}
                                     />
-                                    <ScoreBar value={row.self} max={likertMax} color="rgb(15,24,152)" />
+                                    <ScoreBar value={row.self} max={likertMax} color={theme.palette.primary.main} />
                                 </Stack>
                                 {hasPeers &&
                                     row.peers.map((peer, i) =>

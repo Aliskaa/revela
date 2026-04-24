@@ -1,9 +1,8 @@
-import * as React from "react";
-import { Box, Typography } from "@mui/material";
+import { Box, Typography } from '@mui/material';
 
 export function MiniStat({ label, value }: { label: string; value: string }) {
     return (
-        <Box sx={{ border: "1px solid rgba(15,23,42,0.10)", borderRadius: 4, p: 1.5 }}>
+        <Box sx={{ border: '1px solid rgba(15,23,42,0.10)', borderRadius: 4, p: 1.5 }}>
             <Typography variant="caption" color="text.secondary">
                 {label}
             </Typography>

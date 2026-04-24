@@ -1,5 +1,5 @@
-import { useMemo } from 'react';
 import type { ParticipantQuestionnaireMatrix } from '@aor/types';
+import { useMemo } from 'react';
 
 export type ScoreItem = { scoreKey: number; label: string };
 export type DimensionBlock = { dimension: string; items: ScoreItem[] };

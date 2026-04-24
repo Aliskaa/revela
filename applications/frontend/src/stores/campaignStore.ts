@@ -9,6 +9,6 @@ type CampaignStore = {
 
 export const useCampaignStore = create<CampaignStore>(set => ({
     selectedCampaignId: null,
-    select: (campaignId) => set({ selectedCampaignId: campaignId }),
+    select: campaignId => set({ selectedCampaignId: campaignId }),
     clear: () => set({ selectedCampaignId: null }),
 }));

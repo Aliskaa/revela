@@ -64,8 +64,12 @@ export default function CampaignForm() {
     };
     return (
         <>
-            <Button variant="contained" color="primary"
-                onClick={() => setIsDrawerOpen(true)} sx={{ boxShadow: 2, fontWeight: 600 }}>
+            <Button
+                variant="contained"
+                color="primary"
+                onClick={() => setIsDrawerOpen(true)}
+                sx={{ boxShadow: 2, fontWeight: 600 }}
+            >
                 + Nouvelle Campagne
             </Button>
             <Drawer

@@ -1,18 +1,13 @@
-import * as React from 'react';
-import { useParticipantSession, useParticipantSessionMatrix, useParticipantCampaignPeers } from '@/hooks/participantSession';
-import { useSelectedAssignment } from '@/hooks/useSelectedAssignment';
+import { RatingDimensionCard } from '@/components/questionnaire/RatingDimensionCard';
+import {
+    useParticipantCampaignPeers,
+    useParticipantSession,
+    useParticipantSessionMatrix,
+} from '@/hooks/participantSession';
 import { useSubmitParticipantQuestionnaire } from '@/hooks/questionnaires';
 import { useBuildDimensions } from '@/hooks/useBuildDimensions';
-import { RatingDimensionCard } from '@/components/questionnaire/RatingDimensionCard';
+import { useSelectedAssignment } from '@/hooks/useSelectedAssignment';
 import type { CampaignPeerChoice } from '@aor/types';
-import { createFileRoute } from '@tanstack/react-router';
-import {
-    CheckCircle2,
-    CircleUserRound,
-    Save,
-    Sparkles,
-    Users,
-} from 'lucide-react';
 import {
     Alert,
     Box,
@@ -26,6 +21,9 @@ import {
     Stack,
     Typography,
 } from '@mui/material';
+import { createFileRoute } from '@tanstack/react-router';
+import { CheckCircle2, CircleUserRound, Save, Sparkles, Users } from 'lucide-react';
+import * as React from 'react';
 
 export const Route = createFileRoute('/participant/peer-feedback')({
     component: ParticipantPeerFeedbackRoute,
@@ -59,21 +57,48 @@ function PeerCard({
                 bgcolor: selected ? 'tint.primaryHover' : '#fff',
                 opacity: alreadyRated ? 0.7 : 1,
                 transition: 'all 0.15s ease',
-                ...(!alreadyRated ? { '&:hover': { borderColor: 'primary.main', bgcolor: 'rgba(15,24,152,0.02)' } } : {}),
+                ...(!alreadyRated
+                    ? { '&:hover': { borderColor: 'primary.main', bgcolor: 'rgba(15,24,152,0.02)' } }
+                    : {}),
             }}
         >
-            <Box sx={{ width: 38, height: 38, borderRadius: 3, bgcolor: selected ? 'rgba(15,24,152,0.12)' : 'tint.primaryBg', color: 'primary.main', display: 'grid', placeItems: 'center', flex: 'none' }}>
+            <Box
+                sx={{
+                    width: 38,
+                    height: 38,
+                    borderRadius: 3,
+                    bgcolor: selected ? 'rgba(15,24,152,0.12)' : 'tint.primaryBg',
+                    color: 'primary.main',
+                    display: 'grid',
+                    placeItems: 'center',
+                    flex: 'none',
+                }}
+            >
                 <CircleUserRound size={16} />
             </Box>
             <Box sx={{ minWidth: 0, flex: 1 }}>
-                <Typography variant="body2" fontWeight={700} color="text.primary">{peer.full_name}</Typography>
+                <Typography variant="body2" fontWeight={700} color="text.primary">
+                    {peer.full_name}
+                </Typography>
             </Box>
             {alreadyRated ? (
-                <Chip label="Noté" size="small" sx={{ borderRadius: 99, bgcolor: 'tint.successBg', color: 'tint.successText' }} />
+                <Chip
+                    label="Noté"
+                    size="small"
+                    sx={{ borderRadius: 99, bgcolor: 'tint.successBg', color: 'tint.successText' }}
+                />
             ) : selected ? (
-                <Chip label="Sélectionné" size="small" sx={{ borderRadius: 99, bgcolor: 'tint.primaryBg', color: 'primary.main' }} />
+                <Chip
+                    label="Sélectionné"
+                    size="small"
+                    sx={{ borderRadius: 99, bgcolor: 'tint.primaryBg', color: 'primary.main' }}
+                />
             ) : (
-                <Chip label="À noter" size="small" sx={{ borderRadius: 99, bgcolor: 'tint.secondaryBg', color: 'tint.secondaryText' }} />
+                <Chip
+                    label="À noter"
+                    size="small"
+                    sx={{ borderRadius: 99, bgcolor: 'tint.secondaryBg', color: 'tint.secondaryText' }}
+                />
             )}
         </Stack>
     );
@@ -96,12 +121,14 @@ function ParticipantPeerFeedbackRoute() {
 
     const isLoading = sessionLoading || matrixLoading;
     const campaignActive = activeAssignment?.campaign_status === 'active';
-    const stepAvailable = activeAssignment?.progression?.peer_feedback_status === 'pending'
-        || activeAssignment?.progression?.peer_feedback_status === 'completed'
-        || !activeAssignment?.progression;
+    const stepAvailable =
+        activeAssignment?.progression?.peer_feedback_status === 'pending' ||
+        activeAssignment?.progression?.peer_feedback_status === 'completed' ||
+        !activeAssignment?.progression;
     const canInteract = campaignActive && stepAvailable;
 
-    const questionnaireTitle = matrix?.questionnaire_title ?? activeAssignment?.questionnaire_title ?? 'Feedback des pairs';
+    const questionnaireTitle =
+        matrix?.questionnaire_title ?? activeAssignment?.questionnaire_title ?? 'Feedback des pairs';
     const peerColumns = matrix?.peer_columns ?? [];
 
     const ratedPeerIds = React.useMemo(() => {
@@ -151,7 +178,9 @@ function ParticipantPeerFeedbackRoute() {
         return (
             <Card variant="outlined">
                 <CardContent sx={{ p: 3 }}>
-                    <Typography variant="h6" fontWeight={700} color="text.primary">Chargement du feedback des pairs</Typography>
+                    <Typography variant="h6" fontWeight={700} color="text.primary">
+                        Chargement du feedback des pairs
+                    </Typography>
                     <LinearProgress sx={{ mt: 2 }} />
                 </CardContent>
             </Card>
@@ -181,26 +210,53 @@ function ParticipantPeerFeedbackRoute() {
 
             <Card variant="outlined">
                 <CardContent sx={{ p: { xs: 2.5, md: 3 } }}>
-                    <Stack spacing={2.5} direction={{ xs: 'column', lg: 'row' }} justifyContent="space-between" alignItems={{ xs: 'start', lg: 'start' }}>
+                    <Stack
+                        spacing={2.5}
+                        direction={{ xs: 'column', lg: 'row' }}
+                        justifyContent="space-between"
+                        alignItems={{ xs: 'start', lg: 'start' }}
+                    >
                         <Box>
-                            <Chip label="Feedback des pairs" sx={{ borderRadius: 99, bgcolor: 'tint.primaryBg', color: 'primary.main', mb: 1.5 }} />
+                            <Chip
+                                label="Feedback des pairs"
+                                sx={{ borderRadius: 99, bgcolor: 'tint.primaryBg', color: 'primary.main', mb: 1.5 }}
+                            />
                             <Typography variant="h4" fontWeight={800} color="text.primary" sx={{ letterSpacing: -0.5 }}>
                                 {questionnaireTitle}
                             </Typography>
-                            <Typography variant="body1" color="text.secondary" sx={{ mt: 1, lineHeight: 1.7, maxWidth: 860 }}>
-                                Sélectionnez un pair puis notez chaque item de 1 à 9. Vous pouvez évaluer jusqu'à {MAX_PEERS} pairs.
+                            <Typography
+                                variant="body1"
+                                color="text.secondary"
+                                sx={{ mt: 1, lineHeight: 1.7, maxWidth: 860 }}
+                            >
+                                Sélectionnez un pair puis notez chaque item de 1 à 9. Vous pouvez évaluer jusqu'à{' '}
+                                {MAX_PEERS} pairs.
                             </Typography>
                         </Box>
 
                         <Card variant="outlined" sx={{ width: { xs: '100%', sm: 340 } }}>
                             <CardContent sx={{ p: 2 }}>
                                 <Stack direction="row" spacing={1.5} alignItems="center">
-                                    <Box sx={{ width: 48, height: 48, borderRadius: 4, bgcolor: 'primary.main', color: '#fff', display: 'grid', placeItems: 'center' }}>
+                                    <Box
+                                        sx={{
+                                            width: 48,
+                                            height: 48,
+                                            borderRadius: 4,
+                                            bgcolor: 'primary.main',
+                                            color: '#fff',
+                                            display: 'grid',
+                                            placeItems: 'center',
+                                        }}
+                                    >
                                         <Users size={20} />
                                     </Box>
                                     <Box>
-                                        <Typography fontWeight={800} color="text.primary">{ratedCount} / {MAX_PEERS}</Typography>
-                                        <Typography variant="body2" color="text.secondary">pairs évalués</Typography>
+                                        <Typography fontWeight={800} color="text.primary">
+                                            {ratedCount} / {MAX_PEERS}
+                                        </Typography>
+                                        <Typography variant="body2" color="text.secondary">
+                                            pairs évalués
+                                        </Typography>
                                     </Box>
                                 </Stack>
                             </CardContent>
@@ -209,17 +265,28 @@ function ParticipantPeerFeedbackRoute() {
                 </CardContent>
             </Card>
 
-            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', xl: '0.35fr 0.65fr' }, gap: 3, alignItems: 'start' }}>
+            <Box
+                sx={{
+                    display: 'grid',
+                    gridTemplateColumns: { xs: '1fr', xl: '0.35fr 0.65fr' },
+                    gap: 3,
+                    alignItems: 'start',
+                }}
+            >
                 {/* Peer list sidebar */}
                 <Card variant="outlined">
                     <CardContent sx={{ p: 2.5 }}>
-                        <Typography variant="h6" fontWeight={800} color="text.primary">Pairs de la campagne</Typography>
+                        <Typography variant="h6" fontWeight={800} color="text.primary">
+                            Pairs de la campagne
+                        </Typography>
                         <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, mb: 2, lineHeight: 1.7 }}>
                             Sélectionnez un pair à évaluer.
                         </Typography>
 
                         {availablePeers.length === 0 ? (
-                            <Typography variant="body2" color="text.secondary">Aucun pair disponible dans cette campagne.</Typography>
+                            <Typography variant="body2" color="text.secondary">
+                                Aucun pair disponible dans cette campagne.
+                            </Typography>
                         ) : (
                             <Stack spacing={1}>
                                 {availablePeers.map(peer => {
@@ -253,7 +320,17 @@ function ParticipantPeerFeedbackRoute() {
                     <Card variant="outlined">
                         <CardContent sx={{ p: 2.5 }}>
                             <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 2 }}>
-                                <Box sx={{ width: 44, height: 44, borderRadius: 4, bgcolor: 'primary.main', color: '#fff', display: 'grid', placeItems: 'center' }}>
+                                <Box
+                                    sx={{
+                                        width: 44,
+                                        height: 44,
+                                        borderRadius: 4,
+                                        bgcolor: 'primary.main',
+                                        color: '#fff',
+                                        display: 'grid',
+                                        placeItems: 'center',
+                                    }}
+                                >
                                     <CircleUserRound size={20} />
                                 </Box>
                                 <Box>
@@ -270,7 +347,14 @@ function ParticipantPeerFeedbackRoute() {
 
                             <Stack spacing={2}>
                                 {dimensions.map(block => (
-                                    <RatingDimensionCard key={block.dimension} block={block} scores={scores} onScoreChange={handleScoreChange} chipLabel="Pair" chipVariant="secondary" />
+                                    <RatingDimensionCard
+                                        key={block.dimension}
+                                        block={block}
+                                        scores={scores}
+                                        onScoreChange={handleScoreChange}
+                                        chipLabel="Pair"
+                                        chipVariant="secondary"
+                                    />
                                 ))}
                             </Stack>
 
@@ -292,12 +376,15 @@ function ParticipantPeerFeedbackRoute() {
                                     {submitMutation.isPending
                                         ? 'Enregistrement…'
                                         : allFilled
-                                            ? `Valider le feedback pour ${selectedPeer.first_name}`
-                                            : `Enregistrer (${filledCount}/${totalItems})`}
+                                          ? `Valider le feedback pour ${selectedPeer.first_name}`
+                                          : `Enregistrer (${filledCount}/${totalItems})`}
                                 </Button>
                                 <Button
                                     variant="outlined"
-                                    onClick={() => { setSelectedPeer(null); setScores({}); }}
+                                    onClick={() => {
+                                        setSelectedPeer(null);
+                                        setScores({});
+                                    }}
                                     sx={{ borderRadius: 3 }}
                                 >
                                     Annuler
@@ -308,7 +395,19 @@ function ParticipantPeerFeedbackRoute() {
                 ) : (
                     <Card variant="outlined">
                         <CardContent sx={{ p: 4, textAlign: 'center' }}>
-                            <Box sx={{ width: 56, height: 56, borderRadius: 4, bgcolor: 'tint.primaryBg', color: 'primary.main', display: 'grid', placeItems: 'center', mx: 'auto', mb: 2 }}>
+                            <Box
+                                sx={{
+                                    width: 56,
+                                    height: 56,
+                                    borderRadius: 4,
+                                    bgcolor: 'tint.primaryBg',
+                                    color: 'primary.main',
+                                    display: 'grid',
+                                    placeItems: 'center',
+                                    mx: 'auto',
+                                    mb: 2,
+                                }}
+                            >
                                 <Sparkles size={24} />
                             </Box>
                             <Typography variant="h6" fontWeight={800} color="text.primary">

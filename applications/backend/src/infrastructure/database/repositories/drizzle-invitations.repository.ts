@@ -39,7 +39,9 @@ export class DrizzleInvitationsRepository implements IInvitationsRepositoryPort 
             const qid = command.questionnaireId.toUpperCase();
             const assignmentMatch = and(
                 eq(inviteTokensTable.participantId, command.participantId),
-                campaignId === null ? isNull(inviteTokensTable.campaignId) : eq(inviteTokensTable.campaignId, campaignId),
+                campaignId === null
+                    ? isNull(inviteTokensTable.campaignId)
+                    : eq(inviteTokensTable.campaignId, campaignId),
                 eq(inviteTokensTable.questionnaireId, qid)
             );
             const now = new Date();

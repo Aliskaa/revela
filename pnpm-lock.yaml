@@ -181,6 +181,9 @@ importers:
       '@nestjs/platform-express':
         specifier: 'catalog:'
         version: 11.1.17(@nestjs/common@11.1.17(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.17)
+      dotenv:
+        specifier: 'catalog:'
+        version: 17.3.1
       drizzle-orm:
         specifier: 'catalog:'
         version: 0.45.1(@types/pg@8.20.0)(mysql2@3.20.0(@types/node@22.19.15))(pg@8.20.0)

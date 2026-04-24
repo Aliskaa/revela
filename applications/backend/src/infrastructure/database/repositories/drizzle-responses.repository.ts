@@ -11,10 +11,10 @@
  */
 
 import {
-    campaignParticipantsTable,
-    campaignsTable,
     DRIZZLE_DB_SYMBOL,
     type DrizzleDb,
+    campaignParticipantsTable,
+    campaignsTable,
     inviteTokensTable,
     participantProgressTable,
     participantsTable,
@@ -56,7 +56,7 @@ const attachScores = async (db: DrizzleDb, rows: QuestionnaireResponseRow[]): Pr
 
 @Injectable()
 export class DrizzleResponsesRepository implements IResponsesRepositoryPort {
-    public constructor(@Inject(DRIZZLE_DB_SYMBOL) private readonly db: DrizzleDb) { }
+    public constructor(@Inject(DRIZZLE_DB_SYMBOL) private readonly db: DrizzleDb) {}
 
     public async listForSubjectQuestionnaireMatrix(
         subjectParticipantId: number,
@@ -168,14 +168,11 @@ export class DrizzleResponsesRepository implements IResponsesRepositoryPort {
                         ? true
                         : existingProgress?.peerFeedbackStatus === 'completed';
                 const unlockElementHumain =
-                    (command.submissionKind === 'self_rating' ||
-                        command.submissionKind === 'peer_rating') &&
+                    (command.submissionKind === 'self_rating' || command.submissionKind === 'peer_rating') &&
                     (existingProgress?.elementHumainStatus ?? 'locked') === 'locked' &&
                     (canSkipManualInputs || (selfDoneAfter && peerDoneAfter));
 
-                const elementHumainUnlockPatch = unlockElementHumain
-                    ? { elementHumainStatus: 'pending' as const }
-                    : {};
+                const elementHumainUnlockPatch = unlockElementHumain ? { elementHumainStatus: 'pending' as const } : {};
 
                 const progressPatch =
                     command.submissionKind === 'self_rating'
@@ -215,14 +212,14 @@ export class DrizzleResponsesRepository implements IResponsesRepositoryPort {
                 command.scores.length === 0
                     ? []
                     : await tx
-                        .insert(scoresTable)
-                        .values(
-                            command.scores.map(score => ({
-                                responseId: response.id,
-                                ...score,
-                            }))
-                        )
-                        .returning();
+                          .insert(scoresTable)
+                          .values(
+                              command.scores.map(score => ({
+                                  responseId: response.id,
+                                  ...score,
+                              }))
+                          )
+                          .returning();
 
             if (command.markInviteTokenUsedId !== undefined) {
                 await tx
@@ -266,14 +263,14 @@ export class DrizzleResponsesRepository implements IResponsesRepositoryPort {
                 command.scores.length === 0
                     ? []
                     : await tx
-                        .insert(scoresTable)
-                        .values(
-                            command.scores.map(score => ({
-                                responseId: command.id,
-                                ...score,
-                            }))
-                        )
-                        .returning();
+                          .insert(scoresTable)
+                          .values(
+                              command.scores.map(score => ({
+                                  responseId: command.id,
+                                  ...score,
+                              }))
+                          )
+                          .returning();
 
             return {
                 ...updated,
@@ -302,14 +299,14 @@ export class DrizzleResponsesRepository implements IResponsesRepositoryPort {
         const listQuery = this.db.select().from(questionnaireResponsesTable);
         const rows = whereClause
             ? await listQuery
-                .where(whereClause)
-                .orderBy(desc(questionnaireResponsesTable.submittedAt))
-                .limit(perPage)
-                .offset((page - 1) * perPage)
+                  .where(whereClause)
+                  .orderBy(desc(questionnaireResponsesTable.submittedAt))
+                  .limit(perPage)
+                  .offset((page - 1) * perPage)
             : await listQuery
-                .orderBy(desc(questionnaireResponsesTable.submittedAt))
-                .limit(perPage)
-                .offset((page - 1) * perPage);
+                  .orderBy(desc(questionnaireResponsesTable.submittedAt))
+                  .limit(perPage)
+                  .offset((page - 1) * perPage);
 
         const items = await attachScores(this.db, rows);
         return {

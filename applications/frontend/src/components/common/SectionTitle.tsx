@@ -1,7 +1,11 @@
-import * as React from "react";
-import { Box, Stack, Typography } from "@mui/material";
+import { Box, Stack, Typography } from '@mui/material';
+import type * as React from 'react';
 
-export function SectionTitle({ title, subtitle, action }: {
+export function SectionTitle({
+    title,
+    subtitle,
+    action,
+}: {
     title: string;
     subtitle?: string;
     action?: React.ReactNode;

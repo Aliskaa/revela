@@ -10,12 +10,7 @@
  * See LICENSE.md for the full license terms.
  */
 
-import {
-    DRIZZLE_DB_SYMBOL,
-    type DrizzleDb,
-    inviteTokensTable,
-    participantsTable,
-} from '@aor/drizzle';
+import { DRIZZLE_DB_SYMBOL, type DrizzleDb, inviteTokensTable, participantsTable } from '@aor/drizzle';
 import { eq } from '@aor/drizzle';
 import { Inject, Injectable } from '@nestjs/common';
 

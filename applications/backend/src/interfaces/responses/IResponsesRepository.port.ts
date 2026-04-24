@@ -12,7 +12,7 @@
 
 import type { Paginated } from '@src/shared/pagination';
 
-import { ResponseSubmissionKind as SubmissionKind } from '@aor/types';
+import type { ResponseSubmissionKind as SubmissionKind } from '@aor/types';
 export type { SubmissionKind };
 
 export const RESPONSES_REPOSITORY_PORT_SYMBOL = Symbol('RESPONSES_REPOSITORY_PORT_SYMBOL');

@@ -20,8 +20,8 @@ import {
 import type { ICompaniesReadPort } from '@src/interfaces/companies/ICompaniesRepository.port';
 import type { IResponsesExportPort } from '@src/interfaces/responses/IResponsesRepository.port';
 
-import type { AdminCsvExport } from './admin-csv-export';
 import { formatDateOnly } from '@aor/utils';
+import type { AdminCsvExport } from './admin-csv-export';
 
 export class ExportAdminAnonymizedResponsesCsvUseCase {
     public constructor(

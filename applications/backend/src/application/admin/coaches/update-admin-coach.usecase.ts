@@ -1,8 +1,11 @@
-import { AdminResourceNotFoundError, AdminValidationError } from '@src/domain/admin/admin.errors';
-import type { CoachRecord,
-    ICoachesReadPort, ICoachesWritePort,
-    UpdateCoachCommand, } from '@src/interfaces/coaches/ICoachesRepository.port';
 import type { IPasswordHasherPort } from '@aor/ports';
+import { AdminResourceNotFoundError, AdminValidationError } from '@src/domain/admin/admin.errors';
+import type {
+    CoachRecord,
+    ICoachesReadPort,
+    ICoachesWritePort,
+    UpdateCoachCommand,
+} from '@src/interfaces/coaches/ICoachesRepository.port';
 
 export class UpdateAdminCoachUseCase {
     public constructor(

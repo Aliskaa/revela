@@ -12,8 +12,11 @@
 
 import { ParticipantQuestionnaireNotAllowedError } from '@src/domain/participant/participant-session.errors';
 import type { ICampaignsReadPort } from '@src/interfaces/campaigns/ICampaignsRepository.port';
-import type { CampaignPeerChoiceItemDto,
-    IParticipantsInviteAssignmentsReaderPort, IParticipantsCampaignStateReaderPort, } from '@src/interfaces/participants/IParticipantsRepository.port';
+import type {
+    CampaignPeerChoiceItemDto,
+    IParticipantsCampaignStateReaderPort,
+    IParticipantsInviteAssignmentsReaderPort,
+} from '@src/interfaces/participants/IParticipantsRepository.port';
 
 export class ListParticipantCampaignPeersUseCase {
     public constructor(

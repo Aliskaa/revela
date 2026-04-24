@@ -8,7 +8,11 @@ import {
 import type { ICampaignsReadPort } from '@src/interfaces/campaigns/ICampaignsRepository.port';
 import type { ICompaniesReadPort } from '@src/interfaces/companies/ICompaniesRepository.port';
 import type { IInvitationsWritePort } from '@src/interfaces/invitations/IInvitationsRepository.port';
-import type { IParticipantsIdentityReaderPort, IParticipantsWriterPort, IParticipantsCampaignParticipationWriterPort } from '@src/interfaces/participants/IParticipantsRepository.port';
+import type {
+    IParticipantsCampaignParticipationWriterPort,
+    IParticipantsIdentityReaderPort,
+    IParticipantsWriterPort,
+} from '@src/interfaces/participants/IParticipantsRepository.port';
 
 import { parseSemicolonCsv } from '@aor/utils';
 
@@ -17,7 +21,9 @@ export class ImportParticipantsToCampaignUseCase {
         private readonly ports: {
             readonly campaigns: ICampaignsReadPort;
             readonly companies: ICompaniesReadPort;
-            readonly participants: IParticipantsIdentityReaderPort & IParticipantsWriterPort & IParticipantsCampaignParticipationWriterPort;
+            readonly participants: IParticipantsIdentityReaderPort &
+                IParticipantsWriterPort &
+                IParticipantsCampaignParticipationWriterPort;
             readonly invitations: IInvitationsWritePort;
         }
     ) {}

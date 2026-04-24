@@ -1,5 +1,9 @@
 import { AdminResourceNotFoundError, AdminValidationError } from '@src/domain/admin/admin.errors';
-import type { CampaignRecord, ICampaignsReadPort, ICampaignsWritePort } from '@src/interfaces/campaigns/ICampaignsRepository.port';
+import type {
+    CampaignRecord,
+    ICampaignsReadPort,
+    ICampaignsWritePort,
+} from '@src/interfaces/campaigns/ICampaignsRepository.port';
 import type { ICoachesReadPort } from '@src/interfaces/coaches/ICoachesRepository.port';
 
 export class ReassignAdminCampaignCoachUseCase {

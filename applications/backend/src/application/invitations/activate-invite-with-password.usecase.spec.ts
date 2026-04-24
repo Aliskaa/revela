@@ -10,12 +10,13 @@
  * See LICENSE.md for the full license terms.
  */
 
+import { hashPassword, verifyPassword } from '@aor/adapters';
+import type { IPasswordHasherPort } from '@aor/ports';
 import {
     InviteActivationAlreadyCompletedError,
     InviteActivationWeakPasswordError,
     InviteTokenRequestError,
 } from '@src/domain/invitations/invitations.errors';
-import { hashPassword, verifyPassword } from '@aor/adapters';
 import type {
     IInvitationsRepositoryPort,
     InvitationRecord,
@@ -26,7 +27,6 @@ import type {
 } from '@src/interfaces/invitations/IInviteActivationWrite.port';
 import type { IParticipantJwtSignerPort } from '@src/interfaces/participant/IParticipantJwtSigner.port';
 import type { IParticipantsRepositoryPort } from '@src/interfaces/participants/IParticipantsRepository.port';
-import type { IPasswordHasherPort } from '@aor/ports';
 import { expect, test } from 'vitest';
 
 import { ActivateInviteWithPasswordUseCase } from './activate-invite-with-password.usecase';

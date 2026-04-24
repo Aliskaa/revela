@@ -10,13 +10,13 @@
  * See LICENSE.md for the full license terms.
  */
 
+import { CALCULATE_SCORING_USE_CASE_PORT_SYMBOL, type ICalculateScoringUseCasePort } from '@aor/ports';
 import {
     type CalculateScoringRequestDto,
     type CalculateScoringResponseDto,
     calculateScoringRequestDtoSchema,
 } from '@aor/types';
 import { Body, Controller, Inject, Post } from '@nestjs/common';
-import { CALCULATE_SCORING_USE_CASE_PORT_SYMBOL, type ICalculateScoringUseCasePort } from '@aor/ports';
 
 @Controller('scoring')
 export class ScoringController {

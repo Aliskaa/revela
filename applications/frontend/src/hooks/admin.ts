@@ -1,4 +1,5 @@
 import { apiClient } from '@/api/client';
+import { userAdmin } from '@/lib/auth';
 import type {
     AdminCampaign,
     AdminCampaignDetail,
@@ -15,7 +16,6 @@ import type {
     ParticipantQuestionnaireMatrix,
     ResponseDetail,
 } from '@aor/types';
-import { userAdmin } from '@/lib/auth';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 export const adminKeys = {

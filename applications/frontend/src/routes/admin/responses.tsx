@@ -1,11 +1,8 @@
-import * as React from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
-import {
-    ClipboardList,
-    MessageSquareText,
-    Sparkles,
-    Users,
-} from "lucide-react";
+import { MiniStat } from '@/components/common/MiniStat';
+import { SectionTitle } from '@/components/common/SectionTitle';
+import { StatCard } from '@/components/common/StatCard';
+import { useAdminResponses } from '@/hooks/admin';
+import type { ResponseSubmissionKind } from '@aor/types';
 import {
     Box,
     Button,
@@ -21,22 +18,19 @@ import {
     TableRow,
     TextField,
     Typography,
-} from "@mui/material";
-import { ADMIN_COLORS as COLORS } from "@/components/common/colors";
-import { SectionTitle } from "@/components/common/SectionTitle";
-import { StatCard } from "@/components/common/StatCard";
-import { MiniStat } from "@/components/common/MiniStat";
-import { useAdminResponses } from "@/hooks/admin";
-import type { AdminResponse, ResponseSubmissionKind } from "@aor/types";
+} from '@mui/material';
+import { createFileRoute } from '@tanstack/react-router';
+import { ClipboardList, MessageSquareText, Sparkles, Users } from 'lucide-react';
+import * as React from 'react';
 
-export const Route = createFileRoute("/admin/responses")({
+export const Route = createFileRoute('/admin/responses')({
     component: AdminResponsesRoute,
 });
 
 const SUBMISSION_KIND_LABELS: Record<ResponseSubmissionKind, string> = {
-    element_humain: "Test Élément Humain",
-    self_rating: "Auto-évaluation",
-    peer_rating: "Feedback des pairs",
+    element_humain: 'Test Élément Humain',
+    self_rating: 'Auto-évaluation',
+    peer_rating: 'Feedback des pairs',
 };
 
 function kindLabel(kind: ResponseSubmissionKind): string {
@@ -45,20 +39,20 @@ function kindLabel(kind: ResponseSubmissionKind): string {
 
 function AdminResponsesRoute() {
     const [page, setPage] = React.useState(1);
-    const [search, setSearch] = React.useState("");
+    const [search, setSearch] = React.useState('');
 
     const { data, isLoading } = useAdminResponses(undefined, page, 50);
 
     const responses = data?.items ?? [];
     const totalPages = data?.pages ?? 1;
 
-    const selfCount = responses.filter((r) => r.submission_kind === "self_rating").length;
-    const peerCount = responses.filter((r) => r.submission_kind === "peer_rating").length;
-    const ehCount = responses.filter((r) => r.submission_kind === "element_humain").length;
+    const selfCount = responses.filter(r => r.submission_kind === 'self_rating').length;
+    const peerCount = responses.filter(r => r.submission_kind === 'peer_rating').length;
+    const ehCount = responses.filter(r => r.submission_kind === 'element_humain').length;
 
     const filtered = search.trim()
         ? responses.filter(
-              (r) =>
+              r =>
                   r.name.toLowerCase().includes(search.toLowerCase()) ||
                   r.email.toLowerCase().includes(search.toLowerCase()) ||
                   r.organisation.toLowerCase().includes(search.toLowerCase())
@@ -69,25 +63,56 @@ function AdminResponsesRoute() {
         <Stack spacing={3}>
             <Card variant="outlined">
                 <CardContent sx={{ p: { xs: 2.5, md: 3 } }}>
-                    <Stack spacing={2.5} direction={{ xs: "column", lg: "row" }} justifyContent="space-between" alignItems={{ xs: "start", lg: "start" }}>
+                    <Stack
+                        spacing={2.5}
+                        direction={{ xs: 'column', lg: 'row' }}
+                        justifyContent="space-between"
+                        alignItems={{ xs: 'start', lg: 'start' }}
+                    >
                         <Box>
-                            <Chip label="Réponses" sx={{ borderRadius: 99, bgcolor: "rgba(15,24,152,0.08)", color: COLORS.blue, mb: 1.5 }} />
+                            <Chip
+                                label="Réponses"
+                                sx={{ borderRadius: 99, bgcolor: 'tint.primaryBg', color: 'primary.main', mb: 1.5 }}
+                            />
                             <Typography variant="h4" fontWeight={800} color="text.primary" sx={{ letterSpacing: -0.5 }}>
                                 Réponses
                             </Typography>
-                            <Typography variant="body1" color="text.secondary" sx={{ mt: 1, lineHeight: 1.7, maxWidth: 860 }}>
-                                Suivi des soumissions collectées par campagne, avec accès rapide aux dossiers de collecte.
+                            <Typography
+                                variant="body1"
+                                color="text.secondary"
+                                sx={{ mt: 1, lineHeight: 1.7, maxWidth: 860 }}
+                            >
+                                Suivi des soumissions collectées par campagne, avec accès rapide aux dossiers de
+                                collecte.
                             </Typography>
                         </Box>
                     </Stack>
                 </CardContent>
             </Card>
 
-            <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "repeat(4, minmax(0, 1fr))" }, gap: 2 }}>
-                <StatCard label="Soumissions" value={data?.total ?? "–"} helper="tous types confondus" icon={MessageSquareText} loading={isLoading} />
-                <StatCard label="Auto-éval" value={selfCount} helper="sur cette page" icon={Users} loading={isLoading} />
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(4, minmax(0, 1fr))' }, gap: 2 }}>
+                <StatCard
+                    label="Soumissions"
+                    value={data?.total ?? '–'}
+                    helper="tous types confondus"
+                    icon={MessageSquareText}
+                    loading={isLoading}
+                />
+                <StatCard
+                    label="Auto-éval"
+                    value={selfCount}
+                    helper="sur cette page"
+                    icon={Users}
+                    loading={isLoading}
+                />
                 <StatCard label="Pairs" value={peerCount} helper="sur cette page" icon={Sparkles} loading={isLoading} />
-                <StatCard label="Élément Humain" value={ehCount} helper="sur cette page" icon={ClipboardList} loading={isLoading} />
+                <StatCard
+                    label="Élément Humain"
+                    value={ehCount}
+                    helper="sur cette page"
+                    icon={ClipboardList}
+                    loading={isLoading}
+                />
             </Box>
 
             <Card variant="outlined">
@@ -100,14 +125,14 @@ function AdminResponsesRoute() {
                                 size="small"
                                 placeholder="Rechercher une soumission…"
                                 value={search}
-                                onChange={(e) => setSearch(e.target.value)}
+                                onChange={e => setSearch(e.target.value)}
                                 sx={{ minWidth: 300 }}
                             />
                         }
                     />
 
                     {/* Desktop table */}
-                    <Box sx={{ display: { xs: "none", lg: "block" }, overflowX: "auto" }}>
+                    <Box sx={{ display: { xs: 'none', lg: 'block' }, overflowX: 'auto' }}>
                         <Table sx={{ minWidth: 900 }}>
                             <TableHead>
                                 <TableRow>
@@ -123,11 +148,13 @@ function AdminResponsesRoute() {
                                     ? Array.from({ length: 5 }).map((_, i) => (
                                           <TableRow key={i}>
                                               {Array.from({ length: 5 }).map((__, j) => (
-                                                  <TableCell key={j}><Skeleton variant="text" /></TableCell>
+                                                  <TableCell key={j}>
+                                                      <Skeleton variant="text" />
+                                                  </TableCell>
                                               ))}
                                           </TableRow>
                                       ))
-                                    : filtered.map((response) => (
+                                    : filtered.map(response => (
                                           <TableRow hover key={response.id}>
                                               <TableCell>
                                                   <Typography fontWeight={700} color="text.primary">
@@ -138,10 +165,10 @@ function AdminResponsesRoute() {
                                                   </Typography>
                                               </TableCell>
                                               <TableCell>{response.questionnaire_id}</TableCell>
-                                              <TableCell>{response.organisation || "–"}</TableCell>
+                                              <TableCell>{response.organisation || '–'}</TableCell>
                                               <TableCell>{Object.keys(response.scores).length}</TableCell>
                                               <TableCell>
-                                                  {new Date(response.submitted_at).toLocaleDateString("fr-FR")}
+                                                  {new Date(response.submitted_at).toLocaleDateString('fr-FR')}
                                               </TableCell>
                                           </TableRow>
                                       ))}
@@ -149,7 +176,9 @@ function AdminResponsesRoute() {
                                     <TableRow>
                                         <TableCell colSpan={5} align="center" sx={{ py: 4 }}>
                                             <Typography variant="body2" color="text.secondary">
-                                                {search ? "Aucune soumission ne correspond à la recherche." : "Aucune soumission pour le moment."}
+                                                {search
+                                                    ? 'Aucune soumission ne correspond à la recherche.'
+                                                    : 'Aucune soumission pour le moment.'}
                                             </Typography>
                                         </TableCell>
                                     </TableRow>
@@ -159,12 +188,12 @@ function AdminResponsesRoute() {
                     </Box>
 
                     {/* Mobile cards */}
-                    <Stack spacing={2} sx={{ display: { xs: "flex", lg: "none" }, mt: 2 }}>
+                    <Stack spacing={2} sx={{ display: { xs: 'flex', lg: 'none' }, mt: 2 }}>
                         {isLoading
                             ? Array.from({ length: 3 }).map((_, i) => (
                                   <Skeleton key={i} variant="rounded" height={160} />
                               ))
-                            : filtered.map((response) => (
+                            : filtered.map(response => (
                                   <Card variant="outlined" key={response.id}>
                                       <CardContent sx={{ p: 2.5 }}>
                                           <Stack spacing={1.8}>
@@ -176,13 +205,24 @@ function AdminResponsesRoute() {
                                                       {response.name}
                                                   </Typography>
                                               </Box>
-                                              <Box sx={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 1.2 }}>
+                                              <Box
+                                                  sx={{
+                                                      display: 'grid',
+                                                      gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+                                                      gap: 1.2,
+                                                  }}
+                                              >
                                                   <MiniStat label="Questionnaire" value={response.questionnaire_id} />
-                                                  <MiniStat label="Organisation" value={response.organisation || "–"} />
-                                                  <MiniStat label="Scores" value={String(Object.keys(response.scores).length)} />
+                                                  <MiniStat label="Organisation" value={response.organisation || '–'} />
+                                                  <MiniStat
+                                                      label="Scores"
+                                                      value={String(Object.keys(response.scores).length)}
+                                                  />
                                                   <MiniStat
                                                       label="Soumis le"
-                                                      value={new Date(response.submitted_at).toLocaleDateString("fr-FR")}
+                                                      value={new Date(response.submitted_at).toLocaleDateString(
+                                                          'fr-FR'
+                                                      )}
                                                   />
                                               </Box>
                                           </Stack>
@@ -190,20 +230,28 @@ function AdminResponsesRoute() {
                                   </Card>
                               ))}
                         {!isLoading && filtered.length === 0 && (
-                            <Typography variant="body2" color="text.secondary" sx={{ py: 2, textAlign: "center" }}>
-                                {search ? "Aucune soumission ne correspond à la recherche." : "Aucune soumission pour le moment."}
+                            <Typography variant="body2" color="text.secondary" sx={{ py: 2, textAlign: 'center' }}>
+                                {search
+                                    ? 'Aucune soumission ne correspond à la recherche.'
+                                    : 'Aucune soumission pour le moment.'}
                             </Typography>
                         )}
                     </Stack>
 
                     {totalPages > 1 && (
-                        <Stack direction="row" justifyContent="center" alignItems="center" spacing={1.5} sx={{ mt: 2.5 }}>
+                        <Stack
+                            direction="row"
+                            justifyContent="center"
+                            alignItems="center"
+                            spacing={1.5}
+                            sx={{ mt: 2.5 }}
+                        >
                             <Button
                                 variant="outlined"
                                 size="small"
                                 disabled={page <= 1}
-                                onClick={() => setPage((p) => p - 1)}
-                                sx={{ borderRadius: 3, textTransform: "none" }}
+                                onClick={() => setPage(p => p - 1)}
+                                sx={{ borderRadius: 3, textTransform: 'none' }}
                             >
                                 Précédent
                             </Button>
@@ -214,8 +262,8 @@ function AdminResponsesRoute() {
                                 variant="outlined"
                                 size="small"
                                 disabled={page >= totalPages}
-                                onClick={() => setPage((p) => p + 1)}
-                                sx={{ borderRadius: 3, textTransform: "none" }}
+                                onClick={() => setPage(p => p + 1)}
+                                sx={{ borderRadius: 3, textTransform: 'none' }}
                             >
                                 Suivant
                             </Button>

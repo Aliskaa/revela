@@ -1,8 +1,8 @@
-import type { QuestionnaireDetail } from '@aor/types';
 import { AiPlaceholder } from '@/components/common/AiPlaceholder';
 import { ScaleInput } from '@/components/common/ScaleInput';
 import { ScientificProgressBar } from '@/components/common/ScientificProgressBar';
 import { useSubmitParticipantQuestionnaire } from '@/hooks/questionnaires';
+import type { QuestionnaireDetail } from '@aor/types';
 import { Alert, Box, Button, Paper, Typography } from '@mui/material';
 import { useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';

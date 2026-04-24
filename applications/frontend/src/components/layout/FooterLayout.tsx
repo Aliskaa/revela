@@ -1,4 +1,4 @@
-import { Divider, Stack, Typography } from "@mui/material";
+import { Divider, Stack, Typography } from '@mui/material';
 
 export function FooterLayout() {
     return (
@@ -16,6 +16,7 @@ export function FooterLayout() {
                 <Typography variant="caption" fontWeight={500}>
                     v1.0.0
                 </Typography>
-            </Stack></>
+            </Stack>
+        </>
     );
 }

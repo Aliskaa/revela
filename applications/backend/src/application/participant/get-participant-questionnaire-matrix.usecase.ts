@@ -18,10 +18,7 @@ import type {
     ResultDim,
 } from '@aor/types';
 
-import {
-    displayPeerRatingStoredLabel,
-    parsePeerRatingTargetParticipantId,
-} from '@aor/domain';
+import { displayPeerRatingStoredLabel, parsePeerRatingTargetParticipantId } from '@aor/domain';
 import { AdminInvalidQuestionnaireError, AdminResourceNotFoundError } from '@src/domain/admin/admin.errors';
 import type { IParticipantsIdentityReaderPort } from '@src/interfaces/participants/IParticipantsRepository.port';
 import type {

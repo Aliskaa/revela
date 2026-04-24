@@ -80,13 +80,16 @@ export const theme = createTheme({
     components: {
         MuiButton: {
             styleOverrides: {
-                root: { 
-                    textTransform: 'none', fontWeight: 600, borderRadius: 8 },
+                root: {
+                    textTransform: 'none',
+                    fontWeight: 600,
+                    borderRadius: 8,
+                },
             },
         },
         MuiCard: {
             styleOverrides: {
-                root: { borderRadius: 6, boxShadow: "0 6px 18px rgba(15,23,42,0.04)" },
+                root: { borderRadius: 6, boxShadow: '0 6px 18px rgba(15,23,42,0.04)' },
             },
         },
         MuiChip: {

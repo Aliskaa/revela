@@ -14,13 +14,16 @@ import { randomBytes } from 'node:crypto';
 
 import { getQuestionnaireEntry, isQuestionnaireUserFacing } from '@aor/questionnaires';
 
-import { AdminInvalidQuestionnaireError, AdminResourceNotFoundError } from '@src/domain/admin/admin.errors';
 import { invitationTokenAdminStatus } from '@aor/domain';
+import { AdminInvalidQuestionnaireError, AdminResourceNotFoundError } from '@src/domain/admin/admin.errors';
 import type { IInviteUrlConfigPort } from '@src/interfaces/admin/IInviteUrlConfig.port';
 import type { ICampaignsReadPort } from '@src/interfaces/campaigns/ICampaignsRepository.port';
 import type { IInvitationsWritePort } from '@src/interfaces/invitations/IInvitationsRepository.port';
 import type { IMailPort } from '@src/interfaces/invitations/IMail.port';
-import type { IParticipantsIdentityReaderPort, IParticipantsCampaignParticipationWriterPort } from '@src/interfaces/participants/IParticipantsRepository.port';
+import type {
+    IParticipantsCampaignParticipationWriterPort,
+    IParticipantsIdentityReaderPort,
+} from '@src/interfaces/participants/IParticipantsRepository.port';
 
 export class CreateParticipantInviteUseCase {
     public constructor(

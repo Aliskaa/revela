@@ -34,6 +34,7 @@
         "@nestjs/jwt": "catalog:",
         "@nestjs/passport": "catalog:",
         "@nestjs/platform-express": "catalog:",
+        "dotenv": "catalog:",
         "drizzle-orm": "catalog:",
         "multer": "catalog:",
         "nodemailer": "catalog:",

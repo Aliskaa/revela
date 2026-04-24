@@ -14,6 +14,8 @@ import { Module } from '@nestjs/common';
 import { JwtModule, JwtService } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 
+import { ScryptPasswordAdapter } from '@aor/adapters';
+import { type IPasswordVerifierPort, PASSWORD_VERIFIER_PORT_SYMBOL } from '@aor/ports';
 import { GetParticipantQuestionnaireMatrixUseCase } from '@src/application/participant/get-participant-questionnaire-matrix.usecase';
 import { GetParticipantSessionQuestionnaireMatrixUseCase } from '@src/application/participant/get-participant-session-questionnaire-matrix.usecase';
 import { GetParticipantSessionUseCase } from '@src/application/participant/get-participant-session.usecase';
@@ -21,19 +23,15 @@ import { ListParticipantCampaignPeersUseCase } from '@src/application/participan
 import { ParticipantLoginUseCase } from '@src/application/participant/participant-login.usecase';
 import { GetParticipantOwnedResponseUseCase } from '@src/application/responses/get-participant-owned-response.usecase';
 import { SubmitParticipantQuestionnaireUseCase } from '@src/application/responses/submit-participant-questionnaire.usecase';
-import { ScryptPasswordAdapter } from '@aor/adapters';
 import {
     CAMPAIGNS_REPOSITORY_PORT_SYMBOL,
     type ICampaignsReadPort,
 } from '@src/interfaces/campaigns/ICampaignsRepository.port';
+import { COACHES_REPOSITORY_PORT_SYMBOL, type ICoachesReadPort } from '@src/interfaces/coaches/ICoachesRepository.port';
 import {
     COMPANIES_REPOSITORY_PORT_SYMBOL,
     type ICompaniesReadPort,
 } from '@src/interfaces/companies/ICompaniesRepository.port';
-import {
-    COACHES_REPOSITORY_PORT_SYMBOL,
-    type ICoachesReadPort,
-} from '@src/interfaces/coaches/ICoachesRepository.port';
 import {
     type IParticipantJwtSignerPort,
     PARTICIPANT_JWT_SIGNER_PORT_SYMBOL,
@@ -50,11 +48,8 @@ import {
     type IResponsesWriterPort,
     RESPONSES_REPOSITORY_PORT_SYMBOL,
 } from '@src/interfaces/responses/IResponsesRepository.port';
-import {
-    PASSWORD_VERIFIER_PORT_SYMBOL,
-    type IPasswordVerifierPort,
-} from '@aor/ports';
 import { GET_PARTICIPANT_QUESTIONNAIRE_MATRIX_USE_CASE_SYMBOL } from '@src/presentation/admin/admin.tokens';
+import { requireEnv } from '@src/shared/env';
 
 import { ParticipantJwtAuthGuard } from './participant-jwt-auth.guard';
 import { ParticipantController } from './participant.controller';
@@ -71,7 +66,7 @@ import {
     imports: [
         PassportModule.register({ defaultStrategy: 'jwt' }),
         JwtModule.register({
-            secret: process.env.JWT_SECRET ?? 'dev-insecure-change-me',
+            secret: requireEnv('JWT_SECRET'),
             signOptions: { expiresIn: '7d' },
         }),
     ],
@@ -116,8 +111,7 @@ import {
                 campaigns: ICampaignsReadPort,
                 companies: ICompaniesReadPort,
                 coaches: ICoachesReadPort
-            ) =>
-                new GetParticipantSessionUseCase({ participants, campaigns, companies, coaches }),
+            ) => new GetParticipantSessionUseCase({ participants, campaigns, companies, coaches }),
             inject: [
                 PARTICIPANTS_REPOSITORY_PORT_SYMBOL,
                 CAMPAIGNS_REPOSITORY_PORT_SYMBOL,
@@ -162,7 +156,8 @@ import {
         },
         {
             provide: GET_PARTICIPANT_OWNED_RESPONSE_USE_CASE_SYMBOL,
-            useFactory: (responses: IResponsesRecordReaderPort) => new GetParticipantOwnedResponseUseCase({ responses }),
+            useFactory: (responses: IResponsesRecordReaderPort) =>
+                new GetParticipantOwnedResponseUseCase({ responses }),
             inject: [RESPONSES_REPOSITORY_PORT_SYMBOL],
         },
         {
@@ -170,8 +165,7 @@ import {
             useFactory: (
                 participants: IParticipantsInviteAssignmentsReaderPort & IParticipantsCampaignStateReaderPort,
                 campaigns: ICampaignsReadPort
-            ) =>
-                new ListParticipantCampaignPeersUseCase({ participants, campaigns }),
+            ) => new ListParticipantCampaignPeersUseCase({ participants, campaigns }),
             inject: [PARTICIPANTS_REPOSITORY_PORT_SYMBOL, CAMPAIGNS_REPOSITORY_PORT_SYMBOL],
         },
     ],

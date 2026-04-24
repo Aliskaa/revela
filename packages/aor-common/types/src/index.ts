@@ -11,3 +11,4 @@ export * from './company';
 export * from './participant';
 export * from './invite';
 export * from './matrix';
+export * from './participant-results-view';

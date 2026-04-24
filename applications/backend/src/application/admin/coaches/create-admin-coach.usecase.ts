@@ -1,6 +1,6 @@
+import type { IPasswordHasherPort } from '@aor/ports';
 import { AdminValidationError } from '@src/domain/admin/admin.errors';
 import type { ICoachesReadPort, ICoachesWritePort } from '@src/interfaces/coaches/ICoachesRepository.port';
-import type { IPasswordHasherPort } from '@aor/ports';
 
 export class CreateAdminCoachUseCase {
     public constructor(

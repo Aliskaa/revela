@@ -1,6 +1,6 @@
 import { apiClient } from '@/api/client';
-import type { InviteInfo, SubmitResult } from '@aor/types';
 import { userParticipant } from '@/lib/auth';
+import type { InviteInfo, SubmitResult } from '@aor/types';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 type ConfirmParticipationResult = { invitation_confirmed: boolean };

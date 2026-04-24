@@ -1,8 +1,13 @@
-import * as React from "react";
-import { Box, Card, CardContent, Skeleton, Stack, Typography } from "@mui/material";
-import { ADMIN_COLORS } from "@/components/common/colors";
+import { Box, Card, CardContent, Skeleton, Stack, Typography } from '@mui/material';
+import type * as React from 'react';
 
-export function StatCard({ label, value, helper, icon: Icon, loading }: {
+export function StatCard({
+    label,
+    value,
+    helper,
+    icon: Icon,
+    loading,
+}: {
     label: string;
     value: string | number;
     helper?: string;
@@ -20,15 +25,32 @@ export function StatCard({ label, value, helper, icon: Icon, loading }: {
                         {loading ? (
                             <Skeleton variant="text" width={48} height={48} />
                         ) : (
-                            <Typography variant="h4" fontWeight={800} color="text.primary" sx={{ mt: 0.4, letterSpacing: -0.5 }}>
+                            <Typography
+                                variant="h4"
+                                fontWeight={800}
+                                color="text.primary"
+                                sx={{ mt: 0.4, letterSpacing: -0.5 }}
+                            >
                                 {value}
                             </Typography>
                         )}
-                        {helper && <Typography variant="caption" color="text.secondary">
-                            {helper}
-                        </Typography>}
+                        {helper && (
+                            <Typography variant="caption" color="text.secondary">
+                                {helper}
+                            </Typography>
+                        )}
                     </Box>
-                    <Box sx={{ width: 42, height: 42, borderRadius: 3, bgcolor: "rgba(15,24,152,0.08)", color: ADMIN_COLORS.blue, display: "grid", placeItems: "center" }}>
+                    <Box
+                        sx={{
+                            width: 42,
+                            height: 42,
+                            borderRadius: 3,
+                            bgcolor: 'tint.primaryBg',
+                            color: 'primary.main',
+                            display: 'grid',
+                            placeItems: 'center',
+                        }}
+                    >
                         <Icon size={18} />
                     </Box>
                 </Stack>

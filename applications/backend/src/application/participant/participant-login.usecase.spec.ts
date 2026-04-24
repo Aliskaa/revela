@@ -10,14 +10,14 @@
  * See LICENSE.md for the full license terms.
  */
 
+import { hashPassword, verifyPassword } from '@aor/adapters';
+import type { IPasswordVerifierPort } from '@aor/ports';
 import {
     ParticipantInvalidCredentialsError,
     ParticipantPasswordNotSetError,
 } from '@src/domain/participant/participant-auth.errors';
-import { hashPassword, verifyPassword } from '@aor/adapters';
 import type { IParticipantJwtSignerPort } from '@src/interfaces/participant/IParticipantJwtSigner.port';
 import type { IParticipantsRepositoryPort } from '@src/interfaces/participants/IParticipantsRepository.port';
-import type { IPasswordVerifierPort } from '@aor/ports';
 import { expect, test } from 'vitest';
 
 import { ParticipantLoginUseCase } from './participant-login.usecase';

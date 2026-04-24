@@ -12,12 +12,13 @@
 
 import { Module } from '@nestjs/common';
 
+import { ScryptPasswordAdapter } from '@aor/adapters';
+import { type IPasswordHasherPort, PASSWORD_HASHER_PORT_SYMBOL } from '@aor/ports';
 import { ActivateInviteWithPasswordUseCase } from '@src/application/invitations/activate-invite-with-password.usecase';
 import { ConfirmInviteParticipationUseCase } from '@src/application/invitations/confirm-invite-participation.usecase';
 import { GetInvitePreviewUseCase } from '@src/application/invitations/get-invite-preview.usecase';
 import { InviteTokenValidationUseCase } from '@src/application/invitations/invite-token-validation.usecase';
 import { SubmitInviteQuestionnaireUseCase } from '@src/application/invitations/submit-invite-questionnaire.usecase';
-import { ScryptPasswordAdapter } from '@aor/adapters';
 import {
     CAMPAIGNS_REPOSITORY_PORT_SYMBOL,
     type ICampaignsReadPort,
@@ -48,10 +49,6 @@ import {
     type IResponsesWriterPort,
     RESPONSES_REPOSITORY_PORT_SYMBOL,
 } from '@src/interfaces/responses/IResponsesRepository.port';
-import {
-    PASSWORD_HASHER_PORT_SYMBOL,
-    type IPasswordHasherPort,
-} from '@aor/ports';
 
 import { ParticipantModule } from '@src/presentation/participant/participant.module';
 
@@ -95,8 +92,7 @@ import {
             useFactory: (
                 tokenValidation: InviteTokenValidationUseCase,
                 participants: IParticipantsCampaignParticipationWriterPort
-            ) =>
-                new ConfirmInviteParticipationUseCase({ tokenValidation, participants }),
+            ) => new ConfirmInviteParticipationUseCase({ tokenValidation, participants }),
             inject: [INVITE_TOKEN_VALIDATION_USE_CASE_SYMBOL, PARTICIPANTS_REPOSITORY_PORT_SYMBOL],
         },
         {

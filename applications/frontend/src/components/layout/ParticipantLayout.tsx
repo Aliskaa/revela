@@ -1,5 +1,5 @@
-import { userParticipant } from '@/lib/auth';
 import { LayoutSidebar } from '@/components/layout/LayoutSidebar';
+import { userParticipant } from '@/lib/auth';
 import { Box } from '@mui/material';
 import { useNavigate } from '@tanstack/react-router';
 import { BookOpen, Compass, LayoutDashboard } from 'lucide-react';
@@ -31,10 +31,7 @@ type ParticipantNavItem = {
     label: string;
 };
 
-export function ParticipantLayout({
-    children,
-    activeNav,
-}: ParticipantLayoutProps) {
+export function ParticipantLayout({ children, activeNav }: ParticipantLayoutProps) {
     const navigate = useNavigate();
     const [mobileOpen, setMobileOpen] = useState(false);
 

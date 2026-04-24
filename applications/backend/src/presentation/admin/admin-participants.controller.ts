@@ -10,7 +10,21 @@
  * See LICENSE.md for the full license terms.
  */
 
-import { Body, Controller, Delete, Get, Inject, Param, ParseIntPipe, Post, Query, UploadedFile, UseFilters, UseGuards, UseInterceptors } from '@nestjs/common';
+import {
+    Body,
+    Controller,
+    Delete,
+    Get,
+    Inject,
+    Param,
+    ParseIntPipe,
+    Post,
+    Query,
+    UploadedFile,
+    UseFilters,
+    UseGuards,
+    UseInterceptors,
+} from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 
 import type { CreateParticipantInviteUseCase } from '@src/application/admin/participants/create-participant-invite.usecase';

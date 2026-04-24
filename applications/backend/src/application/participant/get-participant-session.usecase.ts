@@ -10,13 +10,17 @@
  * See LICENSE.md for the full license terms.
  */
 
-import { ParticipantAccountNotFoundError } from '@src/domain/participant/participant-session.errors';
 import { getQuestionnaireEntry } from '@aor/questionnaires';
 import type { ParticipantSession } from '@aor/types';
+import { ParticipantAccountNotFoundError } from '@src/domain/participant/participant-session.errors';
 import type { CampaignStatus, ICampaignsReadPort } from '@src/interfaces/campaigns/ICampaignsRepository.port';
 import type { ICoachesReadPort } from '@src/interfaces/coaches/ICoachesRepository.port';
 import type { ICompaniesReadPort } from '@src/interfaces/companies/ICompaniesRepository.port';
-import type { IParticipantsIdentityReaderPort, IParticipantsInviteAssignmentsReaderPort, IParticipantsCampaignStateReaderPort } from '@src/interfaces/participants/IParticipantsRepository.port';
+import type {
+    IParticipantsCampaignStateReaderPort,
+    IParticipantsIdentityReaderPort,
+    IParticipantsInviteAssignmentsReaderPort,
+} from '@src/interfaces/participants/IParticipantsRepository.port';
 
 const normalizeStepStatus = (status: 'locked' | 'pending' | 'completed'): 'locked' | 'pending' | 'completed' => {
     if (status === 'completed' || status === 'locked') {
@@ -25,11 +29,12 @@ const normalizeStepStatus = (status: 'locked' | 'pending' | 'completed'): 'locke
     return 'pending';
 };
 
-
 export class GetParticipantSessionUseCase {
     public constructor(
         private readonly ports: {
-            readonly participants: IParticipantsIdentityReaderPort & IParticipantsInviteAssignmentsReaderPort & IParticipantsCampaignStateReaderPort;
+            readonly participants: IParticipantsIdentityReaderPort &
+                IParticipantsInviteAssignmentsReaderPort &
+                IParticipantsCampaignStateReaderPort;
             readonly campaigns: ICampaignsReadPort;
             readonly companies: ICompaniesReadPort;
             readonly coaches: ICoachesReadPort;

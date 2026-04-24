@@ -19,7 +19,11 @@ import { parsePeerRatingTargetParticipantId } from '@aor/domain';
 import { ResponsesQuestionnaireNotFoundError, ResponsesValidationError } from '@src/domain/responses/responses.errors';
 import type { ICampaignsReadPort } from '@src/interfaces/campaigns/ICampaignsRepository.port';
 import type { ICompaniesReadPort } from '@src/interfaces/companies/ICompaniesRepository.port';
-import type { IParticipantsCampaignStateReaderPort, IParticipantsIdentityReaderPort, IParticipantsInviteAssignmentsReaderPort } from '@src/interfaces/participants/IParticipantsRepository.port';
+import type {
+    IParticipantsCampaignStateReaderPort,
+    IParticipantsIdentityReaderPort,
+    IParticipantsInviteAssignmentsReaderPort,
+} from '@src/interfaces/participants/IParticipantsRepository.port';
 import type {
     IResponsesSubmissionReaderPort,
     IResponsesWriterPort,
@@ -30,7 +34,9 @@ import { validateLikertScoresRecord, validateSubmissionSeries } from '@aor/domai
 export class SubmitParticipantQuestionnaireUseCase {
     public constructor(
         private readonly ports: {
-            readonly participants: IParticipantsIdentityReaderPort & IParticipantsInviteAssignmentsReaderPort & IParticipantsCampaignStateReaderPort;
+            readonly participants: IParticipantsIdentityReaderPort &
+                IParticipantsInviteAssignmentsReaderPort &
+                IParticipantsCampaignStateReaderPort;
             readonly companies: ICompaniesReadPort;
             readonly campaigns: ICampaignsReadPort;
             readonly responses: IResponsesWriterPort & IResponsesSubmissionReaderPort;
@@ -170,7 +176,8 @@ export class SubmitParticipantQuestionnaireUseCase {
                 if (ratedParticipantId !== undefined) {
                     return (
                         r.ratedParticipantId === ratedParticipantId ||
-                        (r.ratedParticipantId === null && parsePeerRatingTargetParticipantId(r.name) === ratedParticipantId)
+                        (r.ratedParticipantId === null &&
+                            parsePeerRatingTargetParticipantId(r.name) === ratedParticipantId)
                     );
                 }
                 return (

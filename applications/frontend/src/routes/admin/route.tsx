@@ -33,14 +33,6 @@ import {
 } from 'lucide-react';
 import * as React from 'react';
 
-const COLORS = {
-    blue: 'rgb(15,24,152)',
-    yellow: 'rgb(255,204,0)',
-    border: 'rgba(15,23,42,0.10)',
-    surface: '#ffffff',
-    background: '#f8fafc',
-};
-
 type AdminNavItem = {
     label: string;
     to: string;
@@ -70,7 +62,7 @@ function BrandMark() {
                     width: 44,
                     height: 44,
                     borderRadius: 3,
-                    bgcolor: COLORS.blue,
+                    bgcolor: 'primary.main',
                     color: '#fff',
                     display: 'grid',
                     placeItems: 'center',
@@ -108,8 +100,9 @@ function AdminSidebar() {
                 width: 280,
                 display: { xs: 'none', lg: 'flex' },
                 flexDirection: 'column',
-                bgcolor: COLORS.surface,
-                borderRight: `1px solid ${COLORS.border}`,
+                bgcolor: 'background.paper',
+                borderRight: '1px solid',
+                borderRightColor: 'border',
                 px: 2.5,
                 py: 3,
             }}
@@ -136,7 +129,7 @@ function AdminSidebar() {
                                 py: 1.35,
                                 px: 2,
                                 textTransform: 'none',
-                                bgcolor: active ? COLORS.blue : 'transparent',
+                                bgcolor: active ? 'primary.main' : 'transparent',
                                 color: active ? '#fff' : 'text.secondary',
                                 boxShadow: active ? '0 10px 25px rgba(15,24,152,0.16)' : 'none',
                                 '&:hover': {
@@ -198,7 +191,8 @@ function MobileTopBar() {
                     bgcolor: 'rgba(248,250,252,0.92)',
                     backdropFilter: 'blur(10px)',
                     color: 'text.primary',
-                    borderBottom: `1px solid ${COLORS.border}`,
+                    borderBottom: '1px solid',
+                    borderBottomColor: 'border',
                 }}
             >
                 <Toolbar sx={{ minHeight: 68, px: 2 }}>
@@ -212,7 +206,7 @@ function MobileTopBar() {
                                 width: 38,
                                 height: 38,
                                 borderRadius: 3,
-                                bgcolor: COLORS.blue,
+                                bgcolor: 'primary.main',
                                 color: '#fff',
                                 display: 'grid',
                                 placeItems: 'center',
@@ -230,7 +224,7 @@ function MobileTopBar() {
                         </Box>
                     </Stack>
 
-                    <Avatar sx={{ width: 34, height: 34, bgcolor: COLORS.blue }}>A</Avatar>
+                    <Avatar sx={{ width: 34, height: 34, bgcolor: 'primary.main' }}>A</Avatar>
                 </Toolbar>
             </AppBar>
 
@@ -238,7 +232,7 @@ function MobileTopBar() {
                 anchor="left"
                 open={drawerOpen}
                 onClose={() => setDrawerOpen(false)}
-                PaperProps={{ sx: { width: 280, bgcolor: COLORS.surface } }}
+                PaperProps={{ sx: { width: 280, bgcolor: 'background.paper' } }}
             >
                 <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ px: 2.5, py: 2.5 }}>
                     <BrandMark />
@@ -260,7 +254,7 @@ function MobileTopBar() {
                                 sx={{
                                     borderRadius: 3,
                                     mb: 0.5,
-                                    bgcolor: active ? COLORS.blue : 'transparent',
+                                    bgcolor: active ? 'primary.main' : 'transparent',
                                     color: active ? '#fff' : 'text.secondary',
                                     '&:hover': {
                                         bgcolor: active ? 'rgb(10,18,130)' : 'rgba(15,23,42,0.04)',
@@ -338,8 +332,9 @@ function TopBar() {
                         py: 1,
                         minWidth: 320,
                         borderRadius: 999,
-                        border: `1px solid ${COLORS.border}`,
-                        bgcolor: COLORS.surface,
+                        border: '1px solid',
+                        borderColor: 'border',
+                        bgcolor: 'background.paper',
                     }}
                 >
                     <Search size={16} color="rgb(100,116,139)" />
@@ -348,7 +343,7 @@ function TopBar() {
 
                 <IconButton
                     onClick={handleLogout}
-                    sx={{ border: `1px solid ${COLORS.border}`, bgcolor: COLORS.surface }}
+                    sx={{ border: '1px solid', borderColor: 'border', bgcolor: 'background.paper' }}
                 >
                     <LogOut size={18} />
                 </IconButton>
@@ -359,7 +354,7 @@ function TopBar() {
 
 function AdminShell({ children }: { children: React.ReactNode }) {
     return (
-        <Box sx={{ minHeight: '100vh', bgcolor: COLORS.background }}>
+        <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
             <MobileTopBar />
             <Box sx={{ display: 'flex', minHeight: '100vh', maxWidth: 1600, mx: 'auto' }}>
                 <AdminSidebar />

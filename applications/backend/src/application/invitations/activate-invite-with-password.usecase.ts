@@ -10,6 +10,7 @@
  * See LICENSE.md for the full license terms.
  */
 
+import type { IPasswordHasherPort } from '@aor/ports';
 import {
     InviteActivationAlreadyCompletedError,
     InviteActivationWeakPasswordError,
@@ -18,8 +19,10 @@ import {
 } from '@src/domain/invitations/invitations.errors';
 import type { IInviteActivationWritePort } from '@src/interfaces/invitations/IInviteActivationWrite.port';
 import type { IParticipantJwtSignerPort } from '@src/interfaces/participant/IParticipantJwtSigner.port';
-import type { IParticipantsIdentityReaderPort, IParticipantsCampaignStateReaderPort } from '@src/interfaces/participants/IParticipantsRepository.port';
-import type { IPasswordHasherPort } from '@aor/ports';
+import type {
+    IParticipantsCampaignStateReaderPort,
+    IParticipantsIdentityReaderPort,
+} from '@src/interfaces/participants/IParticipantsRepository.port';
 import type { InviteTokenValidationUseCase } from './invite-token-validation.usecase';
 
 const MIN_PASSWORD_LENGTH = 8;
@@ -64,9 +67,7 @@ export class ActivateInviteWithPasswordUseCase {
                 invitation.participantId
             );
             if (!participation?.joinedAt) {
-                throw new InviteTokenRequestError(
-                    'Vous devez d’abord confirmer votre participation à cette campagne.'
-                );
+                throw new InviteTokenRequestError('Vous devez d’abord confirmer votre participation à cette campagne.');
             }
         }
 

@@ -10,7 +10,21 @@
  * See LICENSE.md for the full license terms.
  */
 
-import { Body, Controller, Delete, Get, Inject, Param, ParseIntPipe, Query, Req, Res, UnauthorizedException, UseFilters, UseGuards } from '@nestjs/common';
+import {
+    Body,
+    Controller,
+    Delete,
+    Get,
+    Inject,
+    Param,
+    ParseIntPipe,
+    Query,
+    Req,
+    Res,
+    UnauthorizedException,
+    UseFilters,
+    UseGuards,
+} from '@nestjs/common';
 import type { Response } from 'express';
 
 import type { GetAdminCampaignDetailUseCase } from '@src/application/admin/campaigns/get-admin-campaign-detail.usecase';

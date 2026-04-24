@@ -15,7 +15,10 @@ import { getQuestionnaireEntry } from '@aor/questionnaires';
 import { InviteResourceNotFoundError, InviteTokenRequestError } from '@src/domain/invitations/invitations.errors';
 import type { CampaignStatus, ICampaignsReadPort } from '@src/interfaces/campaigns/ICampaignsRepository.port';
 import type { ICompaniesReadPort } from '@src/interfaces/companies/ICompaniesRepository.port';
-import type { IParticipantsIdentityReaderPort, IParticipantsCampaignStateReaderPort } from '@src/interfaces/participants/IParticipantsRepository.port';
+import type {
+    IParticipantsCampaignStateReaderPort,
+    IParticipantsIdentityReaderPort,
+} from '@src/interfaces/participants/IParticipantsRepository.port';
 
 import type { InviteTokenValidationUseCase } from './invite-token-validation.usecase';
 

@@ -1,5 +1,7 @@
 import { jsPDF } from 'jspdf';
 
+import type { DimensionView } from '@aor/types';
+
 // ── AOR brand colours ───────────────────────────────────────────────
 const BLUE = { r: 15, g: 24, b: 152 } as const;
 const YELLOW = { r: 255, g: 204, b: 0 } as const;
@@ -16,29 +18,6 @@ const PEER_COLORS_PDF = [
 ];
 
 // ── Types ───────────────────────────────────────────────────────────
-type PeerScore = {
-    label: string;
-    value: number | null;
-};
-
-type ScoreRow = {
-    label: string;
-    self: number | null;
-    peers: PeerScore[];
-    scientific: number | null;
-};
-
-type EcartView = {
-    value: number;
-    message: string;
-};
-
-type DimensionView = {
-    name: string;
-    rows: ScoreRow[];
-    ecarts: EcartView[];
-};
-
 type ExportParams = {
     participantName: string;
     campaignName: string;

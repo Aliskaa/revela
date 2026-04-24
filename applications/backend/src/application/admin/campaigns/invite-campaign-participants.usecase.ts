@@ -3,7 +3,10 @@ import { randomBytes } from 'node:crypto';
 import { AdminResourceNotFoundError, AdminValidationError } from '@src/domain/admin/admin.errors';
 import type { ICampaignsReadPort } from '@src/interfaces/campaigns/ICampaignsRepository.port';
 import type { IInvitationsWritePort } from '@src/interfaces/invitations/IInvitationsRepository.port';
-import type { IParticipantsAdminReadPort, IParticipantsCampaignParticipationWriterPort } from '@src/interfaces/participants/IParticipantsRepository.port';
+import type {
+    IParticipantsAdminReadPort,
+    IParticipantsCampaignParticipationWriterPort,
+} from '@src/interfaces/participants/IParticipantsRepository.port';
 
 export class InviteCampaignParticipantsUseCase {
     public constructor(

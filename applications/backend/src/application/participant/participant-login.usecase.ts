@@ -10,13 +10,13 @@
  * See LICENSE.md for the full license terms.
  */
 
+import type { IPasswordVerifierPort } from '@aor/ports';
 import {
     ParticipantInvalidCredentialsError,
     ParticipantPasswordNotSetError,
 } from '@src/domain/participant/participant-auth.errors';
 import type { IParticipantJwtSignerPort } from '@src/interfaces/participant/IParticipantJwtSigner.port';
 import type { IParticipantsIdentityReaderPort } from '@src/interfaces/participants/IParticipantsRepository.port';
-import type { IPasswordVerifierPort } from '@aor/ports';
 
 export class ParticipantLoginResult {
     private constructor(public readonly accessToken: string) {

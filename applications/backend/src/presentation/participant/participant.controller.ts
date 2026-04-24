@@ -11,8 +11,8 @@
  */
 
 import {
-    Body,
     BadRequestException,
+    Body,
     Controller,
     Get,
     Inject,
@@ -28,6 +28,7 @@ import {
 } from '@nestjs/common';
 import type { Request } from 'express';
 
+import { updateParticipantProfileBodySchema } from '@aor/types';
 import type { GetParticipantSessionQuestionnaireMatrixUseCase } from '@src/application/participant/get-participant-session-questionnaire-matrix.usecase';
 import type { GetParticipantSessionUseCase } from '@src/application/participant/get-participant-session.usecase';
 import type { ListParticipantCampaignPeersUseCase } from '@src/application/participant/list-participant-campaign-peers.usecase';
@@ -36,7 +37,6 @@ import type { GetParticipantOwnedResponseUseCase } from '@src/application/respon
 import type { SubmitParticipantQuestionnaireUseCase } from '@src/application/responses/submit-participant-questionnaire.usecase';
 import type { IParticipantsWriterPort } from '@src/interfaces/participants/IParticipantsRepository.port';
 import { PARTICIPANTS_REPOSITORY_PORT_SYMBOL } from '@src/interfaces/participants/IParticipantsRepository.port';
-import { updateParticipantProfileBodySchema } from '@aor/types';
 import type { JwtValidatedUser } from '@src/presentation/admin/jwt.strategy';
 import { ResponsesExceptionFilter } from '@src/presentation/responses/responses-exception.filter';
 

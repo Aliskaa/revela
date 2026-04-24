@@ -15,8 +15,8 @@ import { QUESTIONNAIRE_CATALOG } from '@aor/questionnaires';
 import { AdminInvalidQuestionnaireError } from '@src/domain/admin/admin.errors';
 import type { IResponsesExportPort } from '@src/interfaces/responses/IResponsesRepository.port';
 
-import type { AdminCsvExport } from './admin-csv-export';
 import { formatFrenchDateTime } from '@aor/utils';
+import type { AdminCsvExport } from './admin-csv-export';
 
 export class ExportAdminResponsesCsvUseCase {
     public constructor(private readonly ports: { readonly responses: IResponsesExportPort }) {}

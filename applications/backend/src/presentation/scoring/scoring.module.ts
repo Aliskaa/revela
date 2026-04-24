@@ -13,12 +13,12 @@
 import { Module } from '@nestjs/common';
 
 import { NoopScorePersistenceAdapter } from '@aor/adapters';
-import { CalculateScoringUseCase } from '@src/application/scoring/calculate-scoring.usecase';
 import {
     CALCULATE_SCORING_USE_CASE_PORT_SYMBOL,
     type IScorePersistencePort,
     SCORE_PERSISTENCE_PORT_SYMBOL,
 } from '@aor/ports';
+import { CalculateScoringUseCase } from '@src/application/scoring/calculate-scoring.usecase';
 
 import { ScoringController } from './scoring.controller';
 

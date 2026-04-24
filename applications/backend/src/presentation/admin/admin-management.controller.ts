@@ -19,10 +19,7 @@ import { ResponsesExceptionFilter } from '@src/presentation/responses/responses-
 import { AdminApplicationExceptionFilter } from './admin-application-exception.filter';
 import { AdminJwtAuthGuard } from './admin-jwt-auth.guard';
 import { adminDashboardToJson } from './admin.presenters';
-import {
-    GET_ADMIN_DASHBOARD_USE_CASE_SYMBOL,
-    GET_ADMIN_MAIL_STATUS_USE_CASE_SYMBOL,
-} from './admin.tokens';
+import { GET_ADMIN_DASHBOARD_USE_CASE_SYMBOL, GET_ADMIN_MAIL_STATUS_USE_CASE_SYMBOL } from './admin.tokens';
 
 @Controller('admin')
 @UseGuards(AdminJwtAuthGuard)
