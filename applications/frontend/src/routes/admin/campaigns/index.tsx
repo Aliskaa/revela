@@ -16,6 +16,7 @@ import {
     TableBody,
     TableCell,
     TableHead,
+    TablePagination,
     TableRow,
     TextField,
     Typography,
@@ -63,6 +64,8 @@ function StatusChip({ status }: { status: CampaignStatus }) {
 function AdminCampaignsRoute() {
     const [search, setSearch] = React.useState('');
     const [drawerOpen, setDrawerOpen] = React.useState(false);
+    const [page, setPage] = React.useState(0);
+    const [rowsPerPage, setRowsPerPage] = React.useState(10);
 
     const { data: campaigns = [], isLoading: campaignsLoading } = useAdminCampaigns();
     const { data: coaches = [], isLoading: coachesLoading } = useCoaches();
@@ -76,12 +79,25 @@ function AdminCampaignsRoute() {
     const coachName = (id: number) => coaches.find(c => c.id === id)?.displayName ?? '–';
     const questionnairesUsed = new Set(campaigns.map(c => c.questionnaireId).filter(Boolean)).size;
 
-    const filtered = campaigns.filter(
-        c =>
-            c.name.toLowerCase().includes(search.toLowerCase()) ||
-            companyName(c.companyId).toLowerCase().includes(search.toLowerCase()) ||
-            coachName(c.coachId).toLowerCase().includes(search.toLowerCase())
+    const filtered = React.useMemo(() => {
+        const q = search.toLowerCase();
+        return campaigns.filter(c => {
+            const company = companies.find(co => co.id === c.companyId)?.name ?? '';
+            const coach = coaches.find(co => co.id === c.coachId)?.displayName ?? '';
+            return (
+                c.name.toLowerCase().includes(q) || company.toLowerCase().includes(q) || coach.toLowerCase().includes(q)
+            );
+        });
+    }, [campaigns, coaches, companies, search]);
+
+    const paged = React.useMemo(
+        () => filtered.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage),
+        [filtered, page, rowsPerPage]
     );
+
+    React.useEffect(() => {
+        setPage(0);
+    }, [search]);
 
     return (
         <Stack spacing={3}>
@@ -222,7 +238,7 @@ function AdminCampaignsRoute() {
                                               <TableCell />
                                           </TableRow>
                                       ))
-                                    : filtered.map(campaign => (
+                                    : paged.map(campaign => (
                                           <TableRow hover key={campaign.id}>
                                               <TableCell>
                                                   <Typography fontWeight={700} color="text.primary">
@@ -252,7 +268,6 @@ function AdminCampaignsRoute() {
                                                       params={{ campaignId: String(campaign.id) }}
                                                       variant="text"
                                                       endIcon={<ChevronRight size={16} />}
-
                                                   >
                                                       Détail
                                                   </Button>
@@ -272,6 +287,22 @@ function AdminCampaignsRoute() {
                                 )}
                             </TableBody>
                         </Table>
+                        {filtered.length > 0 && (
+                            <TablePagination
+                                component="div"
+                                count={filtered.length}
+                                page={page}
+                                onPageChange={(_, newPage) => setPage(newPage)}
+                                rowsPerPage={rowsPerPage}
+                                onRowsPerPageChange={e => {
+                                    setRowsPerPage(Number(e.target.value));
+                                    setPage(0);
+                                }}
+                                rowsPerPageOptions={[10, 25, 50]}
+                                labelRowsPerPage="Lignes par page"
+                                labelDisplayedRows={({ from, to, count }) => `${from}–${to} sur ${count}`}
+                            />
+                        )}
                     </Box>
 
                     {/* Mobile cards */}

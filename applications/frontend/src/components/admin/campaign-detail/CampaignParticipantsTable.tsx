@@ -9,6 +9,7 @@ import {
     TableBody,
     TableCell,
     TableHead,
+    TablePagination,
     TableRow,
     Typography,
 } from '@mui/material';
@@ -30,9 +31,21 @@ const COL_SPAN = 6;
 
 export function CampaignParticipantsTable({ campaignId, participants }: CampaignParticipantsTableProps) {
     const [expandedParticipant, setExpandedParticipant] = React.useState<number | null>(null);
+    const [page, setPage] = React.useState(0);
+    const [rowsPerPage, setRowsPerPage] = React.useState(10);
 
     const toggleExpanded = (participantId: number) =>
         setExpandedParticipant(prev => (prev === participantId ? null : participantId));
+
+    const paged = React.useMemo(
+        () => participants.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage),
+        [participants, page, rowsPerPage]
+    );
+
+    React.useEffect(() => {
+        const maxPage = Math.max(0, Math.ceil(participants.length / rowsPerPage) - 1);
+        if (page > maxPage) setPage(maxPage);
+    }, [participants.length, rowsPerPage, page]);
 
     return (
         <Card variant="outlined">
@@ -64,7 +77,7 @@ export function CampaignParticipantsTable({ campaignId, participants }: Campaign
                                     </TableCell>
                                 </TableRow>
                             ) : (
-                                participants.map(p => (
+                                paged.map(p => (
                                     <React.Fragment key={p.participantId}>
                                         <TableRow
                                             hover
@@ -126,6 +139,22 @@ export function CampaignParticipantsTable({ campaignId, participants }: Campaign
                             )}
                         </TableBody>
                     </Table>
+                    {participants.length > 0 && (
+                        <TablePagination
+                            component="div"
+                            count={participants.length}
+                            page={page}
+                            onPageChange={(_, newPage) => setPage(newPage)}
+                            rowsPerPage={rowsPerPage}
+                            onRowsPerPageChange={e => {
+                                setRowsPerPage(Number(e.target.value));
+                                setPage(0);
+                            }}
+                            rowsPerPageOptions={[10, 25, 50]}
+                            labelRowsPerPage="Lignes par page"
+                            labelDisplayedRows={({ from, to, count }) => `${from}–${to} sur ${count}`}
+                        />
+                    )}
                 </Box>
             </CardContent>
         </Card>

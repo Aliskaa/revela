@@ -15,6 +15,7 @@ import {
     TableBody,
     TableCell,
     TableHead,
+    TablePagination,
     TableRow,
     TextField,
     Typography,
@@ -48,6 +49,8 @@ function StatusChip({ isActive }: { isActive: boolean }) {
 function AdminCoachesRoute() {
     const [drawerOpen, setDrawerOpen] = React.useState(false);
     const [search, setSearch] = React.useState('');
+    const [page, setPage] = React.useState(0);
+    const [rowsPerPage, setRowsPerPage] = React.useState(10);
 
     const { data: coaches = [], isLoading: coachesLoading } = useCoaches();
     const { data: campaigns = [], isLoading: campaignsLoading } = useAdminCampaigns();
@@ -63,13 +66,26 @@ function AdminCoachesRoute() {
         return map;
     }, [campaigns]);
 
-    const filtered = search.trim()
-        ? coaches.filter(
-              c =>
-                  c.displayName.toLowerCase().includes(search.toLowerCase()) ||
-                  c.username.toLowerCase().includes(search.toLowerCase())
-          )
-        : coaches;
+    const filtered = React.useMemo(
+        () =>
+            search.trim()
+                ? coaches.filter(
+                      c =>
+                          c.displayName.toLowerCase().includes(search.toLowerCase()) ||
+                          c.username.toLowerCase().includes(search.toLowerCase())
+                  )
+                : coaches,
+        [coaches, search]
+    );
+
+    const paged = React.useMemo(
+        () => filtered.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage),
+        [filtered, page, rowsPerPage]
+    );
+
+    React.useEffect(() => {
+        setPage(0);
+    }, [search]);
 
     const activeCount = coaches.filter(c => c.isActive).length;
 
@@ -197,7 +213,7 @@ function AdminCoachesRoute() {
                                               ))}
                                           </TableRow>
                                       ))
-                                    : filtered.map(coach => (
+                                    : paged.map(coach => (
                                           <TableRow hover key={coach.id}>
                                               <TableCell>
                                                   <Typography fontWeight={700} color="text.primary">
@@ -233,6 +249,22 @@ function AdminCoachesRoute() {
                                 )}
                             </TableBody>
                         </Table>
+                        {filtered.length > 0 && (
+                            <TablePagination
+                                component="div"
+                                count={filtered.length}
+                                page={page}
+                                onPageChange={(_, newPage) => setPage(newPage)}
+                                rowsPerPage={rowsPerPage}
+                                onRowsPerPageChange={e => {
+                                    setRowsPerPage(Number(e.target.value));
+                                    setPage(0);
+                                }}
+                                rowsPerPageOptions={[10, 25, 50]}
+                                labelRowsPerPage="Lignes par page"
+                                labelDisplayedRows={({ from, to, count }) => `${from}–${to} sur ${count}`}
+                            />
+                        )}
                     </Box>
 
                     {/* Mobile cards */}

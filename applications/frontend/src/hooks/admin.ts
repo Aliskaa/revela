@@ -27,7 +27,8 @@ export const adminKeys = {
     responses: (qid?: string, page?: number, campaignId?: number) =>
         ['admin', 'responses', qid, page, campaignId] as const,
     response: (id: number) => ['admin', 'responses', id] as const,
-    participants: (page?: number, companyId?: number) => ['admin', 'participants', page, companyId] as const,
+    participants: (page?: number, companyId?: number, perPage?: number) =>
+        ['admin', 'participants', page, companyId, perPage] as const,
     participantTokens: (participantId: number) => ['admin', 'participants', participantId, 'tokens'] as const,
     participantMatrix: (participantId: number, qid: string) =>
         ['admin', 'participants', participantId, 'matrix', qid] as const,
@@ -75,11 +76,13 @@ export function useAdminResponse(id: number) {
     });
 }
 
-export function useParticipants(page = 1, companyId?: number) {
+export function useParticipants(page = 1, companyId?: number, perPage = 25) {
     return useQuery<PaginatedResult<Participant>>({
-        queryKey: adminKeys.participants(page, companyId),
+        queryKey: adminKeys.participants(page, companyId, perPage),
         queryFn: () =>
-            apiClient.get('/admin/participants', { params: { page, company_id: companyId } }).then(r => r.data),
+            apiClient
+                .get('/admin/participants', { params: { page, company_id: companyId, per_page: perPage } })
+                .then(r => r.data),
     });
 }
 

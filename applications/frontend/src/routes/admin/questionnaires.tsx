@@ -12,6 +12,7 @@ import {
     TableBody,
     TableCell,
     TableHead,
+    TablePagination,
     TableRow,
     TextField,
     Typography,
@@ -26,6 +27,8 @@ export const Route = createFileRoute('/admin/questionnaires')({
 
 function AdminQuestionnairesRoute() {
     const [search, setSearch] = React.useState('');
+    const [page, setPage] = React.useState(0);
+    const [rowsPerPage, setRowsPerPage] = React.useState(10);
 
     const { data: questionnaires = [], isLoading } = useAdminQuestionnaires();
 
@@ -37,13 +40,26 @@ function AdminQuestionnairesRoute() {
         return set.size;
     }, [questionnaires]);
 
-    const filtered = search.trim()
-        ? questionnaires.filter(
-              q =>
-                  q.title.toLowerCase().includes(search.toLowerCase()) ||
-                  q.id.toLowerCase().includes(search.toLowerCase())
-          )
-        : questionnaires;
+    const filtered = React.useMemo(
+        () =>
+            search.trim()
+                ? questionnaires.filter(
+                      q =>
+                          q.title.toLowerCase().includes(search.toLowerCase()) ||
+                          q.id.toLowerCase().includes(search.toLowerCase())
+                  )
+                : questionnaires,
+        [questionnaires, search]
+    );
+
+    const paged = React.useMemo(
+        () => filtered.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage),
+        [filtered, page, rowsPerPage]
+    );
+
+    React.useEffect(() => {
+        setPage(0);
+    }, [search]);
 
     return (
         <Stack spacing={3}>
@@ -130,7 +146,7 @@ function AdminQuestionnairesRoute() {
                                               ))}
                                           </TableRow>
                                       ))
-                                    : filtered.map(q => (
+                                    : paged.map(q => (
                                           <TableRow hover key={q.id}>
                                               <TableCell>
                                                   <Typography fontWeight={700} color="text.primary">
@@ -161,6 +177,22 @@ function AdminQuestionnairesRoute() {
                                 )}
                             </TableBody>
                         </Table>
+                        {filtered.length > 0 && (
+                            <TablePagination
+                                component="div"
+                                count={filtered.length}
+                                page={page}
+                                onPageChange={(_, newPage) => setPage(newPage)}
+                                rowsPerPage={rowsPerPage}
+                                onRowsPerPageChange={e => {
+                                    setRowsPerPage(Number(e.target.value));
+                                    setPage(0);
+                                }}
+                                rowsPerPageOptions={[10, 25, 50]}
+                                labelRowsPerPage="Lignes par page"
+                                labelDisplayedRows={({ from, to, count }) => `${from}–${to} sur ${count}`}
+                            />
+                        )}
                     </Box>
 
                     {/* Mobile cards */}

@@ -5,7 +5,6 @@ import { useAdminResponses } from '@/hooks/admin';
 import type { ResponseSubmissionKind } from '@aor/types';
 import {
     Box,
-    Button,
     Card,
     CardContent,
     Chip,
@@ -15,6 +14,7 @@ import {
     TableBody,
     TableCell,
     TableHead,
+    TablePagination,
     TableRow,
     TextField,
     Typography,
@@ -38,13 +38,18 @@ function kindLabel(kind: ResponseSubmissionKind): string {
 }
 
 function AdminResponsesRoute() {
-    const [page, setPage] = React.useState(1);
+    const [page, setPage] = React.useState(0);
+    const [rowsPerPage, setRowsPerPage] = React.useState(25);
     const [search, setSearch] = React.useState('');
 
-    const { data, isLoading } = useAdminResponses(undefined, page, 50);
+    const { data, isLoading } = useAdminResponses(undefined, page + 1, rowsPerPage);
 
     const responses = data?.items ?? [];
-    const totalPages = data?.pages ?? 1;
+    const totalCount = data?.total ?? 0;
+
+    React.useEffect(() => {
+        setPage(0);
+    }, [rowsPerPage]);
 
     const selfCount = responses.filter(r => r.submission_kind === 'self_rating').length;
     const peerCount = responses.filter(r => r.submission_kind === 'peer_rating').length;
@@ -238,36 +243,18 @@ function AdminResponsesRoute() {
                         )}
                     </Stack>
 
-                    {totalPages > 1 && (
-                        <Stack
-                            direction="row"
-                            justifyContent="center"
-                            alignItems="center"
-                            spacing={1.5}
-                            sx={{ mt: 2.5 }}
-                        >
-                            <Button
-                                variant="outlined"
-                                size="small"
-                                disabled={page <= 1}
-                                onClick={() => setPage(p => p - 1)}
-                                sx={{ borderRadius: 3 }}
-                            >
-                                Précédent
-                            </Button>
-                            <Typography variant="body2" color="text.secondary">
-                                Page {page} / {totalPages}
-                            </Typography>
-                            <Button
-                                variant="outlined"
-                                size="small"
-                                disabled={page >= totalPages}
-                                onClick={() => setPage(p => p + 1)}
-                                sx={{ borderRadius: 3 }}
-                            >
-                                Suivant
-                            </Button>
-                        </Stack>
+                    {totalCount > 0 && (
+                        <TablePagination
+                            component="div"
+                            count={totalCount}
+                            page={page}
+                            onPageChange={(_, newPage) => setPage(newPage)}
+                            rowsPerPage={rowsPerPage}
+                            onRowsPerPageChange={e => setRowsPerPage(Number(e.target.value))}
+                            rowsPerPageOptions={[25, 50, 100]}
+                            labelRowsPerPage="Lignes par page"
+                            labelDisplayedRows={({ from, to, count }) => `${from}–${to} sur ${count}`}
+                        />
                     )}
                 </CardContent>
             </Card>

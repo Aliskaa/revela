@@ -1,7 +1,7 @@
 # État d'avancement — Questionnaire Platform (Révéla / AOR)
 
 > Rapport au **2026-04-26**, suite directe de [avancement-2026-04-24.md](avancement-2026-04-24.md).
-> Cette session : Sprint 2 finalisé à 100 % (Swagger + tests frontend), toast/snackbar global (Sprint 3 #16), nettoyage repo (résout M-2, M-3, M-4), **`beforeLoad` auth (M-11)** + **allègement des copyright headers** (résout 1 item "EN TROP"), **toast branché sur toutes les mutations admin/participant** (16 hooks), **drawers refacto (M-10)** sur `useDrawerForm` + Zod, **refacto des 3 routes >300L (M-5 ✅ complet)** : `results.tsx` (559→285), `participant/index.tsx` (686→120), `admin/campaigns/$campaignId.tsx` (718→157), **a11y batch (M-7)** : `vitest-axe` câblé, dialog drawer accessible name, toast aria-live, IconButtons aria-labels, loading states role="status", PDF metadata, **gouvernance docs** : LICENSE.md créé, 4 nouveaux ADRs (catalog, BiomeJS, toast hooks, useDrawerForm), **i18n setup (M-8)** : `react-i18next` + `fr.json` + tests, premières chaînes migrées, **consolidation règles IA** : `.cursorrules` supprimé (legacy + contradictoire), `CLAUDE.md` réduit à un digest pointant vers `.cursor/rules/`, **batch UX (8 items)** : textTransform/borderRadius theme cleanup, PDF pending state, effort estimate participant, glossary tooltips, dirty drawer guard, CSV import progress, sort+pagination companies.
+> Cette session : Sprint 2 finalisé à 100 % (Swagger + tests frontend), toast/snackbar global (Sprint 3 #16), nettoyage repo (résout M-2, M-3, M-4), **`beforeLoad` auth (M-11)** + **allègement des copyright headers** (résout 1 item "EN TROP"), **toast branché sur toutes les mutations admin/participant** (16 hooks), **drawers refacto (M-10)** sur `useDrawerForm` + Zod, **refacto des 3 routes >300L (M-5 ✅ complet)** : `results.tsx` (559→285), `participant/index.tsx` (686→120), `admin/campaigns/$campaignId.tsx` (718→157), **a11y batch (M-7)** : `vitest-axe` câblé, dialog drawer accessible name, toast aria-live, IconButtons aria-labels, loading states role="status", PDF metadata, **gouvernance docs** : LICENSE.md créé, 4 nouveaux ADRs (catalog, BiomeJS, toast hooks, useDrawerForm), **i18n setup (M-8)** : `react-i18next` + `fr.json` + tests, premières chaînes migrées, **consolidation règles IA** : `.cursorrules` supprimé (legacy + contradictoire), `CLAUDE.md` réduit à un digest pointant vers `.cursor/rules/`, **batch UX (8 items)** : textTransform/borderRadius theme cleanup, PDF pending state, effort estimate participant, glossary tooltips, dirty drawer guard, CSV import progress, sort+pagination companies, **pagination généralisée sur tous les tableaux admin** (6 tableaux + extension `useParticipants` perPage).
 > Mise à jour incrémentale : ce fichier est mis à jour à la fin de chaque opération.
 
 ---
@@ -376,6 +376,24 @@ const { values, errors, submit, submitting, setField } = useDrawerForm({
 
 **Validations** : typecheck ✅, frontend tests **45/45** ✅, lint stable (8 erreurs pré-existantes hors périmètre).
 
+### ✅ Pagination généralisée sur tous les tableaux admin
+
+Initialement seul `companies/index.tsx` portait `TablePagination`. Pattern propagé sur les **6 autres tableaux** du back-office, en réutilisant la signature de référence (`TablePagination` MUI, libellés FR `Lignes par page` / `1–10 sur N`, options `[10, 25, 50]`).
+
+| Fichier | Mode | Notes |
+|---|---|---|
+| [routes/admin/coaches/index.tsx](../applications/frontend/src/routes/admin/coaches/index.tsx) | Client | `useMemo` sur `filtered`, slice `paged`, reset page à 0 sur changement de recherche |
+| [routes/admin/questionnaires.tsx](../applications/frontend/src/routes/admin/questionnaires.tsx) | Client | Idem |
+| [routes/admin/campaigns/index.tsx](../applications/frontend/src/routes/admin/campaigns/index.tsx) | Client | Filtre étendu (nom / entreprise / coach) refactoré en `useMemo` propre (lookups inlinés pour deps Biome correctes), slice `paged`, reset page sur recherche |
+| [routes/admin/responses.tsx](../applications/frontend/src/routes/admin/responses.tsx) | Serveur | Boutons Précédent/Suivant remplacés par `TablePagination`. Options `[25, 50, 100]` (défaut 25). `useAdminResponses(qid, page+1, rowsPerPage)` |
+| [routes/admin/companies/$companyId.tsx](../applications/frontend/src/routes/admin/companies/$companyId.tsx) | Serveur | Idem. Options `[10, 25, 50]` (défaut 10) |
+| [components/admin/campaign-detail/CampaignParticipantsTable.tsx](../applications/frontend/src/components/admin/campaign-detail/CampaignParticipantsTable.tsx) | Client | Pagination locale + clamp de page si la liste rétrécit (effets sur invalidation queryClient) |
+| [hooks/admin.ts](../applications/frontend/src/hooks/admin.ts) (`useParticipants`) | — | Signature étendue `(page, companyId, perPage = 25)`, `per_page` propagé au backend (déjà supporté par `AdminParticipantsController.normalizePerPage`). Clé react-query mise à jour pour inclure `perPage` |
+
+**Tableau exclu volontairement** : [routes/admin/index.tsx](../applications/frontend/src/routes/admin/index.tsx) (dashboard) — la table « Suivi des campagnes » est un **aperçu slicé aux 5 plus récentes** avec un bouton « Voir toutes » qui pointe vers `/admin/campaigns` (lui-même paginé). Y ajouter une pagination dénaturerait le rôle de carte résumé du dashboard.
+
+**Validations** : typecheck ✅, frontend tests **45/45** ✅, lint stable (mêmes warnings pré-existants : `noArrayIndexKey` sur skeletons, `useExhaustiveDependencies` sur le `useEffect(() => setPage(0), [search])` — pattern identique à celui de `companies/index.tsx`, la référence).
+
 ---
 
 ## 2. CE QUI RESTE À FAIRE
@@ -433,6 +451,7 @@ const { values, errors, submit, submitting, setField } = useDrawerForm({
 - Tooltips sur termes "écart"/"Élément Humain" ✅ HelpCircle + Tooltip sur résultats + DimensionCard
 - État "génération PDF en cours" ✅ bouton disabled + label dynamique + toast success/error
 - Tri + pagination liste companies ✅ TableSortLabel + TablePagination (10/25/50)
+- Pagination généralisée sur les 6 autres tableaux admin ✅ coaches / questionnaires / campaigns (client) + responses / companies/$companyId / CampaignParticipantsTable (mix client/serveur) — labels FR cohérents, dashboard exclu (preview slicé)
 - Feedback progressif Import CSV ✅ box avec nom du fichier + LinearProgress pendant l'upload
 - Warning données non sauvegardées drawer ✅ flag `dirty` dans `useDrawerForm` + Dialog confirm dans AdminDrawerForm
 - `textTransform: 'none'` dupliqué partout ✅ 53 occurrences supprimées (theme MUI couvre par défaut)
@@ -450,7 +469,7 @@ const { values, errors, submit, submitting, setField } = useDrawerForm({
 
 ```
 Sprint 1 : ██████ 6/6   (100%) ✅
-Sprint 2 : █████░ 5/5   (100%) ✅
+Sprint 2 : █████ 5/5   (100%) ✅
 Sprint 3 : █████░ 5/6   (83%)
 
 C-1..C-8 : ████████ 8/8   (100%) ✅

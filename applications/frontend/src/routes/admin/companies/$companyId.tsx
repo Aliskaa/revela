@@ -22,6 +22,7 @@ import {
     TableBody,
     TableCell,
     TableHead,
+    TablePagination,
     TableRow,
     Typography,
 } from '@mui/material';
@@ -72,8 +73,17 @@ function AdminCompanyDetailRoute() {
     const navigate = useNavigate();
 
     const { data: companies = [], isLoading: companiesLoading } = useCompanies();
-    const [page, setPage] = React.useState(1);
-    const { data: participantsData, isLoading: participantsLoading } = useParticipants(page, numericId);
+    const [page, setPage] = React.useState(0);
+    const [rowsPerPage, setRowsPerPage] = React.useState(10);
+    const { data: participantsData, isLoading: participantsLoading } = useParticipants(
+        page + 1,
+        numericId,
+        rowsPerPage
+    );
+
+    React.useEffect(() => {
+        setPage(0);
+    }, [rowsPerPage]);
 
     const deleteCompany = useDeleteCompany();
     const deleteParticipant = useDeleteParticipant();
@@ -84,7 +94,7 @@ function AdminCompanyDetailRoute() {
 
     const company = companies.find(c => c.id === numericId);
     const participants = participantsData?.items ?? [];
-    const totalPages = participantsData?.pages ?? 1;
+    const totalCount = participantsData?.total ?? 0;
     const isLoading = companiesLoading || participantsLoading;
 
     const handleDeleteCompany = async () => {
@@ -119,12 +129,7 @@ function AdminCompanyDetailRoute() {
                     <Typography variant="h6" color="text.secondary">
                         Entreprise introuvable.
                     </Typography>
-                    <Button
-                        component={Link}
-                        to="/admin/companies"
-                        variant="outlined"
-                        sx={{ mt: 2, borderRadius: 3 }}
-                    >
+                    <Button component={Link} to="/admin/companies" variant="outlined" sx={{ mt: 2, borderRadius: 3 }}>
                         Retour aux entreprises
                     </Button>
                 </CardContent>
@@ -146,16 +151,13 @@ function AdminCompanyDetailRoute() {
                     </DialogContentText>
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={() => setDeleteCompanyOpen(false)}>
-                        Annuler
-                    </Button>
+                    <Button onClick={() => setDeleteCompanyOpen(false)}>Annuler</Button>
                     <Button
                         onClick={handleDeleteCompany}
                         color="error"
                         variant="contained"
                         disableElevation
                         disabled={deleteCompany.isPending}
-
                     >
                         {deleteCompany.isPending ? 'Suppression…' : 'Confirmer la suppression'}
                     </Button>
@@ -173,16 +175,13 @@ function AdminCompanyDetailRoute() {
                     </DialogContentText>
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={() => setDeleteParticipantTarget(null)}>
-                        Annuler
-                    </Button>
+                    <Button onClick={() => setDeleteParticipantTarget(null)}>Annuler</Button>
                     <Button
                         onClick={handleDeleteParticipant}
                         color="error"
                         variant="contained"
                         disableElevation
                         disabled={deleteParticipant.isPending}
-
                     >
                         {deleteParticipant.isPending ? 'Suppression…' : 'Confirmer la suppression'}
                     </Button>
@@ -214,12 +213,7 @@ function AdminCompanyDetailRoute() {
                                 Fiche entreprise avec la liste des collaborateurs rattachés et les actions de gestion.
                             </Typography>
                         </Box>
-                        <Button
-                            variant="outlined"
-                            component={Link}
-                            to="/admin/companies"
-                            sx={{ borderRadius: 3 }}
-                        >
+                        <Button variant="outlined" component={Link} to="/admin/companies" sx={{ borderRadius: 3 }}>
                             Retour aux entreprises
                         </Button>
                     </Stack>
@@ -301,7 +295,6 @@ function AdminCompanyDetailRoute() {
                                                           color="error"
                                                           startIcon={<Trash2 size={14} />}
                                                           onClick={() => setDeleteParticipantTarget(p)}
-
                                                       >
                                                           Supprimer
                                                       </Button>
@@ -321,36 +314,18 @@ function AdminCompanyDetailRoute() {
                             </Table>
                         </Box>
 
-                        {totalPages > 1 && (
-                            <Stack
-                                direction="row"
-                                justifyContent="center"
-                                alignItems="center"
-                                spacing={1.5}
-                                sx={{ mt: 2.5 }}
-                            >
-                                <Button
-                                    variant="outlined"
-                                    size="small"
-                                    disabled={page <= 1}
-                                    onClick={() => setPage(p => p - 1)}
-                                    sx={{ borderRadius: 3 }}
-                                >
-                                    Précédent
-                                </Button>
-                                <Typography variant="body2" color="text.secondary">
-                                    Page {page} / {totalPages}
-                                </Typography>
-                                <Button
-                                    variant="outlined"
-                                    size="small"
-                                    disabled={page >= totalPages}
-                                    onClick={() => setPage(p => p + 1)}
-                                    sx={{ borderRadius: 3 }}
-                                >
-                                    Suivant
-                                </Button>
-                            </Stack>
+                        {totalCount > 0 && (
+                            <TablePagination
+                                component="div"
+                                count={totalCount}
+                                page={page}
+                                onPageChange={(_, newPage) => setPage(newPage)}
+                                rowsPerPage={rowsPerPage}
+                                onRowsPerPageChange={e => setRowsPerPage(Number(e.target.value))}
+                                rowsPerPageOptions={[10, 25, 50]}
+                                labelRowsPerPage="Lignes par page"
+                                labelDisplayedRows={({ from, to, count }) => `${from}–${to} sur ${count}`}
+                            />
                         )}
                     </CardContent>
                 </Card>
