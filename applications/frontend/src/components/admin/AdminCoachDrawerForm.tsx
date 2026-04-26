@@ -1,6 +1,6 @@
 // Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
 
-import { Box, IconButton, InputAdornment, Stack, TextField, Typography } from '@mui/material';
+import { Box, FormControlLabel, IconButton, InputAdornment, Stack, Switch, TextField, Typography } from '@mui/material';
 import { Eye, EyeOff } from 'lucide-react';
 import * as React from 'react';
 import { z } from 'zod';
@@ -12,18 +12,28 @@ import { AdminDrawerForm } from './AdminDrawerForm';
 export type CoachDrawerMode = 'create' | 'edit';
 
 /**
- * Schéma aligné sur l'API `POST /admin/coaches` qui exige `{ username, password, displayName }`.
- * Les anciens champs décoratifs (firstName/lastName, organisation, status, notes…) ont été retirés :
- * ils n'étaient pas envoyés au backend et le mot de passe était hardcodé à `'changeme123'` côté
- * route, ce qui était un trou de sécurité évident.
+ * Schéma aligné sur l'API `POST /admin/coaches` qui exige `{ username, password, displayName }`
+ * et `PATCH /admin/coaches/:id` qui accepte `{ username?, password?, display_name?, is_active? }`.
+ *
+ * En mode `edit`, le mot de passe est optionnel : un champ vide signifie "ne pas changer".
  */
-const coachFormSchema = z.object({
-    displayName: z.string().trim().min(1, 'Le nom à afficher est requis.'),
-    username: z.string().trim().min(3, 'Le username doit contenir au moins 3 caractères.'),
-    password: z.string().min(8, 'Le mot de passe doit contenir au moins 8 caractères.'),
-});
+const buildCoachSchema = (mode: CoachDrawerMode) =>
+    z.object({
+        displayName: z.string().trim().min(1, 'Le nom à afficher est requis.'),
+        username: z.string().trim().min(3, 'Le username doit contenir au moins 3 caractères.'),
+        password:
+            mode === 'create'
+                ? z.string().min(8, 'Le mot de passe doit contenir au moins 8 caractères.')
+                : z
+                      .string()
+                      .refine(
+                          v => v === '' || v.length >= 8,
+                          'Au moins 8 caractères, ou laisser vide pour conserver le mot de passe actuel.'
+                      ),
+        isActive: z.boolean(),
+    });
 
-export type CoachFormValues = z.infer<typeof coachFormSchema>;
+export type CoachFormValues = z.infer<ReturnType<typeof buildCoachSchema>>;
 
 export type AdminCoachDrawerFormProps = {
     open: boolean;
@@ -37,7 +47,8 @@ export type AdminCoachDrawerFormProps = {
 const buildDefaults = (initial?: Partial<CoachFormValues>): CoachFormValues => ({
     displayName: initial?.displayName ?? '',
     username: initial?.username ?? '',
-    password: initial?.password ?? '',
+    password: '',
+    isActive: initial?.isActive ?? true,
 });
 
 export function AdminCoachDrawerForm({
@@ -48,9 +59,12 @@ export function AdminCoachDrawerForm({
     onSubmit,
     isSubmitting = false,
 }: AdminCoachDrawerFormProps) {
+    const schema = React.useMemo(() => buildCoachSchema(mode), [mode]);
+    const defaults = React.useMemo(() => buildDefaults(initialValues), [initialValues]);
+
     const { values, errors, submit, submitting, setField, dirty } = useDrawerForm({
-        schema: coachFormSchema,
-        defaultValues: buildDefaults(initialValues),
+        schema,
+        defaultValues: defaults,
         open,
         onSubmit,
     });
@@ -104,12 +118,17 @@ export function AdminCoachDrawerForm({
                             fullWidth
                         />
                         <TextField
-                            label="Mot de passe initial"
+                            label={mode === 'create' ? 'Mot de passe initial' : 'Nouveau mot de passe (optionnel)'}
                             type={showPassword ? 'text' : 'password'}
                             value={values.password}
                             onChange={e => setField('password', e.target.value)}
                             error={Boolean(errors.password)}
-                            helperText={errors.password ?? 'Sera communiqué au coach pour sa première connexion.'}
+                            helperText={
+                                errors.password ??
+                                (mode === 'create'
+                                    ? 'Sera communiqué au coach pour sa première connexion.'
+                                    : 'Laisser vide pour conserver le mot de passe actuel.')
+                            }
                             fullWidth
                             slotProps={{
                                 input: {
@@ -119,7 +138,9 @@ export function AdminCoachDrawerForm({
                                                 size="small"
                                                 onClick={() => setShowPassword(s => !s)}
                                                 aria-label={
-                                                    showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'
+                                                    showPassword
+                                                        ? 'Masquer le mot de passe'
+                                                        : 'Afficher le mot de passe'
                                                 }
                                             >
                                                 {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -131,6 +152,26 @@ export function AdminCoachDrawerForm({
                         />
                     </Stack>
                 </Box>
+
+                {mode === 'edit' && (
+                    <Box>
+                        <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
+                            Statut
+                        </Typography>
+                        <FormControlLabel
+                            control={
+                                <Switch
+                                    checked={values.isActive}
+                                    onChange={(_, checked) => setField('isActive', checked)}
+                                />
+                            }
+                            label={values.isActive ? 'Coach actif' : 'Coach désactivé'}
+                        />
+                        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
+                            Un coach désactivé conserve ses campagnes mais ne peut plus se connecter.
+                        </Typography>
+                    </Box>
+                )}
             </Stack>
         </AdminDrawerForm>
     );

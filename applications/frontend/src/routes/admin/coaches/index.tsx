@@ -9,6 +9,7 @@ import {
     Card,
     CardContent,
     Chip,
+    IconButton,
     Skeleton,
     Stack,
     Table,
@@ -18,10 +19,11 @@ import {
     TablePagination,
     TableRow,
     TextField,
-    Typography,
+    Tooltip,
+    Typography
 } from '@mui/material';
 import { createFileRoute } from '@tanstack/react-router';
-import { ClipboardList, Plus, UserRound } from 'lucide-react';
+import { ArrowRight, ClipboardList, Plus, UserRound } from 'lucide-react';
 import * as React from 'react';
 
 export const Route = createFileRoute('/admin/coaches/')({
@@ -47,7 +49,7 @@ function StatusChip({ isActive }: { isActive: boolean }) {
 }
 
 function AdminCoachesRoute() {
-    const [drawerOpen, setDrawerOpen] = React.useState(false);
+    const [createOpen, setCreateOpen] = React.useState(false);
     const [search, setSearch] = React.useState('');
     const [page, setPage] = React.useState(0);
     const [rowsPerPage, setRowsPerPage] = React.useState(10);
@@ -92,11 +94,11 @@ function AdminCoachesRoute() {
     return (
         <Stack spacing={3}>
             <AdminCoachDrawerForm
-                open={drawerOpen}
+                open={createOpen}
                 mode="create"
                 isSubmitting={createCoach.isPending}
                 onClose={() => {
-                    setDrawerOpen(false);
+                    setCreateOpen(false);
                     createCoach.reset();
                 }}
                 onSubmit={async values => {
@@ -106,7 +108,7 @@ function AdminCoachesRoute() {
                             password: values.password,
                             displayName: values.displayName,
                         });
-                        setDrawerOpen(false);
+                        setCreateOpen(false);
                     } catch {
                         // Le toast d'erreur est émis par le hook ; on garde le drawer ouvert.
                     }
@@ -138,7 +140,7 @@ function AdminCoachesRoute() {
                             </Typography>
                         </Box>
                         <Button
-                            onClick={() => setDrawerOpen(true)}
+                            onClick={() => setCreateOpen(true)}
                             variant="contained"
                             disableElevation
                             startIcon={<Plus size={16} />}
@@ -200,13 +202,14 @@ function AdminCoachesRoute() {
                                     <TableCell>Campagnes</TableCell>
                                     <TableCell>Statut</TableCell>
                                     <TableCell>Créé le</TableCell>
+                                    <TableCell align="right">Actions</TableCell>
                                 </TableRow>
                             </TableHead>
                             <TableBody>
                                 {isLoading
                                     ? Array.from({ length: 4 }).map((_, i) => (
                                           <TableRow key={i}>
-                                              {Array.from({ length: 5 }).map((__, j) => (
+                                              {Array.from({ length: 6 }).map((__, j) => (
                                                   <TableCell key={j}>
                                                       <Skeleton variant="text" />
                                                   </TableCell>
@@ -234,11 +237,24 @@ function AdminCoachesRoute() {
                                                       ? new Date(coach.createdAt).toLocaleDateString('fr-FR')
                                                       : '–'}
                                               </TableCell>
+                                              <TableCell align="right">
+                                                  <Stack direction="row" spacing={0.5} justifyContent="flex-end">
+                                                      <Tooltip title="Ouvrir le détail">
+                                                          <IconButton
+                                                              href={`/admin/coaches/${coach.id}`}
+                                                              size="small"
+                                                              aria-label={`Ouvrir ${coach.displayName}`}
+                                                          >
+                                                              <ArrowRight size={16} />
+                                                          </IconButton>
+                                                      </Tooltip>
+                                                  </Stack>
+                                              </TableCell>
                                           </TableRow>
                                       ))}
                                 {!isLoading && filtered.length === 0 && (
                                     <TableRow>
-                                        <TableCell colSpan={5} align="center" sx={{ py: 4 }}>
+                                        <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
                                             <Typography variant="body2" color="text.secondary">
                                                 {search
                                                     ? 'Aucun coach ne correspond à la recherche.'
@@ -317,6 +333,17 @@ function AdminCoachesRoute() {
                                                       }
                                                   />
                                               </Box>
+                                              <Stack direction="row" spacing={1}>
+                                                  <Button
+                                                      size="small"
+                                                      variant="outlined"
+                                                      href={`/admin/coaches/${coach.id}`}
+                                                      startIcon={<ArrowRight size={14} />}
+                                                      sx={{ borderRadius: 3 }}
+                                                  >
+                                                      Détail
+                                                  </Button>
+                                              </Stack>
                                           </Stack>
                                       </CardContent>
                                   </Card>

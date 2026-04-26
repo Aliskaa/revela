@@ -1,7 +1,7 @@
 # État d'avancement — Questionnaire Platform (Révéla / AOR)
 
 > Rapport au **2026-04-26**, suite directe de [avancement-2026-04-24.md](avancement-2026-04-24.md).
-> Cette session : Sprint 2 finalisé à 100 % (Swagger + tests frontend), toast/snackbar global (Sprint 3 #16), nettoyage repo (résout M-2, M-3, M-4), **`beforeLoad` auth (M-11)** + **allègement des copyright headers** (résout 1 item "EN TROP"), **toast branché sur toutes les mutations admin/participant** (16 hooks), **drawers refacto (M-10)** sur `useDrawerForm` + Zod, **refacto des 3 routes >300L (M-5 ✅ complet)** : `results.tsx` (559→285), `participant/index.tsx` (686→120), `admin/campaigns/$campaignId.tsx` (718→157), **a11y batch (M-7)** : `vitest-axe` câblé, dialog drawer accessible name, toast aria-live, IconButtons aria-labels, loading states role="status", PDF metadata, **gouvernance docs** : LICENSE.md créé, 4 nouveaux ADRs (catalog, BiomeJS, toast hooks, useDrawerForm), **i18n setup (M-8)** : `react-i18next` + `fr.json` + tests, premières chaînes migrées, **consolidation règles IA** : `.cursorrules` supprimé (legacy + contradictoire), `CLAUDE.md` réduit à un digest pointant vers `.cursor/rules/`, **batch UX (8 items)** : textTransform/borderRadius theme cleanup, PDF pending state, effort estimate participant, glossary tooltips, dirty drawer guard, CSV import progress, sort+pagination companies, **pagination généralisée sur tous les tableaux admin** (6 tableaux + extension `useParticipants` perPage).
+> Cette session : Sprint 2 finalisé à 100 % (Swagger + tests frontend), toast/snackbar global (Sprint 3 #16), nettoyage repo (résout M-2, M-3, M-4), **`beforeLoad` auth (M-11)** + **allègement des copyright headers** (résout 1 item "EN TROP"), **toast branché sur toutes les mutations admin/participant** (16 hooks), **drawers refacto (M-10)** sur `useDrawerForm` + Zod, **refacto des 3 routes >300L (M-5 ✅ complet)** : `results.tsx` (559→285), `participant/index.tsx` (686→120), `admin/campaigns/$campaignId.tsx` (718→157), **a11y batch (M-7)** : `vitest-axe` câblé, dialog drawer accessible name, toast aria-live, IconButtons aria-labels, loading states role="status", PDF metadata, **gouvernance docs** : LICENSE.md créé, 4 nouveaux ADRs (catalog, BiomeJS, toast hooks, useDrawerForm), **i18n setup (M-8)** : `react-i18next` + `fr.json` + tests, premières chaînes migrées, **consolidation règles IA** : `.cursorrules` supprimé (legacy + contradictoire), `CLAUDE.md` réduit à un digest pointant vers `.cursor/rules/`, **batch UX (8 items)** : textTransform/borderRadius theme cleanup, PDF pending state, effort estimate participant, glossary tooltips, dirty drawer guard, CSV import progress, sort+pagination companies, **pagination généralisée sur tous les tableaux admin** (6 tableaux + extension `useParticipants` perPage), **CRUD complet coaches** (drawer edit mode-aware + Switch isActive + page détail `coaches/$coachId.tsx` avec campagnes rattachées + suppression RGPD).
 > Mise à jour incrémentale : ce fichier est mis à jour à la fin de chaque opération.
 
 ---
@@ -394,6 +394,22 @@ Initialement seul `companies/index.tsx` portait `TablePagination`. Pattern propa
 
 **Validations** : typecheck ✅, frontend tests **45/45** ✅, lint stable (mêmes warnings pré-existants : `noArrayIndexKey` sur skeletons, `useExhaustiveDependencies` sur le `useEffect(() => setPage(0), [search])` — pattern identique à celui de `companies/index.tsx`, la référence).
 
+### ✅ CRUD complet sur les coaches (admin)
+
+Avant cette session, la liste coaches portait uniquement la **création**. La mise à jour et la suppression étaient déjà câblées côté backend (`PATCH /admin/coaches/:id`, `DELETE /admin/coaches/:id` — `AdminCoachesController`) **et** côté hooks (`useUpdateCoach`, `useDeleteCoach` dans `hooks/admin.ts`), mais aucune UI ne les utilisait. Cette itération expose le CRUD au complet et ajoute une vraie page de détail.
+
+| Fichier | Changement |
+|---|---|
+| [components/admin/AdminCoachDrawerForm.tsx](../applications/frontend/src/components/admin/AdminCoachDrawerForm.tsx) | Schéma Zod **mode-aware** (`buildCoachSchema(mode)`) : en `edit`, password optionnel (chaîne vide = "ne pas changer", sinon ≥ 8 car). Ajout d'un toggle `isActive` (Switch MUI) visible uniquement en mode `edit`. Helper text adapté au mode. |
+| [routes/admin/coaches/index.tsx](../applications/frontend/src/routes/admin/coaches/index.tsx) | Colonne **Actions** ajoutée à la table (Détail / Éditer / Supprimer en `IconButton` + tooltips, pendant en boutons sur la version mobile). 2e instance de `AdminCoachDrawerForm` en mode `edit` pilotée par `editTarget`. Dialog de confirmation RGPD pour la suppression. Renommage `drawerOpen` → `createOpen` pour cohérence avec `editTarget` / `deleteTarget`. |
+| [routes/admin/coaches/$coachId.tsx](../applications/frontend/src/routes/admin/coaches/$coachId.tsx) **(nouveau)** | Page détail inspirée de `companies/$companyId.tsx` : header avec chip statut, stat cards (campagnes / actives / date de création), table des campagnes rattachées (résolution `companyId → name` côté front), sidebar identité + zone dangereuse avec warning si campagnes attachées. Boutons Éditer / Supprimer pilotent les mêmes mutations que la liste. Redirection vers `/admin/coaches` après suppression. |
+
+**Comportement clé du formulaire d'édition** : si l'admin laisse le champ password vide, le payload PATCH n'inclut pas la propriété `password` (vérifié dans `useUpdateCoach.mutationFn` : `password.length > 0 ? password : undefined`), donc le backend ne touche pas au hash existant.
+
+**Backend vérifié, aucune modification nécessaire** : `AdminCoachesController.updateCoach` (PATCH) et `deleteCoach` (DELETE 204) sont déjà en place, le scope `coach` ne peut pas créer/supprimer un autre coach (`UnauthorizedException`), et la mise à jour côté `coach` est restreinte à son propre id (`ensureCoachEntityAccess`). Les use-cases `update-admin-coach.usecase.ts` et `delete-admin-coach.usecase.ts` couvrent les invariants côté domaine.
+
+**Validations** : typecheck ✅, frontend tests **45/45** ✅, biome formatting auto-fix appliqué, lints restants identiques au reste du repo (`noArrayIndexKey` sur skeletons — dette transversale).
+
 ---
 
 ## 2. CE QUI RESTE À FAIRE
@@ -452,6 +468,7 @@ Initialement seul `companies/index.tsx` portait `TablePagination`. Pattern propa
 - État "génération PDF en cours" ✅ bouton disabled + label dynamique + toast success/error
 - Tri + pagination liste companies ✅ TableSortLabel + TablePagination (10/25/50)
 - Pagination généralisée sur les 6 autres tableaux admin ✅ coaches / questionnaires / campaigns (client) + responses / companies/$companyId / CampaignParticipantsTable (mix client/serveur) — labels FR cohérents, dashboard exclu (preview slicé)
+- CRUD complet coaches ✅ schéma `AdminCoachDrawerForm` mode-aware (password optionnel + Switch `isActive` en edit), actions Détail/Éditer/Supprimer dans la liste avec dialog confirm RGPD, page détail `coaches/$coachId.tsx` (header + stats + table des campagnes rattachées + zone dangereuse), backend déjà en place — aucun changement requis côté API
 - Feedback progressif Import CSV ✅ box avec nom du fichier + LinearProgress pendant l'upload
 - Warning données non sauvegardées drawer ✅ flag `dirty` dans `useDrawerForm` + Dialog confirm dans AdminDrawerForm
 - `textTransform: 'none'` dupliqué partout ✅ 53 occurrences supprimées (theme MUI couvre par défaut)

@@ -21,7 +21,7 @@ import {
     TextField,
     Typography,
 } from '@mui/material';
-import { Link, createFileRoute } from '@tanstack/react-router';
+import { createFileRoute } from '@tanstack/react-router';
 import { ChevronRight, ClipboardList, Plus, Sparkles, Target, Users } from 'lucide-react';
 import * as React from 'react';
 
@@ -263,9 +263,7 @@ function AdminCampaignsRoute() {
                                               </TableCell>
                                               <TableCell align="right">
                                                   <Button
-                                                      component={Link}
-                                                      to="/admin/campaigns/$campaignId"
-                                                      params={{ campaignId: String(campaign.id) }}
+                                                      href={`/admin/campaigns/${campaign.id}`}
                                                       variant="text"
                                                       endIcon={<ChevronRight size={16} />}
                                                   >
@@ -366,9 +364,7 @@ function AdminCampaignsRoute() {
                                               <Button
                                                   variant="contained"
                                                   disableElevation
-                                                  component={Link}
-                                                  to="/admin/campaigns/$campaignId"
-                                                  params={{ campaignId: String(campaign.id) }}
+                                                  href={`/admin/campaigns/${campaign.id}`}
                                                   endIcon={<ChevronRight size={16} />}
                                                   sx={{
                                                       borderRadius: 3,
