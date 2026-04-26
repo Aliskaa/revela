@@ -110,14 +110,14 @@ function AdminDashboardRoute() {
                                 component={Link}
                                 to="/admin/campaigns"
                                 startIcon={<Plus size={16} />}
-                                sx={{ borderRadius: 3, bgcolor: 'primary.main', textTransform: 'none' }}
+                                sx={{ borderRadius: 3, bgcolor: 'primary.main' }}
                             >
                                 Nouvelle campagne
                             </Button>
                             <Button
                                 variant="outlined"
                                 startIcon={<FileText size={16} />}
-                                sx={{ borderRadius: 3, textTransform: 'none' }}
+                                sx={{ borderRadius: 3 }}
                             >
                                 Exporter
                             </Button>
@@ -177,7 +177,7 @@ function AdminDashboardRoute() {
                                 component={Link}
                                 to="/admin/campaigns"
                                 variant="outlined"
-                                sx={{ borderRadius: 3, textTransform: 'none' }}
+                                sx={{ borderRadius: 3 }}
                             >
                                 Voir toutes
                             </Button>
@@ -237,7 +237,7 @@ function AdminDashboardRoute() {
                                                       href={`/admin/campaigns/${campaign.id}`}
                                                       variant="text"
                                                       endIcon={<ArrowRight size={16} />}
-                                                      sx={{ textTransform: 'none' }}
+
                                                   >
                                                       Ouvrir
                                                   </Button>

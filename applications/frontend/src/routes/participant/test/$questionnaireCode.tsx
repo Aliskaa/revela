@@ -248,7 +248,7 @@ function QuestionCard({
                             startIcon={<ArrowLeft size={16} />}
                             disabled={prevDisabled}
                             onClick={goPrev}
-                            sx={{ borderRadius: 3, textTransform: 'none' }}
+                            sx={{ borderRadius: 3 }}
                         >
                             Précédent
                         </Button>
@@ -260,7 +260,7 @@ function QuestionCard({
                                 startIcon={<Send size={16} />}
                                 disabled={!allAnswered || isSubmitting}
                                 onClick={onSubmit}
-                                sx={{ borderRadius: 3, textTransform: 'none' }}
+                                sx={{ borderRadius: 3 }}
                             >
                                 {isSubmitting
                                     ? 'Envoi en cours…'
@@ -274,7 +274,7 @@ function QuestionCard({
                                 disableElevation
                                 endIcon={<ArrowRight size={16} />}
                                 onClick={goNext}
-                                sx={{ borderRadius: 3, textTransform: 'none' }}
+                                sx={{ borderRadius: 3 }}
                             >
                                 Suivant
                             </Button>

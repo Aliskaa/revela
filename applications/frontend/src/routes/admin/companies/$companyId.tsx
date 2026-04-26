@@ -123,7 +123,7 @@ function AdminCompanyDetailRoute() {
                         component={Link}
                         to="/admin/companies"
                         variant="outlined"
-                        sx={{ mt: 2, borderRadius: 3, textTransform: 'none' }}
+                        sx={{ mt: 2, borderRadius: 3 }}
                     >
                         Retour aux entreprises
                     </Button>
@@ -146,7 +146,7 @@ function AdminCompanyDetailRoute() {
                     </DialogContentText>
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={() => setDeleteCompanyOpen(false)} sx={{ textTransform: 'none' }}>
+                    <Button onClick={() => setDeleteCompanyOpen(false)}>
                         Annuler
                     </Button>
                     <Button
@@ -155,7 +155,7 @@ function AdminCompanyDetailRoute() {
                         variant="contained"
                         disableElevation
                         disabled={deleteCompany.isPending}
-                        sx={{ textTransform: 'none' }}
+
                     >
                         {deleteCompany.isPending ? 'Suppression…' : 'Confirmer la suppression'}
                     </Button>
@@ -173,7 +173,7 @@ function AdminCompanyDetailRoute() {
                     </DialogContentText>
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={() => setDeleteParticipantTarget(null)} sx={{ textTransform: 'none' }}>
+                    <Button onClick={() => setDeleteParticipantTarget(null)}>
                         Annuler
                     </Button>
                     <Button
@@ -182,7 +182,7 @@ function AdminCompanyDetailRoute() {
                         variant="contained"
                         disableElevation
                         disabled={deleteParticipant.isPending}
-                        sx={{ textTransform: 'none' }}
+
                     >
                         {deleteParticipant.isPending ? 'Suppression…' : 'Confirmer la suppression'}
                     </Button>
@@ -218,7 +218,7 @@ function AdminCompanyDetailRoute() {
                             variant="outlined"
                             component={Link}
                             to="/admin/companies"
-                            sx={{ borderRadius: 3, textTransform: 'none' }}
+                            sx={{ borderRadius: 3 }}
                         >
                             Retour aux entreprises
                         </Button>
@@ -301,7 +301,7 @@ function AdminCompanyDetailRoute() {
                                                           color="error"
                                                           startIcon={<Trash2 size={14} />}
                                                           onClick={() => setDeleteParticipantTarget(p)}
-                                                          sx={{ textTransform: 'none' }}
+
                                                       >
                                                           Supprimer
                                                       </Button>
@@ -334,7 +334,7 @@ function AdminCompanyDetailRoute() {
                                     size="small"
                                     disabled={page <= 1}
                                     onClick={() => setPage(p => p - 1)}
-                                    sx={{ borderRadius: 3, textTransform: 'none' }}
+                                    sx={{ borderRadius: 3 }}
                                 >
                                     Précédent
                                 </Button>
@@ -346,7 +346,7 @@ function AdminCompanyDetailRoute() {
                                     size="small"
                                     disabled={page >= totalPages}
                                     onClick={() => setPage(p => p + 1)}
-                                    sx={{ borderRadius: 3, textTransform: 'none' }}
+                                    sx={{ borderRadius: 3 }}
                                 >
                                     Suivant
                                 </Button>
@@ -379,7 +379,7 @@ function AdminCompanyDetailRoute() {
                                 startIcon={<Trash2 size={16} />}
                                 disabled={deleteCompany.isPending}
                                 onClick={() => setDeleteCompanyOpen(true)}
-                                sx={{ borderRadius: 3, textTransform: 'none', mt: 1 }}
+                                sx={{ borderRadius: 3, mt: 1 }}
                             >
                                 Supprimer l'entreprise
                             </Button>

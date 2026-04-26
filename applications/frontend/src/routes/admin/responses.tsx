@@ -251,7 +251,7 @@ function AdminResponsesRoute() {
                                 size="small"
                                 disabled={page <= 1}
                                 onClick={() => setPage(p => p - 1)}
-                                sx={{ borderRadius: 3, textTransform: 'none' }}
+                                sx={{ borderRadius: 3 }}
                             >
                                 Précédent
                             </Button>
@@ -263,7 +263,7 @@ function AdminResponsesRoute() {
                                 size="small"
                                 disabled={page >= totalPages}
                                 onClick={() => setPage(p => p + 1)}
-                                sx={{ borderRadius: 3, textTransform: 'none' }}
+                                sx={{ borderRadius: 3 }}
                             >
                                 Suivant
                             </Button>

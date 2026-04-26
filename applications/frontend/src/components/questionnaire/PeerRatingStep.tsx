@@ -233,7 +233,6 @@ export function PeerRatingStep({ qid, q, campaignId }: PeerRatingStepProps) {
                             mb: 3,
                             minHeight: 48,
                             '& .MuiTab-root': {
-                                textTransform: 'none',
                                 fontWeight: 700,
                                 borderRadius: 2,
                                 mx: 0.5,

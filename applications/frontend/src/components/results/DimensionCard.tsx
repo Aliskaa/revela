@@ -1,7 +1,7 @@
 // Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
 
-import { Box, Card, CardContent, Chip, Stack, Typography, useTheme } from '@mui/material';
-import { ArrowLeftRight } from 'lucide-react';
+import { Box, Card, CardContent, Chip, Stack, Tooltip, Typography, useTheme } from '@mui/material';
+import { ArrowLeftRight, HelpCircle } from 'lucide-react';
 
 import { PEER_COLORS } from '@/lib/results/buildDimensions';
 import type { DimensionView } from '@aor/types';
@@ -98,9 +98,23 @@ export function DimensionCard({ dimension, likertMax }: DimensionCardProps) {
 
                 {dimension.ecarts.length > 0 && (
                     <Box sx={{ mt: 2.5, p: 2, bgcolor: 'tint.subtleBg', borderRadius: 3 }}>
-                        <Typography variant="body2" fontWeight={700} color="text.primary" sx={{ mb: 1.5 }}>
-                            Analyse des écarts
-                        </Typography>
+                        <Stack direction="row" spacing={0.6} alignItems="center" sx={{ mb: 1.5 }}>
+                            <Typography variant="body2" fontWeight={700} color="text.primary">
+                                Analyse des écarts
+                            </Typography>
+                            <Tooltip
+                                title="Un écart est la différence entre votre score « comportement actuel (e) » et votre score « comportement souhaité (w) ». Plus l'écart est grand, plus vous percevez un décalage entre ce que vous faites et ce que vous voudriez faire."
+                                arrow
+                            >
+                                <Box
+                                    component="span"
+                                    sx={{ display: 'inline-flex', color: 'text.secondary', cursor: 'help' }}
+                                    aria-label="Définition d'un écart"
+                                >
+                                    <HelpCircle size={14} />
+                                </Box>
+                            </Tooltip>
+                        </Stack>
                         <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1.5 }}>
                             Ces écarts indiquent des différences entre le comportement actuel et souhaité.
                         </Typography>

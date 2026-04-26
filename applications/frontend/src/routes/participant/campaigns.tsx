@@ -232,7 +232,7 @@ function CampaignCard({ campaign }: { campaign: Campaign }) {
                                 variant="contained"
                                 disableElevation
                                 onClick={() => goTo('/participant/journey')}
-                                sx={{ borderRadius: 3, bgcolor: 'primary.main', textTransform: 'none' }}
+                                sx={{ borderRadius: 3, bgcolor: 'primary.main' }}
                                 endIcon={<ArrowRight size={16} />}
                             >
                                 {campaign.progress > 0 ? 'Continuer le parcours' : 'Commencer le parcours'}
@@ -243,7 +243,7 @@ function CampaignCard({ campaign }: { campaign: Campaign }) {
                                 variant="contained"
                                 disableElevation
                                 onClick={() => goTo('/participant/results')}
-                                sx={{ borderRadius: 3, bgcolor: 'primary.main', textTransform: 'none' }}
+                                sx={{ borderRadius: 3, bgcolor: 'primary.main' }}
                                 endIcon={<ArrowRight size={16} />}
                             >
                                 Voir les résultats
@@ -252,7 +252,7 @@ function CampaignCard({ campaign }: { campaign: Campaign }) {
                         <Button
                             variant="outlined"
                             onClick={() => goTo('/participant/results')}
-                            sx={{ borderRadius: 3, textTransform: 'none' }}
+                            sx={{ borderRadius: 3 }}
                         >
                             Voir les résultats
                         </Button>

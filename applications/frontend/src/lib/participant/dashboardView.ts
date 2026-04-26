@@ -57,7 +57,8 @@ const journeyTemplate: JourneyStep[] = [
     {
         label: 'Test Élément Humain',
         state: 'locked',
-        description: 'Accessible une fois les prérequis de la campagne complétés.',
+        description:
+            "Approche de Will Schutz : explore les besoins fondamentaux d'inclusion, contrôle et ouverture, et l'écart entre comportement actuel et souhaité.",
         icon: Lock,
     },
     {
@@ -216,6 +217,52 @@ export const buildJourney = (assignment?: ParticipantAssignment): JourneyStep[] 
             to: '/participant/coach',
         },
     ];
+};
+
+/**
+ * Estimation grossière du temps restant pour finir le parcours, basée sur des constantes de
+ * référence (mesurées sur les premiers utilisateurs, à recalibrer avec les données prod) :
+ * auto-évaluation ~10 min, feedback pairs ~10 min, test Élément Humain ~15 min.
+ * La consultation des résultats et la restitution coaching ne sont pas comptées (lecture libre,
+ * dépend du coach).
+ */
+const STEP_EFFORT_MINUTES = {
+    self_rating: 10,
+    peer_feedback: 10,
+    element_humain: 15,
+} as const;
+
+export type EffortEstimate = {
+    remainingMinutes: number;
+    remainingSteps: number;
+    isComplete: boolean;
+};
+
+export const buildEffortEstimate = (assignment?: ParticipantAssignment): EffortEstimate => {
+    const progression = assignment?.progression;
+    if (!assignment || !progression) {
+        const total = STEP_EFFORT_MINUTES.self_rating + STEP_EFFORT_MINUTES.peer_feedback + STEP_EFFORT_MINUTES.element_humain;
+        return { remainingMinutes: total, remainingSteps: 3, isComplete: false };
+    }
+    let minutes = 0;
+    let steps = 0;
+    if (progression.self_rating_status !== 'completed') {
+        minutes += STEP_EFFORT_MINUTES.self_rating;
+        steps += 1;
+    }
+    if (progression.peer_feedback_status !== 'completed') {
+        minutes += STEP_EFFORT_MINUTES.peer_feedback;
+        steps += 1;
+    }
+    if (progression.element_humain_status !== 'completed') {
+        minutes += STEP_EFFORT_MINUTES.element_humain;
+        steps += 1;
+    }
+    return {
+        remainingMinutes: minutes,
+        remainingSteps: steps,
+        isComplete: steps === 0,
+    };
 };
 
 export const buildMetrics = (campaignView: CampaignView, assignment?: ParticipantAssignment): Metric[] => [

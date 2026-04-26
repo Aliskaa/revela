@@ -1,7 +1,7 @@
 # État d'avancement — Questionnaire Platform (Révéla / AOR)
 
 > Rapport au **2026-04-26**, suite directe de [avancement-2026-04-24.md](avancement-2026-04-24.md).
-> Cette session : Sprint 2 finalisé à 100 % (Swagger + tests frontend), toast/snackbar global (Sprint 3 #16), nettoyage repo (résout M-2, M-3, M-4), **`beforeLoad` auth (M-11)** + **allègement des copyright headers** (résout 1 item "EN TROP"), **toast branché sur toutes les mutations admin/participant** (16 hooks), **drawers refacto (M-10)** sur `useDrawerForm` + Zod, **refacto des 3 routes >300L (M-5 ✅ complet)** : `results.tsx` (559→285), `participant/index.tsx` (686→120), `admin/campaigns/$campaignId.tsx` (718→157), **a11y batch (M-7)** : `vitest-axe` câblé, dialog drawer accessible name, toast aria-live, IconButtons aria-labels, loading states role="status", PDF metadata, **gouvernance docs** : LICENSE.md créé, 4 nouveaux ADRs (catalog, BiomeJS, toast hooks, useDrawerForm), **i18n setup (M-8)** : `react-i18next` + `fr.json` + tests, premières chaînes migrées, **consolidation règles IA** : `.cursorrules` supprimé (legacy + contradictoire), `CLAUDE.md` réduit à un digest pointant vers `.cursor/rules/`.
+> Cette session : Sprint 2 finalisé à 100 % (Swagger + tests frontend), toast/snackbar global (Sprint 3 #16), nettoyage repo (résout M-2, M-3, M-4), **`beforeLoad` auth (M-11)** + **allègement des copyright headers** (résout 1 item "EN TROP"), **toast branché sur toutes les mutations admin/participant** (16 hooks), **drawers refacto (M-10)** sur `useDrawerForm` + Zod, **refacto des 3 routes >300L (M-5 ✅ complet)** : `results.tsx` (559→285), `participant/index.tsx` (686→120), `admin/campaigns/$campaignId.tsx` (718→157), **a11y batch (M-7)** : `vitest-axe` câblé, dialog drawer accessible name, toast aria-live, IconButtons aria-labels, loading states role="status", PDF metadata, **gouvernance docs** : LICENSE.md créé, 4 nouveaux ADRs (catalog, BiomeJS, toast hooks, useDrawerForm), **i18n setup (M-8)** : `react-i18next` + `fr.json` + tests, premières chaînes migrées, **consolidation règles IA** : `.cursorrules` supprimé (legacy + contradictoire), `CLAUDE.md` réduit à un digest pointant vers `.cursor/rules/`, **batch UX (8 items)** : textTransform/borderRadius theme cleanup, PDF pending state, effort estimate participant, glossary tooltips, dirty drawer guard, CSV import progress, sort+pagination companies.
 > Mise à jour incrémentale : ce fichier est mis à jour à la fin de chaque opération.
 
 ---
@@ -359,6 +359,23 @@ const { values, errors, submit, submitting, setField } = useDrawerForm({
 
 **Validations** : typecheck ✅, frontend tests **45/45** ✅, backend tests **12/12** ✅.
 
+### ✅ Batch UX — 8 items de finition
+
+| Item | Avant | Après |
+|---|---|---|
+| `textTransform: 'none'` dupliqué | 53 occurrences sur 22 fichiers en sx | Supprimées en bloc (sed) — déjà dans le theme [theme.ts:84](../applications/frontend/src/lib/theme.ts) |
+| Border-radius inconsistant (3/8/99) | Aucune doc, choix arbitraire | Échelle commentée dans [theme.ts](../applications/frontend/src/lib/theme.ts) : 99 (pill), 4 (soft), 3 (dense), 2 (compact) |
+| État "génération PDF en cours" | Pas de feedback | Bouton disabled + label "Génération du PDF…" + `toast.success('Synthèse PDF téléchargée.')` ; `setTimeout(0)` cède la main pour peindre le state pending avant que jsPDF bloque |
+| Indicateur temps/effort restant | Aucun | `buildEffortEstimate` dans [dashboardView.ts](../applications/frontend/src/lib/participant/dashboardView.ts) (10/10/15 min par étape, recalibrable) + carte sidebar « Temps restant estimé » dans [PageHeader.tsx](../applications/frontend/src/components/participant-dashboard/PageHeader.tsx) |
+| Tooltips "écart" / "Élément Humain" | Termes psy non explicités | HelpCircle + Tooltip MUI à 2 endroits : [DimensionCard.tsx](../applications/frontend/src/components/results/DimensionCard.tsx) (analyse des écarts) et [results.tsx](../applications/frontend/src/routes/participant/results.tsx) (header). Description Élément Humain enrichie dans `journeyTemplate` |
+| Warning données non sauvegardées | Fermeture silencieuse | Flag `dirty` dans [useDrawerForm.ts](../applications/frontend/src/lib/useDrawerForm.ts) (passe à `true` au premier `setField`, reset au submit/open) + `Dialog` de confirmation dans [AdminDrawerForm.tsx](../applications/frontend/src/components/admin/AdminDrawerForm.tsx) — propagé sur les 3 drawers migrés (Company, Coach, Campaign) |
+| Feedback progressif Import CSV | Bouton "Import…" sans détail | Box live region (role="status") affichant le nom du fichier + LinearProgress pendant `importParticipants.isPending` dans [CampaignManageParticipants.tsx](../applications/frontend/src/components/admin/campaign-detail/CampaignManageParticipants.tsx) |
+| Tri + pagination liste companies | Liste plate, risque perf 100+ entrées | `TableSortLabel` sur 3 colonnes (nom / contact / participants), tri client localCompare/numérique, `TablePagination` (10/25/50, labels FR), reset page à 0 sur changement de search |
+
+**Découverte intéressante** : le `useDrawerForm.dirty` ne se déclenche que sur `setField` — donc remplir et vider un champ ne déclenche pas (pas un faux positif). Reset propre au submit, à l'open, et au reset() explicite.
+
+**Validations** : typecheck ✅, frontend tests **45/45** ✅, lint stable (8 erreurs pré-existantes hors périmètre).
+
 ---
 
 ## 2. CE QUI RESTE À FAIRE
@@ -412,14 +429,14 @@ const { values, errors, submit, submitting, setField } = useDrawerForm({
 ### 🎨 UX
 
 - Toast/snackbar global ✅ (livré + branché sur 16 hooks admin/participant)
-- Indicateur temps/effort restant participant ❌
-- Tooltips sur termes "écart"/"Élément Humain" ❌
-- État "génération PDF en cours" ❌
-- Tri + pagination liste companies ❌
-- Feedback progressif Import CSV ❌
-- Warning données non sauvegardées drawer ❌
-- `textTransform: 'none'` dupliqué partout ❌
-- Border-radius inconsistant (3/8/99) ❌
+- Indicateur temps/effort restant participant ✅ `buildEffortEstimate` + carte sidebar « Temps restant estimé »
+- Tooltips sur termes "écart"/"Élément Humain" ✅ HelpCircle + Tooltip sur résultats + DimensionCard
+- État "génération PDF en cours" ✅ bouton disabled + label dynamique + toast success/error
+- Tri + pagination liste companies ✅ TableSortLabel + TablePagination (10/25/50)
+- Feedback progressif Import CSV ✅ box avec nom du fichier + LinearProgress pendant l'upload
+- Warning données non sauvegardées drawer ✅ flag `dirty` dans `useDrawerForm` + Dialog confirm dans AdminDrawerForm
+- `textTransform: 'none'` dupliqué partout ✅ 53 occurrences supprimées (theme MUI couvre par défaut)
+- Border-radius inconsistant (3/8/99) ✅ Documenté dans le theme (commentaire) — choix design délibéré pill/soft/dense
 
 ### ⚠ Dette de finition
 

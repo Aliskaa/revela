@@ -141,7 +141,7 @@ function AdminCampaignsRoute() {
                             disableElevation
                             startIcon={<Plus size={16} />}
                             onClick={() => setDrawerOpen(true)}
-                            sx={{ borderRadius: 3, bgcolor: 'primary.main', textTransform: 'none' }}
+                            sx={{ borderRadius: 3, bgcolor: 'primary.main' }}
                         >
                             Nouvelle campagne
                         </Button>
@@ -252,7 +252,7 @@ function AdminCampaignsRoute() {
                                                       params={{ campaignId: String(campaign.id) }}
                                                       variant="text"
                                                       endIcon={<ChevronRight size={16} />}
-                                                      sx={{ textTransform: 'none' }}
+
                                                   >
                                                       Détail
                                                   </Button>
@@ -342,7 +342,6 @@ function AdminCampaignsRoute() {
                                                   sx={{
                                                       borderRadius: 3,
                                                       bgcolor: 'primary.main',
-                                                      textTransform: 'none',
                                                       width: 'fit-content',
                                                   }}
                                               >

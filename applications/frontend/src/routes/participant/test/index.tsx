@@ -334,12 +334,12 @@ function ParticipantTestIndexRoute() {
                                         variant="contained"
                                         disableElevation
                                         startIcon={<ArrowRight size={16} />}
-                                        sx={{ borderRadius: 3, bgcolor: 'primary.main', textTransform: 'none' }}
+                                        sx={{ borderRadius: 3, bgcolor: 'primary.main' }}
                                     >
                                         Commencer le test
                                     </Button>
                                 </Link>
-                                <Button variant="outlined" sx={{ borderRadius: 3, textTransform: 'none' }}>
+                                <Button variant="outlined" sx={{ borderRadius: 3 }}>
                                     Retour au parcours
                                 </Button>
                             </Stack>

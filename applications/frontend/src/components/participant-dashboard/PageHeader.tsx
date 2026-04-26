@@ -12,9 +12,9 @@ import {
     Stack,
     Typography,
 } from '@mui/material';
-import { Bell, Users } from 'lucide-react';
+import { Bell, Clock3, Users } from 'lucide-react';
 
-import type { CampaignView } from '@/lib/participant/dashboardView';
+import type { CampaignView, EffortEstimate } from '@/lib/participant/dashboardView';
 import type { ParticipantSession } from '@aor/types';
 
 export type PageHeaderProps = {
@@ -23,6 +23,7 @@ export type PageHeaderProps = {
     assignments: ParticipantSession['assignments'];
     selectedIndex: number;
     onSelectIndex: (index: number) => void;
+    effort: EffortEstimate;
 };
 
 export function PageHeader({
@@ -31,7 +32,11 @@ export function PageHeader({
     assignments,
     selectedIndex,
     onSelectIndex,
+    effort,
 }: PageHeaderProps) {
+    const effortText = effort.isComplete
+        ? 'Parcours terminé'
+        : `~${effort.remainingMinutes} min · ${effort.remainingSteps} étape${effort.remainingSteps > 1 ? 's' : ''}`;
     return (
         <Card variant="outlined">
             <CardContent sx={{ p: { xs: 2.5, md: 3 } }}>
@@ -120,12 +125,37 @@ export function PageHeader({
                                 >
                                     <Bell size={16} />
                                 </Box>
-                                <Box>
+                                <Box sx={{ minWidth: 0 }}>
                                     <Typography variant="caption" color="text.secondary">
                                         Prochaine action
                                     </Typography>
                                     <Typography variant="body2" fontWeight={700} color="text.primary">
                                         {campaignView.nextAction}
+                                    </Typography>
+                                </Box>
+                            </CardContent>
+                        </Card>
+                        <Card variant="outlined">
+                            <CardContent sx={{ p: 2, display: 'flex', gap: 1.5, alignItems: 'center' }}>
+                                <Box
+                                    sx={{
+                                        width: 40,
+                                        height: 40,
+                                        borderRadius: 3,
+                                        bgcolor: 'tint.successBg',
+                                        color: 'tint.successText',
+                                        display: 'grid',
+                                        placeItems: 'center',
+                                    }}
+                                >
+                                    <Clock3 size={16} />
+                                </Box>
+                                <Box>
+                                    <Typography variant="caption" color="text.secondary">
+                                        Temps restant estimé
+                                    </Typography>
+                                    <Typography variant="body2" fontWeight={700} color="text.primary">
+                                        {effortText}
                                     </Typography>
                                 </Box>
                             </CardContent>

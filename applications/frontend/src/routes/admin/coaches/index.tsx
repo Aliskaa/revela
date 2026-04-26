@@ -126,7 +126,7 @@ function AdminCoachesRoute() {
                             variant="contained"
                             disableElevation
                             startIcon={<Plus size={16} />}
-                            sx={{ borderRadius: 3, bgcolor: 'primary.main', textTransform: 'none' }}
+                            sx={{ borderRadius: 3, bgcolor: 'primary.main' }}
                         >
                             Ajouter un coach
                         </Button>

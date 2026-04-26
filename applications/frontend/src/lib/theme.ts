@@ -76,6 +76,17 @@ export const theme = createTheme({
         h5: { fontWeight: 600 },
         h6: { fontWeight: 600 },
     },
+    /**
+     * Échelle de border-radius utilisée dans le projet (les `borderRadius: N` en sx s'expriment en
+     * multiples de cette unité de base : sx `borderRadius: 3` = 3 * shape.borderRadius / 8 ≈ 4 px) :
+     *  - `borderRadius: 99` (pill) : chips, boutons d'action arrondis (Résultats, Coachs…)
+     *  - `borderRadius: 4`        : cartes "soft" (mini-stat, sidebar mini-cards)
+     *  - `borderRadius: 3`        : cartes denses, badges arrondis discrets
+     *  - `borderRadius: 2`        : très compact (peu utilisé)
+     *
+     * Buttons : 8 par défaut (theme), Cards : 6. Si tu hardcodes une autre valeur en sx, c'est un
+     * choix design délibéré — sinon laisse le thème faire.
+     */
     shape: { borderRadius: 10 },
     components: {
         MuiButton: {

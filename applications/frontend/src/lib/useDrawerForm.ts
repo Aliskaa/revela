@@ -25,6 +25,11 @@ export type UseDrawerFormReturn<TValues extends Record<string, unknown>> = {
     values: TValues;
     errors: Partial<Record<keyof TValues, string>>;
     submitting: boolean;
+    /**
+     * `true` si l'utilisateur a modifié au moins un champ depuis l'ouverture du drawer. Utile pour
+     * afficher un warning avant `onClose` (perte des données saisies).
+     */
+    dirty: boolean;
     setField: <K extends keyof TValues>(key: K, value: TValues[K]) => void;
     submit: () => Promise<void>;
     reset: () => void;
@@ -43,11 +48,13 @@ export function useDrawerForm<TSchema extends z.ZodTypeAny>(
     const [values, setValues] = React.useState<TValues>(defaultValues);
     const [errors, setErrors] = React.useState<Partial<Record<keyof TValues, string>>>({});
     const [submitting, setSubmitting] = React.useState(false);
+    const [dirty, setDirty] = React.useState(false);
 
     React.useEffect(() => {
         if (open) {
             setValues(defaultsRef.current);
             setErrors({});
+            setDirty(false);
         }
     }, [open]);
 
@@ -59,11 +66,13 @@ export function useDrawerForm<TSchema extends z.ZodTypeAny>(
             delete next[key];
             return next;
         });
+        setDirty(true);
     }, []);
 
     const reset = React.useCallback(() => {
         setValues(defaultsRef.current);
         setErrors({});
+        setDirty(false);
     }, []);
 
     const submit = React.useCallback(async () => {
@@ -82,10 +91,11 @@ export function useDrawerForm<TSchema extends z.ZodTypeAny>(
         try {
             setSubmitting(true);
             await onSubmit(parsed.data);
+            setDirty(false);
         } finally {
             setSubmitting(false);
         }
     }, [schema, values, onSubmit]);
 
-    return { values, errors, submitting, setField, submit, reset };
+    return { values, errors, submitting, dirty, setField, submit, reset };
 }

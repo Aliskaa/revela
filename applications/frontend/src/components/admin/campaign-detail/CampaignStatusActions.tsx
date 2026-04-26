@@ -40,7 +40,6 @@ export function CampaignStatusActions({ campaign }: CampaignStatusActionsProps) 
                             sx={{
                                 borderRadius: 3,
                                 bgcolor: 'rgb(4,120,87)',
-                                textTransform: 'none',
                                 '&:hover': { bgcolor: 'rgb(3,100,70)' },
                             }}
                         >
@@ -57,7 +56,6 @@ export function CampaignStatusActions({ campaign }: CampaignStatusActionsProps) 
                             sx={{
                                 borderRadius: 3,
                                 bgcolor: 'rgb(180,120,0)',
-                                textTransform: 'none',
                                 '&:hover': { bgcolor: 'rgb(150,100,0)' },
                             }}
                         >
@@ -72,7 +70,7 @@ export function CampaignStatusActions({ campaign }: CampaignStatusActionsProps) 
                             startIcon={<Archive size={16} />}
                             disabled={isPending}
                             onClick={() => updateStatus.mutate({ campaignId: campaign.id, status: 'archived' })}
-                            sx={{ borderRadius: 3, textTransform: 'none', color: 'text.secondary' }}
+                            sx={{ borderRadius: 3, color: 'text.secondary' }}
                         >
                             Archiver
                         </Button>

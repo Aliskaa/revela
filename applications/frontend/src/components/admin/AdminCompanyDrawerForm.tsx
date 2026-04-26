@@ -50,7 +50,7 @@ export function AdminCompanyDrawerForm({
     onSubmit,
     isSubmitting = false,
 }: AdminCompanyDrawerFormProps) {
-    const { values, errors, submit, submitting, setField } = useDrawerForm({
+    const { values, errors, submit, submitting, setField, dirty } = useDrawerForm({
         schema: companyFormSchema,
         defaultValues: buildDefaults(initialValues),
         open,
@@ -72,6 +72,7 @@ export function AdminCompanyDrawerForm({
             onSubmit={submit}
             submitLabel={mode === 'create' ? 'Créer' : 'Enregistrer'}
             isSubmitting={isSubmitting || submitting}
+            dirty={dirty}
         >
             <Stack spacing={2.25}>
                 <Box>

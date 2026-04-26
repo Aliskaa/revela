@@ -84,7 +84,7 @@ function RootErrorComponent({ error, reset }: { error: Error; reset: () => void 
                             disableElevation
                             startIcon={<RotateCcw size={16} />}
                             onClick={reset}
-                            sx={{ borderRadius: 3, textTransform: 'none' }}
+                            sx={{ borderRadius: 3 }}
                         >
                             Réessayer
                         </Button>
@@ -93,7 +93,7 @@ function RootErrorComponent({ error, reset }: { error: Error; reset: () => void 
                             onClick={() => {
                                 window.location.href = '/';
                             }}
-                            sx={{ borderRadius: 3, textTransform: 'none' }}
+                            sx={{ borderRadius: 3 }}
                         >
                             Retour à l'accueil
                         </Button>
@@ -139,7 +139,7 @@ function NotFoundComponent() {
                             to="/"
                             variant="contained"
                             disableElevation
-                            sx={{ borderRadius: 3, textTransform: 'none' }}
+                            sx={{ borderRadius: 3 }}
                         >
                             Retour à l'accueil
                         </Button>

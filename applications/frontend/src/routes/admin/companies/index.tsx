@@ -15,7 +15,9 @@ import {
     TableBody,
     TableCell,
     TableHead,
+    TablePagination,
     TableRow,
+    TableSortLabel,
     TextField,
     Typography,
 } from '@mui/material';
@@ -27,9 +29,16 @@ export const Route = createFileRoute('/admin/companies/')({
     component: AdminCompaniesRoute,
 });
 
+type SortKey = 'name' | 'contact_name' | 'participant_count';
+type SortOrder = 'asc' | 'desc';
+
 function AdminCompaniesRoute() {
     const [drawerOpen, setDrawerOpen] = React.useState(false);
     const [search, setSearch] = React.useState('');
+    const [sortKey, setSortKey] = React.useState<SortKey>('name');
+    const [sortOrder, setSortOrder] = React.useState<SortOrder>('asc');
+    const [page, setPage] = React.useState(0);
+    const [rowsPerPage, setRowsPerPage] = React.useState(10);
 
     const { data: companies = [], isLoading: companiesLoading } = useCompanies();
     const { data: campaigns = [], isLoading: campaignsLoading } = useAdminCampaigns();
@@ -40,13 +49,43 @@ function AdminCompaniesRoute() {
         [companies]
     );
 
-    const filtered = search.trim()
-        ? companies.filter(
-              c =>
-                  c.name.toLowerCase().includes(search.toLowerCase()) ||
-                  (c.contact_name ?? '').toLowerCase().includes(search.toLowerCase())
-          )
-        : companies;
+    const filtered = React.useMemo(() => {
+        const base = search.trim()
+            ? companies.filter(
+                  c =>
+                      c.name.toLowerCase().includes(search.toLowerCase()) ||
+                      (c.contact_name ?? '').toLowerCase().includes(search.toLowerCase())
+              )
+            : companies;
+        const direction = sortOrder === 'asc' ? 1 : -1;
+        const sorted = [...base].sort((a, b) => {
+            if (sortKey === 'participant_count') {
+                return (a.participant_count - b.participant_count) * direction;
+            }
+            const av = (sortKey === 'name' ? a.name : (a.contact_name ?? '')).toLowerCase();
+            const bv = (sortKey === 'name' ? b.name : (b.contact_name ?? '')).toLowerCase();
+            return av.localeCompare(bv) * direction;
+        });
+        return sorted;
+    }, [companies, search, sortKey, sortOrder]);
+
+    const paged = React.useMemo(
+        () => filtered.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage),
+        [filtered, page, rowsPerPage]
+    );
+
+    const handleSort = (key: SortKey) => {
+        if (sortKey === key) {
+            setSortOrder(o => (o === 'asc' ? 'desc' : 'asc'));
+        } else {
+            setSortKey(key);
+            setSortOrder('asc');
+        }
+    };
+
+    React.useEffect(() => {
+        setPage(0);
+    }, [search]);
 
     return (
         <Stack spacing={3}>
@@ -101,7 +140,7 @@ function AdminCompaniesRoute() {
                             variant="contained"
                             disableElevation
                             startIcon={<Plus size={16} />}
-                            sx={{ borderRadius: 3, bgcolor: 'primary.main', textTransform: 'none' }}
+                            sx={{ borderRadius: 3, bgcolor: 'primary.main' }}
                         >
                             Ajouter une entreprise
                         </Button>
@@ -154,9 +193,33 @@ function AdminCompaniesRoute() {
                         <Table sx={{ minWidth: 800 }}>
                             <TableHead>
                                 <TableRow>
-                                    <TableCell>Entreprise</TableCell>
-                                    <TableCell>Contact</TableCell>
-                                    <TableCell>Participants</TableCell>
+                                    <TableCell>
+                                        <TableSortLabel
+                                            active={sortKey === 'name'}
+                                            direction={sortKey === 'name' ? sortOrder : 'asc'}
+                                            onClick={() => handleSort('name')}
+                                        >
+                                            Entreprise
+                                        </TableSortLabel>
+                                    </TableCell>
+                                    <TableCell>
+                                        <TableSortLabel
+                                            active={sortKey === 'contact_name'}
+                                            direction={sortKey === 'contact_name' ? sortOrder : 'asc'}
+                                            onClick={() => handleSort('contact_name')}
+                                        >
+                                            Contact
+                                        </TableSortLabel>
+                                    </TableCell>
+                                    <TableCell>
+                                        <TableSortLabel
+                                            active={sortKey === 'participant_count'}
+                                            direction={sortKey === 'participant_count' ? sortOrder : 'asc'}
+                                            onClick={() => handleSort('participant_count')}
+                                        >
+                                            Participants
+                                        </TableSortLabel>
+                                    </TableCell>
                                     <TableCell />
                                 </TableRow>
                             </TableHead>
@@ -171,7 +234,7 @@ function AdminCompaniesRoute() {
                                               ))}
                                           </TableRow>
                                       ))
-                                    : filtered.map(company => (
+                                    : paged.map(company => (
                                           <TableRow hover key={company.id}>
                                               <TableCell>
                                                   <Typography fontWeight={700} color="text.primary">
@@ -192,7 +255,7 @@ function AdminCompaniesRoute() {
                                                       href={`/admin/companies/${company.id}`}
                                                       variant="text"
                                                       endIcon={<ArrowRight size={16} />}
-                                                      sx={{ textTransform: 'none' }}
+
                                                   >
                                                       Ouvrir
                                                   </Button>
@@ -212,6 +275,22 @@ function AdminCompaniesRoute() {
                                 )}
                             </TableBody>
                         </Table>
+                        {filtered.length > 0 && (
+                            <TablePagination
+                                component="div"
+                                count={filtered.length}
+                                page={page}
+                                onPageChange={(_, newPage) => setPage(newPage)}
+                                rowsPerPage={rowsPerPage}
+                                onRowsPerPageChange={e => {
+                                    setRowsPerPage(Number(e.target.value));
+                                    setPage(0);
+                                }}
+                                rowsPerPageOptions={[10, 25, 50]}
+                                labelRowsPerPage="Lignes par page"
+                                labelDisplayedRows={({ from, to, count }) => `${from}–${to} sur ${count}`}
+                            />
+                        )}
                     </Box>
 
                     {/* Mobile cards */}

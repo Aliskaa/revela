@@ -104,7 +104,7 @@ function AdminCampaignDetailRoute() {
                             variant="outlined"
                             component={Link}
                             to="/admin/campaigns"
-                            sx={{ borderRadius: 3, textTransform: 'none' }}
+                            sx={{ borderRadius: 3 }}
                         >
                             Retour aux campagnes
                         </Button>

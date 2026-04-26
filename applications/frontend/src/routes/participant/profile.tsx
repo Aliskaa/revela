@@ -213,14 +213,14 @@ function ParticipantProfileRoute() {
                             startIcon={<PencilLine size={16} />}
                             onClick={handleSave}
                             disabled={updateProfile.isPending}
-                            sx={{ borderRadius: 3, bgcolor: 'primary.main', textTransform: 'none' }}
+                            sx={{ borderRadius: 3, bgcolor: 'primary.main' }}
                         >
                             {updateProfile.isPending ? 'Enregistrement…' : 'Mettre à jour'}
                         </Button>
                         <Button
                             variant="outlined"
                             onClick={handleReset}
-                            sx={{ borderRadius: 3, textTransform: 'none' }}
+                            sx={{ borderRadius: 3 }}
                         >
                             Réinitialiser
                         </Button>

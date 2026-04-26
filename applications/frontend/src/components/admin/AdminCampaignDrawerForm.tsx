@@ -84,7 +84,7 @@ export function AdminCampaignDrawerForm({
     const { data: coaches = [] } = useCoaches();
     const { data: questionnaires = [] } = useAdminQuestionnaires();
 
-    const { values, errors, submit, submitting, setField } = useDrawerForm({
+    const { values, errors, submit, submitting, setField, dirty } = useDrawerForm({
         schema: campaignFormSchema,
         defaultValues: buildDefaults(initialValues),
         open,
@@ -106,6 +106,7 @@ export function AdminCampaignDrawerForm({
             onSubmit={submit}
             submitLabel={mode === 'create' ? 'Créer' : 'Enregistrer'}
             isSubmitting={isSubmitting || submitting}
+            dirty={dirty}
         >
             <Stack spacing={2.25}>
                 <Box>

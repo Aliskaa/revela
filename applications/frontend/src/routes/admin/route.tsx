@@ -128,7 +128,6 @@ function AdminSidebar() {
                                 borderRadius: 4,
                                 py: 1.35,
                                 px: 2,
-                                textTransform: 'none',
                                 bgcolor: active ? 'primary.main' : 'transparent',
                                 color: active ? '#fff' : 'text.secondary',
                                 boxShadow: active ? '0 10px 25px rgba(15,24,152,0.16)' : 'none',
@@ -154,7 +153,6 @@ function AdminSidebar() {
                         borderRadius: 4,
                         py: 1.35,
                         px: 2,
-                        textTransform: 'none',
                         color: 'text.secondary',
                         '&:hover': {
                             bgcolor: 'rgba(239,68,68,0.08)',

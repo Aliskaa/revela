@@ -7,6 +7,7 @@ import { useParticipantSession, useParticipantSessionMatrix } from '@/hooks/part
 import { useSelectedAssignment } from '@/hooks/useSelectedAssignment';
 import { exportResultsPdf } from '@/lib/exportResultsPdf';
 import { PEER_COLORS, buildDimensions } from '@/lib/results/buildDimensions';
+import { useToast } from '@/lib/toast';
 import { useCampaignStore } from '@/stores/campaignStore';
 import {
     Alert,
@@ -21,10 +22,11 @@ import {
     MenuItem,
     Select,
     Stack,
+    Tooltip,
     Typography,
 } from '@mui/material';
 import { createFileRoute } from '@tanstack/react-router';
-import { Download, Radar, Sparkles, UserRound, Users } from 'lucide-react';
+import { Download, HelpCircle, Radar, Sparkles, UserRound, Users } from 'lucide-react';
 
 export const Route = createFileRoute('/participant/results')({
     component: ParticipantResultsRoute,
@@ -34,6 +36,7 @@ function ParticipantResultsRoute() {
     const { data: session, isLoading: sessionLoading, isError: sessionError } = useParticipantSession();
     const { assignment: selectedAssignment, index: selectedIndex, assignments } = useSelectedAssignment(session);
     const selectCampaign = useCampaignStore(s => s.select);
+    const toast = useToast();
 
     const qid = selectedAssignment?.questionnaire_id ?? '';
     const campaignId = selectedAssignment?.campaign_id ?? undefined;
@@ -50,19 +53,32 @@ function ParticipantResultsRoute() {
 
     const participantName = session ? `${session.first_name} ${session.last_name}` : '';
 
-    const handleExportPdf = () => {
+    const [pdfPending, setPdfPending] = React.useState(false);
+
+    const handleExportPdf = async () => {
         if (!matrix || dimensions.length === 0) {
             return;
         }
-        exportResultsPdf({
-            participantName,
-            campaignName,
-            coachName,
-            questionnaireId: matrix.questionnaire_id,
-            peerCount,
-            likertMax: matrix.likert_max,
-            dimensions,
-        });
+        setPdfPending(true);
+        try {
+            // jsPDF est synchrone mais peut bloquer le thread sur de gros PDF — on cède la main pour
+            // laisser le state "pending" se peindre avant l'export.
+            await new Promise(resolve => setTimeout(resolve, 0));
+            exportResultsPdf({
+                participantName,
+                campaignName,
+                coachName,
+                questionnaireId: matrix.questionnaire_id,
+                peerCount,
+                likertMax: matrix.likert_max,
+                dimensions,
+            });
+            toast.success('Synthèse PDF téléchargée.');
+        } catch (err) {
+            toast.error(err instanceof Error && err.message ? err.message : "Échec de l'export PDF.");
+        } finally {
+            setPdfPending(false);
+        }
     };
 
     if (isLoading) {
@@ -100,23 +116,35 @@ function ParticipantResultsRoute() {
                             <Typography variant="h4" fontWeight={800} color="text.primary" sx={{ letterSpacing: -0.5 }}>
                                 {campaignName}
                             </Typography>
-                            <Typography
-                                variant="body1"
-                                color="text.secondary"
-                                sx={{ mt: 1, lineHeight: 1.7, maxWidth: 860 }}
-                            >
-                                Synthèse des scores par dimension : auto-évaluation, moyenne des pairs et test
-                                scientifique.
-                            </Typography>
+                            <Stack direction="row" spacing={0.6} alignItems="center" sx={{ mt: 1, maxWidth: 860 }}>
+                                <Typography variant="body1" color="text.secondary" sx={{ lineHeight: 1.7 }}>
+                                    Synthèse des scores par dimension : auto-évaluation, moyenne des pairs et test
+                                    scientifique.
+                                </Typography>
+                                <Tooltip
+                                    title="Le test scientifique correspond à l'Élément Humain de Will Schutz : un instrument psychométrique qui mesure vos besoins relationnels (Inclusion / Contrôle / Ouverture) et l'écart entre vos comportements actuels et souhaités."
+                                    arrow
+                                >
+                                    <Box
+                                        component="span"
+                                        sx={{ display: 'inline-flex', color: 'text.secondary', cursor: 'help' }}
+                                        aria-label="Définition de l'Élément Humain"
+                                    >
+                                        <HelpCircle size={14} />
+                                    </Box>
+                                </Tooltip>
+                            </Stack>
                             {dimensions.length > 0 && (
                                 <Button
                                     variant="outlined"
                                     size="small"
                                     startIcon={<Download size={16} />}
                                     onClick={handleExportPdf}
-                                    sx={{ mt: 2, borderRadius: 99, textTransform: 'none', fontWeight: 700 }}
+                                    disabled={pdfPending}
+                                    aria-busy={pdfPending}
+                                    sx={{ mt: 2, borderRadius: 99, fontWeight: 700 }}
                                 >
-                                    Exporter en PDF
+                                    {pdfPending ? 'Génération du PDF…' : 'Exporter en PDF'}
                                 </Button>
                             )}
                             {assignments.length > 1 && (

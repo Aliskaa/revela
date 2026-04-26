@@ -12,7 +12,7 @@ import { MetricCard } from '@/components/participant-dashboard/MetricCard';
 import { PageHeader } from '@/components/participant-dashboard/PageHeader';
 import { useParticipantSession } from '@/hooks/participantSession';
 import { useSelectedAssignment } from '@/hooks/useSelectedAssignment';
-import { buildCampaignView, buildJourney, buildMetrics } from '@/lib/participant/dashboardView';
+import { buildCampaignView, buildEffortEstimate, buildJourney, buildMetrics } from '@/lib/participant/dashboardView';
 import { useCampaignStore } from '@/stores/campaignStore';
 
 export const Route = createFileRoute('/participant/')({
@@ -33,6 +33,7 @@ export function ParticipantDashboardRoute() {
         () => buildMetrics(campaignView, selectedAssignment),
         [campaignView, selectedAssignment]
     );
+    const effort = React.useMemo(() => buildEffortEstimate(selectedAssignment), [selectedAssignment]);
     const participantFirstName = session?.first_name?.trim() || 'Participant';
 
     if (isLoading) {
@@ -68,6 +69,7 @@ export function ParticipantDashboardRoute() {
                         selectCampaign(a.campaign_id);
                     }
                 }}
+                effort={effort}
             />
 
             <Box

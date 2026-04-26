@@ -48,7 +48,7 @@ export function AdminCoachDrawerForm({
     onSubmit,
     isSubmitting = false,
 }: AdminCoachDrawerFormProps) {
-    const { values, errors, submit, submitting, setField } = useDrawerForm({
+    const { values, errors, submit, submitting, setField, dirty } = useDrawerForm({
         schema: coachFormSchema,
         defaultValues: buildDefaults(initialValues),
         open,
@@ -70,6 +70,7 @@ export function AdminCoachDrawerForm({
             onSubmit={submit}
             submitLabel={mode === 'create' ? 'Créer' : 'Enregistrer'}
             isSubmitting={isSubmitting || submitting}
+            dirty={dirty}
         >
             <Stack spacing={2.25}>
                 <Box>

@@ -1,4 +1,17 @@
-import { Box, Button, Divider, Drawer, IconButton, Stack, Typography } from '@mui/material';
+import {
+    Box,
+    Button,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogContentText,
+    DialogTitle,
+    Divider,
+    Drawer,
+    IconButton,
+    Stack,
+    Typography,
+} from '@mui/material';
 import { X } from 'lucide-react';
 import * as React from 'react';
 import { useTranslation } from 'react-i18next';
@@ -17,6 +30,12 @@ export type AdminDrawerFormProps = {
     footerRight?: React.ReactNode;
     isSubmitDisabled?: boolean;
     isSubmitting?: boolean;
+    /**
+     * Si `true`, fermer le drawer (clic extérieur, X, Annuler) ouvre un dialog de confirmation
+     * pour éviter de perdre les modifications en cours. Typiquement câblé sur `dirty` retourné
+     * par `useDrawerForm`.
+     */
+    dirty?: boolean;
 };
 
 export function AdminDrawerForm({
@@ -33,16 +52,32 @@ export function AdminDrawerForm({
     footerRight,
     isSubmitDisabled = false,
     isSubmitting = false,
+    dirty = false,
 }: AdminDrawerFormProps) {
     const { t } = useTranslation();
     const titleId = React.useId();
     const resolvedSubmitLabel = submitLabel ?? t('common.save');
     const resolvedCancelLabel = cancelLabel ?? t('common.cancel');
+    const [confirmOpen, setConfirmOpen] = React.useState(false);
+
+    const requestClose = React.useCallback(() => {
+        if (dirty) {
+            setConfirmOpen(true);
+            return;
+        }
+        onClose();
+    }, [dirty, onClose]);
+
+    const handleConfirmDiscard = () => {
+        setConfirmOpen(false);
+        onClose();
+    };
+
     return (
         <Drawer
             anchor="right"
             open={open}
-            onClose={onClose}
+            onClose={requestClose}
             slotProps={{
                 paper: {
                     sx: {
@@ -75,7 +110,7 @@ export function AdminDrawerForm({
                         </Box>
 
                         <IconButton
-                            onClick={onClose}
+                            onClick={requestClose}
                             aria-label={t('drawer.closePanel')}
                             sx={{ border: '1px solid rgba(15,23,42,0.10)' }}
                         >
@@ -104,9 +139,9 @@ export function AdminDrawerForm({
                         <Stack direction="row" spacing={1.2} sx={{ ml: 'auto' }}>
                             {footerRight}
                             <Button
-                                onClick={onClose}
+                                onClick={requestClose}
                                 variant="outlined"
-                                sx={{ borderRadius: 3, textTransform: 'none' }}
+                                sx={{ borderRadius: 3 }}
                             >
                                 {resolvedCancelLabel}
                             </Button>
@@ -117,7 +152,7 @@ export function AdminDrawerForm({
                                     variant="contained"
                                     disableElevation
                                     disabled={isSubmitDisabled || isSubmitting}
-                                    sx={{ borderRadius: 3, textTransform: 'none' }}
+                                    sx={{ borderRadius: 3 }}
                                 >
                                     {isSubmitting ? t('common.saving') : resolvedSubmitLabel}
                                 </Button>
@@ -126,6 +161,20 @@ export function AdminDrawerForm({
                     </Stack>
                 </Box>
             </Box>
+            <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)}>
+                <DialogTitle>Abandonner les modifications ?</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        Vous avez des modifications non enregistrées. Si vous fermez le panneau, elles seront perdues.
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setConfirmOpen(false)}>Continuer la saisie</Button>
+                    <Button onClick={handleConfirmDiscard} color="error" variant="contained" disableElevation>
+                        Abandonner
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </Drawer>
     );
 }
