@@ -1,14 +1,4 @@
-/*
- * Copyright (c) 2026 AOR Conseil. All rights reserved.
- * Proprietary and confidential.
- * Licensed under the AOR Commercial License.
- *
- * Use, reproduction, modification, distribution, or disclosure of this
- * source code, in whole or in part, is prohibited except under a valid
- * written commercial agreement with AOR Conseil.
- *
- * See LICENSE.md for the full license terms.
- */
+// Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
 
 import { getQuestionnaireEntry, isQuestionnaireUserFacing } from '@aor/questionnaires';
 import { calculateScores } from '@aor/scoring';
@@ -17,6 +7,7 @@ import { submitParticipantQuestionnaireBodySchema } from '@aor/types';
 
 import { parsePeerRatingTargetParticipantId } from '@aor/domain';
 import { ResponsesQuestionnaireNotFoundError, ResponsesValidationError } from '@src/domain/responses/responses.errors';
+import { Response } from '@src/domain/responses';
 import type { ICampaignsReadPort } from '@src/interfaces/campaigns/ICampaignsRepository.port';
 import type { ICompaniesReadPort } from '@src/interfaces/companies/ICompaniesRepository.port';
 import type {
@@ -69,7 +60,7 @@ export class SubmitParticipantQuestionnaireUseCase {
         if (!participant) {
             throw new ResponsesValidationError('Participant introuvable.');
         }
-        if (!participant.passwordHash) {
+        if (!participant.isActivated()) {
             throw new ResponsesValidationError('Compte non activé.');
         }
 
@@ -128,18 +119,20 @@ export class SubmitParticipantQuestionnaireUseCase {
                 scoreKey: Number(scoreKey),
                 value,
             }));
-            const record = await this.ports.responses.create({
-                questionnaireId: qid,
-                campaignId,
-                submissionKind: 'self_rating',
-                subjectParticipantId: participant.id,
-                raterParticipantId: participant.id,
-                participantId: participant.id,
-                name: info.name,
-                email: info.email,
-                organisation: info.organisation,
-                scores: scoresRows,
-            });
+            const record = await this.ports.responses.create(
+                Response.create({
+                    questionnaireId: qid,
+                    campaignId,
+                    submissionKind: 'self_rating',
+                    subjectParticipantId: participant.id,
+                    raterParticipantId: participant.id,
+                    participantId: participant.id,
+                    name: info.name,
+                    email: info.email,
+                    organisation: info.organisation,
+                    scores: scoresRows,
+                })
+            );
             const scoresOut: Record<string, number> = {};
             for (const row of scoresRows) {
                 scoresOut[String(row.scoreKey)] = row.value;
@@ -203,19 +196,21 @@ export class SubmitParticipantQuestionnaireUseCase {
                 scoreKey: Number(scoreKey),
                 value,
             }));
-            const record = await this.ports.responses.create({
-                questionnaireId: qid,
-                campaignId,
-                submissionKind: 'peer_rating',
-                subjectParticipantId: participant.id,
-                raterParticipantId: null,
-                ratedParticipantId: ratedParticipantId ?? null,
-                participantId: participant.id,
-                name: peerLabel,
-                email: participant.email,
-                organisation: info.organisation,
-                scores: scoresRows,
-            });
+            const record = await this.ports.responses.create(
+                Response.create({
+                    questionnaireId: qid,
+                    campaignId,
+                    submissionKind: 'peer_rating',
+                    subjectParticipantId: participant.id,
+                    raterParticipantId: null,
+                    ratedParticipantId: ratedParticipantId ?? null,
+                    participantId: participant.id,
+                    name: peerLabel,
+                    email: participant.email,
+                    organisation: info.organisation,
+                    scores: scoresRows,
+                })
+            );
             const scoresOut: Record<string, number> = {};
             for (const row of scoresRows) {
                 scoresOut[String(row.scoreKey)] = row.value;
@@ -247,18 +242,20 @@ export class SubmitParticipantQuestionnaireUseCase {
             value,
         }));
 
-        const record = await this.ports.responses.create({
-            questionnaireId: qid,
-            campaignId,
-            submissionKind: 'element_humain',
-            subjectParticipantId: participant.id,
-            raterParticipantId: participant.id,
-            participantId: participant.id,
-            name: info.name,
-            email: info.email,
-            organisation: info.organisation,
-            scores: scoresRows,
-        });
+        const record = await this.ports.responses.create(
+            Response.create({
+                questionnaireId: qid,
+                campaignId,
+                submissionKind: 'element_humain',
+                subjectParticipantId: participant.id,
+                raterParticipantId: participant.id,
+                participantId: participant.id,
+                name: info.name,
+                email: info.email,
+                organisation: info.organisation,
+                scores: scoresRows,
+            })
+        );
 
         const scoresOut: Record<string, number> = {};
         for (const [k, v] of Object.entries(scoresMap)) {

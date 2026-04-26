@@ -1,14 +1,4 @@
-/*
- * Copyright (c) 2026 AOR Conseil. All rights reserved.
- * Proprietary and confidential.
- * Licensed under the AOR Commercial License.
- *
- * Use, reproduction, modification, distribution, or disclosure of this
- * source code, in whole or in part, is prohibited except under a valid
- * written commercial agreement with AOR Conseil.
- *
- * See LICENSE.md for the full license terms.
- */
+// Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
 
 /** Questionnaire inconnu du catalogue lors d’une soumission publique. */
 export class ResponsesQuestionnaireNotFoundError extends Error {
@@ -33,6 +23,15 @@ export class ResponseRecordNotFoundError extends Error {
     public constructor() {
         super('');
         this.name = 'ResponseRecordNotFoundError';
+        Object.setPrototypeOf(this, new.target.prototype);
+    }
+}
+
+/** `questionnaireId` vide au moment de la création de l'entité — violation d'invariant. */
+export class ResponseQuestionnaireIdRequiredError extends Error {
+    public constructor() {
+        super("L'identifiant du questionnaire est requis sur la réponse.");
+        this.name = 'ResponseQuestionnaireIdRequiredError';
         Object.setPrototypeOf(this, new.target.prototype);
     }
 }

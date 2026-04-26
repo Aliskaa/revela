@@ -1,6 +1,7 @@
 import { randomBytes } from 'node:crypto';
 
 import { AdminResourceNotFoundError, AdminValidationError } from '@src/domain/admin/admin.errors';
+import { Invitation } from '@src/domain/invitations';
 import type { ICampaignsReadPort } from '@src/interfaces/campaigns/ICampaignsRepository.port';
 import type { IInvitationsWritePort } from '@src/interfaces/invitations/IInvitationsRepository.port';
 import type {
@@ -28,13 +29,15 @@ export class InviteCampaignParticipantsUseCase {
         const participants = await this.ports.participants.listByCompanyId(campaign.companyId);
         let created = 0;
         for (const participant of participants) {
-            await this.ports.invitations.create({
-                token: randomBytes(32).toString('base64url'),
-                participantId: participant.id,
-                campaignId: campaign.id,
-                questionnaireId: campaign.questionnaireId,
-                expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-            });
+            await this.ports.invitations.create(
+                Invitation.create({
+                    token: randomBytes(32).toString('base64url'),
+                    participantId: participant.id,
+                    campaignId: campaign.id,
+                    questionnaireId: campaign.questionnaireId,
+                    expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+                })
+            );
             await this.ports.participants.ensureCampaignParticipantInvited(campaign.id, participant.id);
             created += 1;
         }

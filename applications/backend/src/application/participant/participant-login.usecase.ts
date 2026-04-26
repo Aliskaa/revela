@@ -1,14 +1,4 @@
-/*
- * Copyright (c) 2026 AOR Conseil. All rights reserved.
- * Proprietary and confidential.
- * Licensed under the AOR Commercial License.
- *
- * Use, reproduction, modification, distribution, or disclosure of this
- * source code, in whole or in part, is prohibited except under a valid
- * written commercial agreement with AOR Conseil.
- *
- * See LICENSE.md for the full license terms.
- */
+// Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
 
 import type { IPasswordVerifierPort } from '@aor/ports';
 import {
@@ -46,10 +36,10 @@ export class ParticipantLoginUseCase {
         if (!participant) {
             throw new ParticipantInvalidCredentialsError();
         }
-        if (!participant.passwordHash) {
+        if (!participant.isActivated()) {
             throw new ParticipantPasswordNotSetError();
         }
-        if (!this.ports.passwordVerifier.verify(password, participant.passwordHash)) {
+        if (!participant.verifyPassword(password, this.ports.passwordVerifier)) {
             throw new ParticipantInvalidCredentialsError();
         }
         return ParticipantLoginResult.create(this.ports.jwtSigner.signAccessToken(participant.id));

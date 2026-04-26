@@ -58,12 +58,16 @@ function AdminCompaniesRoute() {
                     createCompany.reset();
                 }}
                 onSubmit={async values => {
-                    await createCompany.mutateAsync({
-                        name: values.name,
-                        contactName: values.contactName || null,
-                        contactEmail: values.contactEmail || null,
-                    });
-                    setDrawerOpen(false);
+                    try {
+                        await createCompany.mutateAsync({
+                            name: values.name,
+                            contactName: values.contactName || null,
+                            contactEmail: values.contactEmail || null,
+                        });
+                        setDrawerOpen(false);
+                    } catch {
+                        // Le toast d'erreur est émis par le hook ; on garde le drawer ouvert.
+                    }
                 }}
             />
 

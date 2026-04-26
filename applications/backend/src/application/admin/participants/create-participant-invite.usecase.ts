@@ -1,14 +1,4 @@
-/*
- * Copyright (c) 2026 AOR Conseil. All rights reserved.
- * Proprietary and confidential.
- * Licensed under the AOR Commercial License.
- *
- * Use, reproduction, modification, distribution, or disclosure of this
- * source code, in whole or in part, is prohibited except under a valid
- * written commercial agreement with AOR Conseil.
- *
- * See LICENSE.md for the full license terms.
- */
+// Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
 
 import { randomBytes } from 'node:crypto';
 
@@ -16,6 +6,7 @@ import { getQuestionnaireEntry, isQuestionnaireUserFacing } from '@aor/questionn
 
 import { invitationTokenAdminStatus } from '@aor/domain';
 import { AdminInvalidQuestionnaireError, AdminResourceNotFoundError } from '@src/domain/admin/admin.errors';
+import { Invitation } from '@src/domain/invitations';
 import type { IInviteUrlConfigPort } from '@src/interfaces/admin/IInviteUrlConfig.port';
 import type { ICampaignsReadPort } from '@src/interfaces/campaigns/ICampaignsRepository.port';
 import type { IInvitationsWritePort } from '@src/interfaces/invitations/IInvitationsRepository.port';
@@ -83,13 +74,15 @@ export class CreateParticipantInviteUseCase {
         }
         const sendEmail = Boolean(body.send_email);
         const tokenStr = randomBytes(32).toString('base64url');
-        const invitation = await this.ports.invitations.create({
-            token: tokenStr,
-            participantId,
-            campaignId: campaign.id,
-            questionnaireId: qid,
-            expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-        });
+        const invitation = await this.ports.invitations.create(
+            Invitation.create({
+                token: tokenStr,
+                participantId,
+                campaignId: campaign.id,
+                questionnaireId: qid,
+                expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+            })
+        );
         await this.ports.participants.ensureCampaignParticipantInvited(campaign.id, participantId);
 
         const inviteUrl = `${this.ports.inviteUrlConfig.frontendBaseUrl}/invite/${invitation.token}`;

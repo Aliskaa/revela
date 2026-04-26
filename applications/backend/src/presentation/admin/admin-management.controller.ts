@@ -1,16 +1,7 @@
-/*
- * Copyright (c) 2026 AOR Conseil. All rights reserved.
- * Proprietary and confidential.
- * Licensed under the AOR Commercial License.
- *
- * Use, reproduction, modification, distribution, or disclosure of this
- * source code, in whole or in part, is prohibited except under a valid
- * written commercial agreement with AOR Conseil.
- *
- * See LICENSE.md for the full license terms.
- */
+// Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
 
 import { Controller, Get, Inject, UseFilters, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
 import type { GetAdminDashboardUseCase } from '@src/application/admin/dashboard/get-admin-dashboard.usecase';
 import type { GetAdminMailStatusUseCase } from '@src/application/admin/mail/get-admin-mail-status.usecase';
@@ -21,6 +12,8 @@ import { AdminJwtAuthGuard } from './admin-jwt-auth.guard';
 import { adminDashboardToJson } from './admin.presenters';
 import { GET_ADMIN_DASHBOARD_USE_CASE_SYMBOL, GET_ADMIN_MAIL_STATUS_USE_CASE_SYMBOL } from './admin.tokens';
 
+@ApiTags('admin-management')
+@ApiBearerAuth('jwt')
 @Controller('admin')
 @UseGuards(AdminJwtAuthGuard)
 @UseFilters(AdminApplicationExceptionFilter, ResponsesExceptionFilter)

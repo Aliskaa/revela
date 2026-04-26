@@ -1,6 +1,7 @@
 import { Box, Button, Divider, Drawer, IconButton, Stack, Typography } from '@mui/material';
 import { X } from 'lucide-react';
-import type * as React from 'react';
+import * as React from 'react';
+import { useTranslation } from 'react-i18next';
 
 export type AdminDrawerFormProps = {
     open: boolean;
@@ -24,8 +25,8 @@ export function AdminDrawerForm({
     subtitle,
     onClose,
     onSubmit,
-    submitLabel = 'Enregistrer',
-    cancelLabel = 'Annuler',
+    submitLabel,
+    cancelLabel,
     children,
     width = 560,
     footerLeft,
@@ -33,16 +34,23 @@ export function AdminDrawerForm({
     isSubmitDisabled = false,
     isSubmitting = false,
 }: AdminDrawerFormProps) {
+    const { t } = useTranslation();
+    const titleId = React.useId();
+    const resolvedSubmitLabel = submitLabel ?? t('common.save');
+    const resolvedCancelLabel = cancelLabel ?? t('common.cancel');
     return (
         <Drawer
             anchor="right"
             open={open}
             onClose={onClose}
-            PaperProps={{
-                sx: {
-                    width: { xs: '100vw', sm: width },
-                    maxWidth: '100vw',
-                    bgcolor: '#fff',
+            slotProps={{
+                paper: {
+                    sx: {
+                        width: { xs: '100vw', sm: width },
+                        maxWidth: '100vw',
+                        bgcolor: 'background.paper',
+                    },
+                    'aria-labelledby': titleId,
                 },
             }}
         >
@@ -56,7 +64,7 @@ export function AdminDrawerForm({
                 <Box sx={{ p: 2.5 }}>
                     <Stack direction="row" justifyContent="space-between" alignItems="start" spacing={2}>
                         <Box sx={{ minWidth: 0 }}>
-                            <Typography variant="h6" fontWeight={800} color="text.primary">
+                            <Typography id={titleId} variant="h6" fontWeight={800} color="text.primary">
                                 {title}
                             </Typography>
                             {subtitle ? (
@@ -68,7 +76,7 @@ export function AdminDrawerForm({
 
                         <IconButton
                             onClick={onClose}
-                            aria-label="Fermer le panneau"
+                            aria-label={t('drawer.closePanel')}
                             sx={{ border: '1px solid rgba(15,23,42,0.10)' }}
                         >
                             <X size={16} />
@@ -100,7 +108,7 @@ export function AdminDrawerForm({
                                 variant="outlined"
                                 sx={{ borderRadius: 3, textTransform: 'none' }}
                             >
-                                {cancelLabel}
+                                {resolvedCancelLabel}
                             </Button>
 
                             {onSubmit ? (
@@ -111,7 +119,7 @@ export function AdminDrawerForm({
                                     disabled={isSubmitDisabled || isSubmitting}
                                     sx={{ borderRadius: 3, textTransform: 'none' }}
                                 >
-                                    {isSubmitting ? 'Enregistrement…' : submitLabel}
+                                    {isSubmitting ? t('common.saving') : resolvedSubmitLabel}
                                 </Button>
                             ) : null}
                         </Stack>
@@ -121,19 +129,3 @@ export function AdminDrawerForm({
         </Drawer>
     );
 }
-
-/*
-Usage:
-
-<AdminDrawerForm
-  open={open}
-  title="Nouvelle campagne"
-  subtitle="Créer une campagne et l’assigner à un questionnaire"
-  onClose={() => setOpen(false)}
-  onSubmit={handleSubmit}
->
-  <Stack spacing={2}>
-    ...form fields...
-  </Stack>
-</AdminDrawerForm>
-*/

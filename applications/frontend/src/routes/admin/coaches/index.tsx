@@ -78,17 +78,22 @@ function AdminCoachesRoute() {
             <AdminCoachDrawerForm
                 open={drawerOpen}
                 mode="create"
+                isSubmitting={createCoach.isPending}
                 onClose={() => {
                     setDrawerOpen(false);
                     createCoach.reset();
                 }}
                 onSubmit={async values => {
-                    await createCoach.mutateAsync({
-                        username: values.email,
-                        password: 'changeme123',
-                        displayName: `${values.firstName} ${values.lastName}`.trim(),
-                    });
-                    setDrawerOpen(false);
+                    try {
+                        await createCoach.mutateAsync({
+                            username: values.username,
+                            password: values.password,
+                            displayName: values.displayName,
+                        });
+                        setDrawerOpen(false);
+                    } catch {
+                        // Le toast d'erreur est émis par le hook ; on garde le drawer ouvert.
+                    }
                 }}
             />
 

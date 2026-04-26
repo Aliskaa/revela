@@ -1,19 +1,9 @@
-/*
- * Copyright (c) 2026 AOR Conseil. All rights reserved.
- * Proprietary and confidential.
- * Licensed under the AOR Commercial License.
- *
- * Use, reproduction, modification, distribution, or disclosure of this
- * source code, in whole or in part, is prohibited except under a valid
- * written commercial agreement with AOR Conseil.
- *
- * See LICENSE.md for the full license terms.
- */
+// Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
 
 import type { AdminDashboardSnapshot } from '@aor/domain';
-import type { CampaignRecord } from '@src/interfaces/campaigns/ICampaignsRepository.port';
-import type { CoachRecord } from '@src/interfaces/coaches/ICoachesRepository.port';
-import type { CompanyWithParticipantCount } from '@src/interfaces/companies/ICompaniesRepository.port';
+import type { Campaign } from '@src/domain/campaigns';
+import type { Coach } from '@src/domain/coaches';
+import type { CompanyWithParticipantCountReadModel } from '@src/interfaces/companies/ICompaniesRepository.port';
 import type { ParticipantAdminListItem } from '@src/interfaces/participants/IParticipantsRepository.port';
 
 export const participantToAdminJson = (p: ParticipantAdminListItem) => ({
@@ -27,7 +17,7 @@ export const participantToAdminJson = (p: ParticipantAdminListItem) => ({
     response_count: p.responseCount,
 });
 
-export const companyToAdminJson = (c: CompanyWithParticipantCount) => ({
+export const companyToAdminJson = (c: CompanyWithParticipantCountReadModel) => ({
     id: c.id,
     name: c.name,
     contact_name: c.contactName,
@@ -35,7 +25,11 @@ export const companyToAdminJson = (c: CompanyWithParticipantCount) => ({
     participant_count: c.participantCount,
 });
 
-const coachWithoutPasswordToJson = (c: Omit<CoachRecord, 'password'>) => ({
+/**
+ * Sérialise un `Coach` en enveloppe publique : uniquement les champs safe explicitement listés.
+ * Le `#passwordHash` (champ privé ECMAScript) n'est jamais atteignable ici.
+ */
+export const coachToAdminJson = (c: Coach) => ({
     id: c.id,
     username: c.username,
     displayName: c.displayName,
@@ -43,12 +37,23 @@ const coachWithoutPasswordToJson = (c: Omit<CoachRecord, 'password'>) => ({
     createdAt: c.createdAt,
 });
 
-export const adminCoachDetailToJson = (detail: {
-    coach: Omit<CoachRecord, 'password'>;
-    campaigns: CampaignRecord[];
-}) => ({
-    coach: coachWithoutPasswordToJson(detail.coach),
-    campaigns: detail.campaigns,
+export const adminCoachDetailToJson = (detail: { coach: Coach; campaigns: Campaign[] }) => ({
+    coach: coachToAdminJson(detail.coach),
+    campaigns: detail.campaigns.map(campaignToAdminJson),
+});
+
+/** Sérialise un `Campaign` en DTO plat pour l'API admin. */
+export const campaignToAdminJson = (c: Campaign) => ({
+    id: c.id,
+    coachId: c.coachId,
+    companyId: c.companyId,
+    name: c.name,
+    questionnaireId: c.questionnaireId,
+    status: c.status,
+    allowTestWithoutManualInputs: c.allowTestWithoutManualInputs,
+    startsAt: c.startsAt,
+    endsAt: c.endsAt,
+    createdAt: c.createdAt,
 });
 
 export const adminDashboardToJson = (snapshot: AdminDashboardSnapshot) => ({

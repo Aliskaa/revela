@@ -1,14 +1,4 @@
-/*
- * Copyright (c) 2026 AOR Conseil. All rights reserved.
- * Proprietary and confidential.
- * Licensed under the AOR Commercial License.
- *
- * Use, reproduction, modification, distribution, or disclosure of this
- * source code, in whole or in part, is prohibited except under a valid
- * written commercial agreement with AOR Conseil.
- *
- * See LICENSE.md for the full license terms.
- */
+// Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
 
 import { Module } from '@nestjs/common';
 
@@ -77,7 +67,8 @@ import {
         },
         {
             provide: UPDATE_ADMIN_CAMPAIGN_STATUS_USE_CASE_SYMBOL,
-            useFactory: (campaigns: ICampaignsWritePort) => new UpdateAdminCampaignStatusUseCase({ campaigns }),
+            useFactory: (campaigns: ICampaignsReadPort & ICampaignsWritePort) =>
+                new UpdateAdminCampaignStatusUseCase({ campaigns }),
             inject: [CAMPAIGNS_REPOSITORY_PORT_SYMBOL],
         },
         {

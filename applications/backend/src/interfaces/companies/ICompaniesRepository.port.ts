@@ -1,51 +1,35 @@
-/*
- * Copyright (c) 2026 AOR Conseil. All rights reserved.
- * Proprietary and confidential.
- * Licensed under the AOR Commercial License.
- *
- * Use, reproduction, modification, distribution, or disclosure of this
- * source code, in whole or in part, is prohibited except under a valid
- * written commercial agreement with AOR Conseil.
- *
- * See LICENSE.md for the full license terms.
- */
+// Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
+
+import type { Company } from '@src/domain/companies';
 
 export const COMPANIES_REPOSITORY_PORT_SYMBOL = Symbol('COMPANIES_REPOSITORY_PORT_SYMBOL');
 
-export type CompanyRecord = {
+/**
+ * Projection CQRS read-side : `Company` + aggregation `participantCount`. Ce n'est pas une
+ * entité de domaine (pas de comportement métier) — c'est un modèle de lecture destiné aux
+ * listes/détails enrichis.
+ */
+export type CompanyWithParticipantCountReadModel = {
     id: number;
     name: string;
     contactName: string | null;
     contactEmail: string | null;
     createdAt: Date | null;
-};
-
-export type CompanyWithParticipantCount = CompanyRecord & {
     participantCount: number;
 };
 
-export type CreateCompanyCommand = {
-    name: string;
-    contactName?: string;
-    contactEmail?: string;
-};
-
-export type UpdateCompanyCommand = {
-    name: string;
-    contactName: string | null;
-    contactEmail: string | null;
-};
-
 export interface ICompaniesReadPort {
-    findByName(name: string): Promise<CompanyRecord | null>;
-    findById(id: number): Promise<CompanyRecord | null>;
-    findByIdWithParticipantCount(id: number): Promise<CompanyWithParticipantCount | null>;
-    listOrderedWithParticipantCount(): Promise<CompanyWithParticipantCount[]>;
+    findByName(name: string): Promise<Company | null>;
+    findById(id: number): Promise<Company | null>;
+    findByIdWithParticipantCount(id: number): Promise<CompanyWithParticipantCountReadModel | null>;
+    listOrderedWithParticipantCount(): Promise<CompanyWithParticipantCountReadModel[]>;
 }
 
 export interface ICompaniesWritePort {
-    create(command: CreateCompanyCommand): Promise<CompanyRecord>;
-    update(id: number, command: UpdateCompanyCommand): Promise<CompanyRecord | null>;
+    /** Persiste une nouvelle entité et retourne l'entité hydratée avec id + createdAt issus de la DB. */
+    create(company: Company): Promise<Company>;
+    /** Persiste les changements d'une entité existante. Retourne `null` si l'id n'existe pas. */
+    save(company: Company): Promise<Company | null>;
     deleteById(id: number): Promise<void>;
 }
 

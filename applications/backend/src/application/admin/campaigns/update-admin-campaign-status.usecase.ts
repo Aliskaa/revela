@@ -1,23 +1,42 @@
+// Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
+
 import { AdminResourceNotFoundError, AdminValidationError } from '@src/domain/admin/admin.errors';
-import type { CampaignStatus, ICampaignsWritePort } from '@src/interfaces/campaigns/ICampaignsRepository.port';
+import type { Campaign } from '@src/domain/campaigns';
+import type {
+    CampaignStatus,
+    ICampaignsReadPort,
+    ICampaignsWritePort,
+} from '@src/interfaces/campaigns/ICampaignsRepository.port';
+
+const VALID_STATUSES: readonly CampaignStatus[] = ['draft', 'active', 'closed', 'archived'] as const;
 
 export class UpdateAdminCampaignStatusUseCase {
     public constructor(
         private readonly ports: {
-            readonly campaigns: ICampaignsWritePort;
+            readonly campaigns: ICampaignsReadPort & ICampaignsWritePort;
         }
     ) {}
 
-    public async execute(campaignId: number, status: CampaignStatus, options?: { alignStartsAtToNow?: boolean }) {
-        if (!['draft', 'active', 'closed', 'archived'].includes(status)) {
+    public async execute(
+        campaignId: number,
+        status: CampaignStatus,
+        options?: { alignStartsAtToNow?: boolean }
+    ): Promise<Campaign> {
+        if (!(VALID_STATUSES as readonly string[]).includes(status)) {
             throw new AdminValidationError('status invalide.');
         }
-        const patch =
-            status === 'active' && options?.alignStartsAtToNow === true ? { startsAt: new Date() } : undefined;
-        const updated = await this.ports.campaigns.updateStatus(campaignId, status, patch);
-        if (!updated) {
+        const current = await this.ports.campaigns.findById(campaignId);
+        if (!current) {
             throw new AdminResourceNotFoundError('Campagne introuvable.');
         }
-        return updated;
+        const next = current.transitionTo(status, {
+            alignStartsAtToNow:
+                status === 'active' && options?.alignStartsAtToNow === true ? new Date() : undefined,
+        });
+        const saved = await this.ports.campaigns.save(next);
+        if (!saved) {
+            throw new AdminResourceNotFoundError('Campagne introuvable.');
+        }
+        return saved;
     }
 }

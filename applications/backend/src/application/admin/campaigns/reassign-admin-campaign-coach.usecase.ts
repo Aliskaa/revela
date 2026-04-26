@@ -1,9 +1,8 @@
+// Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
+
 import { AdminResourceNotFoundError, AdminValidationError } from '@src/domain/admin/admin.errors';
-import type {
-    CampaignRecord,
-    ICampaignsReadPort,
-    ICampaignsWritePort,
-} from '@src/interfaces/campaigns/ICampaignsRepository.port';
+import type { Campaign } from '@src/domain/campaigns';
+import type { ICampaignsReadPort, ICampaignsWritePort } from '@src/interfaces/campaigns/ICampaignsRepository.port';
 import type { ICoachesReadPort } from '@src/interfaces/coaches/ICoachesRepository.port';
 
 export class ReassignAdminCampaignCoachUseCase {
@@ -14,7 +13,7 @@ export class ReassignAdminCampaignCoachUseCase {
         }
     ) {}
 
-    public async execute(campaignId: number, coachId: number): Promise<CampaignRecord> {
+    public async execute(campaignId: number, coachId: number): Promise<Campaign> {
         if (!Number.isFinite(coachId) || coachId <= 0) {
             throw new AdminValidationError('coach_id invalide.');
         }
@@ -29,14 +28,15 @@ export class ReassignAdminCampaignCoachUseCase {
             throw new AdminResourceNotFoundError('Coach introuvable.');
         }
 
-        if (campaign.coachId === coachId) {
+        const reassigned = campaign.reassignTo(coachId);
+        if (reassigned === campaign) {
             return campaign;
         }
 
-        const updated = await this.ports.campaigns.updateCoachId(campaignId, coachId);
-        if (!updated) {
+        const saved = await this.ports.campaigns.save(reassigned);
+        if (!saved) {
             throw new AdminResourceNotFoundError('Campagne introuvable.');
         }
-        return updated;
+        return saved;
     }
 }

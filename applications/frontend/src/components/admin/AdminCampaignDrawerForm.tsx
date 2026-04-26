@@ -1,11 +1,12 @@
-import { useCoaches, useCompanies } from '@/hooks/admin';
-import { useAdminQuestionnaires } from '@/hooks/questionnaires';
+// Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
+
 import {
     Alert,
     Box,
     Checkbox,
     FormControl,
     FormControlLabel,
+    FormHelperText,
     InputLabel,
     MenuItem,
     Select,
@@ -13,21 +14,41 @@ import {
     TextField,
     Typography,
 } from '@mui/material';
-import * as React from 'react';
+import { z } from 'zod';
+
+import { useCoaches, useCompanies } from '@/hooks/admin';
+import { useAdminQuestionnaires } from '@/hooks/questionnaires';
+import { useDrawerForm } from '@/lib/useDrawerForm';
+
 import { AdminDrawerForm } from './AdminDrawerForm';
 
 export type CampaignDrawerMode = 'create' | 'edit';
 
-export type CampaignFormValues = {
-    name: string;
-    companyId: number | '';
-    coachId: number | '';
-    questionnaireId: string;
-    startDate: string;
-    endDate: string;
-    status: 'draft' | 'active' | 'closed' | 'archived';
-    allowTestWithoutManualInputs: boolean;
-};
+const campaignFormSchema = z
+    .object({
+        name: z.string().trim().min(3, 'Le nom doit contenir au moins 3 caractères.'),
+        companyId: z.number().int().positive("L'entreprise est requise."),
+        coachId: z.number().int().positive('Le coach est requis.'),
+        questionnaireId: z.string().trim().min(1, 'Le questionnaire est requis.'),
+        startDate: z.string().trim(),
+        endDate: z.string().trim(),
+        status: z.enum(['draft', 'active', 'closed', 'archived']),
+        allowTestWithoutManualInputs: z.boolean(),
+    })
+    .refine(
+        data => {
+            if (data.startDate.length === 0 || data.endDate.length === 0) {
+                return true;
+            }
+            return new Date(data.startDate) <= new Date(data.endDate);
+        },
+        {
+            message: 'La date de fin doit être postérieure à la date de début.',
+            path: ['endDate'],
+        }
+    );
+
+export type CampaignFormValues = z.infer<typeof campaignFormSchema>;
 
 export type AdminCampaignDrawerFormProps = {
     open: boolean;
@@ -39,16 +60,16 @@ export type AdminCampaignDrawerFormProps = {
     error?: string | null;
 };
 
-const defaultValues: CampaignFormValues = {
-    name: '',
-    companyId: '',
-    coachId: '',
-    questionnaireId: '',
-    startDate: '',
-    endDate: '',
-    status: 'draft',
-    allowTestWithoutManualInputs: false,
-};
+const buildDefaults = (initial?: Partial<CampaignFormValues>): CampaignFormValues => ({
+    name: initial?.name ?? '',
+    companyId: initial?.companyId ?? 0,
+    coachId: initial?.coachId ?? 0,
+    questionnaireId: initial?.questionnaireId ?? '',
+    startDate: initial?.startDate ?? '',
+    endDate: initial?.endDate ?? '',
+    status: initial?.status ?? 'draft',
+    allowTestWithoutManualInputs: initial?.allowTestWithoutManualInputs ?? false,
+});
 
 export function AdminCampaignDrawerForm({
     open,
@@ -59,30 +80,16 @@ export function AdminCampaignDrawerForm({
     isSubmitting = false,
     error = null,
 }: AdminCampaignDrawerFormProps) {
-    const [values, setValues] = React.useState<CampaignFormValues>({
-        ...defaultValues,
-        ...initialValues,
-    });
-
     const { data: companies = [] } = useCompanies();
     const { data: coaches = [] } = useCoaches();
     const { data: questionnaires = [] } = useAdminQuestionnaires();
 
-    React.useEffect(() => {
-        if (open) {
-            setValues({ ...defaultValues, ...initialValues });
-        }
-    }, [open, initialValues]);
-
-    const handleChange = <K extends keyof CampaignFormValues>(key: K, value: CampaignFormValues[K]) => {
-        setValues(prev => ({ ...prev, [key]: value }));
-    };
-
-    const isValid =
-        values.name.trim().length >= 3 &&
-        values.companyId !== '' &&
-        values.coachId !== '' &&
-        values.questionnaireId !== '';
+    const { values, errors, submit, submitting, setField } = useDrawerForm({
+        schema: campaignFormSchema,
+        defaultValues: buildDefaults(initialValues),
+        open,
+        onSubmit,
+    });
 
     const title = mode === 'create' ? 'Nouvelle campagne' : 'Éditer la campagne';
     const subtitle =
@@ -96,10 +103,9 @@ export function AdminCampaignDrawerForm({
             title={title}
             subtitle={subtitle}
             onClose={onClose}
-            onSubmit={() => onSubmit(values)}
+            onSubmit={submit}
             submitLabel={mode === 'create' ? 'Créer' : 'Enregistrer'}
-            isSubmitting={isSubmitting}
-            isSubmitDisabled={!isValid}
+            isSubmitting={isSubmitting || submitting}
         >
             <Stack spacing={2.25}>
                 <Box>
@@ -109,9 +115,11 @@ export function AdminCampaignDrawerForm({
                     <TextField
                         label="Nom de la campagne"
                         value={values.name}
-                        onChange={e => handleChange('name', e.target.value)}
+                        onChange={e => setField('name', e.target.value)}
+                        error={Boolean(errors.name)}
+                        helperText={errors.name}
                         fullWidth
-                        required
+                        autoFocus
                     />
                 </Box>
 
@@ -120,12 +128,12 @@ export function AdminCampaignDrawerForm({
                         Affectation
                     </Typography>
                     <Stack spacing={2}>
-                        <FormControl fullWidth required>
+                        <FormControl fullWidth error={Boolean(errors.companyId)}>
                             <InputLabel>Entreprise</InputLabel>
                             <Select
                                 label="Entreprise"
-                                value={values.companyId}
-                                onChange={e => handleChange('companyId', e.target.value as number | '')}
+                                value={values.companyId === 0 ? '' : values.companyId}
+                                onChange={e => setField('companyId', Number(e.target.value) || 0)}
                             >
                                 {companies.map(company => (
                                     <MenuItem key={company.id} value={company.id}>
@@ -133,14 +141,15 @@ export function AdminCampaignDrawerForm({
                                     </MenuItem>
                                 ))}
                             </Select>
+                            {errors.companyId ? <FormHelperText>{errors.companyId}</FormHelperText> : null}
                         </FormControl>
 
-                        <FormControl fullWidth required>
+                        <FormControl fullWidth error={Boolean(errors.coachId)}>
                             <InputLabel>Coach</InputLabel>
                             <Select
                                 label="Coach"
-                                value={values.coachId}
-                                onChange={e => handleChange('coachId', e.target.value as number | '')}
+                                value={values.coachId === 0 ? '' : values.coachId}
+                                onChange={e => setField('coachId', Number(e.target.value) || 0)}
                             >
                                 {coaches.map(coach => (
                                     <MenuItem key={coach.id} value={coach.id}>
@@ -148,14 +157,15 @@ export function AdminCampaignDrawerForm({
                                     </MenuItem>
                                 ))}
                             </Select>
+                            {errors.coachId ? <FormHelperText>{errors.coachId}</FormHelperText> : null}
                         </FormControl>
 
-                        <FormControl fullWidth required>
+                        <FormControl fullWidth error={Boolean(errors.questionnaireId)}>
                             <InputLabel>Questionnaire</InputLabel>
                             <Select
                                 label="Questionnaire"
                                 value={values.questionnaireId}
-                                onChange={e => handleChange('questionnaireId', e.target.value)}
+                                onChange={e => setField('questionnaireId', e.target.value)}
                             >
                                 {questionnaires.map(q => (
                                     <MenuItem key={q.id} value={q.id}>
@@ -163,6 +173,9 @@ export function AdminCampaignDrawerForm({
                                     </MenuItem>
                                 ))}
                             </Select>
+                            {errors.questionnaireId ? (
+                                <FormHelperText>{errors.questionnaireId}</FormHelperText>
+                            ) : null}
                         </FormControl>
                     </Stack>
                 </Box>
@@ -176,16 +189,20 @@ export function AdminCampaignDrawerForm({
                             label="Date de début"
                             type="date"
                             value={values.startDate}
-                            onChange={e => handleChange('startDate', e.target.value)}
-                            InputLabelProps={{ shrink: true }}
+                            onChange={e => setField('startDate', e.target.value)}
+                            error={Boolean(errors.startDate)}
+                            helperText={errors.startDate}
+                            slotProps={{ inputLabel: { shrink: true } }}
                             fullWidth
                         />
                         <TextField
                             label="Date de fin"
                             type="date"
                             value={values.endDate}
-                            onChange={e => handleChange('endDate', e.target.value)}
-                            InputLabelProps={{ shrink: true }}
+                            onChange={e => setField('endDate', e.target.value)}
+                            error={Boolean(errors.endDate)}
+                            helperText={errors.endDate}
+                            slotProps={{ inputLabel: { shrink: true } }}
                             fullWidth
                         />
                         <FormControl fullWidth>
@@ -193,7 +210,7 @@ export function AdminCampaignDrawerForm({
                             <Select
                                 label="Statut initial"
                                 value={values.status}
-                                onChange={e => handleChange('status', e.target.value as CampaignFormValues['status'])}
+                                onChange={e => setField('status', e.target.value as CampaignFormValues['status'])}
                             >
                                 <MenuItem value="draft">Brouillon</MenuItem>
                                 <MenuItem value="active">Active</MenuItem>
@@ -208,7 +225,7 @@ export function AdminCampaignDrawerForm({
                     control={
                         <Checkbox
                             checked={values.allowTestWithoutManualInputs}
-                            onChange={(_, checked) => handleChange('allowTestWithoutManualInputs', checked)}
+                            onChange={(_, checked) => setField('allowTestWithoutManualInputs', checked)}
                         />
                     }
                     label="Autoriser le test sans inputs manuels"

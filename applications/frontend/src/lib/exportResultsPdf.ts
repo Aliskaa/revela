@@ -62,6 +62,14 @@ export const exportResultsPdf = (params: ExportParams) => {
     const { participantName, campaignName, coachName, questionnaireId, peerCount, likertMax, dimensions } = params;
 
     const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    doc.setLanguage('fr-FR');
+    doc.setProperties({
+        title: `Synthèse Révéla — ${campaignName}`,
+        subject: 'Synthèse des résultats psychométriques',
+        author: participantName,
+        creator: 'Révéla',
+        keywords: `Révéla, ${questionnaireId}, ${campaignName}`,
+    });
     const pageW = doc.internal.pageSize.getWidth();
     const marginX = 18;
     const contentW = pageW - marginX * 2;

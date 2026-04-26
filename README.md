@@ -166,7 +166,7 @@ AOR Conseil;Jean;Dupont;jean.dupont@example.com;B;;;;
 
 ## Archives
 
-L'ancienne version Flask monolithique est conservée dans [archives/](archives/) à titre de référence historique. Elle n'est plus maintenue.
+L'ancienne version Flask monolithique est conservée localement dans `_legacy/` (gitignoré) à titre de référence historique. Elle n'est plus maintenue.
 
 ## Licence
 

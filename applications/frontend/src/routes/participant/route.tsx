@@ -15,7 +15,7 @@ import {
     Toolbar,
     Typography,
 } from '@mui/material';
-import { Link, Outlet, createFileRoute, useLocation, useNavigate } from '@tanstack/react-router';
+import { Link, Outlet, createFileRoute, redirect, useLocation, useNavigate } from '@tanstack/react-router';
 import {
     BookOpen,
     ChevronRight,
@@ -32,6 +32,16 @@ import {
 import * as React from 'react';
 
 export const Route = createFileRoute('/participant')({
+    /**
+     * Garde route-level : redirige les non-authentifiés vers `/login` AVANT que la chrome
+     * participant ne soit montée. La route `/login` a sa propre `beforeLoad` qui redirige
+     * vers `/participant` si déjà authentifié, donc pas de boucle.
+     */
+    beforeLoad: () => {
+        if (!userParticipant.isAuthenticated()) {
+            throw redirect({ to: '/login' });
+        }
+    },
     component: ParticipantRouteLayout,
 });
 
@@ -196,7 +206,11 @@ function MobileTopBar() {
                 }}
             >
                 <Toolbar sx={{ minHeight: 68, px: 2 }}>
-                    <IconButton onClick={() => setDrawerOpen(true)} sx={{ mr: 1, color: 'text.primary' }}>
+                    <IconButton
+                        onClick={() => setDrawerOpen(true)}
+                        sx={{ mr: 1, color: 'text.primary' }}
+                        aria-label="Ouvrir le menu"
+                    >
                         <Menu size={22} />
                     </IconButton>
 
@@ -236,7 +250,7 @@ function MobileTopBar() {
             >
                 <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ px: 2.5, py: 2.5 }}>
                     <BrandMark />
-                    <IconButton onClick={() => setDrawerOpen(false)} size="small">
+                    <IconButton onClick={() => setDrawerOpen(false)} size="small" aria-label="Fermer le menu">
                         <X size={18} />
                     </IconButton>
                 </Stack>

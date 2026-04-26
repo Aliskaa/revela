@@ -1,14 +1,4 @@
-/*
- * Copyright (c) 2026 AOR Conseil. All rights reserved.
- * Proprietary and confidential.
- * Licensed under the AOR Commercial License.
- *
- * Use, reproduction, modification, distribution, or disclosure of this
- * source code, in whole or in part, is prohibited except under a valid
- * written commercial agreement with AOR Conseil.
- *
- * See LICENSE.md for the full license terms.
- */
+// Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
 
 import {
     BadRequestException,
@@ -28,6 +18,8 @@ import {
 } from '@nestjs/common';
 import type { Request } from 'express';
 
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+
 import { updateParticipantProfileBodySchema } from '@aor/types';
 import type { GetParticipantSessionQuestionnaireMatrixUseCase } from '@src/application/participant/get-participant-session-questionnaire-matrix.usecase';
 import type { GetParticipantSessionUseCase } from '@src/application/participant/get-participant-session.usecase';
@@ -35,7 +27,10 @@ import type { ListParticipantCampaignPeersUseCase } from '@src/application/parti
 import type { ParticipantLoginUseCase } from '@src/application/participant/participant-login.usecase';
 import type { GetParticipantOwnedResponseUseCase } from '@src/application/responses/get-participant-owned-response.usecase';
 import type { SubmitParticipantQuestionnaireUseCase } from '@src/application/responses/submit-participant-questionnaire.usecase';
-import type { IParticipantsWriterPort } from '@src/interfaces/participants/IParticipantsRepository.port';
+import type {
+    IParticipantsIdentityReaderPort,
+    IParticipantsWriterPort,
+} from '@src/interfaces/participants/IParticipantsRepository.port';
 import { PARTICIPANTS_REPOSITORY_PORT_SYMBOL } from '@src/interfaces/participants/IParticipantsRepository.port';
 import type { JwtValidatedUser } from '@src/presentation/admin/jwt.strategy';
 import { ResponsesExceptionFilter } from '@src/presentation/responses/responses-exception.filter';
@@ -54,6 +49,8 @@ import {
 
 type RequestWithParticipant = Request & { user: JwtValidatedUser };
 
+@ApiTags('participant')
+@ApiBearerAuth('jwt')
 @Controller('participant')
 export class ParticipantController {
     public constructor(
@@ -70,7 +67,7 @@ export class ParticipantController {
         @Inject(LIST_PARTICIPANT_CAMPAIGN_PEERS_USE_CASE_SYMBOL)
         private readonly listParticipantCampaignPeers: ListParticipantCampaignPeersUseCase,
         @Inject(PARTICIPANTS_REPOSITORY_PORT_SYMBOL)
-        private readonly participantsWriter: IParticipantsWriterPort
+        private readonly participantsWriter: IParticipantsIdentityReaderPort & IParticipantsWriterPort
     ) {}
 
     private static normalizeQid(raw?: string): string | undefined {
@@ -186,12 +183,17 @@ export class ParticipantController {
             throw new BadRequestException('Données de profil invalides.');
         }
         const data = parsed.data;
-        await this.participantsWriter.updateProfile(participantId, {
+        const current = await this.participantsWriter.findById(participantId);
+        if (!current) {
+            throw new UnauthorizedException();
+        }
+        const updated = current.updateProfile({
             ...(data.organisation !== undefined ? { organisation: data.organisation } : {}),
             ...(data.direction !== undefined ? { direction: data.direction } : {}),
             ...(data.service !== undefined ? { service: data.service } : {}),
             ...(data.function_level !== undefined ? { functionLevel: data.function_level } : {}),
         });
+        await this.participantsWriter.save(updated);
         return { ok: true };
     }
 }

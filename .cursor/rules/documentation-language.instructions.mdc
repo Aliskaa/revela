@@ -5,7 +5,7 @@ alwaysApply: true
 
 # Documentation Language Context
 
-- All documentation must be written in French (en-en).
+- All documentation must be written in French (fr-FR).
 - All documentation files must be created and maintained in Markdown format (`.md`).
 - In documentation, references to files and sections must use clickable Markdown links.
 - This includes README content, Markdown docs, architecture notes, runbooks, ADRs, and inline documentation prose.

@@ -1,5 +1,8 @@
 .env
 
-archives/
+_legacy/
 **/node_modules/
 dist/
+
+# Sortie locale du script scripts/generate-rules-sync.sh
+combined_cursor_rules.txt

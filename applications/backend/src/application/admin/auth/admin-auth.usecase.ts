@@ -1,14 +1,4 @@
-/*
- * Copyright (c) 2026 AOR Conseil. All rights reserved.
- * Proprietary and confidential.
- * Licensed under the AOR Commercial License.
- *
- * Use, reproduction, modification, distribution, or disclosure of this
- * source code, in whole or in part, is prohibited except under a valid
- * written commercial agreement with AOR Conseil.
- *
- * See LICENSE.md for the full license terms.
- */
+// Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
 
 import { AdminLoginResult } from '@aor/domain';
 import type { IPasswordVerifierPort } from '@aor/ports';
@@ -40,11 +30,7 @@ export class AdminAuthUseCase {
         }
 
         const coach = await this.ports.coaches.findByUsername(username);
-        if (
-            !coach ||
-            !coach.isActive ||
-            !this.ports.passwordVerifier.verifyOrPlaintextLegacy(password, coach.password)
-        ) {
+        if (!coach || !coach.isActive || !coach.verifyPassword(password, this.ports.passwordVerifier)) {
             throw new AdminInvalidCredentialsError();
         }
 

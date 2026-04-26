@@ -1,67 +1,19 @@
-/*
- * Copyright (c) 2026 AOR Conseil. All rights reserved.
- * Proprietary and confidential.
- * Licensed under the AOR Commercial License.
- *
- * Use, reproduction, modification, distribution, or disclosure of this
- * source code, in whole or in part, is prohibited except under a valid
- * written commercial agreement with AOR Conseil.
- *
- * See LICENSE.md for the full license terms.
- */
+// Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
 
+import type { Response } from '@src/domain/responses';
 import type { Paginated } from '@src/shared/pagination';
 
 import type { ResponseSubmissionKind as SubmissionKind } from '@aor/types';
 export type { SubmissionKind };
+/** @deprecated Préférer `ResponseScore` importé depuis `@src/domain/responses`. */
+export type { ResponseScore as ResponseScoreRecord } from '@src/domain/responses';
 
 export const RESPONSES_REPOSITORY_PORT_SYMBOL = Symbol('RESPONSES_REPOSITORY_PORT_SYMBOL');
 
-export type ResponseScoreRecord = {
-    scoreKey: number;
-    value: number;
-};
-
-export type ResponseRecord = {
-    id: number;
-    participantId: number | null;
-    inviteTokenId: number | null;
-    questionnaireId: string;
-    campaignId: number | null;
-    submissionKind: SubmissionKind;
-    subjectParticipantId: number | null;
-    raterParticipantId: number | null;
-    ratedParticipantId: number | null;
-    name: string;
-    email: string;
-    organisation: string | null;
-    submittedAt: Date | null;
-    scores: ResponseScoreRecord[];
-};
-
-export type CreateResponseCommand = {
-    participantId?: number;
-    inviteTokenId?: number;
-    questionnaireId: string;
-    campaignId?: number;
-    submissionKind?: SubmissionKind;
-    subjectParticipantId?: number | null;
-    raterParticipantId?: number | null;
-    ratedParticipantId?: number | null;
-    name: string;
-    email: string;
-    organisation?: string;
-    scores: ResponseScoreRecord[];
+/** Paramètres cross-entité de `create` : marquage atomique d'un jeton d'invite comme utilisé. */
+export type CreateResponseOptions = {
     /** Si défini, met à jour `used_at` du jeton dans la même transaction que la réponse. */
     markInviteTokenUsedId?: number;
-};
-
-export type UpdateResponseCommand = {
-    id: number;
-    name: string;
-    email: string;
-    organisation?: string;
-    scores: ResponseScoreRecord[];
 };
 
 export type ListResponsesParams = {
@@ -72,31 +24,31 @@ export type ListResponsesParams = {
 };
 
 export interface IResponsesRecordReaderPort {
-    findById(id: number): Promise<ResponseRecord | null>;
+    findById(id: number): Promise<Response | null>;
 }
 
 export interface IResponsesWriterPort {
-    create(command: CreateResponseCommand): Promise<ResponseRecord>;
-    update(command: UpdateResponseCommand): Promise<ResponseRecord | null>;
+    /** Persiste une nouvelle réponse. Les réponses étant immuables par nature métier, il n'y a pas de `save`. */
+    create(response: Response, options?: CreateResponseOptions): Promise<Response>;
     deleteById(id: number): Promise<boolean>;
 }
 
 export interface IResponsesSubmissionReaderPort {
-    /** Responses for a subject on one questionnaire (optionally scoped to one campaign), newest first. */
+    /** Réponses d'un sujet sur un questionnaire (optionnellement filtrées par campagne), plus récent d'abord. */
     listForSubjectQuestionnaireMatrix(
         subjectParticipantId: number,
         questionnaireId: string,
         campaignId?: number
-    ): Promise<ResponseRecord[]>;
+    ): Promise<Response[]>;
 }
 
 export interface IResponsesAdminListPort {
-    list(params: ListResponsesParams): Promise<Paginated<ResponseRecord>>;
+    list(params: ListResponsesParams): Promise<Paginated<Response>>;
 }
 
 export interface IResponsesExportPort {
-    listAllForQuestionnaire(questionnaireId: string): Promise<ResponseRecord[]>;
-    listAnonymizedForCompany(questionnaireId: string, companyId: number): Promise<ResponseRecord[]>;
+    listAllForQuestionnaire(questionnaireId: string): Promise<Response[]>;
+    listAnonymizedForCompany(questionnaireId: string, companyId: number): Promise<Response[]>;
 }
 
 export interface IResponsesMetricsPort {
@@ -112,3 +64,6 @@ export interface IResponsesRepositoryPort
         IResponsesAdminListPort,
         IResponsesExportPort,
         IResponsesMetricsPort {}
+
+/** @deprecated Préférer l'entité `Response` importée depuis `@src/domain/responses`. */
+export type { Response as ResponseRecord } from '@src/domain/responses';

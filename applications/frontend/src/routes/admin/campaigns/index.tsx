@@ -93,20 +93,23 @@ function AdminCampaignsRoute() {
                     createCampaign.reset();
                 }}
                 onSubmit={async values => {
-                    await createCampaign.mutateAsync({
-                        name: values.name,
-                        companyId: Number(values.companyId),
-                        coachId: Number(values.coachId),
-                        questionnaireId: values.questionnaireId,
-                        startsAt: values.startDate ? new Date(values.startDate).toISOString() : null,
-                        endsAt: values.endDate ? new Date(values.endDate).toISOString() : null,
-                        allowTestWithoutManualInputs: values.allowTestWithoutManualInputs,
-                        status: values.status,
-                    });
-                    setDrawerOpen(false);
+                    try {
+                        await createCampaign.mutateAsync({
+                            name: values.name,
+                            companyId: values.companyId,
+                            coachId: values.coachId,
+                            questionnaireId: values.questionnaireId,
+                            startsAt: values.startDate ? new Date(values.startDate).toISOString() : null,
+                            endsAt: values.endDate ? new Date(values.endDate).toISOString() : null,
+                            allowTestWithoutManualInputs: values.allowTestWithoutManualInputs,
+                            status: values.status,
+                        });
+                        setDrawerOpen(false);
+                    } catch {
+                        // Le toast d'erreur est émis par le hook ; on garde le drawer ouvert.
+                    }
                 }}
                 isSubmitting={createCampaign.isPending}
-                error={createCampaign.isError ? (createCampaign.error?.message ?? 'Erreur lors de la création.') : null}
             />
 
             <Card variant="outlined">

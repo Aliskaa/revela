@@ -45,5 +45,8 @@ jobs:
       - name: Backend tests
         run: pnpm --filter @aor/backend-api run test
 
+      - name: Frontend tests
+        run: pnpm --filter @aor/frontend-app run test
+
       - name: Build
         run: pnpm run build

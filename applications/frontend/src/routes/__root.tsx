@@ -1,11 +1,10 @@
 import { theme } from '@/lib/theme';
+import { ToastProvider } from '@/lib/toast';
 import { Box, Button, Card, CardContent, CssBaseline, Stack, ThemeProvider, Typography } from '@mui/material';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Link, Outlet, createRootRouteWithContext } from '@tanstack/react-router';
+import { Link, Outlet, createRootRoute } from '@tanstack/react-router';
 import { AlertTriangle, Compass, RotateCcw } from 'lucide-react';
 import type * as React from 'react';
-
-export type RouterContext = Record<string, never>;
 
 const queryClient = new QueryClient({
     defaultOptions: {
@@ -25,7 +24,7 @@ function RootProviders({ children }: { children: React.ReactNode }) {
         <QueryClientProvider client={queryClient}>
             <ThemeProvider theme={theme}>
                 <CssBaseline />
-                {children}
+                <ToastProvider>{children}</ToastProvider>
             </ThemeProvider>
         </QueryClientProvider>
     );
@@ -159,7 +158,7 @@ function RootComponent() {
     );
 }
 
-export const Route = createRootRouteWithContext<RouterContext>()({
+export const Route = createRootRoute({
     component: RootComponent,
     errorComponent: RootErrorComponent,
     notFoundComponent: NotFoundComponent,

@@ -1,4 +1,5 @@
 import { participantApiClient } from '@/api/participantClient';
+import { useToast } from '@/lib/toast';
 import type {
     CampaignPeerChoice,
     ParticipantQuestionnaireMatrix,
@@ -6,6 +7,7 @@ import type {
     UpdateParticipantProfileBody,
 } from '@aor/types';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 
 export const participantSessionKeys = {
     session: ['participant', 'session'] as const,
@@ -59,10 +61,15 @@ export function useParticipantCampaignPeers(campaignId: number | null) {
 
 export function useUpdateParticipantProfile() {
     const qc = useQueryClient();
+    const toast = useToast();
+    const { t } = useTranslation();
     return useMutation<{ ok: boolean }, Error, UpdateParticipantProfileBody>({
         mutationFn: payload => participantApiClient.patch('/participant/profile', payload).then(r => r.data),
         onSuccess: () => {
             qc.invalidateQueries({ queryKey: participantSessionKeys.session });
+            toast.success(t('toast.profileUpdated'));
         },
+        onError: err =>
+            toast.error(err instanceof Error && err.message ? err.message : t('toast.profileUpdateFailed')),
     });
 }

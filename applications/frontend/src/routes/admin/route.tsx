@@ -16,7 +16,7 @@ import {
     Toolbar,
     Typography,
 } from '@mui/material';
-import { Link, Outlet, createFileRoute, useLocation, useNavigate } from '@tanstack/react-router';
+import { Link, Outlet, createFileRoute, redirect, useLocation, useNavigate } from '@tanstack/react-router';
 import {
     Building2,
     ChevronRight,
@@ -196,7 +196,11 @@ function MobileTopBar() {
                 }}
             >
                 <Toolbar sx={{ minHeight: 68, px: 2 }}>
-                    <IconButton onClick={() => setDrawerOpen(true)} sx={{ mr: 1, color: 'text.primary' }}>
+                    <IconButton
+                        onClick={() => setDrawerOpen(true)}
+                        sx={{ mr: 1, color: 'text.primary' }}
+                        aria-label="Ouvrir le menu"
+                    >
                         <Menu size={22} />
                     </IconButton>
 
@@ -236,7 +240,7 @@ function MobileTopBar() {
             >
                 <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ px: 2.5, py: 2.5 }}>
                     <BrandMark />
-                    <IconButton onClick={() => setDrawerOpen(false)} size="small">
+                    <IconButton onClick={() => setDrawerOpen(false)} size="small" aria-label="Fermer le menu">
                         <X size={18} />
                     </IconButton>
                 </Stack>
@@ -338,11 +342,16 @@ function TopBar() {
                     }}
                 >
                     <Search size={16} color="rgb(100,116,139)" />
-                    <InputBase placeholder="Recherche globale…" sx={{ width: '100%', fontSize: 14 }} />
+                    <InputBase
+                        placeholder="Recherche globale…"
+                        inputProps={{ 'aria-label': 'Recherche globale' }}
+                        sx={{ width: '100%', fontSize: 14 }}
+                    />
                 </Box>
 
                 <IconButton
                     onClick={handleLogout}
+                    aria-label="Se déconnecter"
                     sx={{ border: '1px solid', borderColor: 'border', bgcolor: 'background.paper' }}
                 >
                     <LogOut size={18} />
@@ -382,5 +391,18 @@ function AdminRoot() {
 }
 
 export const Route = createFileRoute('/admin')({
+    /**
+     * Garde route-level : redirige les non-authentifiés vers `/admin/login` AVANT que la
+     * chrome admin (sidebar, drawer, navbar) ne soit montée. Évite le flash visuel + le 401
+     * silencieux côté API. Skip pour `/admin/login` lui-même afin d'éviter une boucle.
+     */
+    beforeLoad: ({ location }) => {
+        if (location.pathname === '/admin/login') {
+            return;
+        }
+        if (!userAdmin.isAuthenticated()) {
+            throw redirect({ to: '/admin/login' });
+        }
+    },
     component: AdminRoot,
 });

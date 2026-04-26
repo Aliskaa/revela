@@ -1,10 +1,13 @@
+// Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
+
 import * as React from 'react';
 
+import { DimensionCard } from '@/components/results/DimensionCard';
 import { useParticipantSession, useParticipantSessionMatrix } from '@/hooks/participantSession';
 import { useSelectedAssignment } from '@/hooks/useSelectedAssignment';
 import { exportResultsPdf } from '@/lib/exportResultsPdf';
+import { PEER_COLORS, buildDimensions } from '@/lib/results/buildDimensions';
 import { useCampaignStore } from '@/stores/campaignStore';
-import type { DimensionView, EcartView, ParticipantQuestionnaireMatrix, ScoreRow } from '@aor/types';
 import {
     Alert,
     Box,
@@ -19,210 +22,13 @@ import {
     Select,
     Stack,
     Typography,
-    useTheme,
 } from '@mui/material';
 import { createFileRoute } from '@tanstack/react-router';
-import { ArrowLeftRight, Download, Radar, Sparkles, UserRound, Users } from 'lucide-react';
+import { Download, Radar, Sparkles, UserRound, Users } from 'lucide-react';
 
 export const Route = createFileRoute('/participant/results')({
     component: ParticipantResultsRoute,
 });
-
-const avg = (values: (number | null)[]): number | null => {
-    const nums = values.filter((v): v is number => v !== null);
-    if (nums.length === 0) return null;
-    return Math.round((nums.reduce((s, v) => s + v, 0) / nums.length) * 10) / 10;
-};
-
-const bestScore = (row: { scientific: number | null; self: number | null; peers: (number | null)[] }): number | null =>
-    row.scientific ?? row.self ?? avg(row.peers);
-
-const buildDimensions = (matrix: ParticipantQuestionnaireMatrix): DimensionView[] => {
-    const dims: DimensionView[] = [];
-    const rowMap = new Map(matrix.rows.map(r => [r.score_key, r]));
-    const peerLabels = matrix.peer_columns.map(pc => pc.label);
-
-    for (const rd of matrix.result_dims) {
-        const rows: ScoreRow[] = [];
-        for (const scoreKey of rd.scores) {
-            const row = matrix.rows.find(r => r.score_key === scoreKey);
-            if (row) {
-                rows.push({
-                    label: row.label,
-                    self: row.self,
-                    peers: row.peers.map((v, i) => ({ label: peerLabels[i] ?? `Pair ${String(i + 1)}`, value: v })),
-                    scientific: row.scientific,
-                });
-            }
-        }
-
-        const ecarts: EcartView[] = [];
-        if (rd.diff_pairs) {
-            for (const dp of rd.diff_pairs) {
-                const eRow = rowMap.get(dp.e);
-                const wRow = rowMap.get(dp.w);
-                const eVal = eRow ? bestScore(eRow) : null;
-                const wVal = wRow ? bestScore(wRow) : null;
-                if (eVal != null && wVal != null) {
-                    const diff = eVal - wVal;
-                    const message = diff > 0 ? dp.if_e_gt : diff < 0 ? dp.if_w_gt : '';
-                    ecarts.push({ value: Math.abs(diff), message });
-                }
-            }
-        }
-
-        dims.push({ name: rd.name, rows, ecarts });
-    }
-    return dims;
-};
-
-function ScoreBar({ value, max, color }: { value: number | null; max: number; color: string }) {
-    const pct = value != null ? Math.round((value / max) * 100) : 0;
-    return (
-        <Stack direction="row" spacing={1} alignItems="center" sx={{ flex: 1 }}>
-            <Typography variant="body2" fontWeight={700} color="text.primary" sx={{ minWidth: 24, textAlign: 'right' }}>
-                {value ?? '–'}
-            </Typography>
-            <LinearProgress
-                variant="determinate"
-                value={pct}
-                sx={{
-                    flex: 1,
-                    height: 8,
-                    borderRadius: 99,
-                    bgcolor: 'tint.subtleBg',
-                    '& .MuiLinearProgress-bar': { bgcolor: color },
-                }}
-            />
-        </Stack>
-    );
-}
-
-const PEER_COLORS = ['rgb(255,204,0)', 'rgb(255,170,0)', 'rgb(230,150,0)', 'rgb(200,130,0)', 'rgb(180,115,0)'];
-
-function DimensionCard({ dimension, likertMax }: { dimension: DimensionView; likertMax: number }) {
-    const theme = useTheme();
-    const hasPeers = dimension.rows.some(r => r.peers.some(p => p.value !== null));
-    const hasScientific = dimension.rows.some(r => r.scientific !== null);
-
-    return (
-        <Card variant="outlined">
-            <CardContent sx={{ p: 2.5 }}>
-                <Typography variant="h6" fontWeight={800} color="text.primary" sx={{ mb: 2 }}>
-                    {dimension.name}
-                </Typography>
-
-                <Stack spacing={2}>
-                    {dimension.rows.map(row => (
-                        <Box key={row.label} sx={{ border: '1px solid', borderColor: 'border', borderRadius: 3, p: 2 }}>
-                            <Typography variant="body2" fontWeight={700} color="text.primary" sx={{ mb: 1.5 }}>
-                                {row.label}
-                            </Typography>
-                            <Stack spacing={1}>
-                                <Stack direction="row" spacing={1.5} alignItems="center">
-                                    <Chip
-                                        label="Auto"
-                                        size="small"
-                                        sx={{
-                                            borderRadius: 99,
-                                            bgcolor: 'tint.primaryBg',
-                                            color: 'primary.main',
-                                            minWidth: 70,
-                                            fontWeight: 700,
-                                            fontSize: 11,
-                                        }}
-                                    />
-                                    <ScoreBar value={row.self} max={likertMax} color={theme.palette.primary.main} />
-                                </Stack>
-                                {hasPeers &&
-                                    row.peers.map((peer, i) =>
-                                        peer.value !== null ? (
-                                            <Stack key={peer.label} direction="row" spacing={1.5} alignItems="center">
-                                                <Chip
-                                                    label={peer.label}
-                                                    size="small"
-                                                    sx={{
-                                                        borderRadius: 99,
-                                                        bgcolor: 'tint.secondaryBg',
-                                                        color: 'tint.secondaryText',
-                                                        minWidth: 70,
-                                                        fontWeight: 700,
-                                                        fontSize: 11,
-                                                        maxWidth: 100,
-                                                        overflow: 'hidden',
-                                                        textOverflow: 'ellipsis',
-                                                    }}
-                                                />
-                                                <ScoreBar
-                                                    value={peer.value}
-                                                    max={likertMax}
-                                                    color={PEER_COLORS[i % PEER_COLORS.length]}
-                                                />
-                                            </Stack>
-                                        ) : null
-                                    )}
-                                {hasScientific && (
-                                    <Stack direction="row" spacing={1.5} alignItems="center">
-                                        <Chip
-                                            label="Test"
-                                            size="small"
-                                            sx={{
-                                                borderRadius: 99,
-                                                bgcolor: 'tint.successBg',
-                                                color: 'tint.successText',
-                                                minWidth: 70,
-                                                fontWeight: 700,
-                                                fontSize: 11,
-                                            }}
-                                        />
-                                        <ScoreBar value={row.scientific} max={likertMax} color="rgb(4,120,87)" />
-                                    </Stack>
-                                )}
-                            </Stack>
-                        </Box>
-                    ))}
-                </Stack>
-
-                {dimension.ecarts.length > 0 && (
-                    <Box sx={{ mt: 2.5, p: 2, bgcolor: 'tint.subtleBg', borderRadius: 3 }}>
-                        <Typography variant="body2" fontWeight={700} color="text.primary" sx={{ mb: 1.5 }}>
-                            Analyse des écarts
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1.5 }}>
-                            Ces écarts indiquent des différences entre le comportement actuel et souhaité.
-                        </Typography>
-                        <Stack spacing={1}>
-                            {dimension.ecarts.map(ecart => (
-                                <Stack
-                                    key={ecart.message || `ecart-${String(ecart.value)}`}
-                                    direction="row"
-                                    spacing={1.5}
-                                    alignItems="center"
-                                >
-                                    <Chip
-                                        icon={<ArrowLeftRight size={14} />}
-                                        label={`Écart : ${String(ecart.value)}`}
-                                        size="small"
-                                        sx={{
-                                            borderRadius: 99,
-                                            fontWeight: 700,
-                                            fontSize: 12,
-                                            bgcolor: ecart.value === 0 ? 'tint.successBg' : 'tint.secondaryBg',
-                                            color: ecart.value === 0 ? 'tint.successText' : 'tint.secondaryText',
-                                        }}
-                                    />
-                                    <Typography variant="body2" color="text.secondary">
-                                        {ecart.value === 0 ? 'Pas de différence significative.' : ecart.message}
-                                    </Typography>
-                                </Stack>
-                            ))}
-                        </Stack>
-                    </Box>
-                )}
-            </CardContent>
-        </Card>
-    );
-}
 
 function ParticipantResultsRoute() {
     const { data: session, isLoading: sessionLoading, isError: sessionError } = useParticipantSession();
@@ -245,7 +51,9 @@ function ParticipantResultsRoute() {
     const participantName = session ? `${session.first_name} ${session.last_name}` : '';
 
     const handleExportPdf = () => {
-        if (!matrix || dimensions.length === 0) return;
+        if (!matrix || dimensions.length === 0) {
+            return;
+        }
         exportResultsPdf({
             participantName,
             campaignName,
@@ -259,12 +67,12 @@ function ParticipantResultsRoute() {
 
     if (isLoading) {
         return (
-            <Card variant="outlined">
+            <Card variant="outlined" role="status" aria-live="polite" aria-busy="true">
                 <CardContent sx={{ p: 3 }}>
                     <Typography variant="h6" fontWeight={700} color="text.primary">
                         Chargement des résultats
                     </Typography>
-                    <LinearProgress sx={{ mt: 2 }} />
+                    <LinearProgress sx={{ mt: 2 }} aria-label="Chargement des résultats" />
                 </CardContent>
             </Card>
         );
@@ -320,7 +128,9 @@ function ParticipantResultsRoute() {
                                         onChange={e => {
                                             const idx = e.target.value as number;
                                             const a = assignments[idx];
-                                            if (a?.campaign_id != null) selectCampaign(a.campaign_id);
+                                            if (a?.campaign_id !== null && a?.campaign_id !== undefined) {
+                                                selectCampaign(a.campaign_id);
+                                            }
                                         }}
                                     >
                                         {assignments.map((a, i) => (
@@ -390,7 +200,6 @@ function ParticipantResultsRoute() {
                 </CardContent>
             </Card>
 
-            {/* Legend */}
             <Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap>
                 <Chip
                     label="Auto-évaluation"

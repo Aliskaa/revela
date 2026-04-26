@@ -1,30 +1,29 @@
-/*
- * Copyright (c) 2026 AOR Conseil. All rights reserved.
- * Proprietary and confidential.
- * Licensed under the AOR Commercial License.
- *
- * Use, reproduction, modification, distribution, or disclosure of this
- * source code, in whole or in part, is prohibited except under a valid
- * written commercial agreement with AOR Conseil.
- *
- * See LICENSE.md for the full license terms.
- */
+// Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
 
 import { AdminValidationError } from '@src/domain/admin/admin.errors';
-import type { ICompaniesReadPort, ICompaniesWritePort } from '@src/interfaces/companies/ICompaniesRepository.port';
+import { Company } from '@src/domain/companies';
+import type {
+    CompanyWithParticipantCountReadModel,
+    ICompaniesReadPort,
+    ICompaniesWritePort,
+} from '@src/interfaces/companies/ICompaniesRepository.port';
 
-const normalizeOptional = (value: string | undefined | null): string | undefined => {
+const normalizeOptional = (value: string | undefined | null): string | null => {
     if (value === undefined || value === null) {
-        return undefined;
+        return null;
     }
     const t = value.trim();
-    return t.length === 0 ? undefined : t;
+    return t.length === 0 ? null : t;
 };
 
 export class CreateAdminCompanyUseCase {
     public constructor(private readonly ports: { readonly companies: ICompaniesReadPort & ICompaniesWritePort }) {}
 
-    public async execute(body: { name?: string; contact_name?: string | null; contact_email?: string | null }) {
+    public async execute(body: {
+        name?: string;
+        contact_name?: string | null;
+        contact_email?: string | null;
+    }): Promise<CompanyWithParticipantCountReadModel> {
         const name = (body.name ?? '').trim();
         if (name.length === 0) {
             throw new AdminValidationError("Le nom de l'entreprise est requis.");
@@ -33,9 +32,19 @@ export class CreateAdminCompanyUseCase {
         if (existing) {
             throw new AdminValidationError('Une entreprise avec ce nom existe déjà.');
         }
-        const contactName = normalizeOptional(body.contact_name ?? undefined) ?? undefined;
-        const contactEmail = normalizeOptional(body.contact_email ?? undefined) ?? undefined;
-        const created = await this.ports.companies.create({ name, contactName, contactEmail });
-        return { ...created, participantCount: 0 };
+        const draft = Company.create({
+            name,
+            contactName: normalizeOptional(body.contact_name),
+            contactEmail: normalizeOptional(body.contact_email),
+        });
+        const created = await this.ports.companies.create(draft);
+        return {
+            id: created.id,
+            name: created.name,
+            contactName: created.contactName,
+            contactEmail: created.contactEmail,
+            createdAt: created.createdAt,
+            participantCount: 0,
+        };
     }
 }

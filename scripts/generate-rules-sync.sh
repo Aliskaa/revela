@@ -1,6 +1,11 @@
 #!/bin/bash
 
-# Nom du fichier de sortie
+# Concatène toutes les règles Cursor (.cursor/rules/*.mdc) dans un fichier unique pour
+# revue/audit. Toujours résolu depuis la racine du repo (peu importe le cwd d'exécution).
+
+REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+cd "$REPO_ROOT" || exit 1
+
 OUTPUT_FILE="combined_cursor_rules.txt"
 
 # Vider le fichier s'il existe
@@ -8,7 +13,6 @@ echo "# SYNTHÈSE DES RÈGLES DE DÉVELOPPEMENT - $(date +%Y-%m-%d)" > $OUTPUT_F
 echo "" >> $OUTPUT_FILE
 
 # Trouver tous les fichiers .mdc (ou .md si tes règles sont en .md)
-# Ajuste le chemin si tes règles sont dans .cursor/rules/
 RULES_PATH=".cursor/rules"
 
 if [ ! -d "$RULES_PATH" ]; then

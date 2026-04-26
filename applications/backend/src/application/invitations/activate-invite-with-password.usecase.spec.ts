@@ -1,26 +1,15 @@
-/*
- * Copyright (c) 2026 AOR Conseil. All rights reserved.
- * Proprietary and confidential.
- * Licensed under the AOR Commercial License.
- *
- * Use, reproduction, modification, distribution, or disclosure of this
- * source code, in whole or in part, is prohibited except under a valid
- * written commercial agreement with AOR Conseil.
- *
- * See LICENSE.md for the full license terms.
- */
+// Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
 
 import { hashPassword, verifyPassword } from '@aor/adapters';
 import type { IPasswordHasherPort } from '@aor/ports';
+import { Invitation } from '@src/domain/invitations';
+import { Participant } from '@src/domain/participants';
 import {
     InviteActivationAlreadyCompletedError,
     InviteActivationWeakPasswordError,
     InviteTokenRequestError,
 } from '@src/domain/invitations/invitations.errors';
-import type {
-    IInvitationsRepositoryPort,
-    InvitationRecord,
-} from '@src/interfaces/invitations/IInvitationsRepository.port';
+import type { IInvitationsRepositoryPort } from '@src/interfaces/invitations/IInvitationsRepository.port';
 import type {
     IInviteActivationWritePort,
     InviteActivationWriteParams,
@@ -32,7 +21,7 @@ import { expect, test } from 'vitest';
 import { ActivateInviteWithPasswordUseCase } from './activate-invite-with-password.usecase';
 import { InviteTokenValidationUseCase } from './invite-token-validation.usecase';
 
-const invitation: InvitationRecord = {
+const invitation: Invitation = Invitation.hydrate({
     id: 9,
     token: 'tok',
     participantId: 3,
@@ -42,7 +31,7 @@ const invitation: InvitationRecord = {
     expiresAt: new Date(Date.now() + 86400000),
     usedAt: null,
     isActive: true,
-};
+});
 
 const passwordHasher: IPasswordHasherPort = {
     hash: (plainPassword: string) => hashPassword(plainPassword),
@@ -52,7 +41,6 @@ function invitationsStub(findByToken: IInvitationsRepositoryPort['findByToken'])
     return {
         findByToken,
         create: async () => invitation,
-        markUsed: async () => {},
         findByParticipantId: async () => [],
     };
 }
@@ -63,15 +51,19 @@ test('activate invite sets password, consumes invite, returns jwt', async () => 
     const participants = {
         findById: async (id: number) =>
             id === 3
-                ? {
+                ? Participant.hydrate({
                       id: 3,
                       companyId: null,
                       firstName: 'X',
                       lastName: 'Y',
                       email: 'x@y.z',
+                      organisation: null,
+                      direction: null,
+                      service: null,
+                      functionLevel: null,
                       passwordHash: null,
                       createdAt: new Date(),
-                  }
+                  })
                 : null,
     } as unknown as IParticipantsRepositoryPort;
 
@@ -120,15 +112,20 @@ test('activate invite rejects when participant already has password', async () =
     const invitations = invitationsStub(async () => invitation);
     const tokenValidation = new InviteTokenValidationUseCase({ invitations });
     const participants = {
-        findById: async () => ({
-            id: 3,
-            companyId: null,
-            firstName: 'X',
-            lastName: 'Y',
-            email: 'x@y.z',
-            passwordHash: hashPassword('existing'),
-            createdAt: new Date(),
-        }),
+        findById: async () =>
+            Participant.hydrate({
+                id: 3,
+                companyId: null,
+                firstName: 'X',
+                lastName: 'Y',
+                email: 'x@y.z',
+                organisation: null,
+                direction: null,
+                service: null,
+                functionLevel: null,
+                passwordHash: hashPassword('existing'),
+                createdAt: new Date(),
+            }),
     } as unknown as IParticipantsRepositoryPort;
 
     const useCase = new ActivateInviteWithPasswordUseCase({

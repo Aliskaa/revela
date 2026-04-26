@@ -1,0 +1,32 @@
+{
+    "common": {
+        "save": "Enregistrer",
+        "saving": "Enregistrement…",
+        "cancel": "Annuler",
+        "create": "Créer",
+        "edit": "Éditer",
+        "delete": "Supprimer",
+        "close": "Fermer",
+        "loading": "Chargement…",
+        "retry": "Réessayer"
+    },
+    "errors": {
+        "generic": "Une erreur est survenue.",
+        "network": "Impossible de joindre le serveur.",
+        "unauthorized": "Session expirée — veuillez vous reconnecter."
+    },
+    "toast": {
+        "profileUpdated": "Profil mis à jour.",
+        "profileUpdateFailed": "Échec de la mise à jour du profil.",
+        "companyCreated": "Entreprise « {{name}} » créée.",
+        "companyCreateFailed": "Échec de la création de l'entreprise.",
+        "companyUpdated": "Entreprise mise à jour.",
+        "companyDeleted": "Entreprise supprimée.",
+        "coachCreated": "Coach créé.",
+        "coachUpdated": "Coach mis à jour.",
+        "coachDeleted": "Coach supprimé."
+    },
+    "drawer": {
+        "closePanel": "Fermer le panneau"
+    }
+}

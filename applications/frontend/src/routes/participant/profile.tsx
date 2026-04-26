@@ -13,7 +13,6 @@ import {
     LinearProgress,
     MenuItem,
     Select,
-    Snackbar,
     Stack,
     TextField,
     Typography,
@@ -35,7 +34,6 @@ function ParticipantProfileRoute() {
     const [service, setService] = React.useState('');
     const [functionLevel, setFunctionLevel] = React.useState<ParticipantFunctionLevel | ''>('');
     const [initialized, setInitialized] = React.useState(false);
-    const [successOpen, setSuccessOpen] = React.useState(false);
 
     React.useEffect(() => {
         if (session && !initialized) {
@@ -49,12 +47,12 @@ function ParticipantProfileRoute() {
 
     if (isLoading) {
         return (
-            <Card variant="outlined">
+            <Card variant="outlined" role="status" aria-live="polite" aria-busy="true">
                 <CardContent sx={{ p: 3 }}>
                     <Typography variant="h6" fontWeight={700} color="text.primary">
                         Chargement du profil
                     </Typography>
-                    <LinearProgress sx={{ mt: 2 }} />
+                    <LinearProgress sx={{ mt: 2 }} aria-label="Chargement du profil" />
                 </CardContent>
             </Card>
         );
@@ -72,13 +70,17 @@ function ParticipantProfileRoute() {
     const company = activeAssignment?.company_name ?? '–';
 
     const handleSave = async () => {
-        await updateProfile.mutateAsync({
-            organisation: organisation.trim() || null,
-            direction: direction.trim() || null,
-            service: service.trim() || null,
-            function_level: functionLevel || null,
-        });
-        setSuccessOpen(true);
+        // Toasts success/error gérés par le hook ; on attrape pour ne pas faire planter le composant.
+        try {
+            await updateProfile.mutateAsync({
+                organisation: organisation.trim() || null,
+                direction: direction.trim() || null,
+                service: service.trim() || null,
+                function_level: functionLevel || null,
+            });
+        } catch {
+            // intentional no-op
+        }
     };
 
     const handleReset = () => {
@@ -90,13 +92,6 @@ function ParticipantProfileRoute() {
 
     return (
         <Stack spacing={3}>
-            <Snackbar
-                open={successOpen}
-                autoHideDuration={3000}
-                onClose={() => setSuccessOpen(false)}
-                message="Profil mis à jour"
-            />
-
             <Card variant="outlined">
                 <CardContent sx={{ p: { xs: 2.5, md: 3 } }}>
                     <Stack

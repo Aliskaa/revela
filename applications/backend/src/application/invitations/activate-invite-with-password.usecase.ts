@@ -1,14 +1,4 @@
-/*
- * Copyright (c) 2026 AOR Conseil. All rights reserved.
- * Proprietary and confidential.
- * Licensed under the AOR Commercial License.
- *
- * Use, reproduction, modification, distribution, or disclosure of this
- * source code, in whole or in part, is prohibited except under a valid
- * written commercial agreement with AOR Conseil.
- *
- * See LICENSE.md for the full license terms.
- */
+// Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
 
 import type { IPasswordHasherPort } from '@aor/ports';
 import {
@@ -75,7 +65,7 @@ export class ActivateInviteWithPasswordUseCase {
         if (!participant) {
             throw new InviteResourceNotFoundError('Participant introuvable.');
         }
-        if (participant.passwordHash) {
+        if (participant.isActivated()) {
             throw new InviteActivationAlreadyCompletedError(
                 'Ce compte est déjà activé. Connectez-vous avec votre e-mail et mot de passe.'
             );
