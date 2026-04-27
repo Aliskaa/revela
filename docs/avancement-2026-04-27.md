@@ -302,7 +302,73 @@ d'une ambiguïté à atténuer par JSDoc mais d'un naming résolu, l'arbre
 
 ---
 
-## 5. Statut de la session
+## 5. Refonte des layouts (full-width + sidebar fixe + logout unique)
+
+### 5.1 Suppression des contraintes de largeur structurelles
+
+| Fichier | Avant | Après |
+|---|---|---|
+| [routes/admin/route.tsx](../applications/frontend/src/routes/admin/route.tsx) `AdminShell` | `maxWidth: 1600, mx: 'auto'` | (retiré) — le contenu prend désormais toute la largeur |
+| [routes/participant/route.tsx](../applications/frontend/src/routes/participant/route.tsx) `ParticipantShell` | `maxWidth: 1600, mx: 'auto'` | (retiré) |
+| [routes/admin/participants/$participantId.matrix.tsx](../applications/frontend/src/routes/admin/participants/$participantId.matrix.tsx) | `maxWidth: 1400, mx: 'auto'` | (retiré) |
+
+**Conservé intentionnellement** : 17 contraintes typographiques `maxWidth: 860/900` sur des `<Typography>` de paragraphes descriptifs. C'est volontaire pour la lisibilité — un paragraphe qui dépasse ~80 caractères/ligne devient inconfortable à lire (règle UX classique).
+
+### 5.2 Sidebar fixe (sans scroll)
+
+Sidebar admin et participant rendues **sticky** sur toute la hauteur du viewport. Quand le contenu principal scrolle, la sidebar reste visible.
+
+```ts
+// Avant
+sx={{
+    width: 280,
+    display: { xs: 'none', lg: 'flex' },
+    flexDirection: 'column',
+    px: 2.5,
+    py: 3,
+}}
+
+// Après
+sx={{
+    width: 280,
+    flexShrink: 0,
+    display: { xs: 'none', lg: 'flex' },
+    flexDirection: 'column',
+    px: 2.5,
+    py: 3,
+    position: 'sticky',
+    top: 0,
+    height: '100vh',
+    overflow: 'hidden',
+}}
+```
+
+`flexShrink: 0` empêche le shrink de la sidebar dans le flex parent ; `overflow: hidden` garantit qu'aucun scroll interne n'apparaît même si la liste de nav dépasse (cas extrême non rencontré ici avec 6 items max).
+
+### 5.3 Déconnexion unique en bas de la sidebar
+
+Auparavant, le bouton **Déconnexion** apparaissait à 2 endroits en desktop :
+
+- En bas de la sidebar (intentionnel) ;
+- Dans le `TopBar` (à droite, à côté de la barre de recherche admin / à droite du header participant).
+
+**Suppression de la déconnexion du TopBar** sur les deux routes (admin + participant). Le `TopBar` admin garde la barre de recherche globale ; le `TopBar` participant ne contient plus que le titre + sous-titre.
+
+### 5.4 Bonus : 4 lint errors pré-existantes corrigées
+
+Dans [routes/admin/responses/$responseId.tsx](../applications/frontend/src/routes/admin/responses/$responseId.tsx), 4 occurrences de `noUnusedTemplateLiteral` (template literals `` `...` `` sans interpolation) ont été remplacées par des strings simples. Lint frontend désormais à **0 erreur**.
+
+⚠ **À noter** : `pnpm format` (Biome) a aggressivement converti des template literals **avec** interpolation (`` `#${detail.X}` ``) en strings littérales (`'#${detail.X}'`) — bug de la règle `noUnusedTemplateLiteral` quand un template literal côtoie un autre déjà transformé. Restauration manuelle effectuée. À surveiller lors des futurs `pnpm format`.
+
+### 5.5 Validations
+
+- `pnpm --filter '@aor/frontend-app' typecheck` ✅
+- `pnpm --filter '@aor/frontend-app' test` → **45/45 tests** ✅
+- `pnpm --filter '@aor/frontend-app' lint` → **0 erreur** ✅
+
+---
+
+## 6. Statut de la session
 
 | Étape | Statut |
 |---|---|
@@ -314,3 +380,7 @@ d'une ambiguïté à atténuer par JSDoc mais d'un naming résolu, l'arbre
 | Mise à jour [docs/adr/README.md](adr/README.md) (index + statut) | ✅ |
 | Vérification `.cursor/rules` (rien à modifier) | ✅ |
 | Renommage `participant/` → `participant-session/` (4 dossiers + 15 imports) | ✅ |
+| Layout full-width (3 contraintes structurelles retirées) | ✅ |
+| Sidebar fixe non-scrollable (admin + participant) | ✅ |
+| Déconnexion unique en bas de la sidebar (suppression du TopBar) | ✅ |
+| 4 lint errors pré-existantes corrigées (lint frontend = 0) | ✅ |
