@@ -6,11 +6,11 @@ import { PassportModule } from '@nestjs/passport';
 
 import { ScryptPasswordAdapter } from '@aor/adapters';
 import { type IPasswordVerifierPort, PASSWORD_VERIFIER_PORT_SYMBOL } from '@aor/ports';
-import { GetParticipantQuestionnaireMatrixUseCase } from '@src/application/participant/get-participant-questionnaire-matrix.usecase';
-import { GetParticipantSessionQuestionnaireMatrixUseCase } from '@src/application/participant/get-participant-session-questionnaire-matrix.usecase';
-import { GetParticipantSessionUseCase } from '@src/application/participant/get-participant-session.usecase';
-import { ListParticipantCampaignPeersUseCase } from '@src/application/participant/list-participant-campaign-peers.usecase';
-import { ParticipantLoginUseCase } from '@src/application/participant/participant-login.usecase';
+import { GetParticipantQuestionnaireMatrixUseCase } from '@src/application/participant-session/get-participant-questionnaire-matrix.usecase';
+import { GetParticipantSessionQuestionnaireMatrixUseCase } from '@src/application/participant-session/get-participant-session-questionnaire-matrix.usecase';
+import { GetParticipantSessionUseCase } from '@src/application/participant-session/get-participant-session.usecase';
+import { ListParticipantCampaignPeersUseCase } from '@src/application/participant-session/list-participant-campaign-peers.usecase';
+import { ParticipantLoginUseCase } from '@src/application/participant-session/participant-login.usecase';
 import { GetParticipantOwnedResponseUseCase } from '@src/application/responses/get-participant-owned-response.usecase';
 import { SubmitParticipantQuestionnaireUseCase } from '@src/application/responses/submit-participant-questionnaire.usecase';
 import {
@@ -25,7 +25,7 @@ import {
 import {
     type IParticipantJwtSignerPort,
     PARTICIPANT_JWT_SIGNER_PORT_SYMBOL,
-} from '@src/interfaces/participant/IParticipantJwtSigner.port';
+} from '@src/interfaces/participant-session/IParticipantJwtSigner.port';
 import {
     type IParticipantsCampaignStateReaderPort,
     type IParticipantsIdentityReaderPort,

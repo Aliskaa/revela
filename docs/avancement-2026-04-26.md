@@ -441,6 +441,24 @@ Avant cette session, la liste coaches portait uniquement la **création**. La mi
 
 **Validations** : `pnpm biome check .` → 0 erreur ✅, `pnpm typecheck` ✅, `pnpm test --run` → **45/45 tests** ✅. Aucun changement de comportement utilisateur (placeholders identiques visuellement, hook `usePageResetEffect` strictement équivalent à l'`useEffect` inline).
 
+### ✅ Page détail réponse `/admin/responses/$responseId`
+
+**Constat (2026-04-27)** : la liste des réponses affichait 5 colonnes (type, questionnaire, organisation, scores, date) mais aucun moyen de voir le détail d'une réponse. Or le backend exposait déjà `GET /admin/responses/:responseId` qui renvoie un `ResponseDetail` avec `result_dims`, `score_labels` et `short_labels` — données prêtes à l'usage côté UI.
+
+**Création** :
+
+| Fichier | Rôle |
+|---|---|
+| [src/routes/admin/responses.$responseId.tsx](../applications/frontend/src/routes/admin/responses.$responseId.tsx) (nouveau) | Page détail consommant `useAdminResponse(id)`. Header avec chip de couleur tintée par `submission_kind` (success pour Élément Humain, primary pour auto-éval, secondary pour pairs), 4 StatCards (type / questionnaire / scores collectés / date+heure), section « Identité & contexte » (nom/email/orga + ids participant/rater/rated), puis sections par dimension via `result_dims` (chaque dimension = une carte avec un mini-tableau `code → libellé → score`, le code venant de `short_labels` et le libellé de `score_labels`). Fallback en mode « Scores bruts » si `result_dims` est vide (questionnaires sans structure de dimension). |
+| [src/routes/admin/responses.tsx](../applications/frontend/src/routes/admin/responses.tsx) | + colonne « Détail » sur la table desktop avec `<Button href={...}>` (pattern aligné sur companies/$companyId — TanStack Router refuse `params={{}}` typé strict ici, le href fonctionne). + bouton « Voir le détail » sur les cartes mobile pour parité. `colSpan` ajusté à 6, SkeletonTableRows à 6 colonnes. |
+
+**Bénéfices** :
+- L'admin peut désormais inspecter une réponse complète (scores rangés par dimension psychométrique avec libellés humains, plus le contexte du participant).
+- Aucune extension backend nécessaire — l'endpoint et le schema `ResponseDetail` existaient déjà ; uniquement consommation côté UI.
+- Pattern de page détail cohérent avec `coaches/$coachId.tsx` et `companies/$companyId.tsx`.
+
+**Validations** : typecheck ✅, frontend tests **45/45** ✅, lint **0 erreur** ✅.
+
 ---
 
 ## 2. CE QUI RESTE À FAIRE

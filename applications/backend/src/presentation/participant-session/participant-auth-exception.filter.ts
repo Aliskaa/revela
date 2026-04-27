@@ -6,7 +6,7 @@ import type { Response } from 'express';
 import {
     ParticipantInvalidCredentialsError,
     ParticipantPasswordNotSetError,
-} from '@src/domain/participant/participant-auth.errors';
+} from '@src/domain/participant-session/participant-auth.errors';
 
 @Catch(ParticipantInvalidCredentialsError, ParticipantPasswordNotSetError)
 export class ParticipantAuthExceptionFilter implements ExceptionFilter {

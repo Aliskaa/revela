@@ -14,7 +14,7 @@ import type {
     IInviteActivationWritePort,
     InviteActivationWriteParams,
 } from '@src/interfaces/invitations/IInviteActivationWrite.port';
-import type { IParticipantJwtSignerPort } from '@src/interfaces/participant/IParticipantJwtSigner.port';
+import type { IParticipantJwtSignerPort } from '@src/interfaces/participant-session/IParticipantJwtSigner.port';
 import type { IParticipantsRepositoryPort } from '@src/interfaces/participants/IParticipantsRepository.port';
 import { expect, test } from 'vitest';
 

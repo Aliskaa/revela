@@ -7,6 +7,7 @@ import { usePageResetEffect } from '@/lib/usePageResetEffect';
 import type { ResponseSubmissionKind } from '@aor/types';
 import {
     Box,
+    Button,
     Card,
     CardContent,
     Chip,
@@ -21,10 +22,10 @@ import {
     Typography,
 } from '@mui/material';
 import { createFileRoute } from '@tanstack/react-router';
-import { ClipboardList, MessageSquareText, Sparkles, Users } from 'lucide-react';
+import { ArrowRight, ClipboardList, MessageSquareText, Sparkles, Users } from 'lucide-react';
 import * as React from 'react';
 
-export const Route = createFileRoute('/admin/responses')({
+export const Route = createFileRoute('/admin/responses/')({
     component: AdminResponsesRoute,
 });
 
@@ -145,11 +146,12 @@ function AdminResponsesRoute() {
                                     <TableCell>Organisation</TableCell>
                                     <TableCell>Scores</TableCell>
                                     <TableCell>Soumis le</TableCell>
+                                    <TableCell />
                                 </TableRow>
                             </TableHead>
                             <TableBody>
                                 {isLoading ? (
-                                    <SkeletonTableRows rows={5} columns={5} />
+                                    <SkeletonTableRows rows={5} columns={6} />
                                 ) : (
                                     filtered.map(response => (
                                         <TableRow hover key={response.id}>
@@ -167,12 +169,21 @@ function AdminResponsesRoute() {
                                             <TableCell>
                                                 {new Date(response.submitted_at).toLocaleDateString('fr-FR')}
                                             </TableCell>
+                                            <TableCell align="right">
+                                                <Button
+                                                    href={`/admin/responses/${response.id}`}
+                                                    variant="text"
+                                                    endIcon={<ArrowRight size={16} />}
+                                                >
+                                                    Détail
+                                                </Button>
+                                            </TableCell>
                                         </TableRow>
                                     ))
                                 )}
                                 {!isLoading && filtered.length === 0 && (
                                     <TableRow>
-                                        <TableCell colSpan={5} align="center" sx={{ py: 4 }}>
+                                        <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
                                             <Typography variant="body2" color="text.secondary">
                                                 {search
                                                     ? 'Aucune soumission ne correspond à la recherche.'
@@ -220,6 +231,14 @@ function AdminResponsesRoute() {
                                                     value={new Date(response.submitted_at).toLocaleDateString('fr-FR')}
                                                 />
                                             </Box>
+                                            <Button
+                                                href={`/admin/responses/${response.id}`}
+                                                variant="outlined"
+                                                endIcon={<ArrowRight size={16} />}
+                                                sx={{ borderRadius: 3, alignSelf: 'flex-start' }}
+                                            >
+                                                Voir le détail
+                                            </Button>
                                         </Stack>
                                     </CardContent>
                                 </Card>

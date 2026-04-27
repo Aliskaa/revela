@@ -7,7 +7,7 @@ import {
     ParticipantAccountNotFoundError,
     ParticipantAssignedQuestionnaireMissingError,
     ParticipantQuestionnaireNotAllowedError,
-} from '@src/domain/participant/participant-session.errors';
+} from '@src/domain/participant-session/participant-session.errors';
 
 @Catch(
     ParticipantAccountNotFoundError,

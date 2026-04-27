@@ -23,7 +23,7 @@ import type { EraseParticipantRgpdUseCase } from '@src/application/admin/partici
 import type { ImportParticipantsCsvUseCase } from '@src/application/admin/participants/import-participants-csv.usecase';
 import type { ListAdminParticipantsUseCase } from '@src/application/admin/participants/list-admin-participants.usecase';
 import type { ListParticipantInvitationTokensUseCase } from '@src/application/admin/participants/list-participant-invitation-tokens.usecase';
-import type { GetParticipantQuestionnaireMatrixUseCase } from '@src/application/participant/get-participant-questionnaire-matrix.usecase';
+import type { GetParticipantQuestionnaireMatrixUseCase } from '@src/application/participant-session/get-participant-questionnaire-matrix.usecase';
 import { ResponsesExceptionFilter } from '@src/presentation/responses/responses-exception.filter';
 
 import { AdminApplicationExceptionFilter } from './admin-application-exception.filter';

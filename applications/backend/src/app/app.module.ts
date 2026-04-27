@@ -5,7 +5,7 @@ import { Module } from '@nestjs/common';
 import { DatabaseModule } from '@src/infrastructure/database/database.module';
 import { AdminModule } from '@src/presentation/admin/admin.module';
 import { InvitationsPublicModule } from '@src/presentation/invitations/Invitations-public.module';
-import { ParticipantModule } from '@src/presentation/participant/participant.module';
+import { ParticipantModule } from '@src/presentation/participant-session/participant.module';
 import { QuestionnairesModule } from '@src/presentation/questionnaires/questionnaires.module';
 import { ResponsesModule } from '@src/presentation/responses/responses.module';
 import { ScoringModule } from '@src/presentation/scoring/scoring.module';

@@ -4,8 +4,8 @@ import type { IPasswordVerifierPort } from '@aor/ports';
 import {
     ParticipantInvalidCredentialsError,
     ParticipantPasswordNotSetError,
-} from '@src/domain/participant/participant-auth.errors';
-import type { IParticipantJwtSignerPort } from '@src/interfaces/participant/IParticipantJwtSigner.port';
+} from '@src/domain/participant-session/participant-auth.errors';
+import type { IParticipantJwtSignerPort } from '@src/interfaces/participant-session/IParticipantJwtSigner.port';
 import type { IParticipantsIdentityReaderPort } from '@src/interfaces/participants/IParticipantsRepository.port';
 
 export class ParticipantLoginResult {

@@ -8,7 +8,7 @@ import {
     InviteTokenRequestError,
 } from '@src/domain/invitations/invitations.errors';
 import type { IInviteActivationWritePort } from '@src/interfaces/invitations/IInviteActivationWrite.port';
-import type { IParticipantJwtSignerPort } from '@src/interfaces/participant/IParticipantJwtSigner.port';
+import type { IParticipantJwtSignerPort } from '@src/interfaces/participant-session/IParticipantJwtSigner.port';
 import type {
     IParticipantsCampaignStateReaderPort,
     IParticipantsIdentityReaderPort,

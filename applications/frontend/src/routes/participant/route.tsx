@@ -110,12 +110,17 @@ function ParticipantSidebar() {
             component="aside"
             sx={{
                 width: 280,
+                flexShrink: 0,
                 display: { xs: 'none', lg: 'flex' },
                 flexDirection: 'column',
                 bgcolor: 'background.paper',
                 borderRight: '1px solid rgba(15,23,42,0.10)',
                 px: 2.5,
                 py: 3,
+                position: 'sticky',
+                top: 0,
+                height: '100vh',
+                overflow: 'hidden',
             }}
         >
             <BrandMark />
@@ -311,46 +316,15 @@ function MobileTopBar() {
 }
 
 function TopBar() {
-    const navigate = useNavigate();
-
-    const handleLogout = () => {
-        userParticipant.removeToken();
-        navigate({ to: '/login' });
-    };
-
     return (
-        <Stack
-            direction="row"
-            alignItems="center"
-            justifyContent="space-between"
-            sx={{
-                display: { xs: 'none', lg: 'flex' },
-                px: 0,
-                mb: 3,
-            }}
-        >
-            <Box>
-                <Typography variant="h5" fontWeight={800} color="text.primary">
-                    Espace participant
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                    Suivi de campagne, progression et restitution
-                </Typography>
-            </Box>
-
-            <Stack direction="row" spacing={1.5} alignItems="center">
-                <Button
-                    onClick={handleLogout}
-                    variant="outlined"
-                    startIcon={<LogOut size={16} />}
-                    sx={{
-                        borderRadius: 3,
-                    }}
-                >
-                    Déconnexion
-                </Button>
-            </Stack>
-        </Stack>
+        <Box sx={{ display: { xs: 'none', lg: 'block' }, mb: 3 }}>
+            <Typography variant="h5" fontWeight={800} color="text.primary">
+                Espace participant
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+                Suivi de campagne, progression et restitution
+            </Typography>
+        </Box>
     );
 }
 
@@ -358,7 +332,7 @@ function ParticipantShell({ children }: { children: React.ReactNode }) {
     return (
         <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
             <MobileTopBar />
-            <Box sx={{ display: 'flex', minHeight: '100vh', maxWidth: 1600, mx: 'auto' }}>
+            <Box sx={{ display: 'flex', minHeight: '100vh' }}>
                 <ParticipantSidebar />
 
                 <Box component="main" sx={{ flex: 1, px: { xs: 2, sm: 3, lg: 4 }, py: { xs: 2, sm: 3, lg: 4 } }}>

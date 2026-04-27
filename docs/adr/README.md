@@ -46,8 +46,9 @@ Liens code, autres ADRs, documents externes.
 | --- | --- | --- | --- |
 | [ADR-001](./ADR-001-user-facing-questionnaires-matrix-api.md) | User-facing questionnaires and participant score matrix API | Accepted | 2026-04-03 |
 | [ADR-002](./ADR-002-participant-session-and-campaign-scoped-flows.md) | Session participant unifiée et flux scoppés par campagne | Accepted | 2026-04-06 |
-| [ADR-003](./ADR-003-backend-solid-and-hexagonal-target.md) | Cible SOLID/Hexagonal backend >= 9/10 | Accepted | 2026-04-14 |
+| [ADR-003](./ADR-003-backend-solid-and-hexagonal-target.md) | Cible SOLID/Hexagonal backend >= 9/10 | Accepted (partially superseded by ADR-008) | 2026-04-14 |
 | [ADR-004](./ADR-004-pnpm-catalog-versioning.md) | pnpm workspace + protocol `catalog:` pour les versions | Accepted | 2026-04-23 |
 | [ADR-005](./ADR-005-biomejs-tooling.md) | BiomeJS comme unique outil de lint et format | Accepted | 2026-04-23 |
 | [ADR-006](./ADR-006-toast-emitted-from-mutation-hooks.md) | Toast émis par les hooks de mutation, pas par les routes | Accepted | 2026-04-26 |
 | [ADR-007](./ADR-007-use-drawer-form-zod.md) | `useDrawerForm` + Zod pour les formulaires drawer admin | Accepted | 2026-04-26 |
+| [ADR-008](./ADR-008-backend-layer-first-with-actor-segmentation.md) | Architecture backend layer-first avec segmentation par acteur (supersedes ADR-003 §2) | Accepted | 2026-04-27 |

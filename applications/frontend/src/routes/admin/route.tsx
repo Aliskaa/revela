@@ -98,6 +98,7 @@ function AdminSidebar() {
             component="aside"
             sx={{
                 width: 280,
+                flexShrink: 0,
                 display: { xs: 'none', lg: 'flex' },
                 flexDirection: 'column',
                 bgcolor: 'background.paper',
@@ -105,6 +106,10 @@ function AdminSidebar() {
                 borderRightColor: 'border',
                 px: 2.5,
                 py: 3,
+                position: 'sticky',
+                top: 0,
+                height: '100vh',
+                overflow: 'hidden',
             }}
         >
             <BrandMark />
@@ -301,13 +306,6 @@ function MobileTopBar() {
 }
 
 function TopBar() {
-    const navigate = useNavigate();
-
-    const handleLogout = () => {
-        userAdmin.removeToken();
-        navigate({ to: '/admin/login' });
-    };
-
     return (
         <Stack
             direction="row"
@@ -324,37 +322,27 @@ function TopBar() {
                 </Typography>
             </Box>
 
-            <Stack direction="row" spacing={1.5} alignItems="center">
-                <Box
-                    sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 1,
-                        px: 1.5,
-                        py: 1,
-                        minWidth: 320,
-                        borderRadius: 999,
-                        border: '1px solid',
-                        borderColor: 'border',
-                        bgcolor: 'background.paper',
-                    }}
-                >
-                    <Search size={16} color="rgb(100,116,139)" />
-                    <InputBase
-                        placeholder="Recherche globale…"
-                        inputProps={{ 'aria-label': 'Recherche globale' }}
-                        sx={{ width: '100%', fontSize: 14 }}
-                    />
-                </Box>
-
-                <IconButton
-                    onClick={handleLogout}
-                    aria-label="Se déconnecter"
-                    sx={{ border: '1px solid', borderColor: 'border', bgcolor: 'background.paper' }}
-                >
-                    <LogOut size={18} />
-                </IconButton>
-            </Stack>
+            <Box
+                sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1,
+                    px: 1.5,
+                    py: 1,
+                    minWidth: 320,
+                    borderRadius: 999,
+                    border: '1px solid',
+                    borderColor: 'border',
+                    bgcolor: 'background.paper',
+                }}
+            >
+                <Search size={16} color="rgb(100,116,139)" />
+                <InputBase
+                    placeholder="Recherche globale…"
+                    inputProps={{ 'aria-label': 'Recherche globale' }}
+                    sx={{ width: '100%', fontSize: 14 }}
+                />
+            </Box>
         </Stack>
     );
 }
@@ -363,7 +351,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
     return (
         <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
             <MobileTopBar />
-            <Box sx={{ display: 'flex', minHeight: '100vh', maxWidth: 1600, mx: 'auto' }}>
+            <Box sx={{ display: 'flex', minHeight: '100vh' }}>
                 <AdminSidebar />
 
                 <Box component="main" sx={{ flex: 1, px: { xs: 2, sm: 3, lg: 4 }, py: { xs: 2, sm: 3, lg: 4 } }}>

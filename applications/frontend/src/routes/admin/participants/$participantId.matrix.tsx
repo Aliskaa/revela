@@ -23,7 +23,7 @@ function ParticipantMatrixPage() {
     const id = Number(participantId);
 
     return (
-        <Box sx={{ maxWidth: 1400, mx: 'auto', p: { xs: 2, sm: 3, md: 4 } }}>
+        <Box sx={{ p: { xs: 2, sm: 3, md: 4 } }}>
             <Button
                 component={Link}
                 to="/admin/participants"

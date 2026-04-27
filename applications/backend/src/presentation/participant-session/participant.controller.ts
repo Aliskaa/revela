@@ -21,10 +21,10 @@ import type { Request } from 'express';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
 import { updateParticipantProfileBodySchema } from '@aor/types';
-import type { GetParticipantSessionQuestionnaireMatrixUseCase } from '@src/application/participant/get-participant-session-questionnaire-matrix.usecase';
-import type { GetParticipantSessionUseCase } from '@src/application/participant/get-participant-session.usecase';
-import type { ListParticipantCampaignPeersUseCase } from '@src/application/participant/list-participant-campaign-peers.usecase';
-import type { ParticipantLoginUseCase } from '@src/application/participant/participant-login.usecase';
+import type { GetParticipantSessionQuestionnaireMatrixUseCase } from '@src/application/participant-session/get-participant-session-questionnaire-matrix.usecase';
+import type { GetParticipantSessionUseCase } from '@src/application/participant-session/get-participant-session.usecase';
+import type { ListParticipantCampaignPeersUseCase } from '@src/application/participant-session/list-participant-campaign-peers.usecase';
+import type { ParticipantLoginUseCase } from '@src/application/participant-session/participant-login.usecase';
 import type { GetParticipantOwnedResponseUseCase } from '@src/application/responses/get-participant-owned-response.usecase';
 import type { SubmitParticipantQuestionnaireUseCase } from '@src/application/responses/submit-participant-questionnaire.usecase';
 import type {

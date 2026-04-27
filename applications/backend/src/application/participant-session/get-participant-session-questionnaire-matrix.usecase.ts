@@ -1,11 +1,11 @@
 // Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
 
 import type { ParticipantQuestionnaireMatrix } from '@aor/types';
-import type { GetParticipantQuestionnaireMatrixUseCase } from '@src/application/participant/get-participant-questionnaire-matrix.usecase';
+import type { GetParticipantQuestionnaireMatrixUseCase } from '@src/application/participant-session/get-participant-questionnaire-matrix.usecase';
 import {
     ParticipantAssignedQuestionnaireMissingError,
     ParticipantQuestionnaireNotAllowedError,
-} from '@src/domain/participant/participant-session.errors';
+} from '@src/domain/participant-session/participant-session.errors';
 import type { ICampaignsReadPort } from '@src/interfaces/campaigns/ICampaignsRepository.port';
 import type { IParticipantsInviteAssignmentsReaderPort } from '@src/interfaces/participants/IParticipantsRepository.port';
 

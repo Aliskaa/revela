@@ -7,7 +7,7 @@ import { EraseParticipantRgpdUseCase } from '@src/application/admin/participants
 import { ImportParticipantsCsvUseCase } from '@src/application/admin/participants/import-participants-csv.usecase';
 import { ListAdminParticipantsUseCase } from '@src/application/admin/participants/list-admin-participants.usecase';
 import { ListParticipantInvitationTokensUseCase } from '@src/application/admin/participants/list-participant-invitation-tokens.usecase';
-import { GetParticipantQuestionnaireMatrixUseCase } from '@src/application/participant/get-participant-questionnaire-matrix.usecase';
+import { GetParticipantQuestionnaireMatrixUseCase } from '@src/application/participant-session/get-participant-questionnaire-matrix.usecase';
 import {
     CAMPAIGNS_REPOSITORY_PORT_SYMBOL,
     type ICampaignsReadPort,

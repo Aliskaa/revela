@@ -1,6 +1,6 @@
 // Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
 
-import { ParticipantQuestionnaireNotAllowedError } from '@src/domain/participant/participant-session.errors';
+import { ParticipantQuestionnaireNotAllowedError } from '@src/domain/participant-session/participant-session.errors';
 import type { ICampaignsReadPort } from '@src/interfaces/campaigns/ICampaignsRepository.port';
 import type {
     CampaignPeerChoiceItemDto,

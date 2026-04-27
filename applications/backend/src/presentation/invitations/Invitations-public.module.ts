@@ -28,7 +28,7 @@ import {
 import {
     type IParticipantJwtSignerPort,
     PARTICIPANT_JWT_SIGNER_PORT_SYMBOL,
-} from '@src/interfaces/participant/IParticipantJwtSigner.port';
+} from '@src/interfaces/participant-session/IParticipantJwtSigner.port';
 import {
     type IParticipantsCampaignParticipationWriterPort,
     type IParticipantsCampaignStateReaderPort,
@@ -40,7 +40,7 @@ import {
     RESPONSES_REPOSITORY_PORT_SYMBOL,
 } from '@src/interfaces/responses/IResponsesRepository.port';
 
-import { ParticipantModule } from '@src/presentation/participant/participant.module';
+import { ParticipantModule } from '@src/presentation/participant-session/participant.module';
 
 import { PublicInvitesController } from './invitations-public.controller';
 import {

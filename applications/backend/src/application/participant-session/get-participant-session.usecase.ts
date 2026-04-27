@@ -2,7 +2,7 @@
 
 import { getQuestionnaireEntry } from '@aor/questionnaires';
 import type { ParticipantSession } from '@aor/types';
-import { ParticipantAccountNotFoundError } from '@src/domain/participant/participant-session.errors';
+import { ParticipantAccountNotFoundError } from '@src/domain/participant-session/participant-session.errors';
 import type { CampaignStatus, ICampaignsReadPort } from '@src/interfaces/campaigns/ICampaignsRepository.port';
 import type { ICoachesReadPort } from '@src/interfaces/coaches/ICoachesRepository.port';
 import type { ICompaniesReadPort } from '@src/interfaces/companies/ICompaniesRepository.port';
