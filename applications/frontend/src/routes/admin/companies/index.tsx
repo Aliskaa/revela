@@ -1,15 +1,16 @@
 import { AdminCompanyDrawerForm } from '@/components/admin/AdminCompanyDrawerForm';
 import { MiniStat } from '@/components/common/MiniStat';
 import { SectionTitle } from '@/components/common/SectionTitle';
+import { SkeletonCards, SkeletonTableRows } from '@/components/common/SkeletonRows';
 import { StatCard } from '@/components/common/StatCard';
 import { useAdminCampaigns, useCompanies, useCreateCompany } from '@/hooks/admin';
+import { usePageResetEffect } from '@/lib/usePageResetEffect';
 import {
     Box,
     Button,
     Card,
     CardContent,
     Chip,
-    Skeleton,
     Stack,
     Table,
     TableBody,
@@ -83,9 +84,7 @@ function AdminCompaniesRoute() {
         }
     };
 
-    React.useEffect(() => {
-        setPage(0);
-    }, [search]);
+    usePageResetEffect(setPage, [search]);
 
     return (
         <Stack spacing={3}>
@@ -224,44 +223,37 @@ function AdminCompaniesRoute() {
                                 </TableRow>
                             </TableHead>
                             <TableBody>
-                                {companiesLoading
-                                    ? Array.from({ length: 4 }).map((_, i) => (
-                                          <TableRow key={i}>
-                                              {Array.from({ length: 3 }).map((__, j) => (
-                                                  <TableCell key={j}>
-                                                      <Skeleton variant="text" />
-                                                  </TableCell>
-                                              ))}
-                                          </TableRow>
-                                      ))
-                                    : paged.map(company => (
-                                          <TableRow hover key={company.id}>
-                                              <TableCell>
-                                                  <Typography fontWeight={700} color="text.primary">
-                                                      {company.name}
-                                                  </Typography>
-                                              </TableCell>
-                                              <TableCell>
-                                                  <Typography fontWeight={600} color="text.primary">
-                                                      {company.contact_name ?? '–'}
-                                                  </Typography>
-                                                  <Typography variant="caption" color="text.secondary">
-                                                      {company.contact_email ?? ''}
-                                                  </Typography>
-                                              </TableCell>
-                                              <TableCell>{company.participant_count}</TableCell>
-                                              <TableCell align="right">
-                                                  <Button
-                                                      href={`/admin/companies/${company.id}`}
-                                                      variant="text"
-                                                      endIcon={<ArrowRight size={16} />}
-
-                                                  >
-                                                      Ouvrir
-                                                  </Button>
-                                              </TableCell>
-                                          </TableRow>
-                                      ))}
+                                {companiesLoading ? (
+                                    <SkeletonTableRows rows={4} columns={3} />
+                                ) : (
+                                    paged.map(company => (
+                                        <TableRow hover key={company.id}>
+                                            <TableCell>
+                                                <Typography fontWeight={700} color="text.primary">
+                                                    {company.name}
+                                                </Typography>
+                                            </TableCell>
+                                            <TableCell>
+                                                <Typography fontWeight={600} color="text.primary">
+                                                    {company.contact_name ?? '–'}
+                                                </Typography>
+                                                <Typography variant="caption" color="text.secondary">
+                                                    {company.contact_email ?? ''}
+                                                </Typography>
+                                            </TableCell>
+                                            <TableCell>{company.participant_count}</TableCell>
+                                            <TableCell align="right">
+                                                <Button
+                                                    href={`/admin/companies/${company.id}`}
+                                                    variant="text"
+                                                    endIcon={<ArrowRight size={16} />}
+                                                >
+                                                    Ouvrir
+                                                </Button>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))
+                                )}
                                 {!companiesLoading && filtered.length === 0 && (
                                     <TableRow>
                                         <TableCell colSpan={4} align="center" sx={{ py: 4 }}>
@@ -295,41 +287,41 @@ function AdminCompaniesRoute() {
 
                     {/* Mobile cards */}
                     <Stack spacing={2} sx={{ display: { xs: 'flex', lg: 'none' }, mt: 2 }}>
-                        {companiesLoading
-                            ? Array.from({ length: 3 }).map((_, i) => (
-                                  <Skeleton key={i} variant="rounded" height={140} />
-                              ))
-                            : filtered.map(company => (
-                                  <Card variant="outlined" key={company.id}>
-                                      <CardContent sx={{ p: 2.5 }}>
-                                          <Stack spacing={1.8}>
-                                              <Box>
-                                                  <Typography variant="h6" fontWeight={800} color="text.primary">
-                                                      {company.name}
-                                                  </Typography>
-                                                  <Typography variant="body2" color="text.secondary" sx={{ mt: 0.4 }}>
-                                                      {company.contact_name ?? '–'}
-                                                  </Typography>
-                                                  <Typography variant="caption" color="text.secondary">
-                                                      {company.contact_email ?? ''}
-                                                  </Typography>
-                                              </Box>
-                                              <Box
-                                                  sx={{
-                                                      display: 'grid',
-                                                      gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
-                                                      gap: 1.2,
-                                                  }}
-                                              >
-                                                  <MiniStat
-                                                      label="Participants"
-                                                      value={String(company.participant_count)}
-                                                  />
-                                              </Box>
-                                          </Stack>
-                                      </CardContent>
-                                  </Card>
-                              ))}
+                        {companiesLoading ? (
+                            <SkeletonCards count={3} height={140} />
+                        ) : (
+                            filtered.map(company => (
+                                <Card variant="outlined" key={company.id}>
+                                    <CardContent sx={{ p: 2.5 }}>
+                                        <Stack spacing={1.8}>
+                                            <Box>
+                                                <Typography variant="h6" fontWeight={800} color="text.primary">
+                                                    {company.name}
+                                                </Typography>
+                                                <Typography variant="body2" color="text.secondary" sx={{ mt: 0.4 }}>
+                                                    {company.contact_name ?? '–'}
+                                                </Typography>
+                                                <Typography variant="caption" color="text.secondary">
+                                                    {company.contact_email ?? ''}
+                                                </Typography>
+                                            </Box>
+                                            <Box
+                                                sx={{
+                                                    display: 'grid',
+                                                    gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+                                                    gap: 1.2,
+                                                }}
+                                            >
+                                                <MiniStat
+                                                    label="Participants"
+                                                    value={String(company.participant_count)}
+                                                />
+                                            </Box>
+                                        </Stack>
+                                    </CardContent>
+                                </Card>
+                            ))
+                        )}
                         {!companiesLoading && filtered.length === 0 && (
                             <Typography variant="body2" color="text.secondary" sx={{ py: 2, textAlign: 'center' }}>
                                 {search

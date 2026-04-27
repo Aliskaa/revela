@@ -66,13 +66,7 @@ export function CampaignManageParticipants({ campaign }: CampaignManageParticipa
                     >
                         {inviteParticipants.isPending ? 'Envoi…' : 'Inviter les participants'}
                     </Button>
-                    <input
-                        ref={fileInputRef}
-                        type="file"
-                        accept=".csv"
-                        hidden
-                        onChange={handleFileChange}
-                    />
+                    <input ref={fileInputRef} type="file" accept=".csv" hidden onChange={handleFileChange} />
                     <Button
                         variant="outlined"
                         startIcon={<Upload size={16} />}

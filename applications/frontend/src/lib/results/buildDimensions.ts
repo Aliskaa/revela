@@ -58,10 +58,4 @@ export const buildDimensions = (matrix: ParticipantQuestionnaireMatrix): Dimensi
     return dims;
 };
 
-export const PEER_COLORS = [
-    'rgb(255,204,0)',
-    'rgb(255,170,0)',
-    'rgb(230,150,0)',
-    'rgb(200,130,0)',
-    'rgb(180,115,0)',
-];
+export const PEER_COLORS = ['rgb(255,204,0)', 'rgb(255,170,0)', 'rgb(230,150,0)', 'rgb(200,130,0)', 'rgb(180,115,0)'];

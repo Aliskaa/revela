@@ -62,9 +62,7 @@ export function CampaignStatusActions({ campaign }: CampaignStatusActionsProps) 
                             {isPending ? 'En cours…' : 'Clôturer la campagne'}
                         </Button>
                     )}
-                    {(campaign.status === 'draft' ||
-                        campaign.status === 'active' ||
-                        campaign.status === 'closed') && (
+                    {(campaign.status === 'draft' || campaign.status === 'active' || campaign.status === 'closed') && (
                         <Button
                             variant="outlined"
                             startIcon={<Archive size={16} />}

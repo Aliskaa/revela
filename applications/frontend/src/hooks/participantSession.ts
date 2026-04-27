@@ -69,7 +69,6 @@ export function useUpdateParticipantProfile() {
             qc.invalidateQueries({ queryKey: participantSessionKeys.session });
             toast.success(t('toast.profileUpdated'));
         },
-        onError: err =>
-            toast.error(err instanceof Error && err.message ? err.message : t('toast.profileUpdateFailed')),
+        onError: err => toast.error(err instanceof Error && err.message ? err.message : t('toast.profileUpdateFailed')),
     });
 }

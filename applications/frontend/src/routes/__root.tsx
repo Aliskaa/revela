@@ -134,13 +134,7 @@ function NotFoundComponent() {
                         </Typography>
                     </Box>
                     <Stack direction="row" spacing={1.2}>
-                        <Button
-                            component={Link}
-                            to="/"
-                            variant="contained"
-                            disableElevation
-                            sx={{ borderRadius: 3 }}
-                        >
+                        <Button component={Link} to="/" variant="contained" disableElevation sx={{ borderRadius: 3 }}>
                             Retour à l'accueil
                         </Button>
                     </Stack>

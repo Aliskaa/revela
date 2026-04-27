@@ -15,7 +15,7 @@ describe('<StatCard />', () => {
         expect(screen.getByText('référencées')).toBeInTheDocument();
     });
 
-    test('omet le helper s\'il n\'est pas fourni', () => {
+    test("omet le helper s'il n'est pas fourni", () => {
         renderWithTheme(<StatCard label="Stat" value={1} icon={Building2} />);
 
         // Pas d'élément avec un texte de caption — vérifié indirectement par rendu sans crash.
@@ -24,9 +24,7 @@ describe('<StatCard />', () => {
     });
 
     test('affiche un Skeleton à la place de la valeur quand loading=true', () => {
-        const { container } = renderWithTheme(
-            <StatCard label="Loading" value={0} icon={Building2} loading />
-        );
+        const { container } = renderWithTheme(<StatCard label="Loading" value={0} icon={Building2} loading />);
 
         // En mode loading la valeur n'est pas rendue
         expect(screen.queryByText('0')).not.toBeInTheDocument();

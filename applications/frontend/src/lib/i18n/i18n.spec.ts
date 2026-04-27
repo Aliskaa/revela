@@ -16,9 +16,7 @@ describe('i18n', () => {
     });
 
     it('interpolates variables in a key', () => {
-        expect(i18n.t('toast.companyCreated', { name: 'Ville de Lyon' })).toBe(
-            'Entreprise « Ville de Lyon » créée.'
-        );
+        expect(i18n.t('toast.companyCreated', { name: 'Ville de Lyon' })).toBe('Entreprise « Ville de Lyon » créée.');
     });
 
     it('returns the key path when the key is missing (fallback safety)', () => {

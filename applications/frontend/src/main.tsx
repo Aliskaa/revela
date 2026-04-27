@@ -16,7 +16,12 @@ declare module '@tanstack/react-router' {
     }
 }
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
+const rootElement = document.getElementById('root');
+if (!rootElement) {
+    throw new Error('Élément racine introuvable : `<div id="root">` est attendu dans index.html.');
+}
+
+ReactDOM.createRoot(rootElement).render(
     <React.StrictMode>
         <RouterProvider router={router} />
     </React.StrictMode>

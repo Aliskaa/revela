@@ -174,9 +174,7 @@ export function AdminCampaignDrawerForm({
                                     </MenuItem>
                                 ))}
                             </Select>
-                            {errors.questionnaireId ? (
-                                <FormHelperText>{errors.questionnaireId}</FormHelperText>
-                            ) : null}
+                            {errors.questionnaireId ? <FormHelperText>{errors.questionnaireId}</FormHelperText> : null}
                         </FormControl>
                     </Stack>
                 </Box>

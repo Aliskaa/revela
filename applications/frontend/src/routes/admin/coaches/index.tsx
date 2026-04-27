@@ -1,8 +1,10 @@
 import { AdminCoachDrawerForm } from '@/components/admin/AdminCoachDrawerForm';
 import { MiniStat } from '@/components/common/MiniStat';
 import { SectionTitle } from '@/components/common/SectionTitle';
+import { SkeletonCards, SkeletonTableRows } from '@/components/common/SkeletonRows';
 import { StatCard } from '@/components/common/StatCard';
 import { useAdminCampaigns, useCoaches, useCreateCoach } from '@/hooks/admin';
+import { usePageResetEffect } from '@/lib/usePageResetEffect';
 import {
     Box,
     Button,
@@ -10,7 +12,6 @@ import {
     CardContent,
     Chip,
     IconButton,
-    Skeleton,
     Stack,
     Table,
     TableBody,
@@ -20,7 +21,7 @@ import {
     TableRow,
     TextField,
     Tooltip,
-    Typography
+    Typography,
 } from '@mui/material';
 import { createFileRoute } from '@tanstack/react-router';
 import { ArrowRight, ClipboardList, Plus, UserRound } from 'lucide-react';
@@ -85,9 +86,7 @@ function AdminCoachesRoute() {
         [filtered, page, rowsPerPage]
     );
 
-    React.useEffect(() => {
-        setPage(0);
-    }, [search]);
+    usePageResetEffect(setPage, [search]);
 
     const activeCount = coaches.filter(c => c.isActive).length;
 
@@ -206,52 +205,46 @@ function AdminCoachesRoute() {
                                 </TableRow>
                             </TableHead>
                             <TableBody>
-                                {isLoading
-                                    ? Array.from({ length: 4 }).map((_, i) => (
-                                          <TableRow key={i}>
-                                              {Array.from({ length: 6 }).map((__, j) => (
-                                                  <TableCell key={j}>
-                                                      <Skeleton variant="text" />
-                                                  </TableCell>
-                                              ))}
-                                          </TableRow>
-                                      ))
-                                    : paged.map(coach => (
-                                          <TableRow hover key={coach.id}>
-                                              <TableCell>
-                                                  <Typography fontWeight={700} color="text.primary">
-                                                      {coach.displayName}
-                                                  </Typography>
-                                              </TableCell>
-                                              <TableCell>
-                                                  <Typography variant="body2" color="text.secondary">
-                                                      {coach.username}
-                                                  </Typography>
-                                              </TableCell>
-                                              <TableCell>{campaignCountByCoach.get(coach.id) ?? 0}</TableCell>
-                                              <TableCell>
-                                                  <StatusChip isActive={coach.isActive} />
-                                              </TableCell>
-                                              <TableCell>
-                                                  {coach.createdAt
-                                                      ? new Date(coach.createdAt).toLocaleDateString('fr-FR')
-                                                      : '–'}
-                                              </TableCell>
-                                              <TableCell align="right">
-                                                  <Stack direction="row" spacing={0.5} justifyContent="flex-end">
-                                                      <Tooltip title="Ouvrir le détail">
-                                                          <IconButton
-                                                              href={`/admin/coaches/${coach.id}`}
-                                                              size="small"
-                                                              aria-label={`Ouvrir ${coach.displayName}`}
-                                                          >
-                                                              <ArrowRight size={16} />
-                                                          </IconButton>
-                                                      </Tooltip>
-                                                  </Stack>
-                                              </TableCell>
-                                          </TableRow>
-                                      ))}
+                                {isLoading ? (
+                                    <SkeletonTableRows rows={4} columns={6} />
+                                ) : (
+                                    paged.map(coach => (
+                                        <TableRow hover key={coach.id}>
+                                            <TableCell>
+                                                <Typography fontWeight={700} color="text.primary">
+                                                    {coach.displayName}
+                                                </Typography>
+                                            </TableCell>
+                                            <TableCell>
+                                                <Typography variant="body2" color="text.secondary">
+                                                    {coach.username}
+                                                </Typography>
+                                            </TableCell>
+                                            <TableCell>{campaignCountByCoach.get(coach.id) ?? 0}</TableCell>
+                                            <TableCell>
+                                                <StatusChip isActive={coach.isActive} />
+                                            </TableCell>
+                                            <TableCell>
+                                                {coach.createdAt
+                                                    ? new Date(coach.createdAt).toLocaleDateString('fr-FR')
+                                                    : '–'}
+                                            </TableCell>
+                                            <TableCell align="right">
+                                                <Stack direction="row" spacing={0.5} justifyContent="flex-end">
+                                                    <Tooltip title="Ouvrir le détail">
+                                                        <IconButton
+                                                            href={`/admin/coaches/${coach.id}`}
+                                                            size="small"
+                                                            aria-label={`Ouvrir ${coach.displayName}`}
+                                                        >
+                                                            <ArrowRight size={16} />
+                                                        </IconButton>
+                                                    </Tooltip>
+                                                </Stack>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))
+                                )}
                                 {!isLoading && filtered.length === 0 && (
                                     <TableRow>
                                         <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
@@ -285,69 +278,65 @@ function AdminCoachesRoute() {
 
                     {/* Mobile cards */}
                     <Stack spacing={2} sx={{ display: { xs: 'flex', lg: 'none' }, mt: 2 }}>
-                        {isLoading
-                            ? Array.from({ length: 3 }).map((_, i) => (
-                                  <Skeleton key={i} variant="rounded" height={140} />
-                              ))
-                            : filtered.map(coach => (
-                                  <Card variant="outlined" key={coach.id}>
-                                      <CardContent sx={{ p: 2.5 }}>
-                                          <Stack spacing={1.8}>
-                                              <Stack
-                                                  direction="row"
-                                                  justifyContent="space-between"
-                                                  alignItems="start"
-                                                  spacing={2}
-                                              >
-                                                  <Box>
-                                                      <Typography variant="h6" fontWeight={800} color="text.primary">
-                                                          {coach.displayName}
-                                                      </Typography>
-                                                      <Typography
-                                                          variant="body2"
-                                                          color="text.secondary"
-                                                          sx={{ mt: 0.4 }}
-                                                      >
-                                                          {coach.username}
-                                                      </Typography>
-                                                  </Box>
-                                                  <StatusChip isActive={coach.isActive} />
-                                              </Stack>
-                                              <Box
-                                                  sx={{
-                                                      display: 'grid',
-                                                      gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
-                                                      gap: 1.2,
-                                                  }}
-                                              >
-                                                  <MiniStat
-                                                      label="Campagnes"
-                                                      value={String(campaignCountByCoach.get(coach.id) ?? 0)}
-                                                  />
-                                                  <MiniStat
-                                                      label="Créé le"
-                                                      value={
-                                                          coach.createdAt
-                                                              ? new Date(coach.createdAt).toLocaleDateString('fr-FR')
-                                                              : '–'
-                                                      }
-                                                  />
-                                              </Box>
-                                              <Stack direction="row" spacing={1}>
-                                                  <Button
-                                                      size="small"
-                                                      variant="outlined"
-                                                      href={`/admin/coaches/${coach.id}`}
-                                                      startIcon={<ArrowRight size={14} />}
-                                                      sx={{ borderRadius: 3 }}
-                                                  >
-                                                      Détail
-                                                  </Button>
-                                              </Stack>
-                                          </Stack>
-                                      </CardContent>
-                                  </Card>
-                              ))}
+                        {isLoading ? (
+                            <SkeletonCards count={3} height={140} />
+                        ) : (
+                            filtered.map(coach => (
+                                <Card variant="outlined" key={coach.id}>
+                                    <CardContent sx={{ p: 2.5 }}>
+                                        <Stack spacing={1.8}>
+                                            <Stack
+                                                direction="row"
+                                                justifyContent="space-between"
+                                                alignItems="start"
+                                                spacing={2}
+                                            >
+                                                <Box>
+                                                    <Typography variant="h6" fontWeight={800} color="text.primary">
+                                                        {coach.displayName}
+                                                    </Typography>
+                                                    <Typography variant="body2" color="text.secondary" sx={{ mt: 0.4 }}>
+                                                        {coach.username}
+                                                    </Typography>
+                                                </Box>
+                                                <StatusChip isActive={coach.isActive} />
+                                            </Stack>
+                                            <Box
+                                                sx={{
+                                                    display: 'grid',
+                                                    gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+                                                    gap: 1.2,
+                                                }}
+                                            >
+                                                <MiniStat
+                                                    label="Campagnes"
+                                                    value={String(campaignCountByCoach.get(coach.id) ?? 0)}
+                                                />
+                                                <MiniStat
+                                                    label="Créé le"
+                                                    value={
+                                                        coach.createdAt
+                                                            ? new Date(coach.createdAt).toLocaleDateString('fr-FR')
+                                                            : '–'
+                                                    }
+                                                />
+                                            </Box>
+                                            <Stack direction="row" spacing={1}>
+                                                <Button
+                                                    size="small"
+                                                    variant="outlined"
+                                                    href={`/admin/coaches/${coach.id}`}
+                                                    startIcon={<ArrowRight size={14} />}
+                                                    sx={{ borderRadius: 3 }}
+                                                >
+                                                    Détail
+                                                </Button>
+                                            </Stack>
+                                        </Stack>
+                                    </CardContent>
+                                </Card>
+                            ))
+                        )}
                         {!isLoading && filtered.length === 0 && (
                             <Typography variant="body2" color="text.secondary" sx={{ py: 2, textAlign: 'center' }}>
                                 {search ? 'Aucun coach ne correspond à la recherche.' : 'Aucun coach pour le moment.'}

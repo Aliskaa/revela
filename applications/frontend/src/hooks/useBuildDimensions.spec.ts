@@ -23,7 +23,7 @@ describe('buildDimensionsFromMatrix', () => {
         expect(buildDimensionsFromMatrix(baseMatrix())).toEqual([]);
     });
 
-    test('groupe les rows par dimension dans l\'ordre déclaré', () => {
+    test("groupe les rows par dimension dans l'ordre déclaré", () => {
         const matrix = baseMatrix({
             rows: [
                 { score_key: 1, label: 'Inclusion E', self: 4, peers: [], scientific: null },

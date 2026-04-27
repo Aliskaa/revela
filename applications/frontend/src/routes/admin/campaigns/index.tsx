@@ -1,8 +1,10 @@
 import { AdminCampaignDrawerForm } from '@/components/admin/AdminCampaignDrawerForm';
 import { MiniStat } from '@/components/common/MiniStat';
 import { SectionTitle } from '@/components/common/SectionTitle';
+import { SkeletonCards, SkeletonTableRows } from '@/components/common/SkeletonRows';
 import { StatCard } from '@/components/common/StatCard';
 import { useAdminCampaigns, useAdminDashboard, useCoaches, useCompanies, useCreateAdminCampaign } from '@/hooks/admin';
+import { usePageResetEffect } from '@/lib/usePageResetEffect';
 import type { CampaignStatus } from '@aor/types';
 import {
     Box,
@@ -10,7 +12,6 @@ import {
     Card,
     CardContent,
     Chip,
-    Skeleton,
     Stack,
     Table,
     TableBody,
@@ -95,9 +96,7 @@ function AdminCampaignsRoute() {
         [filtered, page, rowsPerPage]
     );
 
-    React.useEffect(() => {
-        setPage(0);
-    }, [search]);
+    usePageResetEffect(setPage, [search]);
 
     return (
         <Stack spacing={3}>
@@ -227,51 +226,44 @@ function AdminCampaignsRoute() {
                                 </TableRow>
                             </TableHead>
                             <TableBody>
-                                {isLoading
-                                    ? Array.from({ length: 4 }).map((_, i) => (
-                                          <TableRow key={i}>
-                                              {Array.from({ length: 6 }).map((__, j) => (
-                                                  <TableCell key={j}>
-                                                      <Skeleton variant="text" />
-                                                  </TableCell>
-                                              ))}
-                                              <TableCell />
-                                          </TableRow>
-                                      ))
-                                    : paged.map(campaign => (
-                                          <TableRow hover key={campaign.id}>
-                                              <TableCell>
-                                                  <Typography fontWeight={700} color="text.primary">
-                                                      {campaign.name}
-                                                  </Typography>
-                                              </TableCell>
-                                              <TableCell>{companyName(campaign.companyId)}</TableCell>
-                                              <TableCell>{coachName(campaign.coachId)}</TableCell>
-                                              <TableCell>
-                                                  {campaign.questionnaireId
-                                                      ? (QUESTIONNAIRE_LABELS[campaign.questionnaireId] ??
-                                                        campaign.questionnaireId)
-                                                      : '–'}
-                                              </TableCell>
-                                              <TableCell>
-                                                  <StatusChip status={campaign.status} />
-                                              </TableCell>
-                                              <TableCell>
-                                                  {campaign.createdAt
-                                                      ? new Date(campaign.createdAt).toLocaleDateString('fr-FR')
-                                                      : '–'}
-                                              </TableCell>
-                                              <TableCell align="right">
-                                                  <Button
-                                                      href={`/admin/campaigns/${campaign.id}`}
-                                                      variant="text"
-                                                      endIcon={<ChevronRight size={16} />}
-                                                  >
-                                                      Détail
-                                                  </Button>
-                                              </TableCell>
-                                          </TableRow>
-                                      ))}
+                                {isLoading ? (
+                                    <SkeletonTableRows rows={4} columns={7} />
+                                ) : (
+                                    paged.map(campaign => (
+                                        <TableRow hover key={campaign.id}>
+                                            <TableCell>
+                                                <Typography fontWeight={700} color="text.primary">
+                                                    {campaign.name}
+                                                </Typography>
+                                            </TableCell>
+                                            <TableCell>{companyName(campaign.companyId)}</TableCell>
+                                            <TableCell>{coachName(campaign.coachId)}</TableCell>
+                                            <TableCell>
+                                                {campaign.questionnaireId
+                                                    ? (QUESTIONNAIRE_LABELS[campaign.questionnaireId] ??
+                                                      campaign.questionnaireId)
+                                                    : '–'}
+                                            </TableCell>
+                                            <TableCell>
+                                                <StatusChip status={campaign.status} />
+                                            </TableCell>
+                                            <TableCell>
+                                                {campaign.createdAt
+                                                    ? new Date(campaign.createdAt).toLocaleDateString('fr-FR')
+                                                    : '–'}
+                                            </TableCell>
+                                            <TableCell align="right">
+                                                <Button
+                                                    href={`/admin/campaigns/${campaign.id}`}
+                                                    variant="text"
+                                                    endIcon={<ChevronRight size={16} />}
+                                                >
+                                                    Détail
+                                                </Button>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))
+                                )}
                                 {!isLoading && filtered.length === 0 && (
                                     <TableRow>
                                         <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
@@ -305,79 +297,79 @@ function AdminCampaignsRoute() {
 
                     {/* Mobile cards */}
                     <Stack spacing={2} sx={{ display: { xs: 'flex', lg: 'none' }, mt: 2 }}>
-                        {isLoading
-                            ? Array.from({ length: 3 }).map((_, i) => (
-                                  <Skeleton key={i} variant="rounded" height={160} />
-                              ))
-                            : filtered.map(campaign => (
-                                  <Card variant="outlined" key={campaign.id}>
-                                      <CardContent sx={{ p: 2.5 }}>
-                                          <Stack spacing={2}>
-                                              <Stack
-                                                  direction="row"
-                                                  justifyContent="space-between"
-                                                  alignItems="start"
-                                                  spacing={2}
-                                              >
-                                                  <Box>
-                                                      <Typography variant="h6" fontWeight={800} color="text.primary">
-                                                          {campaign.name}
-                                                      </Typography>
-                                                      <Typography
-                                                          variant="body2"
-                                                          color="text.secondary"
-                                                          sx={{ mt: 0.5, lineHeight: 1.7 }}
-                                                      >
-                                                          {companyName(campaign.companyId)} · Coach{' '}
-                                                          {coachName(campaign.coachId)}
-                                                      </Typography>
-                                                  </Box>
-                                                  <StatusChip status={campaign.status} />
-                                              </Stack>
+                        {isLoading ? (
+                            <SkeletonCards count={3} height={160} />
+                        ) : (
+                            filtered.map(campaign => (
+                                <Card variant="outlined" key={campaign.id}>
+                                    <CardContent sx={{ p: 2.5 }}>
+                                        <Stack spacing={2}>
+                                            <Stack
+                                                direction="row"
+                                                justifyContent="space-between"
+                                                alignItems="start"
+                                                spacing={2}
+                                            >
+                                                <Box>
+                                                    <Typography variant="h6" fontWeight={800} color="text.primary">
+                                                        {campaign.name}
+                                                    </Typography>
+                                                    <Typography
+                                                        variant="body2"
+                                                        color="text.secondary"
+                                                        sx={{ mt: 0.5, lineHeight: 1.7 }}
+                                                    >
+                                                        {companyName(campaign.companyId)} · Coach{' '}
+                                                        {coachName(campaign.coachId)}
+                                                    </Typography>
+                                                </Box>
+                                                <StatusChip status={campaign.status} />
+                                            </Stack>
 
-                                              <Box
-                                                  sx={{
-                                                      display: 'grid',
-                                                      gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
-                                                      gap: 1.2,
-                                                  }}
-                                              >
-                                                  <MiniStat
-                                                      label="Questionnaire"
-                                                      value={
-                                                          campaign.questionnaireId
-                                                              ? (QUESTIONNAIRE_LABELS[campaign.questionnaireId] ??
-                                                                campaign.questionnaireId)
-                                                              : '–'
-                                                      }
-                                                  />
-                                                  <MiniStat
-                                                      label="Créée le"
-                                                      value={
-                                                          campaign.createdAt
-                                                              ? new Date(campaign.createdAt).toLocaleDateString('fr-FR')
-                                                              : '–'
-                                                      }
-                                                  />
-                                              </Box>
+                                            <Box
+                                                sx={{
+                                                    display: 'grid',
+                                                    gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+                                                    gap: 1.2,
+                                                }}
+                                            >
+                                                <MiniStat
+                                                    label="Questionnaire"
+                                                    value={
+                                                        campaign.questionnaireId
+                                                            ? (QUESTIONNAIRE_LABELS[campaign.questionnaireId] ??
+                                                              campaign.questionnaireId)
+                                                            : '–'
+                                                    }
+                                                />
+                                                <MiniStat
+                                                    label="Créée le"
+                                                    value={
+                                                        campaign.createdAt
+                                                            ? new Date(campaign.createdAt).toLocaleDateString('fr-FR')
+                                                            : '–'
+                                                    }
+                                                />
+                                            </Box>
 
-                                              <Button
-                                                  variant="contained"
-                                                  disableElevation
-                                                  href={`/admin/campaigns/${campaign.id}`}
-                                                  endIcon={<ChevronRight size={16} />}
-                                                  sx={{
-                                                      borderRadius: 3,
-                                                      bgcolor: 'primary.main',
-                                                      width: 'fit-content',
-                                                  }}
-                                              >
-                                                  Ouvrir
-                                              </Button>
-                                          </Stack>
-                                      </CardContent>
-                                  </Card>
-                              ))}
+                                            <Button
+                                                variant="contained"
+                                                disableElevation
+                                                href={`/admin/campaigns/${campaign.id}`}
+                                                endIcon={<ChevronRight size={16} />}
+                                                sx={{
+                                                    borderRadius: 3,
+                                                    bgcolor: 'primary.main',
+                                                    width: 'fit-content',
+                                                }}
+                                            >
+                                                Ouvrir
+                                            </Button>
+                                        </Stack>
+                                    </CardContent>
+                                </Card>
+                            ))
+                        )}
                         {!isLoading && filtered.length === 0 && (
                             <Typography variant="body2" color="text.secondary" sx={{ py: 2, textAlign: 'center' }}>
                                 {search

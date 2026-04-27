@@ -100,12 +100,7 @@ function AdminCampaignDetailRoute() {
                             </Typography>
                         </Box>
 
-                        <Button
-                            variant="outlined"
-                            component={Link}
-                            to="/admin/campaigns"
-                            sx={{ borderRadius: 3 }}
-                        >
+                        <Button variant="outlined" component={Link} to="/admin/campaigns" sx={{ borderRadius: 3 }}>
                             Retour aux campagnes
                         </Button>
                     </Stack>

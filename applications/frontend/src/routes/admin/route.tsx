@@ -50,7 +50,7 @@ const navItems: AdminNavItem[] = [
 ];
 
 function isActive(item: AdminNavItem, pathname: string): boolean {
-    if (item.exact) return pathname === item.to || pathname === item.to + '/';
+    if (item.exact) return pathname === item.to || pathname === `${item.to}/`;
     return pathname.startsWith(item.to);
 }
 

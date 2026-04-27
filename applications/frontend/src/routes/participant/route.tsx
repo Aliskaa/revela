@@ -62,7 +62,7 @@ const participantNav: NavItem[] = [
 ];
 
 function isActive(item: NavItem, pathname: string): boolean {
-    if (item.exact) return pathname === item.to || pathname === item.to + '/';
+    if (item.exact) return pathname === item.to || pathname === `${item.to}/`;
     return pathname.startsWith(item.to);
 }
 

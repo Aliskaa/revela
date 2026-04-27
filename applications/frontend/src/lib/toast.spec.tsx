@@ -8,8 +8,7 @@ import { theme } from '@/lib/theme';
 
 import { ToastProvider, useToast } from './toast';
 
-const wrap = (children: ReactNode) =>
-    render(<ThemeProvider theme={theme}>{children}</ThemeProvider>);
+const wrap = (children: ReactNode) => render(<ThemeProvider theme={theme}>{children}</ThemeProvider>);
 
 function NotifyButton({ onReady }: { onReady?: (api: ReturnType<typeof useToast>) => void }) {
     const toast = useToast();
@@ -46,7 +45,7 @@ describe('<ToastProvider> + useToast()', () => {
         expect(await screen.findByText('Profil mis à jour')).toBeInTheDocument();
     });
 
-    test('le toast se ferme au clic sur la croix de l\'Alert', async () => {
+    test("le toast se ferme au clic sur la croix de l'Alert", async () => {
         const user = userEvent.setup();
         wrap(
             <ToastProvider>
@@ -74,7 +73,11 @@ describe('<ToastProvider> + useToast()', () => {
         let api: ReturnType<typeof useToast> | undefined;
         wrap(
             <ToastProvider>
-                <NotifyButton onReady={a => (api = a)} />
+                <NotifyButton
+                    onReady={a => {
+                        api = a;
+                    }}
+                />
             </ToastProvider>
         );
 
@@ -94,7 +97,11 @@ describe('<ToastProvider> + useToast()', () => {
         let api: ReturnType<typeof useToast> | undefined;
         wrap(
             <ToastProvider>
-                <NotifyButton onReady={a => (api = a)} />
+                <NotifyButton
+                    onReady={a => {
+                        api = a;
+                    }}
+                />
             </ToastProvider>
         );
 

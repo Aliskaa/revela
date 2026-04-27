@@ -18,12 +18,7 @@ describe('<AdminDrawerForm />', () => {
 
     test('rend titre, sous-titre et contenu quand open=true', () => {
         renderWithTheme(
-            <AdminDrawerForm
-                open
-                title="Nouvelle entreprise"
-                subtitle="Créer une entreprise"
-                onClose={() => {}}
-            >
+            <AdminDrawerForm open title="Nouvelle entreprise" subtitle="Créer une entreprise" onClose={() => {}}>
                 <p>Champs ici</p>
             </AdminDrawerForm>
         );
@@ -88,7 +83,7 @@ describe('<AdminDrawerForm />', () => {
         expect(button).toBeDisabled();
     });
 
-    test('omet le bouton submit quand onSubmit n\'est pas fourni', () => {
+    test("omet le bouton submit quand onSubmit n'est pas fourni", () => {
         renderWithTheme(
             <AdminDrawerForm open title="Drawer" onClose={() => {}}>
                 <p>x</p>

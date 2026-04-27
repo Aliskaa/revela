@@ -1,12 +1,13 @@
 import { SectionTitle } from '@/components/common/SectionTitle';
+import { SkeletonCards, SkeletonTableRows } from '@/components/common/SkeletonRows';
 import { StatCard } from '@/components/common/StatCard';
 import { useAdminQuestionnaires } from '@/hooks/questionnaires';
+import { usePageResetEffect } from '@/lib/usePageResetEffect';
 import {
     Box,
     Card,
     CardContent,
     Chip,
-    Skeleton,
     Stack,
     Table,
     TableBody,
@@ -57,9 +58,7 @@ function AdminQuestionnairesRoute() {
         [filtered, page, rowsPerPage]
     );
 
-    React.useEffect(() => {
-        setPage(0);
-    }, [search]);
+    usePageResetEffect(setPage, [search]);
 
     return (
         <Stack spacing={3}>
@@ -136,34 +135,28 @@ function AdminQuestionnairesRoute() {
                                 </TableRow>
                             </TableHead>
                             <TableBody>
-                                {isLoading
-                                    ? Array.from({ length: 3 }).map((_, i) => (
-                                          <TableRow key={i}>
-                                              {Array.from({ length: 3 }).map((__, j) => (
-                                                  <TableCell key={j}>
-                                                      <Skeleton variant="text" />
-                                                  </TableCell>
-                                              ))}
-                                          </TableRow>
-                                      ))
-                                    : paged.map(q => (
-                                          <TableRow hover key={q.id}>
-                                              <TableCell>
-                                                  <Typography fontWeight={700} color="text.primary">
-                                                      {q.id}
-                                                  </Typography>
-                                              </TableCell>
-                                              <TableCell>
-                                                  <Typography fontWeight={700} color="text.primary">
-                                                      {q.title}
-                                                  </Typography>
-                                                  <Typography variant="caption" color="text.secondary">
-                                                      {q.description}
-                                                  </Typography>
-                                              </TableCell>
-                                              <TableCell>{q.dimensions.map(d => d.name).join(' · ')}</TableCell>
-                                          </TableRow>
-                                      ))}
+                                {isLoading ? (
+                                    <SkeletonTableRows rows={3} columns={3} />
+                                ) : (
+                                    paged.map(q => (
+                                        <TableRow hover key={q.id}>
+                                            <TableCell>
+                                                <Typography fontWeight={700} color="text.primary">
+                                                    {q.id}
+                                                </Typography>
+                                            </TableCell>
+                                            <TableCell>
+                                                <Typography fontWeight={700} color="text.primary">
+                                                    {q.title}
+                                                </Typography>
+                                                <Typography variant="caption" color="text.secondary">
+                                                    {q.description}
+                                                </Typography>
+                                            </TableCell>
+                                            <TableCell>{q.dimensions.map(d => d.name).join(' · ')}</TableCell>
+                                        </TableRow>
+                                    ))
+                                )}
                                 {!isLoading && filtered.length === 0 && (
                                     <TableRow>
                                         <TableCell colSpan={3} align="center" sx={{ py: 4 }}>
@@ -197,40 +190,40 @@ function AdminQuestionnairesRoute() {
 
                     {/* Mobile cards */}
                     <Stack spacing={2} sx={{ display: { xs: 'flex', lg: 'none' }, mt: 2 }}>
-                        {isLoading
-                            ? Array.from({ length: 3 }).map((_, i) => (
-                                  <Skeleton key={i} variant="rounded" height={160} />
-                              ))
-                            : filtered.map(q => (
-                                  <Card variant="outlined" key={q.id}>
-                                      <CardContent sx={{ p: 2.5 }}>
-                                          <Stack spacing={1.8}>
-                                              <Box>
-                                                  <Typography variant="h6" fontWeight={800} color="text.primary">
-                                                      {q.id} · {q.title}
-                                                  </Typography>
-                                                  <Typography variant="body2" color="text.secondary" sx={{ mt: 0.4 }}>
-                                                      {q.description}
-                                                  </Typography>
-                                              </Box>
-                                              <Stack direction="row" spacing={0.8} flexWrap="wrap" useFlexGap>
-                                                  {q.dimensions.map(d => (
-                                                      <Chip
-                                                          key={d.name}
-                                                          label={d.name}
-                                                          size="small"
-                                                          sx={{
-                                                              borderRadius: 99,
-                                                              bgcolor: 'tint.primaryBg',
-                                                              color: 'primary.main',
-                                                          }}
-                                                      />
-                                                  ))}
-                                              </Stack>
-                                          </Stack>
-                                      </CardContent>
-                                  </Card>
-                              ))}
+                        {isLoading ? (
+                            <SkeletonCards count={3} height={160} />
+                        ) : (
+                            filtered.map(q => (
+                                <Card variant="outlined" key={q.id}>
+                                    <CardContent sx={{ p: 2.5 }}>
+                                        <Stack spacing={1.8}>
+                                            <Box>
+                                                <Typography variant="h6" fontWeight={800} color="text.primary">
+                                                    {q.id} · {q.title}
+                                                </Typography>
+                                                <Typography variant="body2" color="text.secondary" sx={{ mt: 0.4 }}>
+                                                    {q.description}
+                                                </Typography>
+                                            </Box>
+                                            <Stack direction="row" spacing={0.8} flexWrap="wrap" useFlexGap>
+                                                {q.dimensions.map(d => (
+                                                    <Chip
+                                                        key={d.name}
+                                                        label={d.name}
+                                                        size="small"
+                                                        sx={{
+                                                            borderRadius: 99,
+                                                            bgcolor: 'tint.primaryBg',
+                                                            color: 'primary.main',
+                                                        }}
+                                                    />
+                                                ))}
+                                            </Stack>
+                                        </Stack>
+                                    </CardContent>
+                                </Card>
+                            ))
+                        )}
                         {!isLoading && filtered.length === 0 && (
                             <Typography variant="body2" color="text.secondary" sx={{ py: 2, textAlign: 'center' }}>
                                 {search

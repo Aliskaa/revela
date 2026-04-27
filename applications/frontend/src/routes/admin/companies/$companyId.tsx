@@ -1,7 +1,9 @@
 import { MiniStat } from '@/components/common/MiniStat';
 import { SectionTitle } from '@/components/common/SectionTitle';
+import { SkeletonTableRows } from '@/components/common/SkeletonRows';
 import { StatCard } from '@/components/common/StatCard';
 import { useCompanies, useDeleteCompany, useDeleteParticipant, useParticipants } from '@/hooks/admin';
+import { usePageResetEffect } from '@/lib/usePageResetEffect';
 import type { Participant } from '@aor/types';
 import {
     Alert,
@@ -81,9 +83,7 @@ function AdminCompanyDetailRoute() {
         rowsPerPage
     );
 
-    React.useEffect(() => {
-        setPage(0);
-    }, [rowsPerPage]);
+    usePageResetEffect(setPage, [rowsPerPage]);
 
     const deleteCompany = useDeleteCompany();
     const deleteParticipant = useDeleteParticipant();
@@ -265,42 +265,36 @@ function AdminCompanyDetailRoute() {
                                     </TableRow>
                                 </TableHead>
                                 <TableBody>
-                                    {participantsLoading
-                                        ? Array.from({ length: 4 }).map((_, i) => (
-                                              <TableRow key={i}>
-                                                  {Array.from({ length: 4 }).map((__, j) => (
-                                                      <TableCell key={j}>
-                                                          <Skeleton variant="text" />
-                                                      </TableCell>
-                                                  ))}
-                                              </TableRow>
-                                          ))
-                                        : participants.map(p => (
-                                              <TableRow hover key={p.id}>
-                                                  <TableCell>
-                                                      <Typography fontWeight={700} color="text.primary">
-                                                          {p.full_name}
-                                                      </Typography>
-                                                      <Typography variant="caption" color="text.secondary">
-                                                          {p.email}
-                                                      </Typography>
-                                                  </TableCell>
-                                                  <TableCell>{p.response_count}</TableCell>
-                                                  <TableCell>
-                                                      <StatusChip participant={p} />
-                                                  </TableCell>
-                                                  <TableCell align="right">
-                                                      <Button
-                                                          size="small"
-                                                          color="error"
-                                                          startIcon={<Trash2 size={14} />}
-                                                          onClick={() => setDeleteParticipantTarget(p)}
-                                                      >
-                                                          Supprimer
-                                                      </Button>
-                                                  </TableCell>
-                                              </TableRow>
-                                          ))}
+                                    {participantsLoading ? (
+                                        <SkeletonTableRows rows={4} columns={4} />
+                                    ) : (
+                                        participants.map(p => (
+                                            <TableRow hover key={p.id}>
+                                                <TableCell>
+                                                    <Typography fontWeight={700} color="text.primary">
+                                                        {p.full_name}
+                                                    </Typography>
+                                                    <Typography variant="caption" color="text.secondary">
+                                                        {p.email}
+                                                    </Typography>
+                                                </TableCell>
+                                                <TableCell>{p.response_count}</TableCell>
+                                                <TableCell>
+                                                    <StatusChip participant={p} />
+                                                </TableCell>
+                                                <TableCell align="right">
+                                                    <Button
+                                                        size="small"
+                                                        color="error"
+                                                        startIcon={<Trash2 size={14} />}
+                                                        onClick={() => setDeleteParticipantTarget(p)}
+                                                    >
+                                                        Supprimer
+                                                    </Button>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))
+                                    )}
                                     {!participantsLoading && participants.length === 0 && (
                                         <TableRow>
                                             <TableCell colSpan={4} align="center" sx={{ py: 4 }}>

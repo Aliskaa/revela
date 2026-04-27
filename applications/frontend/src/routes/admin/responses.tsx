@@ -1,14 +1,15 @@
 import { MiniStat } from '@/components/common/MiniStat';
 import { SectionTitle } from '@/components/common/SectionTitle';
+import { SkeletonCards, SkeletonTableRows } from '@/components/common/SkeletonRows';
 import { StatCard } from '@/components/common/StatCard';
 import { useAdminResponses } from '@/hooks/admin';
+import { usePageResetEffect } from '@/lib/usePageResetEffect';
 import type { ResponseSubmissionKind } from '@aor/types';
 import {
     Box,
     Card,
     CardContent,
     Chip,
-    Skeleton,
     Stack,
     Table,
     TableBody,
@@ -47,9 +48,7 @@ function AdminResponsesRoute() {
     const responses = data?.items ?? [];
     const totalCount = data?.total ?? 0;
 
-    React.useEffect(() => {
-        setPage(0);
-    }, [rowsPerPage]);
+    usePageResetEffect(setPage, [rowsPerPage]);
 
     const selfCount = responses.filter(r => r.submission_kind === 'self_rating').length;
     const peerCount = responses.filter(r => r.submission_kind === 'peer_rating').length;
@@ -149,34 +148,28 @@ function AdminResponsesRoute() {
                                 </TableRow>
                             </TableHead>
                             <TableBody>
-                                {isLoading
-                                    ? Array.from({ length: 5 }).map((_, i) => (
-                                          <TableRow key={i}>
-                                              {Array.from({ length: 5 }).map((__, j) => (
-                                                  <TableCell key={j}>
-                                                      <Skeleton variant="text" />
-                                                  </TableCell>
-                                              ))}
-                                          </TableRow>
-                                      ))
-                                    : filtered.map(response => (
-                                          <TableRow hover key={response.id}>
-                                              <TableCell>
-                                                  <Typography fontWeight={700} color="text.primary">
-                                                      {kindLabel(response.submission_kind)}
-                                                  </Typography>
-                                                  <Typography variant="caption" color="text.secondary">
-                                                      {response.name}
-                                                  </Typography>
-                                              </TableCell>
-                                              <TableCell>{response.questionnaire_id}</TableCell>
-                                              <TableCell>{response.organisation || '–'}</TableCell>
-                                              <TableCell>{Object.keys(response.scores).length}</TableCell>
-                                              <TableCell>
-                                                  {new Date(response.submitted_at).toLocaleDateString('fr-FR')}
-                                              </TableCell>
-                                          </TableRow>
-                                      ))}
+                                {isLoading ? (
+                                    <SkeletonTableRows rows={5} columns={5} />
+                                ) : (
+                                    filtered.map(response => (
+                                        <TableRow hover key={response.id}>
+                                            <TableCell>
+                                                <Typography fontWeight={700} color="text.primary">
+                                                    {kindLabel(response.submission_kind)}
+                                                </Typography>
+                                                <Typography variant="caption" color="text.secondary">
+                                                    {response.name}
+                                                </Typography>
+                                            </TableCell>
+                                            <TableCell>{response.questionnaire_id}</TableCell>
+                                            <TableCell>{response.organisation || '–'}</TableCell>
+                                            <TableCell>{Object.keys(response.scores).length}</TableCell>
+                                            <TableCell>
+                                                {new Date(response.submitted_at).toLocaleDateString('fr-FR')}
+                                            </TableCell>
+                                        </TableRow>
+                                    ))
+                                )}
                                 {!isLoading && filtered.length === 0 && (
                                     <TableRow>
                                         <TableCell colSpan={5} align="center" sx={{ py: 4 }}>
@@ -194,46 +187,44 @@ function AdminResponsesRoute() {
 
                     {/* Mobile cards */}
                     <Stack spacing={2} sx={{ display: { xs: 'flex', lg: 'none' }, mt: 2 }}>
-                        {isLoading
-                            ? Array.from({ length: 3 }).map((_, i) => (
-                                  <Skeleton key={i} variant="rounded" height={160} />
-                              ))
-                            : filtered.map(response => (
-                                  <Card variant="outlined" key={response.id}>
-                                      <CardContent sx={{ p: 2.5 }}>
-                                          <Stack spacing={1.8}>
-                                              <Box>
-                                                  <Typography variant="h6" fontWeight={800} color="text.primary">
-                                                      {kindLabel(response.submission_kind)}
-                                                  </Typography>
-                                                  <Typography variant="body2" color="text.secondary" sx={{ mt: 0.4 }}>
-                                                      {response.name}
-                                                  </Typography>
-                                              </Box>
-                                              <Box
-                                                  sx={{
-                                                      display: 'grid',
-                                                      gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
-                                                      gap: 1.2,
-                                                  }}
-                                              >
-                                                  <MiniStat label="Questionnaire" value={response.questionnaire_id} />
-                                                  <MiniStat label="Organisation" value={response.organisation || '–'} />
-                                                  <MiniStat
-                                                      label="Scores"
-                                                      value={String(Object.keys(response.scores).length)}
-                                                  />
-                                                  <MiniStat
-                                                      label="Soumis le"
-                                                      value={new Date(response.submitted_at).toLocaleDateString(
-                                                          'fr-FR'
-                                                      )}
-                                                  />
-                                              </Box>
-                                          </Stack>
-                                      </CardContent>
-                                  </Card>
-                              ))}
+                        {isLoading ? (
+                            <SkeletonCards count={3} height={160} />
+                        ) : (
+                            filtered.map(response => (
+                                <Card variant="outlined" key={response.id}>
+                                    <CardContent sx={{ p: 2.5 }}>
+                                        <Stack spacing={1.8}>
+                                            <Box>
+                                                <Typography variant="h6" fontWeight={800} color="text.primary">
+                                                    {kindLabel(response.submission_kind)}
+                                                </Typography>
+                                                <Typography variant="body2" color="text.secondary" sx={{ mt: 0.4 }}>
+                                                    {response.name}
+                                                </Typography>
+                                            </Box>
+                                            <Box
+                                                sx={{
+                                                    display: 'grid',
+                                                    gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+                                                    gap: 1.2,
+                                                }}
+                                            >
+                                                <MiniStat label="Questionnaire" value={response.questionnaire_id} />
+                                                <MiniStat label="Organisation" value={response.organisation || '–'} />
+                                                <MiniStat
+                                                    label="Scores"
+                                                    value={String(Object.keys(response.scores).length)}
+                                                />
+                                                <MiniStat
+                                                    label="Soumis le"
+                                                    value={new Date(response.submitted_at).toLocaleDateString('fr-FR')}
+                                                />
+                                            </Box>
+                                        </Stack>
+                                    </CardContent>
+                                </Card>
+                            ))
+                        )}
                         {!isLoading && filtered.length === 0 && (
                             <Typography variant="body2" color="text.secondary" sx={{ py: 2, textAlign: 'center' }}>
                                 {search

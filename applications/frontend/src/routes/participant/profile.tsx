@@ -47,6 +47,7 @@ function ParticipantProfileRoute() {
 
     if (isLoading) {
         return (
+            // biome-ignore lint/a11y/useSemanticElements: `Card` est un `<div>` MUI ; on ajoute `role="status"` (équivalent ARIA d'un live region) pour annoncer le chargement aux lecteurs d'écran.
             <Card variant="outlined" role="status" aria-live="polite" aria-busy="true">
                 <CardContent sx={{ p: 3 }}>
                     <Typography variant="h6" fontWeight={700} color="text.primary">
@@ -217,11 +218,7 @@ function ParticipantProfileRoute() {
                         >
                             {updateProfile.isPending ? 'Enregistrement…' : 'Mettre à jour'}
                         </Button>
-                        <Button
-                            variant="outlined"
-                            onClick={handleReset}
-                            sx={{ borderRadius: 3 }}
-                        >
+                        <Button variant="outlined" onClick={handleReset} sx={{ borderRadius: 3 }}>
                             Réinitialiser
                         </Button>
                     </Stack>

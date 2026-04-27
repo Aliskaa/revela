@@ -41,7 +41,7 @@ function MiniBar(props: {
                 {label}
             </Typography>
             <Typography variant="h6" fontWeight={800} sx={{ color, mt: 0.5, mb: 1 }} display="block">
-                {value ?? '—'} <Typography component="span" variant="caption" color="text.disabled"></Typography>
+                {value ?? '—'} <Typography component="span" variant="caption" color="text.disabled" />
             </Typography>
             <LinearProgress
                 variant="determinate"

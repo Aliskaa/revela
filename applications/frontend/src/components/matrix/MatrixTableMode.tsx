@@ -81,7 +81,11 @@ export function MatrixTableMode({ matrix }: MatrixTableModeProps) {
                                 {row.self ?? '—'}
                             </TableCell>
                             {row.peers.map((v, i) => (
-                                <TableCell key={i} align="center" sx={{ fontWeight: 500, color: 'text.secondary' }}>
+                                <TableCell
+                                    key={`${row.score_key}-${matrix.peer_columns[i]?.response_id ?? i}`}
+                                    align="center"
+                                    sx={{ fontWeight: 500, color: 'text.secondary' }}
+                                >
                                     {v ?? '—'}
                                 </TableCell>
                             ))}

@@ -1,6 +1,6 @@
 // Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
 
-import { BadgeCheck, ClipboardCheck, Brain, Gauge, Lock, MessageSquareQuote, Radar, Users } from 'lucide-react';
+import { BadgeCheck, Brain, ClipboardCheck, Gauge, Lock, MessageSquareQuote, Radar, Users } from 'lucide-react';
 import type { ElementType } from 'react';
 
 import type { ParticipantSession } from '@aor/types';
@@ -142,10 +142,7 @@ export const buildNextAction = (assignment?: ParticipantAssignment): string => {
     return 'Préparer la restitution coaching';
 };
 
-export const buildCampaignView = (
-    session?: ParticipantSession,
-    assignment?: ParticipantAssignment
-): CampaignView => {
+export const buildCampaignView = (session?: ParticipantSession, assignment?: ParticipantAssignment): CampaignView => {
     if (!session || !assignment) {
         return {
             name: 'Aucune campagne active',
@@ -241,7 +238,8 @@ export type EffortEstimate = {
 export const buildEffortEstimate = (assignment?: ParticipantAssignment): EffortEstimate => {
     const progression = assignment?.progression;
     if (!assignment || !progression) {
-        const total = STEP_EFFORT_MINUTES.self_rating + STEP_EFFORT_MINUTES.peer_feedback + STEP_EFFORT_MINUTES.element_humain;
+        const total =
+            STEP_EFFORT_MINUTES.self_rating + STEP_EFFORT_MINUTES.peer_feedback + STEP_EFFORT_MINUTES.element_humain;
         return { remainingMinutes: total, remainingSteps: 3, isComplete: false };
     }
     let minutes = 0;

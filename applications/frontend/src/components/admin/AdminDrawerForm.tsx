@@ -138,11 +138,7 @@ export function AdminDrawerForm({
 
                         <Stack direction="row" spacing={1.2} sx={{ ml: 'auto' }}>
                             {footerRight}
-                            <Button
-                                onClick={requestClose}
-                                variant="outlined"
-                                sx={{ borderRadius: 3 }}
-                            >
+                            <Button onClick={requestClose} variant="outlined" sx={{ borderRadius: 3 }}>
                                 {resolvedCancelLabel}
                             </Button>
 

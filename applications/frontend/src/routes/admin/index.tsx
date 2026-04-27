@@ -1,4 +1,5 @@
 import { SectionTitle } from '@/components/common/SectionTitle';
+import { SkeletonTableRows } from '@/components/common/SkeletonRows';
 import { StatCard } from '@/components/common/StatCard';
 import { useAdminCampaigns, useAdminDashboard, useCoaches, useCompanies } from '@/hooks/admin';
 import type { CampaignStatus } from '@aor/types';
@@ -8,7 +9,6 @@ import {
     Card,
     CardContent,
     Chip,
-    Skeleton,
     Stack,
     Table,
     TableBody,
@@ -114,11 +114,7 @@ function AdminDashboardRoute() {
                             >
                                 Nouvelle campagne
                             </Button>
-                            <Button
-                                variant="outlined"
-                                startIcon={<FileText size={16} />}
-                                sx={{ borderRadius: 3 }}
-                            >
+                            <Button variant="outlined" startIcon={<FileText size={16} />} sx={{ borderRadius: 3 }}>
                                 Exporter
                             </Button>
                         </Stack>
@@ -173,12 +169,7 @@ function AdminDashboardRoute() {
                         title="Suivi des campagnes"
                         subtitle="Vue rapide des campagnes récentes et de leur état opérationnel."
                         action={
-                            <Button
-                                component={Link}
-                                to="/admin/campaigns"
-                                variant="outlined"
-                                sx={{ borderRadius: 3 }}
-                            >
+                            <Button component={Link} to="/admin/campaigns" variant="outlined" sx={{ borderRadius: 3 }}>
                                 Voir toutes
                             </Button>
                         }
@@ -198,52 +189,44 @@ function AdminDashboardRoute() {
                                 </TableRow>
                             </TableHead>
                             <TableBody>
-                                {isLoading
-                                    ? Array.from({ length: 3 }).map((_, i) => (
-                                          <TableRow key={i}>
-                                              {Array.from({ length: 6 }).map((__, j) => (
-                                                  <TableCell key={j}>
-                                                      <Skeleton variant="text" />
-                                                  </TableCell>
-                                              ))}
-                                              <TableCell />
-                                          </TableRow>
-                                      ))
-                                    : recentCampaigns.map(campaign => (
-                                          <TableRow hover key={campaign.id}>
-                                              <TableCell>
-                                                  <Typography fontWeight={700} color="text.primary">
-                                                      {campaign.name}
-                                                  </Typography>
-                                              </TableCell>
-                                              <TableCell>{companyName(campaign.companyId)}</TableCell>
-                                              <TableCell>{coachName(campaign.coachId)}</TableCell>
-                                              <TableCell>
-                                                  {campaign.questionnaireId
-                                                      ? (QUESTIONNAIRE_LABELS[campaign.questionnaireId] ??
-                                                        campaign.questionnaireId)
-                                                      : '–'}
-                                              </TableCell>
-                                              <TableCell>
-                                                  <StatusChip status={campaign.status} />
-                                              </TableCell>
-                                              <TableCell>
-                                                  {campaign.createdAt
-                                                      ? new Date(campaign.createdAt).toLocaleDateString('fr-FR')
-                                                      : '–'}
-                                              </TableCell>
-                                              <TableCell align="right">
-                                                  <Button
-                                                      href={`/admin/campaigns/${campaign.id}`}
-                                                      variant="text"
-                                                      endIcon={<ArrowRight size={16} />}
-
-                                                  >
-                                                      Ouvrir
-                                                  </Button>
-                                              </TableCell>
-                                          </TableRow>
-                                      ))}
+                                {isLoading ? (
+                                    <SkeletonTableRows rows={3} columns={7} />
+                                ) : (
+                                    recentCampaigns.map(campaign => (
+                                        <TableRow hover key={campaign.id}>
+                                            <TableCell>
+                                                <Typography fontWeight={700} color="text.primary">
+                                                    {campaign.name}
+                                                </Typography>
+                                            </TableCell>
+                                            <TableCell>{companyName(campaign.companyId)}</TableCell>
+                                            <TableCell>{coachName(campaign.coachId)}</TableCell>
+                                            <TableCell>
+                                                {campaign.questionnaireId
+                                                    ? (QUESTIONNAIRE_LABELS[campaign.questionnaireId] ??
+                                                      campaign.questionnaireId)
+                                                    : '–'}
+                                            </TableCell>
+                                            <TableCell>
+                                                <StatusChip status={campaign.status} />
+                                            </TableCell>
+                                            <TableCell>
+                                                {campaign.createdAt
+                                                    ? new Date(campaign.createdAt).toLocaleDateString('fr-FR')
+                                                    : '–'}
+                                            </TableCell>
+                                            <TableCell align="right">
+                                                <Button
+                                                    href={`/admin/campaigns/${campaign.id}`}
+                                                    variant="text"
+                                                    endIcon={<ArrowRight size={16} />}
+                                                >
+                                                    Ouvrir
+                                                </Button>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))
+                                )}
                                 {!isLoading && recentCampaigns.length === 0 && (
                                     <TableRow>
                                         <TableCell colSpan={7} align="center" sx={{ py: 4 }}>

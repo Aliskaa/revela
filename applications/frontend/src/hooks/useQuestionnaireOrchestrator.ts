@@ -70,7 +70,7 @@ export function useQuestionnaireOrchestrator({ qid, type, campaignId }: UseQuest
                 navigate({ to: '/participant', replace: true });
             }
         }
-    }, [assignment, navigate, progression, qid, resolvedCampaignId, session, type]);
+    }, [assignment, navigate, progression, session, type]);
 
     return {
         q,

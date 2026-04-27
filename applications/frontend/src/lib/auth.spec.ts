@@ -1,11 +1,6 @@
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import {
-    parseAdminJwtClaims,
-    parseParticipantJwtParticipantId,
-    userAdmin,
-    userParticipant,
-} from './auth';
+import { parseAdminJwtClaims, parseParticipantJwtParticipantId, userAdmin, userParticipant } from './auth';
 
 /**
  * Crée un faux JWT (signature factice — non vérifiée côté frontend) pour les tests.

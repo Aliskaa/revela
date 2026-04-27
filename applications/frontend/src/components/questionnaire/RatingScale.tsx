@@ -18,10 +18,10 @@ export const RatingScale = ({ value, onChange, max = 9, min = 1, size = 'small' 
         }}
         sx={{ flexWrap: 'wrap', gap: 0.75 }}
     >
-        {Array.from({ length: max - min + 1 }, (_, i) => (
+        {Array.from({ length: max - min + 1 }, (_, i) => min + i).map(score => (
             <ToggleButton
-                key={min + i}
-                value={min + i}
+                key={`rating-${score}`}
+                value={score}
                 sx={{
                     minWidth: 38,
                     height: 38,
@@ -32,7 +32,7 @@ export const RatingScale = ({ value, onChange, max = 9, min = 1, size = 'small' 
                     '&.Mui-selected:hover': { bgcolor: 'primary.dark' },
                 }}
             >
-                {min + i}
+                {score}
             </ToggleButton>
         ))}
     </ToggleButtonGroup>
