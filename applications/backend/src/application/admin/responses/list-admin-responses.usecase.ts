@@ -9,6 +9,7 @@ export class ListAdminResponsesUseCase {
     public async execute(params: {
         qid?: string;
         campaignId?: number;
+        coachId?: number;
         page: number;
         perPage: number;
     }): Promise<{
@@ -21,6 +22,7 @@ export class ListAdminResponsesUseCase {
         const result = await this.ports.responses.list({
             questionnaireId: params.qid,
             campaignId: params.campaignId,
+            coachId: params.coachId,
             page: params.page,
             perPage: params.perPage,
         });

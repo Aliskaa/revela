@@ -6,6 +6,7 @@ import {
     and,
     asc,
     campaignParticipantsTable,
+    campaignsTable,
     companiesTable,
     desc,
     eq,
@@ -312,11 +313,27 @@ export class DrizzleParticipantsRepository implements IParticipantsRepositoryPor
     public async listWithCompany(params: ListParticipantsParams): Promise<Paginated<ParticipantAdminListItem>> {
         const perPage = Math.min(params.perPage, 200);
         const page = Math.max(params.page, 1);
-        const companyFilter =
-            params.companyId === undefined ? undefined : eq(participantsTable.companyId, params.companyId);
+        const filters = [];
+        if (params.companyId !== undefined) {
+            filters.push(eq(participantsTable.companyId, params.companyId));
+        }
+        if (params.coachId !== undefined) {
+            // Restreint aux participants ayant rejoint au moins une campagne attribuée à ce coach.
+            // Sous-select : participant_id IN (campaign_participants WHERE campaign_id IN (campaigns WHERE coach_id=?))
+            const coachCampaignIds = this.db
+                .select({ id: campaignsTable.id })
+                .from(campaignsTable)
+                .where(eq(campaignsTable.coachId, params.coachId));
+            const participantIdsInCoachCampaigns = this.db
+                .select({ id: campaignParticipantsTable.participantId })
+                .from(campaignParticipantsTable)
+                .where(inArray(campaignParticipantsTable.campaignId, coachCampaignIds));
+            filters.push(inArray(participantsTable.id, participantIdsInCoachCampaigns));
+        }
+        const whereClause = filters.length > 0 ? and(...filters) : undefined;
 
         const countBase = this.db.select({ total: sql<number>`cast(count(*) as int)` }).from(participantsTable);
-        const [{ total }] = companyFilter ? await countBase.where(companyFilter) : await countBase;
+        const [{ total }] = whereClause ? await countBase.where(whereClause) : await countBase;
 
         const joinBase = this.db
             .select({
@@ -327,9 +344,9 @@ export class DrizzleParticipantsRepository implements IParticipantsRepositoryPor
             .from(participantsTable)
             .leftJoin(companiesTable, eq(participantsTable.companyId, companiesTable.id));
 
-        const rows = companyFilter
+        const rows = whereClause
             ? await joinBase
-                  .where(companyFilter)
+                  .where(whereClause)
                   .orderBy(asc(participantsTable.lastName), asc(participantsTable.firstName))
                   .limit(perPage)
                   .offset((page - 1) * perPage)

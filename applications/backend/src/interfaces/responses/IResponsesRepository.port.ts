@@ -19,6 +19,11 @@ export type CreateResponseOptions = {
 export type ListResponsesParams = {
     questionnaireId?: string;
     campaignId?: number;
+    /**
+     * Si défini, ne retourne que les réponses des campagnes attribuées à ce coach.
+     * Utilisé pour le scope=coach des endpoints admin (cf. ADR-008).
+     */
+    coachId?: number;
     page: number;
     perPage: number;
 };

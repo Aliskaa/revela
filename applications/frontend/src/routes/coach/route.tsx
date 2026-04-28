@@ -1,3 +1,5 @@
+// Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
+
 import { parseAdminJwtClaims, userAdmin } from '@/lib/auth';
 import {
     AppBar,
@@ -7,7 +9,6 @@ import {
     Divider,
     Drawer,
     IconButton,
-    InputBase,
     List,
     ListItemButton,
     ListItemIcon,
@@ -17,40 +18,27 @@ import {
     Typography,
 } from '@mui/material';
 import { Link, Outlet, createFileRoute, redirect, useLocation, useNavigate } from '@tanstack/react-router';
-import {
-    Building2,
-    ChevronRight,
-    ClipboardList,
-    LayoutDashboard,
-    LogOut,
-    Menu,
-    MessageSquareText,
-    Search,
-    Shield,
-    Sparkles,
-    UserRound,
-    X,
-} from 'lucide-react';
+import { Building2, ChevronRight, ClipboardList, Gauge, LogOut, Menu, UserRound, Users, X } from 'lucide-react';
 import * as React from 'react';
 
-type AdminNavItem = {
+type CoachNavItem = {
     label: string;
     to: string;
     icon: React.ElementType;
     exact?: boolean;
 };
 
-const navItems: AdminNavItem[] = [
-    { label: 'Tableau de bord', to: '/admin', icon: LayoutDashboard, exact: true },
-    { label: 'Campagnes', to: '/admin/campaigns', icon: ClipboardList },
-    { label: 'Entreprises', to: '/admin/companies', icon: Building2 },
-    { label: 'Coachs', to: '/admin/coaches', icon: UserRound },
-    { label: 'Réponses', to: '/admin/responses', icon: MessageSquareText },
-    { label: 'Questionnaires', to: '/admin/questionnaires', icon: Sparkles },
+const coachNav: CoachNavItem[] = [
+    { label: 'Tableau de bord', to: '/coach', icon: Gauge, exact: true },
+    { label: 'Mes campagnes', to: '/coach/campaigns', icon: ClipboardList },
+    { label: 'Mes entreprises', to: '/coach/companies', icon: Building2 },
+    { label: 'Mes participants', to: '/coach/participants', icon: Users },
 ];
 
-function isActive(item: AdminNavItem, pathname: string): boolean {
-    if (item.exact) return pathname === item.to || pathname === `${item.to}/`;
+function isActive(item: CoachNavItem, pathname: string): boolean {
+    if (item.exact) {
+        return pathname === item.to || pathname === `${item.to}/`;
+    }
     return pathname.startsWith(item.to);
 }
 
@@ -69,21 +57,21 @@ function BrandMark() {
                     boxShadow: '0 10px 25px rgba(15,24,152,0.18)',
                 }}
             >
-                <Shield size={18} />
+                <UserRound size={18} />
             </Box>
             <Box>
                 <Typography fontWeight={800} color="text.primary" lineHeight={1.1}>
                     Révéla
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
-                    Administration
+                    Espace coach
                 </Typography>
             </Box>
         </Stack>
     );
 }
 
-function AdminSidebar() {
+function CoachSidebar() {
     const location = useLocation();
     const navigate = useNavigate();
     const pathname = location.pathname;
@@ -115,7 +103,7 @@ function AdminSidebar() {
             <BrandMark />
 
             <Stack spacing={1} sx={{ mt: 4 }}>
-                {navItems.map(item => {
+                {coachNav.map(item => {
                     const Icon = item.icon;
                     const active = isActive(item, pathname);
                     return (
@@ -219,19 +207,19 @@ function MobileTopBar() {
                                 placeItems: 'center',
                             }}
                         >
-                            <Shield size={16} />
+                            <UserRound size={16} />
                         </Box>
                         <Box>
                             <Typography fontWeight={800} lineHeight={1.1}>
                                 Révéla
                             </Typography>
                             <Typography variant="caption" color="text.secondary">
-                                Administration
+                                Espace coach
                             </Typography>
                         </Box>
                     </Stack>
 
-                    <Avatar sx={{ width: 34, height: 34, bgcolor: 'primary.main' }}>A</Avatar>
+                    <Avatar sx={{ width: 34, height: 34, bgcolor: 'primary.main' }}>C</Avatar>
                 </Toolbar>
             </AppBar>
 
@@ -239,7 +227,7 @@ function MobileTopBar() {
                 anchor="left"
                 open={drawerOpen}
                 onClose={() => setDrawerOpen(false)}
-                PaperProps={{ sx: { width: 280, bgcolor: 'background.paper' } }}
+                slotProps={{ paper: { sx: { width: 280, bgcolor: 'background.paper' } } }}
             >
                 <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ px: 2.5, py: 2.5 }}>
                     <BrandMark />
@@ -249,7 +237,7 @@ function MobileTopBar() {
                 </Stack>
 
                 <List sx={{ px: 1.5, flex: 1 }}>
-                    {navItems.map(item => {
+                    {coachNav.map(item => {
                         const Icon = item.icon;
                         const active = isActive(item, pathname);
                         return (
@@ -273,14 +261,12 @@ function MobileTopBar() {
                                 </ListItemIcon>
                                 <ListItemText
                                     primary={item.label}
-                                    slotProps={{ primary: { fontWeight: active ? 700 : 500, fontSize: '0.9rem' } }}
+                                    slotProps={{ primary: { fontWeight: 600, fontSize: '0.9rem' } }}
                                 />
-                                {active && <ChevronRight size={16} />}
                             </ListItemButton>
                         );
                     })}
                 </List>
-
                 <Divider />
                 <List sx={{ px: 1.5, py: 1 }}>
                     <ListItemButton
@@ -305,57 +291,14 @@ function MobileTopBar() {
     );
 }
 
-function TopBar() {
-    return (
-        <Stack
-            direction="row"
-            alignItems="center"
-            justifyContent="space-between"
-            sx={{ display: { xs: 'none', lg: 'flex' }, mb: 3 }}
-        >
-            <Box>
-                <Typography variant="h5" fontWeight={800} color="text.primary">
-                    Vue d'ensemble
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                    Pilotage global des campagnes, participants et coachs.
-                </Typography>
-            </Box>
-
-            <Box
-                sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 1,
-                    px: 1.5,
-                    py: 1,
-                    minWidth: 320,
-                    borderRadius: 999,
-                    border: '1px solid',
-                    borderColor: 'border',
-                    bgcolor: 'background.paper',
-                }}
-            >
-                <Search size={16} color="rgb(100,116,139)" />
-                <InputBase
-                    placeholder="Recherche globale…"
-                    inputProps={{ 'aria-label': 'Recherche globale' }}
-                    sx={{ width: '100%', fontSize: 14 }}
-                />
-            </Box>
-        </Stack>
-    );
-}
-
-function AdminShell({ children }: { children: React.ReactNode }) {
+function CoachShell({ children }: { children: React.ReactNode }) {
     return (
         <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
             <MobileTopBar />
             <Box sx={{ display: 'flex', minHeight: '100vh' }}>
-                <AdminSidebar />
+                <CoachSidebar />
 
                 <Box component="main" sx={{ flex: 1, px: { xs: 2, sm: 3, lg: 4 }, py: { xs: 2, sm: 3, lg: 4 } }}>
-                    <TopBar />
                     {children}
                 </Box>
             </Box>
@@ -363,41 +306,28 @@ function AdminShell({ children }: { children: React.ReactNode }) {
     );
 }
 
-function AdminRoot() {
-    const location = useLocation();
-    const isLogin = location.pathname === '/admin/login';
-
-    if (isLogin) return <Outlet />;
-
+function CoachRouteLayout() {
     return (
-        <AdminShell>
+        <CoachShell>
             <Outlet />
-        </AdminShell>
+        </CoachShell>
     );
 }
 
-export const Route = createFileRoute('/admin')({
+export const Route = createFileRoute('/coach')({
     /**
-     * Garde route-level :
-     * 1. Redirige les non-authentifiés vers `/admin/login` AVANT que la chrome admin
-     *    ne soit montée (évite le flash visuel + le 401 silencieux côté API).
-     * 2. Bloque les coaches qui essaieraient d'accéder à `/admin/*` : ils sont
-     *    redirigés vers leur propre espace `/coach`. Cf. ADR-008 + V1.5 décision
-     *    « 3 espaces distincts (admin / coach / participant) — un coach ne doit
-     *    jamais voir la chrome admin ».
-     * Skip pour `/admin/login` lui-même afin d'éviter une boucle.
+     * Garde route-level : le coach doit être authentifié ET avoir scope=coach.
+     * Un super-admin qui tape `/coach` est renvoyé sur `/admin` (son périmètre habituel).
+     * Cf. ADR-008 et docs/avancement-2026-04-28.md §2 décision 2.
      */
-    beforeLoad: ({ location }) => {
-        if (location.pathname === '/admin/login') {
-            return;
-        }
+    beforeLoad: () => {
         if (!userAdmin.isAuthenticated()) {
             throw redirect({ to: '/admin/login' });
         }
         const claims = parseAdminJwtClaims();
-        if (claims?.scope === 'coach') {
-            throw redirect({ to: '/coach' });
+        if (claims?.scope !== 'coach') {
+            throw redirect({ to: '/admin' });
         }
     },
-    component: AdminRoot,
+    component: CoachRouteLayout,
 });

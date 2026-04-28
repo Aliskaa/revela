@@ -1,3 +1,4 @@
+export * from './admin-auth';
 export * from './questionnaire-submit';
 export * from './scoring';
 export * from './api-common';

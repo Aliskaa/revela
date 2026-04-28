@@ -5,7 +5,7 @@ import type { ICompaniesReadPort } from '@src/interfaces/companies/ICompaniesRep
 export class ListAdminCompaniesUseCase {
     public constructor(private readonly ports: { readonly companies: ICompaniesReadPort }) {}
 
-    public async execute() {
-        return this.ports.companies.listOrderedWithParticipantCount();
+    public async execute(params?: { coachId?: number }) {
+        return this.ports.companies.listOrderedWithParticipantCount(params);
     }
 }

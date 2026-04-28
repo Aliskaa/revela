@@ -108,7 +108,8 @@ export class AdminResponsesController {
         if (campaignId !== undefined) {
             await this.ensureCampaignAccess(campaignId, req.user);
         }
-        const result = await this.listAdminResponses.execute({ qid, campaignId, page, perPage });
+        const coachId = req.user.scope === 'coach' ? req.user.coachId : undefined;
+        const result = await this.listAdminResponses.execute({ qid, campaignId, coachId, page, perPage });
         return {
             ...result,
             per_page: result.perPage,

@@ -6,6 +6,7 @@ import type {
     AdminCampaignDetail,
     AdminCoachDetail,
     AdminDashboard,
+    AdminLoginResponse,
     AdminResponse,
     CampaignStatus,
     Coach,
@@ -41,7 +42,7 @@ export const adminKeys = {
 };
 
 export function useAdminLogin() {
-    return useMutation<{ access_token: string }, Error, { username: string; password: string }>({
+    return useMutation<AdminLoginResponse, Error, { username: string; password: string }>({
         mutationFn: credentials => apiClient.post('/admin/auth/login', credentials).then(r => r.data),
         onSuccess: data => {
             userAdmin.setToken(data.access_token);

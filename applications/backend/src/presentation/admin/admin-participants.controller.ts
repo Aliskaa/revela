@@ -10,6 +10,7 @@ import {
     ParseIntPipe,
     Post,
     Query,
+    Req,
     UploadedFile,
     UseFilters,
     UseGuards,
@@ -29,6 +30,7 @@ import { ResponsesExceptionFilter } from '@src/presentation/responses/responses-
 import { AdminApplicationExceptionFilter } from './admin-application-exception.filter';
 import { AdminJwtAuthGuard } from './admin-jwt-auth.guard';
 import { participantToAdminJson } from './admin.presenters';
+import type { JwtValidatedUser } from './jwt.strategy';
 import {
     CREATE_PARTICIPANT_INVITE_USE_CASE_SYMBOL,
     ERASE_PARTICIPANT_RGPD_USE_CASE_SYMBOL,
@@ -85,14 +87,17 @@ export class AdminParticipantsController {
 
     @Get('participants')
     public async listParticipants(
+        @Req() req: { user: JwtValidatedUser },
         @Query('page') pageRaw: string,
         @Query('per_page') perPageRaw: string,
         @Query('company_id') companyIdRaw: string
     ) {
+        const coachId = req.user.scope === 'coach' ? req.user.coachId : undefined;
         const result = await this.listAdminParticipants.execute({
             page: AdminParticipantsController.normalizePage(pageRaw),
             perPage: AdminParticipantsController.normalizePerPage(perPageRaw),
             companyId: AdminParticipantsController.normalizePositiveInt(companyIdRaw),
+            coachId,
         });
         return {
             ...result,

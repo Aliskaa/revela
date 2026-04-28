@@ -22,7 +22,13 @@ export interface ICompaniesReadPort {
     findByName(name: string): Promise<Company | null>;
     findById(id: number): Promise<Company | null>;
     findByIdWithParticipantCount(id: number): Promise<CompanyWithParticipantCountReadModel | null>;
-    listOrderedWithParticipantCount(): Promise<CompanyWithParticipantCountReadModel[]>;
+    /**
+     * Si `params.coachId` est défini, ne retourne que les entreprises ayant au moins une
+     * campagne attribuée à ce coach. Utilisé pour le scope=coach des endpoints admin.
+     */
+    listOrderedWithParticipantCount(params?: {
+        coachId?: number;
+    }): Promise<CompanyWithParticipantCountReadModel[]>;
 }
 
 export interface ICompaniesWritePort {

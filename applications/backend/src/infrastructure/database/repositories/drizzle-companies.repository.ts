@@ -1,6 +1,16 @@
 // Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
 
-import { DRIZZLE_DB_SYMBOL, type DrizzleDb, asc, companiesTable, eq, participantsTable, sql } from '@aor/drizzle';
+import {
+    DRIZZLE_DB_SYMBOL,
+    type DrizzleDb,
+    asc,
+    campaignsTable,
+    companiesTable,
+    eq,
+    inArray,
+    participantsTable,
+    sql,
+} from '@aor/drizzle';
 import { Inject, Injectable } from '@nestjs/common';
 
 import { Company } from '@src/domain/companies';
@@ -65,16 +75,33 @@ export class DrizzleCompaniesRepository implements ICompaniesRepositoryPort {
         };
     }
 
-    public async listOrderedWithParticipantCount(): Promise<CompanyWithParticipantCountReadModel[]> {
-        const rows = await this.db
+    public async listOrderedWithParticipantCount(params?: {
+        coachId?: number;
+    }): Promise<CompanyWithParticipantCountReadModel[]> {
+        const baseQuery = this.db
             .select({
                 company: companiesTable,
                 participantCount: sql<number>`cast(count(${participantsTable.id}) as int)`,
             })
             .from(companiesTable)
-            .leftJoin(participantsTable, eq(participantsTable.companyId, companiesTable.id))
-            .groupBy(companiesTable.id)
-            .orderBy(asc(companiesTable.name));
+            .leftJoin(participantsTable, eq(participantsTable.companyId, companiesTable.id));
+
+        // Restreint aux entreprises ayant au moins une campagne attribuée à ce coach (scope=coach).
+        const rows =
+            params?.coachId !== undefined
+                ? await baseQuery
+                      .where(
+                          inArray(
+                              companiesTable.id,
+                              this.db
+                                  .select({ id: campaignsTable.companyId })
+                                  .from(campaignsTable)
+                                  .where(eq(campaignsTable.coachId, params.coachId))
+                          )
+                      )
+                      .groupBy(companiesTable.id)
+                      .orderBy(asc(companiesTable.name))
+                : await baseQuery.groupBy(companiesTable.id).orderBy(asc(companiesTable.name));
 
         return rows.map(row => ({
             id: row.company.id,

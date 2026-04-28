@@ -24,7 +24,7 @@ export class AdminAuthUseCase {
             username === this.ports.authConfig.superAdminUsername &&
             password === this.ports.authConfig.superAdminPassword
         ) {
-            return AdminLoginResult.create(
+            return AdminLoginResult.createSuperAdmin(
                 this.ports.tokenSigner.sign({ sub: username, role: 'admin', scope: 'super-admin' })
             );
         }
@@ -34,8 +34,9 @@ export class AdminAuthUseCase {
             throw new AdminInvalidCredentialsError();
         }
 
-        return AdminLoginResult.create(
-            this.ports.tokenSigner.sign({ sub: coach.username, role: 'admin', scope: 'coach', coachId: coach.id })
+        return AdminLoginResult.createCoach(
+            this.ports.tokenSigner.sign({ sub: coach.username, role: 'admin', scope: 'coach', coachId: coach.id }),
+            coach.id
         );
     }
 }

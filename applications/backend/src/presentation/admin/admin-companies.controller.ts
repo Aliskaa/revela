@@ -12,6 +12,7 @@ import {
     ParseIntPipe,
     Patch,
     Post,
+    Req,
     UseFilters,
     UseGuards,
 } from '@nestjs/common';
@@ -27,6 +28,7 @@ import { ResponsesExceptionFilter } from '@src/presentation/responses/responses-
 import { AdminApplicationExceptionFilter } from './admin-application-exception.filter';
 import { AdminJwtAuthGuard } from './admin-jwt-auth.guard';
 import { companyToAdminJson } from './admin.presenters';
+import type { JwtValidatedUser } from './jwt.strategy';
 import {
     CREATE_ADMIN_COMPANY_USE_CASE_SYMBOL,
     DELETE_ADMIN_COMPANY_USE_CASE_SYMBOL,
@@ -55,8 +57,9 @@ export class AdminCompaniesController {
     ) {}
 
     @Get('companies')
-    public async listCompanies() {
-        const rows = await this.listAdminCompanies.execute();
+    public async listCompanies(@Req() req: { user: JwtValidatedUser }) {
+        const coachId = req.user.scope === 'coach' ? req.user.coachId : undefined;
+        const rows = await this.listAdminCompanies.execute({ coachId });
         return rows.map(companyToAdminJson);
     }
 

@@ -260,6 +260,16 @@ export class DrizzleResponsesRepository implements IResponsesRepositoryPort {
         if (params.campaignId !== undefined) {
             filters.push(eq(questionnaireResponsesTable.campaignId, params.campaignId));
         }
+        if (params.coachId !== undefined) {
+            // Restreint aux réponses des campagnes attribuées à ce coach (scope=coach).
+            // Le sous-select reste plus simple qu'un INNER JOIN ici (campaign_id peut être null
+            // pour des réponses historiques non rattachées, qu'on exclut donc implicitement).
+            const coachCampaignIds = this.db
+                .select({ id: campaignsTable.id })
+                .from(campaignsTable)
+                .where(eq(campaignsTable.coachId, params.coachId));
+            filters.push(inArray(questionnaireResponsesTable.campaignId, coachCampaignIds));
+        }
         const whereClause: SQL | undefined = filters.length > 0 ? and(...filters) : undefined;
 
         const countQuery = this.db

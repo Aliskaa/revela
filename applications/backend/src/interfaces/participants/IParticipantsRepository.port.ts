@@ -28,6 +28,11 @@ export type ParticipantProgressRecord = {
 
 export type ListParticipantsParams = {
     companyId?: number;
+    /**
+     * Si défini, ne retourne que les participants ayant rejoint au moins une campagne
+     * attribuée à ce coach. Utilisé pour le scope=coach des endpoints admin (cf. ADR-008).
+     */
+    coachId?: number;
     page: number;
     perPage: number;
 };

@@ -2,7 +2,7 @@
 
 import { Box, Button, Card, CardContent, Chip, Skeleton, Stack, Typography } from '@mui/material';
 import { Link, createFileRoute } from '@tanstack/react-router';
-import { BadgeCheck, MessageSquareText, Target, Users } from 'lucide-react';
+import { ArrowLeft, BadgeCheck, MessageSquareText, Target, Users } from 'lucide-react';
 
 import { CampaignManageParticipants } from '@/components/admin/campaign-detail/CampaignManageParticipants';
 import { CampaignParticipantsTable } from '@/components/admin/campaign-detail/CampaignParticipantsTable';
@@ -13,13 +13,19 @@ import { StatCard } from '@/components/common/StatCard';
 import { useAdminCampaign, useCoaches, useCompanies } from '@/hooks/admin';
 import { QUESTIONNAIRE_LABELS, computeProgress, statusText } from '@/lib/admin/campaignDetailView';
 
-export const Route = createFileRoute('/admin/campaigns/$campaignId')({
-    component: AdminCampaignDetailRoute,
+export const Route = createFileRoute('/coach/campaigns/$campaignId')({
+    component: CoachCampaignDetailRoute,
 });
 
 const SKELETON_KEYS = ['stat-1', 'stat-2', 'stat-3', 'stat-4'] as const;
 
-function AdminCampaignDetailRoute() {
+/**
+ * Détail d'une campagne côté coach. Réutilise les mêmes composants que la page admin
+ * (`CampaignSummaryCard`, `CampaignParticipantsTable`, etc.) — la sécurité repose sur
+ * le filtrage backend `useAdminCampaign` qui retourne `null` pour une campagne hors
+ * périmètre du coach connecté (cf. avancement-2026-04-28.md §1.b).
+ */
+function CoachCampaignDetailRoute() {
     const { campaignId } = Route.useParams();
     const numericId = Number(campaignId);
 
@@ -62,13 +68,24 @@ function AdminCampaignDetailRoute() {
 
     if (!campaign) {
         return (
-            <Card variant="outlined">
-                <CardContent sx={{ p: 4, textAlign: 'center' }}>
-                    <Typography variant="h6" color="text.secondary">
-                        Campagne introuvable.
-                    </Typography>
-                </CardContent>
-            </Card>
+            <Stack spacing={2}>
+                <Card variant="outlined">
+                    <CardContent sx={{ p: 4, textAlign: 'center' }}>
+                        <Typography variant="h6" color="text.secondary">
+                            Campagne introuvable ou hors de votre périmètre.
+                        </Typography>
+                    </CardContent>
+                </Card>
+                <Button
+                    component={Link}
+                    to="/coach/campaigns"
+                    variant="outlined"
+                    startIcon={<ArrowLeft size={16} />}
+                    sx={{ borderRadius: 3, alignSelf: 'flex-start' }}
+                >
+                    Retour à mes campagnes
+                </Button>
+            </Stack>
         );
     }
 
@@ -95,13 +112,19 @@ function AdminCampaignDetailRoute() {
                                 color="text.secondary"
                                 sx={{ mt: 1, lineHeight: 1.7, maxWidth: 900 }}
                             >
-                                Cockpit opérationnel de la campagne : questionnaire assigné, participants, invitations,
-                                réponses et pilotage.
+                                Cockpit opérationnel : questionnaire assigné, participants, invitations, réponses et
+                                pilotage.
                             </Typography>
                         </Box>
 
-                        <Button variant="outlined" component={Link} to="/admin/campaigns" sx={{ borderRadius: 3 }}>
-                            Retour aux campagnes
+                        <Button
+                            component={Link}
+                            to="/coach/campaigns"
+                            variant="outlined"
+                            startIcon={<ArrowLeft size={16} />}
+                            sx={{ borderRadius: 3 }}
+                        >
+                            Retour à mes campagnes
                         </Button>
                     </Stack>
                 </CardContent>
@@ -138,7 +161,7 @@ function AdminCampaignDetailRoute() {
                     <CampaignParticipantsTable
                         campaignId={campaign.id}
                         participants={participants}
-                        matrixUrlPrefix="/admin/participants"
+                        matrixUrlPrefix="/coach/participants"
                         questionnaireId={campaign.questionnaireId}
                     />
                 </Stack>

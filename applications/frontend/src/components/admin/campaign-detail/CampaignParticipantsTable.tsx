@@ -2,6 +2,7 @@
 
 import {
     Box,
+    Button,
     Card,
     CardContent,
     IconButton,
@@ -13,7 +14,7 @@ import {
     TableRow,
     Typography,
 } from '@mui/material';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, LayoutPanelLeft } from 'lucide-react';
 import * as React from 'react';
 
 import { SectionTitle } from '@/components/common/SectionTitle';
@@ -25,11 +26,24 @@ import { ProgressChip } from './ProgressChip';
 export type CampaignParticipantsTableProps = {
     campaignId: number;
     participants: CampaignParticipantProgress[];
+    /**
+     * Préfixe d'URL pour l'accès à la matrix des réponses d'un participant. Permet de
+     * dispatcher vers `/admin/participants/$id/matrix` ou `/coach/participants/$id/matrix`
+     * selon l'espace de consommation. Si non fourni, le bouton « Voir les réponses » est masqué.
+     */
+    matrixUrlPrefix?: string;
+    /** Questionnaire de la campagne — passé en query param `qid` à la matrix. */
+    questionnaireId?: string | null;
 };
 
-const COL_SPAN = 6;
+const COL_SPAN = 7;
 
-export function CampaignParticipantsTable({ campaignId, participants }: CampaignParticipantsTableProps) {
+export function CampaignParticipantsTable({
+    campaignId,
+    participants,
+    matrixUrlPrefix,
+    questionnaireId,
+}: CampaignParticipantsTableProps) {
     const [expandedParticipant, setExpandedParticipant] = React.useState<number | null>(null);
     const [page, setPage] = React.useState(0);
     const [rowsPerPage, setRowsPerPage] = React.useState(10);
@@ -56,7 +70,7 @@ export function CampaignParticipantsTable({ campaignId, participants }: Campaign
                 />
 
                 <Box sx={{ overflowX: 'auto' }}>
-                    <Table sx={{ minWidth: 800 }}>
+                    <Table sx={{ minWidth: 900 }}>
                         <TableHead>
                             <TableRow>
                                 <TableCell padding="checkbox" />
@@ -65,6 +79,7 @@ export function CampaignParticipantsTable({ campaignId, participants }: Campaign
                                 <TableCell>Pairs</TableCell>
                                 <TableCell>Élément Humain</TableCell>
                                 <TableCell>Résultats</TableCell>
+                                {matrixUrlPrefix ? <TableCell /> : null}
                             </TableRow>
                         </TableHead>
                         <TableBody>
@@ -126,6 +141,19 @@ export function CampaignParticipantsTable({ campaignId, participants }: Campaign
                                             <TableCell>
                                                 <ProgressChip status={p.resultsStatus} />
                                             </TableCell>
+                                            {matrixUrlPrefix ? (
+                                                <TableCell align="right" onClick={e => e.stopPropagation()}>
+                                                    <Button
+                                                        size="small"
+                                                        variant="outlined"
+                                                        startIcon={<LayoutPanelLeft size={14} />}
+                                                        href={`${matrixUrlPrefix}/${p.participantId}/matrix?qid=${questionnaireId ?? 'B'}`}
+                                                        sx={{ borderRadius: 99 }}
+                                                    >
+                                                        Réponses
+                                                    </Button>
+                                                </TableCell>
+                                            ) : null}
                                         </TableRow>
                                         {expandedParticipant === p.participantId && (
                                             <ParticipantTokensRow

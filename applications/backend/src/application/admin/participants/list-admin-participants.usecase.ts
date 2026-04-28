@@ -10,6 +10,7 @@ export class ListAdminParticipantsUseCase {
         page: number;
         perPage: number;
         companyId?: number;
+        coachId?: number;
     }): Promise<{
         items: ParticipantAdminListItem[];
         total: number;
@@ -21,6 +22,7 @@ export class ListAdminParticipantsUseCase {
             page: params.page,
             perPage: params.perPage,
             companyId: params.companyId,
+            coachId: params.coachId,
         });
         return {
             items: result.items,

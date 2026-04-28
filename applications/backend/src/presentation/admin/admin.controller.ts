@@ -16,12 +16,17 @@ export class AdminController {
 
     @Post('auth/login')
     @ApiOperation({
-        summary: 'Authentification admin — super-admin via env vars ou coach via DB. Retourne un JWT.',
+        summary:
+            'Authentification admin — super-admin via env vars ou coach via DB. Retourne le JWT, le scope effectif (super-admin / coach) et le coach_id si applicable.',
     })
     public async login(@Body() body: { username?: string; password?: string }) {
         const username = body.username ?? '';
         const password = body.password ?? '';
         const result = await this.adminAuth.login(username, password);
-        return { access_token: result.accessToken };
+        return {
+            access_token: result.accessToken,
+            scope: result.scope,
+            coach_id: result.coachId,
+        };
     }
 }
