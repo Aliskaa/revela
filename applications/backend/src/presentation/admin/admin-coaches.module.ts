@@ -2,7 +2,7 @@
 
 import { Module } from '@nestjs/common';
 
-import { IPasswordHasherPort, PASSWORD_HASHER_PORT_SYMBOL } from '@aor/ports';
+import { type IPasswordHasherPort, PASSWORD_HASHER_PORT_SYMBOL } from '@aor/ports';
 import { CreateAdminCoachUseCase } from '@src/application/admin/coaches/create-admin-coach.usecase';
 import { DeleteAdminCoachUseCase } from '@src/application/admin/coaches/delete-admin-coach.usecase';
 import { GetAdminCoachDetailUseCase } from '@src/application/admin/coaches/get-admin-coach-detail.usecase';

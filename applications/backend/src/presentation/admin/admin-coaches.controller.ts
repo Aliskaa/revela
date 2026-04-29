@@ -26,6 +26,7 @@ import type { ListAdminCoachesUseCase } from '@src/application/admin/coaches/lis
 import type { UpdateAdminCoachUseCase } from '@src/application/admin/coaches/update-admin-coach.usecase';
 import { ResponsesExceptionFilter } from '@src/presentation/responses/responses-exception.filter';
 
+import type { JwtValidatedUser } from '@src/presentation/jwt-validated-user';
 import { AdminApplicationExceptionFilter } from './admin-application-exception.filter';
 import { AdminJwtAuthGuard } from './admin-jwt-auth.guard';
 import { adminCoachDetailToJson, coachToAdminJson } from './admin.presenters';
@@ -36,7 +37,6 @@ import {
     LIST_ADMIN_COACHES_USE_CASE_SYMBOL,
     UPDATE_ADMIN_COACH_USE_CASE_SYMBOL,
 } from './admin.tokens';
-import type { JwtValidatedUser } from './jwt.strategy';
 
 @ApiTags('admin-coaches')
 @ApiBearerAuth('jwt')

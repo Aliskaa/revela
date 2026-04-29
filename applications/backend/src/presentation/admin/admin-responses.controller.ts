@@ -27,6 +27,7 @@ import type { GetPublicResponseUseCase } from '@src/application/responses/get-pu
 import { ResponsesExceptionFilter } from '@src/presentation/responses/responses-exception.filter';
 import { GET_PUBLIC_RESPONSE_USE_CASE_SYMBOL } from '@src/presentation/responses/responses.tokens';
 
+import type { JwtValidatedUser } from '@src/presentation/jwt-validated-user';
 import { AdminApplicationExceptionFilter } from './admin-application-exception.filter';
 import { AdminJwtAuthGuard } from './admin-jwt-auth.guard';
 import {
@@ -36,7 +37,6 @@ import {
     GET_ADMIN_CAMPAIGN_DETAIL_USE_CASE_SYMBOL,
     LIST_ADMIN_RESPONSES_USE_CASE_SYMBOL,
 } from './admin.tokens';
-import type { JwtValidatedUser } from './jwt.strategy';
 
 @ApiTags('admin-responses')
 @ApiBearerAuth('jwt')

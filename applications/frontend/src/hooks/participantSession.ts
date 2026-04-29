@@ -27,18 +27,20 @@ export function useParticipantSession() {
 
 export function useParticipantSessionMatrix(enabled: boolean, qid: string, campaignId?: number | null) {
     const q = qid.trim().toUpperCase();
+    const validCampaignId = typeof campaignId === 'number' && campaignId > 0 ? campaignId : null;
     return useQuery<ParticipantQuestionnaireMatrix>({
-        queryKey: participantSessionKeys.matrix(q, campaignId),
-        queryFn: () =>
-            participantApiClient
-                .get('/participant/matrix', {
-                    params: {
-                        qid: q,
-                        campaign_id: campaignId ?? undefined,
-                    },
+        queryKey: participantSessionKeys.matrix(q, validCampaignId),
+        queryFn: () => {
+            if (validCampaignId === null) {
+                return Promise.reject(new Error('campaignId requis pour charger la matrice'));
+            }
+            return participantApiClient
+                .get(`/participant/campaigns/${validCampaignId}/matrix`, {
+                    params: { qid: q },
                 })
-                .then(r => r.data),
-        enabled: enabled && q.length > 0,
+                .then(r => r.data);
+        },
+        enabled: enabled && q.length > 0 && validCampaignId !== null,
     });
 }
 

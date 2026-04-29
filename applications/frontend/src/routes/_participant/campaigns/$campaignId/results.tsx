@@ -108,21 +108,20 @@ function ParticipantResultsRoute() {
 
     return (
         <Stack spacing={3}>
-            <Button
-                component={Link}
-                to="/campaigns/$campaignId"
-                params={{ campaignId: String(campaignId) }}
-                startIcon={<ArrowLeft size={16} />}
-                sx={{
-                    alignSelf: 'flex-start',
-                    fontWeight: 600,
-                    color: 'text.secondary',
-                    '&:hover': { bgcolor: 'transparent', color: 'primary.main' },
-                }}
-                disableRipple
-            >
-                Retour à la campagne
-            </Button>
+            <Link to="/campaigns/$campaignId" params={{ campaignId: String(campaignId) }}>
+                <Button
+                    startIcon={<ArrowLeft size={16} />}
+                    sx={{
+                        alignSelf: 'flex-start',
+                        fontWeight: 600,
+                        color: 'text.secondary',
+                        '&:hover': { bgcolor: 'transparent', color: 'primary.main' },
+                    }}
+                    disableRipple
+                >
+                    Retour à la campagne
+                </Button>
+            </Link>
             <Card variant="outlined">
                 <CardContent sx={{ p: { xs: 2.5, md: 3 } }}>
                     <Stack

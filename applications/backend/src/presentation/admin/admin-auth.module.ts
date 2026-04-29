@@ -2,7 +2,7 @@
 
 import { Module } from '@nestjs/common';
 
-import { IPasswordVerifierPort, PASSWORD_VERIFIER_PORT_SYMBOL } from '@aor/ports';
+import { type IPasswordVerifierPort, PASSWORD_VERIFIER_PORT_SYMBOL } from '@aor/ports';
 import { AdminAuthUseCase } from '@src/application/admin/auth/admin-auth.usecase';
 import { ADMIN_AUTH_CONFIG_PORT_SYMBOL, type IAdminAuthConfigPort } from '@src/interfaces/admin/IAdminAuthConfig.port';
 import {

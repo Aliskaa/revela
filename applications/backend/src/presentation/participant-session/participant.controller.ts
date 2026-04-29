@@ -11,13 +11,10 @@ import {
     Patch,
     Post,
     Query,
-    Req,
     UnauthorizedException,
     UseFilters,
     UseGuards,
 } from '@nestjs/common';
-import type { Request } from 'express';
-
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
 import { updateParticipantProfileBodySchema } from '@aor/types';
@@ -33,9 +30,9 @@ import type {
     IParticipantsWriterPort,
 } from '@src/interfaces/participants/IParticipantsRepository.port';
 import { PARTICIPANTS_REPOSITORY_PORT_SYMBOL } from '@src/interfaces/participants/IParticipantsRepository.port';
-import type { JwtValidatedUser } from '@src/presentation/admin/jwt.strategy';
 import { ResponsesExceptionFilter } from '@src/presentation/responses/responses-exception.filter';
 
+import { CurrentParticipantId } from './current-participant-id.decorator';
 import { ParticipantAuthExceptionFilter } from './participant-auth-exception.filter';
 import { ParticipantJwtAuthGuard } from './participant-jwt-auth.guard';
 import { ParticipantSessionExceptionFilter } from './participant-session-exception.filter';
@@ -48,8 +45,6 @@ import {
     PARTICIPANT_LOGIN_USE_CASE_SYMBOL,
     SUBMIT_PARTICIPANT_QUESTIONNAIRE_USE_CASE_SYMBOL,
 } from './participant.tokens';
-
-type RequestWithParticipant = Request & { user: JwtValidatedUser };
 
 @ApiTags('participant')
 @ApiBearerAuth('jwt')
@@ -71,20 +66,12 @@ export class ParticipantController {
         @Inject(CONFIRM_CAMPAIGN_PARTICIPATION_USE_CASE_SYMBOL)
         private readonly confirmCampaignParticipation: ConfirmCampaignParticipationUseCase,
         @Inject(PARTICIPANTS_REPOSITORY_PORT_SYMBOL)
-        private readonly participantsWriter: IParticipantsIdentityReaderPort & IParticipantsWriterPort
+        private readonly participants: IParticipantsIdentityReaderPort & IParticipantsWriterPort
     ) {}
 
     private static normalizeQid(raw?: string): string | undefined {
         const qid = (raw ?? '').trim().toUpperCase();
         return qid.length > 0 ? qid : undefined;
-    }
-
-    private static normalizePositiveInt(raw?: string): number | undefined {
-        if (raw === undefined || raw.trim() === '') {
-            return undefined;
-        }
-        const value = Number(raw);
-        return Number.isFinite(value) && value > 0 ? value : undefined;
     }
 
     @Post('auth/login')
@@ -96,112 +83,22 @@ export class ParticipantController {
         return { access_token: result.accessToken };
     }
 
-    @Get('matrix')
-    @UseGuards(ParticipantJwtAuthGuard)
-    @UseFilters(ParticipantSessionExceptionFilter)
-    public async matrix(
-        @Req() req: RequestWithParticipant,
-        @Query('qid') qid?: string,
-        @Query('campaign_id') campaignId?: string
-    ) {
-        const participantId = req.user.participantId;
-        if (participantId === undefined || !Number.isFinite(participantId)) {
-            throw new UnauthorizedException();
-        }
-        const normalizedQid = ParticipantController.normalizeQid(qid);
-        const normalizedCampaignId = ParticipantController.normalizePositiveInt(campaignId);
-        if (campaignId !== undefined && campaignId.trim() !== '' && normalizedCampaignId === undefined) {
-            throw new BadRequestException('Paramètre campaign_id invalide.');
-        }
-        return this.getParticipantSessionMatrix.execute(participantId, normalizedQid, normalizedCampaignId);
-    }
-
-    @Post('campaigns/:campaignId/confirm')
-    @UseGuards(ParticipantJwtAuthGuard)
-    @UseFilters(ParticipantSessionExceptionFilter)
-    public async confirmCampaign(
-        @Req() req: RequestWithParticipant,
-        @Param('campaignId', ParseIntPipe) campaignId: number
-    ) {
-        const participantId = req.user.participantId;
-        if (participantId === undefined || !Number.isFinite(participantId)) {
-            throw new UnauthorizedException();
-        }
-        return this.confirmCampaignParticipation.execute(participantId, campaignId);
-    }
-
-    @Get('campaigns/:campaignId/peers')
-    @UseGuards(ParticipantJwtAuthGuard)
-    @UseFilters(ParticipantSessionExceptionFilter)
-    public async campaignPeers(
-        @Req() req: RequestWithParticipant,
-        @Param('campaignId', ParseIntPipe) campaignId: number
-    ) {
-        const participantId = req.user.participantId;
-        if (participantId === undefined || !Number.isFinite(participantId)) {
-            throw new UnauthorizedException();
-        }
-        return this.listParticipantCampaignPeers.execute(participantId, campaignId);
-    }
-
     @Get('session')
     @UseGuards(ParticipantJwtAuthGuard)
     @UseFilters(ParticipantSessionExceptionFilter)
-    public async session(@Req() req: RequestWithParticipant) {
-        const participantId = req.user.participantId;
-        if (participantId === undefined || !Number.isFinite(participantId)) {
-            throw new UnauthorizedException();
-        }
+    public async session(@CurrentParticipantId() participantId: number) {
         return this.getParticipantSession.execute(participantId);
-    }
-
-    @Get('responses/:responseId')
-    @UseGuards(ParticipantJwtAuthGuard)
-    @UseFilters(ResponsesExceptionFilter)
-    public async getResponse(
-        @Req() req: RequestWithParticipant,
-        @Param('responseId', ParseIntPipe) responseId: number
-    ) {
-        const participantId = req.user.participantId;
-        if (participantId === undefined || !Number.isFinite(participantId)) {
-            throw new UnauthorizedException();
-        }
-        return this.getParticipantOwnedResponse.execute(participantId, responseId);
-    }
-
-    @Post('questionnaires/:qid/submit')
-    @UseGuards(ParticipantJwtAuthGuard)
-    @UseFilters(ResponsesExceptionFilter)
-    public async submitQuestionnaire(
-        @Req() req: RequestWithParticipant,
-        @Param('qid') qid: string,
-        @Query('campaign_id') campaignId: string | undefined,
-        @Body() body: unknown
-    ) {
-        const participantId = req.user.participantId;
-        if (participantId === undefined || !Number.isFinite(participantId)) {
-            throw new UnauthorizedException();
-        }
-        const normalizedCampaignId = ParticipantController.normalizePositiveInt(campaignId);
-        if (campaignId !== undefined && campaignId.trim() !== '' && normalizedCampaignId === undefined) {
-            throw new BadRequestException('Paramètre campaign_id invalide.');
-        }
-        return this.submitParticipantQuestionnaire.execute(participantId, qid, body, normalizedCampaignId);
     }
 
     @Patch('profile')
     @UseGuards(ParticipantJwtAuthGuard)
-    public async updateProfile(@Req() req: RequestWithParticipant, @Body() body: unknown) {
-        const participantId = req.user.participantId;
-        if (participantId === undefined || !Number.isFinite(participantId)) {
-            throw new UnauthorizedException();
-        }
+    public async updateProfile(@CurrentParticipantId() participantId: number, @Body() body: unknown) {
         const parsed = updateParticipantProfileBodySchema.safeParse(body);
         if (!parsed.success) {
             throw new BadRequestException('Données de profil invalides.');
         }
         const data = parsed.data;
-        const current = await this.participantsWriter.findById(participantId);
+        const current = await this.participants.findById(participantId);
         if (!current) {
             throw new UnauthorizedException();
         }
@@ -211,7 +108,61 @@ export class ParticipantController {
             ...(data.service !== undefined ? { service: data.service } : {}),
             ...(data.function_level !== undefined ? { functionLevel: data.function_level } : {}),
         });
-        await this.participantsWriter.save(updated);
+        await this.participants.save(updated);
         return { ok: true };
+    }
+
+    @Get('campaigns/:campaignId/matrix')
+    @UseGuards(ParticipantJwtAuthGuard)
+    @UseFilters(ParticipantSessionExceptionFilter)
+    public async campaignMatrix(
+        @CurrentParticipantId() participantId: number,
+        @Param('campaignId', ParseIntPipe) campaignId: number,
+        @Query('qid') qid?: string
+    ) {
+        const normalizedQid = ParticipantController.normalizeQid(qid);
+        return this.getParticipantSessionMatrix.execute(participantId, normalizedQid, campaignId);
+    }
+
+    @Post('campaigns/:campaignId/confirm')
+    @UseGuards(ParticipantJwtAuthGuard)
+    @UseFilters(ParticipantSessionExceptionFilter)
+    public async confirmCampaign(
+        @CurrentParticipantId() participantId: number,
+        @Param('campaignId', ParseIntPipe) campaignId: number
+    ) {
+        return this.confirmCampaignParticipation.execute(participantId, campaignId);
+    }
+
+    @Get('campaigns/:campaignId/peers')
+    @UseGuards(ParticipantJwtAuthGuard)
+    @UseFilters(ParticipantSessionExceptionFilter)
+    public async campaignPeers(
+        @CurrentParticipantId() participantId: number,
+        @Param('campaignId', ParseIntPipe) campaignId: number
+    ) {
+        return this.listParticipantCampaignPeers.execute(participantId, campaignId);
+    }
+
+    @Post('campaigns/:campaignId/questionnaires/:qid/submit')
+    @UseGuards(ParticipantJwtAuthGuard)
+    @UseFilters(ResponsesExceptionFilter)
+    public async submitCampaignQuestionnaire(
+        @CurrentParticipantId() participantId: number,
+        @Param('campaignId', ParseIntPipe) campaignId: number,
+        @Param('qid') qid: string,
+        @Body() body: unknown
+    ) {
+        return this.submitParticipantQuestionnaire.execute(participantId, qid, body, campaignId);
+    }
+
+    @Get('responses/:responseId')
+    @UseGuards(ParticipantJwtAuthGuard)
+    @UseFilters(ResponsesExceptionFilter)
+    public async getResponse(
+        @CurrentParticipantId() participantId: number,
+        @Param('responseId', ParseIntPipe) responseId: number
+    ) {
+        return this.getParticipantOwnedResponse.execute(participantId, responseId);
     }
 }

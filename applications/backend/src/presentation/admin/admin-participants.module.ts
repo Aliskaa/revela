@@ -8,6 +8,7 @@ import { ImportParticipantsCsvUseCase } from '@src/application/admin/participant
 import { ListAdminParticipantsUseCase } from '@src/application/admin/participants/list-admin-participants.usecase';
 import { ListParticipantInvitationTokensUseCase } from '@src/application/admin/participants/list-participant-invitation-tokens.usecase';
 import { GetParticipantQuestionnaireMatrixUseCase } from '@src/application/participant-session/get-participant-questionnaire-matrix.usecase';
+import { type IInviteUrlConfigPort, INVITE_URL_CONFIG_PORT_SYMBOL } from '@src/interfaces/admin/IInviteUrlConfig.port';
 import {
     CAMPAIGNS_REPOSITORY_PORT_SYMBOL,
     type ICampaignsReadPort,
@@ -22,7 +23,6 @@ import {
     type IInvitationsWritePort,
     INVITATIONS_REPOSITORY_PORT_SYMBOL,
 } from '@src/interfaces/invitations/IInvitationsRepository.port';
-import { type IInviteUrlConfigPort, INVITE_URL_CONFIG_PORT_SYMBOL } from '@src/interfaces/admin/IInviteUrlConfig.port';
 import { type IMailPort, MAIL_PORT_SYMBOL } from '@src/interfaces/invitations/IMail.port';
 import {
     type IParticipantsAdminReadPort,
@@ -37,12 +37,13 @@ import {
     RESPONSES_REPOSITORY_PORT_SYMBOL,
 } from '@src/interfaces/responses/IResponsesRepository.port';
 
+import { GET_PARTICIPANT_QUESTIONNAIRE_MATRIX_USE_CASE_SYMBOL } from '@src/presentation/participant-session/participant.tokens';
+
 import { AdminParticipantsController } from './admin-participants.controller';
 import { AdminSharedModule } from './admin-shared.module';
 import {
     CREATE_PARTICIPANT_INVITE_USE_CASE_SYMBOL,
     ERASE_PARTICIPANT_RGPD_USE_CASE_SYMBOL,
-    GET_PARTICIPANT_QUESTIONNAIRE_MATRIX_USE_CASE_SYMBOL,
     IMPORT_PARTICIPANTS_CSV_USE_CASE_SYMBOL,
     LIST_ADMIN_PARTICIPANTS_USE_CASE_SYMBOL,
     LIST_PARTICIPANT_INVITATION_TOKENS_USE_CASE_SYMBOL,
@@ -103,8 +104,7 @@ import {
         },
         {
             provide: ERASE_PARTICIPANT_RGPD_USE_CASE_SYMBOL,
-            useFactory: (participants: IParticipantsWriterPort) =>
-                new EraseParticipantRgpdUseCase({ participants }),
+            useFactory: (participants: IParticipantsWriterPort) => new EraseParticipantRgpdUseCase({ participants }),
             inject: [PARTICIPANTS_REPOSITORY_PORT_SYMBOL],
         },
         {

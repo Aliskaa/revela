@@ -3,7 +3,7 @@
 import { type ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 
-import type { JwtValidatedUser } from '@src/presentation/admin/jwt.strategy';
+import type { JwtValidatedUser } from '@src/presentation/jwt-validated-user';
 
 /**
  * Accepts a valid JWT for either {@link JwtValidatedUser.role} `admin` or `participant`

@@ -63,7 +63,11 @@ import {
                 companies: ICompaniesReadPort,
                 coaches: ICoachesReadPort
             ) => new CreateAdminCampaignUseCase({ campaigns, companies, coaches }),
-            inject: [CAMPAIGNS_REPOSITORY_PORT_SYMBOL, COMPANIES_REPOSITORY_PORT_SYMBOL, COACHES_REPOSITORY_PORT_SYMBOL],
+            inject: [
+                CAMPAIGNS_REPOSITORY_PORT_SYMBOL,
+                COMPANIES_REPOSITORY_PORT_SYMBOL,
+                COACHES_REPOSITORY_PORT_SYMBOL,
+            ],
         },
         {
             provide: UPDATE_ADMIN_CAMPAIGN_STATUS_USE_CASE_SYMBOL,
@@ -84,7 +88,11 @@ import {
                 participants: IParticipantsAdminReadPort,
                 responses: IResponsesAdminListPort
             ) => new GetAdminCampaignDetailUseCase({ campaigns, participants, responses }),
-            inject: [CAMPAIGNS_REPOSITORY_PORT_SYMBOL, PARTICIPANTS_REPOSITORY_PORT_SYMBOL, RESPONSES_REPOSITORY_PORT_SYMBOL],
+            inject: [
+                CAMPAIGNS_REPOSITORY_PORT_SYMBOL,
+                PARTICIPANTS_REPOSITORY_PORT_SYMBOL,
+                RESPONSES_REPOSITORY_PORT_SYMBOL,
+            ],
         },
         {
             provide: INVITE_CAMPAIGN_PARTICIPANTS_USE_CASE_SYMBOL,
@@ -93,7 +101,11 @@ import {
                 participants: IParticipantsAdminReadPort & IParticipantsCampaignParticipationWriterPort,
                 invitations: IInvitationsWritePort
             ) => new InviteCampaignParticipantsUseCase({ campaigns, participants, invitations }),
-            inject: [CAMPAIGNS_REPOSITORY_PORT_SYMBOL, PARTICIPANTS_REPOSITORY_PORT_SYMBOL, INVITATIONS_REPOSITORY_PORT_SYMBOL],
+            inject: [
+                CAMPAIGNS_REPOSITORY_PORT_SYMBOL,
+                PARTICIPANTS_REPOSITORY_PORT_SYMBOL,
+                INVITATIONS_REPOSITORY_PORT_SYMBOL,
+            ],
         },
         {
             provide: IMPORT_PARTICIPANTS_TO_CAMPAIGN_USE_CASE_SYMBOL,

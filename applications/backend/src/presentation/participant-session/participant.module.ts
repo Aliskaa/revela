@@ -40,7 +40,6 @@ import {
     type IResponsesWriterPort,
     RESPONSES_REPOSITORY_PORT_SYMBOL,
 } from '@src/interfaces/responses/IResponsesRepository.port';
-import { GET_PARTICIPANT_QUESTIONNAIRE_MATRIX_USE_CASE_SYMBOL } from '@src/presentation/admin/admin.tokens';
 import { requireEnv } from '@src/shared/env';
 
 import { ParticipantJwtAuthGuard } from './participant-jwt-auth.guard';
@@ -48,6 +47,7 @@ import { ParticipantController } from './participant.controller';
 import {
     CONFIRM_CAMPAIGN_PARTICIPATION_USE_CASE_SYMBOL,
     GET_PARTICIPANT_OWNED_RESPONSE_USE_CASE_SYMBOL,
+    GET_PARTICIPANT_QUESTIONNAIRE_MATRIX_USE_CASE_SYMBOL,
     GET_PARTICIPANT_SESSION_QUESTIONNAIRE_MATRIX_USE_CASE_SYMBOL,
     GET_PARTICIPANT_SESSION_USE_CASE_SYMBOL,
     LIST_PARTICIPANT_CAMPAIGN_PEERS_USE_CASE_SYMBOL,

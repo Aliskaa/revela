@@ -25,10 +25,10 @@ import type { ListAdminCompaniesUseCase } from '@src/application/admin/companies
 import type { UpdateAdminCompanyUseCase } from '@src/application/admin/companies/update-admin-company.usecase';
 import { ResponsesExceptionFilter } from '@src/presentation/responses/responses-exception.filter';
 
+import type { JwtValidatedUser } from '@src/presentation/jwt-validated-user';
 import { AdminApplicationExceptionFilter } from './admin-application-exception.filter';
 import { AdminJwtAuthGuard } from './admin-jwt-auth.guard';
 import { companyToAdminJson } from './admin.presenters';
-import type { JwtValidatedUser } from './jwt.strategy';
 import {
     CREATE_ADMIN_COMPANY_USE_CASE_SYMBOL,
     DELETE_ADMIN_COMPANY_USE_CASE_SYMBOL,

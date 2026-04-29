@@ -3,7 +3,7 @@
 import { type ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 
-import type { JwtValidatedUser } from '@src/presentation/admin/jwt.strategy';
+import type { JwtValidatedUser } from '@src/presentation/jwt-validated-user';
 
 @Injectable()
 export class ParticipantJwtAuthGuard extends AuthGuard('jwt') {

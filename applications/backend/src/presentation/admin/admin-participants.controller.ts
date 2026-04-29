@@ -27,14 +27,15 @@ import type { ListParticipantInvitationTokensUseCase } from '@src/application/ad
 import type { GetParticipantQuestionnaireMatrixUseCase } from '@src/application/participant-session/get-participant-questionnaire-matrix.usecase';
 import { ResponsesExceptionFilter } from '@src/presentation/responses/responses-exception.filter';
 
+import type { JwtValidatedUser } from '@src/presentation/jwt-validated-user';
+import { GET_PARTICIPANT_QUESTIONNAIRE_MATRIX_USE_CASE_SYMBOL } from '@src/presentation/participant-session/participant.tokens';
 import { AdminApplicationExceptionFilter } from './admin-application-exception.filter';
 import { AdminJwtAuthGuard } from './admin-jwt-auth.guard';
 import { participantToAdminJson } from './admin.presenters';
-import type { JwtValidatedUser } from './jwt.strategy';
+
 import {
     CREATE_PARTICIPANT_INVITE_USE_CASE_SYMBOL,
     ERASE_PARTICIPANT_RGPD_USE_CASE_SYMBOL,
-    GET_PARTICIPANT_QUESTIONNAIRE_MATRIX_USE_CASE_SYMBOL,
     IMPORT_PARTICIPANTS_CSV_USE_CASE_SYMBOL,
     LIST_ADMIN_PARTICIPANTS_USE_CASE_SYMBOL,
     LIST_PARTICIPANT_INVITATION_TOKENS_USE_CASE_SYMBOL,

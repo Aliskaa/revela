@@ -68,7 +68,7 @@ const STEP_TEMPLATES: ReadonlyArray<Omit<JourneyStep, 'state'>> = [
     },
     {
         label: 'Test Élément Humain',
-        subtitle: '2 × 54 questions',
+        subtitle: '2 séries de 54 questions',
         description: 'Le test consiste à répondre à deux séries de 54 questions pour chaque questionnaire B, F et S.',
         icon: Brain,
         routeKind: 'test',
@@ -98,8 +98,8 @@ const buildSteps = (assignment?: ParticipantAssignment): JourneyStep[] => {
                 i <= 1 && assignment
                     ? ('current' as const)
                     : i === 2 && assignment?.allow_test_without_manual_inputs
-                      ? ('current' as const)
-                      : ('locked' as const),
+                        ? ('current' as const)
+                        : ('locked' as const),
         }));
     }
     // Les résultats sont consultables dès qu'au moins une donnée a été produite.
@@ -111,8 +111,8 @@ const buildSteps = (assignment?: ParticipantAssignment): JourneyStep[] => {
         progression.results_status === 'completed'
             ? 'completed'
             : hasAnyData
-              ? 'current'
-              : stepStateFromStatus(progression.results_status);
+                ? 'current'
+                : stepStateFromStatus(progression.results_status);
     return [
         { ...STEP_TEMPLATES[0], state: stepStateFromStatus(progression.self_rating_status) },
         { ...STEP_TEMPLATES[1], state: stepStateFromStatus(progression.peer_feedback_status) },
@@ -133,8 +133,8 @@ function StepCard({ step, onNavigate }: { step: JourneyStep; onNavigate: (routeK
         step.state === 'completed'
             ? { bgcolor: 'tint.successBg', color: 'tint.successText' }
             : step.state === 'current'
-              ? { bgcolor: 'tint.secondaryBg', color: 'tint.secondaryText' }
-              : { bgcolor: 'tint.mutedBg', color: 'tint.mutedText' };
+                ? { bgcolor: 'tint.secondaryBg', color: 'tint.secondaryText' }
+                : { bgcolor: 'tint.mutedBg', color: 'tint.mutedText' };
     const cta =
         step.state === 'completed' ? 'Revoir cette étape' : step.state === 'current' ? 'Commencer cette étape' : null;
 
@@ -151,8 +151,8 @@ function StepCard({ step, onNavigate }: { step: JourneyStep; onNavigate: (routeK
                     ...(step.state === 'completed'
                         ? { bgcolor: 'tint.successBg', color: 'tint.successText' }
                         : step.state === 'current'
-                          ? { bgcolor: 'rgba(255,204,0,0.14)', color: 'tint.secondaryText' }
-                          : { bgcolor: 'tint.mutedBg', color: 'tint.mutedText' }),
+                            ? { bgcolor: 'rgba(255,204,0,0.14)', color: 'tint.secondaryText' }
+                            : { bgcolor: 'tint.mutedBg', color: 'tint.mutedText' }),
                 }}
             >
                 <Icon size={18} />
@@ -356,52 +356,51 @@ function ParticipantCampaignWorkspaceRoute() {
                             </Typography>
                         </Box>
 
-                        <ButtonBase
-                            component={Link}
-                            to="/campaigns/$campaignId/coach"
-                            params={{ campaignId: String(campaignId) }}
-                            focusRipple
-                            sx={{
-                                width: { xs: '100%', sm: 340 },
-                                textAlign: 'left',
-                                borderRadius: 4,
-                                border: '1px solid',
-                                borderColor: 'border',
-                                bgcolor: '#fff',
-                                transition: 'border-color 0.15s, box-shadow 0.15s',
-                                '&:hover': {
-                                    borderColor: 'primary.main',
-                                    boxShadow: '0 6px 18px -10px rgba(15,23,42,0.18)',
-                                },
-                            }}
-                        >
-                            <Box sx={{ p: 2, width: '100%' }}>
-                                <Stack direction="row" spacing={1.5} alignItems="center">
-                                    <Box
-                                        sx={{
-                                            width: 48,
-                                            height: 48,
-                                            borderRadius: 4,
-                                            bgcolor: 'primary.main',
-                                            color: '#fff',
-                                            display: 'grid',
-                                            placeItems: 'center',
-                                        }}
-                                    >
-                                        <Sparkles size={20} />
-                                    </Box>
-                                    <Box sx={{ minWidth: 0, flex: 1 }}>
-                                        <Typography variant="caption" color="text.secondary">
-                                            Mon coach
-                                        </Typography>
-                                        <Typography fontWeight={800} color="text.primary">
-                                            {coachName}
-                                        </Typography>
-                                    </Box>
-                                    <ArrowRight size={16} />
-                                </Stack>
-                            </Box>
-                        </ButtonBase>
+                        <Link to="/campaigns/$campaignId/coach" params={{ campaignId: String(campaignId) }}>
+                            <ButtonBase
+                                focusRipple
+                                sx={{
+                                    width: { xs: '100%', sm: 340 },
+                                    textAlign: 'left',
+                                    borderRadius: 4,
+                                    border: '1px solid',
+                                    borderColor: 'border',
+                                    bgcolor: '#fff',
+                                    transition: 'border-color 0.15s, box-shadow 0.15s',
+                                    '&:hover': {
+                                        borderColor: 'primary.main',
+                                        boxShadow: '0 6px 18px -10px rgba(15,23,42,0.18)',
+                                    },
+                                }}
+                            >
+                                <Box sx={{ p: 2, width: '100%' }}>
+                                    <Stack direction="row" spacing={1.5} alignItems="center">
+                                        <Box
+                                            sx={{
+                                                width: 48,
+                                                height: 48,
+                                                borderRadius: 4,
+                                                bgcolor: 'primary.main',
+                                                color: '#fff',
+                                                display: 'grid',
+                                                placeItems: 'center',
+                                            }}
+                                        >
+                                            <Sparkles size={20} />
+                                        </Box>
+                                        <Box sx={{ minWidth: 0, flex: 1 }}>
+                                            <Typography variant="caption" color="text.secondary">
+                                                Mon coach
+                                            </Typography>
+                                            <Typography fontWeight={800} color="text.primary">
+                                                {coachName}
+                                            </Typography>
+                                        </Box>
+                                        <ArrowRight size={16} />
+                                    </Stack>
+                                </Box>
+                            </ButtonBase>
+                        </Link>
                     </Stack>
                 </CardContent>
             </Card>

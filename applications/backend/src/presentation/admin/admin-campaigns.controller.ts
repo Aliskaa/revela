@@ -28,6 +28,7 @@ import type { ReassignAdminCampaignCoachUseCase } from '@src/application/admin/c
 import type { UpdateAdminCampaignStatusUseCase } from '@src/application/admin/campaigns/update-admin-campaign-status.usecase';
 import { ResponsesExceptionFilter } from '@src/presentation/responses/responses-exception.filter';
 
+import type { JwtValidatedUser } from '@src/presentation/jwt-validated-user';
 import { AdminApplicationExceptionFilter } from './admin-application-exception.filter';
 import { AdminJwtAuthGuard } from './admin-jwt-auth.guard';
 import {
@@ -39,7 +40,6 @@ import {
     REASSIGN_ADMIN_CAMPAIGN_COACH_USE_CASE_SYMBOL,
     UPDATE_ADMIN_CAMPAIGN_STATUS_USE_CASE_SYMBOL,
 } from './admin.tokens';
-import type { JwtValidatedUser } from './jwt.strategy';
 
 @ApiTags('admin-campaigns')
 @ApiBearerAuth('jwt')

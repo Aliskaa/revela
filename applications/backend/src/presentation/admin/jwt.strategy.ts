@@ -4,15 +4,8 @@ import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 
+import type { JwtValidatedUser } from '@src/presentation/jwt-validated-user';
 import { requireEnv } from '@src/shared/env';
-
-export type JwtValidatedUser = {
-    username: string;
-    role: 'admin' | 'participant';
-    scope?: 'super-admin' | 'coach';
-    coachId?: number;
-    participantId?: number;
-};
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
