@@ -1,4 +1,5 @@
 import { InfoCard } from '@/components/common/InfoCard';
+import { StepCompletedBanner } from '@/components/participant-dashboard/StepCompletedBanner';
 import { RatingDimensionCard } from '@/components/questionnaire/RatingDimensionCard';
 import { useParticipantSession, useParticipantSessionMatrix } from '@/hooks/participantSession';
 import { useSubmitParticipantQuestionnaire } from '@/hooks/questionnaires';
@@ -22,7 +23,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { BadgeCheck, CheckCircle2, ClipboardList, Hash, Save, Sparkles, Users } from 'lucide-react';
 import * as React from 'react';
 
-export const Route = createFileRoute('/participant/self-rating')({
+export const Route = createFileRoute('/_participant/self-rating')({
     component: ParticipantSelfRatingRoute,
 });
 
@@ -103,6 +104,15 @@ function ParticipantSelfRatingRoute() {
         return <Alert severity="error">Impossible de charger l'auto-évaluation pour le moment.</Alert>;
     }
 
+    if (activeAssignment?.progression?.self_rating_status === 'completed') {
+        return (
+            <StepCompletedBanner
+                title="Auto-évaluation déjà soumise"
+                description="Vous avez validé votre auto-évaluation. Pour préserver l'intégrité du parcours, elle ne peut plus être modifiée."
+            />
+        );
+    }
+
     return (
         <Stack spacing={3}>
             <Snackbar
@@ -110,7 +120,7 @@ function ParticipantSelfRatingRoute() {
                 autoHideDuration={3000}
                 onClose={() => {
                     setSuccessOpen(false);
-                    navigate({ to: '/participant' });
+                    navigate({ to: '/' });
                 }}
                 message="Auto-évaluation enregistrée"
             />
@@ -181,7 +191,7 @@ function ParticipantSelfRatingRoute() {
                 />
                 <InfoCard icon={BadgeCheck} label="Type" value="Auto-évaluation" variant="border" />
                 <InfoCard icon={Hash} label="Échelle" value="1 à 9" variant="border" />
-                <InfoCard icon={Users} label="Progression" value={`${filledCount} / ${totalItems}`} variant="border" />
+                <InfoCard icon={Users} label="Progression" value={'${filledCount} / ${totalItems}'} variant="border" />
             </Box>
 
             {!canSubmit && (

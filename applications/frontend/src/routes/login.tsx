@@ -8,7 +8,7 @@ import { useState } from 'react';
 export const Route = createFileRoute('/login')({
     beforeLoad: () => {
         if (userParticipant.isAuthenticated()) {
-            throw redirect({ to: '/participant' });
+            throw redirect({ to: '/' });
         }
     },
     component: ParticipantLoginPage,
@@ -24,7 +24,7 @@ function ParticipantLoginPage() {
         e.preventDefault();
         try {
             await login.mutateAsync({ email, password });
-            navigate({ to: '/participant' });
+            navigate({ to: '/' });
         } catch {
             // mutation exposes isError
         }

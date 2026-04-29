@@ -95,7 +95,7 @@ function InvitePage() {
             if (jwtParticipantId !== null && jwtParticipantId !== invite.participant_id) {
                 userParticipant.removeToken();
             }
-            void navigate({ to: '/participant', replace: true });
+            void navigate({ to: '/', replace: true });
         }
     }, [invite, inviteError, loadingInvite, navigate]);
 
@@ -241,10 +241,10 @@ function InvitePage() {
 
                 if (campaignOpen) {
                     navigate({
-                        to: '/participant/self-rating',
+                        to: '/self-rating',
                     });
                 } else {
-                    navigate({ to: '/participant', replace: true });
+                    navigate({ to: '/', replace: true });
                 }
             } catch (err) {
                 const ax = err as { response?: { status?: number; data?: { error?: string } } };
@@ -457,7 +457,7 @@ function InvitePage() {
                 series0: series0 as number[],
                 series1: series1 as number[],
             });
-            navigate({ to: '/participant/results' });
+            navigate({ to: '/results' });
         } catch {
             setStep('series1');
         }

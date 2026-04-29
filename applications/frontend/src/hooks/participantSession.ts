@@ -59,6 +59,24 @@ export function useParticipantCampaignPeers(campaignId: number | null) {
     });
 }
 
+export function useConfirmCampaignParticipation() {
+    const qc = useQueryClient();
+    const toast = useToast();
+    const { t } = useTranslation();
+    return useMutation<{ invitation_confirmed: boolean }, Error, number>({
+        mutationFn: campaignId =>
+            participantApiClient.post(`/participant/campaigns/${campaignId}/confirm`).then(r => r.data),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: participantSessionKeys.session });
+            toast.success(t('toast.campaignParticipationConfirmed'));
+        },
+        onError: err =>
+            toast.error(
+                err instanceof Error && err.message ? err.message : t('toast.campaignParticipationConfirmFailed')
+            ),
+    });
+}
+
 export function useUpdateParticipantProfile() {
     const qc = useQueryClient();
     const toast = useToast();

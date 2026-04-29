@@ -1,0 +1,29 @@
+---
+description: Frontend React conventions for applications/frontend/src.
+alwaysApply: false
+globs: applications/frontend/src/*.ts, applications/frontend/src/*.tsx, applications/frontend/src/**/*.ts, applications/frontend/src/**/*.tsx
+---
+
+# Frontend React Conventions
+
+The frontend is a Vite + React + TypeScript application using TanStack Router, TanStack Query, and MUI.
+
+## Structure
+
+- `src/routes/`: route files and route layout composition.
+- `src/components/`: UI components.
+- `src/hooks/`: reusable data and orchestration hooks.
+- `src/api/`: HTTP clients and request helpers.
+- `src/lib/`: shared frontend utilities.
+- `src/stores/`: Zustand state when needed.
+
+## Working Rules
+
+- Use functional components and hooks.
+- Prefer the `@/` alias for frontend-local imports.
+- Import shared API types from `@aor/types`.
+- Keep HTTP calls in `src/api/` or dedicated hooks, not directly in page JSX.
+- Query hooks should define stable query keys and use `apiClient` or `participantApiClient`.
+- Handle loading, error, and empty states explicitly in async UI.
+- `src/routeTree.gen.ts` is generated; do not hand-edit it.
+- For behavior changes, add or update targeted tests with Testing Library and Vitest.

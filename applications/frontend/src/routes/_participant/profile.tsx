@@ -21,7 +21,7 @@ import { createFileRoute } from '@tanstack/react-router';
 import { Building2, Mail, PencilLine, UserRound } from 'lucide-react';
 import * as React from 'react';
 
-export const Route = createFileRoute('/participant/profile')({
+export const Route = createFileRoute('/_participant/profile')({
     component: ParticipantProfileRoute,
 });
 
@@ -47,7 +47,7 @@ function ParticipantProfileRoute() {
 
     if (isLoading) {
         return (
-            // biome-ignore lint/a11y/useSemanticElements: `Card` est un `<div>` MUI ; on ajoute `role="status"` (équivalent ARIA d'un live region) pour annoncer le chargement aux lecteurs d'écran.
+            // biome-ignore lint/a11y/useSemanticElements: `Card` est un `<div>` MUI ; on ajoute `role=`status`` (équivalent ARIA d`un live region) pour annoncer le chargement aux lecteurs d`écran.
             <Card variant="outlined" role="status" aria-live="polite" aria-busy="true">
                 <CardContent sx={{ p: 3 }}>
                     <Typography variant="h6" fontWeight={700} color="text.primary">

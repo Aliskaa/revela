@@ -24,7 +24,9 @@
         "companyDeleted": "Entreprise supprimée.",
         "coachCreated": "Coach créé.",
         "coachUpdated": "Coach mis à jour.",
-        "coachDeleted": "Coach supprimé."
+        "coachDeleted": "Coach supprimé.",
+        "campaignParticipationConfirmed": "Participation confirmée. Vous pouvez démarrer le parcours.",
+        "campaignParticipationConfirmFailed": "Impossible de confirmer la participation."
     },
     "drawer": {
         "closePanel": "Fermer le panneau"

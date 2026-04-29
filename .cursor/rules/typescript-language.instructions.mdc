@@ -1,38 +1,20 @@
 ---
-description: "Use this context for TypeScript language standards and typing approach."
-globs: **/*.ts,**/*.tsx
+description: TypeScript conventions used across repository source files.
 alwaysApply: false
+globs: applications/**/src/*.ts, applications/**/src/*.tsx, applications/**/src/**/*.ts, applications/**/src/**/*.tsx, packages/**/src/*.ts, packages/**/src/*.tsx, packages/**/src/**/*.ts, packages/**/src/**/*.tsx
 ---
 
-# TypeScript Language Context
+# TypeScript Conventions
 
-- TypeScript is the default programming language for source code.
-- Prefer strict typing and explicit types at boundaries.
-- Prefer `type` declarations over `interface` by default.
-- Use `interface` only when it is required by a specific use case (for example declaration merging or class contract patterns).
-- When an `interface` is used, it must start with the `I` prefix.
-- Port contracts must also use the `I` prefix for consistency with backend rules (for example `IUserReadQueryPort`).
-- Use Zod v4 as the source of truth for all domain and transport schemas.
-- Derive TypeScript types from Zod schemas using `z.infer` whenever possible.
-- All DTO declarations must use the `Dto` suffix.
+- Prefer `type` aliases for plain data shapes.
+- Use `interface` when the code is modeling a contract that is already interface-based, especially ports such as `I*.port.ts`.
+- Avoid `any` at public boundaries.
+- Shared transport shapes should live in `@aor/types` when they are reused across frontend and backend.
+- When a Zod schema exists, prefer `z.infer<typeof schema>` for the exported TypeScript type.
+- The repository favors plain objects and exported types, not DTO classes.
 
-## Typing Preference Example
+## Naming
 
-```ts
-// Preferred for most domain and transport shapes
-type UserDto = {
-	id: string;
-	email: string;
-	tenantIds: string[];
-};
-
-// Allowed only when interface-specific behavior is required (I prefix for non-port contracts)
-interface IUserRepository {
-	findById(id: string): Promise<UserDto | null>;
-}
-
-// Port contracts also use the I prefix
-interface IUserRepositoryPort {
-	findById(id: string): Promise<UserDto | null>;
-}
-```
+- Keep file names aligned with existing repository style: kebab-case files in source trees.
+- Keep exported classes, React components, and named types in PascalCase.
+- Keep schema constants in lower camel case, for example `adminCampaignSchema`.

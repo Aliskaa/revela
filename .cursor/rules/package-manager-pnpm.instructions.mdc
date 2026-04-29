@@ -1,32 +1,17 @@
 ---
-description: "Use this context for package management and command conventions."
+description: Use this context when editing package manifests or workspace dependency versions.
 alwaysApply: false
-globs: package.json, pnpm-workspace.yaml
+globs: pnpm-workspace.yaml, package.json, applications/*/package.json, packages/*/package.json, packages/*/*/package.json
 ---
 
-# Package Manager Context
+# Package Manager Conventions
 
-- Use `pnpm` as the default and authoritative package manager.
-- Prefer `pnpm` commands for install, update, scripts, and workspace operations.
-- Do not introduce `npm` or `yarn` lockfile workflows unless explicitly requested.
-- All npm package versions must be centralised in `pnpm-workspace.yaml`.
-- It is not allowed to declare dependency or devDependency versions directly inside any `package.json` file.
-- `package.json` files may declare package names in dependency sections, but version values must be managed only from `pnpm-workspace.yaml` through the `catalog:` protocol.
-- When adding, updating, or removing a package version, modify `pnpm-workspace.yaml` as the single source of truth.
+- `pnpm` is the authoritative package manager for this repository.
+- Prefer `pnpm --filter ...` for workspace-scoped commands.
+- Do not introduce npm or yarn lockfiles or workflows.
 
-## Version Resolution on Install
+## Versions
 
-When adding a new package to the project:
-
-1. **Always resolve the latest stable version** before writing anything. Run:
-   ```bash
-   pnpm info <package-name> version
-   ```
-   or check the npm registry to confirm the current latest release.
-
-2. **Pin the latest stable version** in the `catalog:` section of `pnpm-workspace.yaml`. Never copy a version from memory, documentation examples, or a previous install message without verifying it is still current.
-
-3. **Never install a package that immediately reports a newer version available.** If `pnpm install` outputs a message such as `(X.Y.Z is available)`, treat it as a failure: update the catalog version to the reported latest and re-run `pnpm install` before proceeding.
-
-4. After installing, verify the active version with `pnpm <package-binary> --version` or `pnpm list <package-name>` and confirm it matches the catalog entry.
-
+- Shared dependency versions should live in the `catalog` section of `pnpm-workspace.yaml` and be referenced with `catalog:`.
+- Existing direct version pins in some app `package.json` files are part of the current repository state; do not churn them unless the task requires it.
+- When adding a dependency that should be shared across packages or apps, add it to the workspace catalog first.

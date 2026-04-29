@@ -6,7 +6,7 @@ import { createFileRoute } from '@tanstack/react-router';
 import { Sparkles, UserRound, Users } from 'lucide-react';
 import type * as React from 'react';
 
-export const Route = createFileRoute('/participant/coach')({
+export const Route = createFileRoute('/_participant/my-coach')({
     component: ParticipantCoachRoute,
 });
 

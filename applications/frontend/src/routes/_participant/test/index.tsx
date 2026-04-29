@@ -3,7 +3,7 @@ import { Link, createFileRoute } from '@tanstack/react-router';
 import { ArrowRight, Brain, CheckCircle2, CircleDot, ClipboardList, Hash, Heart, Sparkles, Users } from 'lucide-react';
 import type * as React from 'react';
 
-export const Route = createFileRoute('/participant/test/')({
+export const Route = createFileRoute('/_participant/test/')({
     component: ParticipantTestIndexRoute,
 });
 
@@ -326,7 +326,7 @@ function ParticipantTestIndexRoute() {
                             <SectionTitle title="Actions" subtitle="Passer au questionnaire ou revenir au parcours." />
                             <Stack spacing={1.2} sx={{ mt: 2 }}>
                                 <Link
-                                    to="/participant/test/$questionnaireCode"
+                                    to="/test/$questionnaireCode"
                                     params={{ questionnaireCode: campaignQuestionnaireCode }}
                                     style={{ textDecoration: 'none' }}
                                 >

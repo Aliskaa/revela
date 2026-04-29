@@ -1,3 +1,4 @@
+import { StepCompletedBanner } from '@/components/participant-dashboard/StepCompletedBanner';
 import { RatingDimensionCard } from '@/components/questionnaire/RatingDimensionCard';
 import {
     useParticipantCampaignPeers,
@@ -25,7 +26,7 @@ import { createFileRoute } from '@tanstack/react-router';
 import { CheckCircle2, CircleUserRound, Save, Sparkles, Users } from 'lucide-react';
 import * as React from 'react';
 
-export const Route = createFileRoute('/participant/peer-feedback')({
+export const Route = createFileRoute('/_participant/peer-feedback')({
     component: ParticipantPeerFeedbackRoute,
 });
 
@@ -189,6 +190,15 @@ function ParticipantPeerFeedbackRoute() {
 
     if (isError || !session) {
         return <Alert severity="error">Impossible de charger le feedback des pairs pour le moment.</Alert>;
+    }
+
+    if (activeAssignment?.progression?.peer_feedback_status === 'completed') {
+        return (
+            <StepCompletedBanner
+                title="Feedback des pairs déjà soumis"
+                description="Vous avez validé le feedback des pairs. Pour préserver l'intégrité du parcours, il ne peut plus être modifié."
+            />
+        );
     }
 
     return (

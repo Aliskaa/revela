@@ -1,6 +1,6 @@
 import { SectionTitle } from '@/components/common/SectionTitle';
 import { StatCard } from '@/components/common/StatCard';
-import { useParticipantSession } from '@/hooks/participantSession';
+import { useConfirmCampaignParticipation, useParticipantSession } from '@/hooks/participantSession';
 import { useCampaignStore } from '@/stores/campaignStore';
 import type { ParticipantSession } from '@aor/types';
 import {
@@ -20,6 +20,7 @@ import {
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import {
     ArrowRight,
+    BadgeCheck,
     CalendarDays,
     CheckCircle2,
     ClipboardList,
@@ -32,7 +33,7 @@ import {
 } from 'lucide-react';
 import * as React from 'react';
 
-export const Route = createFileRoute('/participant/campaigns')({
+export const Route = createFileRoute('/_participant/campaigns')({
     component: ParticipantCampaignsRoute,
 });
 
@@ -52,6 +53,7 @@ type Campaign = {
     participants: string;
     lastUpdate: string;
     nextAction: string;
+    invitationConfirmed: boolean;
 };
 
 const completedValue = (status?: 'locked' | 'pending' | 'completed') => (status === 'completed' ? 1 : 0);
@@ -105,6 +107,7 @@ const campaignFromAssignment = (assignment: ParticipantAssignment): Campaign => 
     participants: assignment.invitation_confirmed ? 'Participation confirmee' : 'Participation a confirmer',
     lastUpdate: 'Suivi actualise avec votre session',
     nextAction: nextActionFromAssignment(assignment),
+    invitationConfirmed: assignment.invitation_confirmed,
 });
 
 const statsFromAssignments = (assignments: ParticipantAssignment[]) => [
@@ -159,11 +162,21 @@ function statusChip(status: CampaignStatus) {
 function CampaignCard({ campaign }: { campaign: Campaign }) {
     const selectCampaign = useCampaignStore(s => s.select);
     const navigate = useNavigate();
+    const confirmParticipation = useConfirmCampaignParticipation();
     const isActive = campaign.status === 'active';
+    const needsConfirmation = isActive && !campaign.invitationConfirmed;
+    const canStartJourney = isActive && campaign.invitationConfirmed;
 
     const goTo = (to: string) => {
         if (campaign.campaignId != null) selectCampaign(campaign.campaignId);
         navigate({ to });
+    };
+
+    const handleConfirm = () => {
+        if (campaign.campaignId == null) {
+            return;
+        }
+        confirmParticipation.mutate(campaign.campaignId);
     };
 
     return (
@@ -226,12 +239,30 @@ function CampaignCard({ campaign }: { campaign: Campaign }) {
                         </Card>
                     </Box>
 
+                    {needsConfirmation && (
+                        <Alert severity="info" sx={{ borderRadius: 3 }}>
+                            Vous devez confirmer votre participation avant de pouvoir démarrer le parcours.
+                        </Alert>
+                    )}
+
                     <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.2}>
-                        {campaign.status === 'active' && (
+                        {needsConfirmation && (
                             <Button
                                 variant="contained"
                                 disableElevation
-                                onClick={() => goTo('/participant/journey')}
+                                onClick={handleConfirm}
+                                disabled={confirmParticipation.isPending || campaign.campaignId == null}
+                                sx={{ borderRadius: 3, bgcolor: 'primary.main' }}
+                                startIcon={<BadgeCheck size={16} />}
+                            >
+                                {confirmParticipation.isPending ? 'Confirmation…' : 'Confirmer ma participation'}
+                            </Button>
+                        )}
+                        {canStartJourney && (
+                            <Button
+                                variant="contained"
+                                disableElevation
+                                onClick={() => goTo('/journey')}
                                 sx={{ borderRadius: 3, bgcolor: 'primary.main' }}
                                 endIcon={<ArrowRight size={16} />}
                             >
@@ -242,18 +273,14 @@ function CampaignCard({ campaign }: { campaign: Campaign }) {
                             <Button
                                 variant="contained"
                                 disableElevation
-                                onClick={() => goTo('/participant/results')}
+                                onClick={() => goTo('/results')}
                                 sx={{ borderRadius: 3, bgcolor: 'primary.main' }}
                                 endIcon={<ArrowRight size={16} />}
                             >
                                 Voir les résultats
                             </Button>
                         )}
-                        <Button
-                            variant="outlined"
-                            onClick={() => goTo('/participant/results')}
-                            sx={{ borderRadius: 3 }}
-                        >
+                        <Button variant="outlined" onClick={() => goTo('/results')} sx={{ borderRadius: 3 }}>
                             Voir les résultats
                         </Button>
                     </Stack>

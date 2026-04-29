@@ -6,6 +6,7 @@ import { PassportModule } from '@nestjs/passport';
 
 import { ScryptPasswordAdapter } from '@aor/adapters';
 import { type IPasswordVerifierPort, PASSWORD_VERIFIER_PORT_SYMBOL } from '@aor/ports';
+import { ConfirmCampaignParticipationUseCase } from '@src/application/participant-session/confirm-campaign-participation.usecase';
 import { GetParticipantQuestionnaireMatrixUseCase } from '@src/application/participant-session/get-participant-questionnaire-matrix.usecase';
 import { GetParticipantSessionQuestionnaireMatrixUseCase } from '@src/application/participant-session/get-participant-session-questionnaire-matrix.usecase';
 import { GetParticipantSessionUseCase } from '@src/application/participant-session/get-participant-session.usecase';
@@ -27,6 +28,7 @@ import {
     PARTICIPANT_JWT_SIGNER_PORT_SYMBOL,
 } from '@src/interfaces/participant-session/IParticipantJwtSigner.port';
 import {
+    type IParticipantsCampaignParticipationWriterPort,
     type IParticipantsCampaignStateReaderPort,
     type IParticipantsIdentityReaderPort,
     type IParticipantsInviteAssignmentsReaderPort,
@@ -44,6 +46,7 @@ import { requireEnv } from '@src/shared/env';
 import { ParticipantJwtAuthGuard } from './participant-jwt-auth.guard';
 import { ParticipantController } from './participant.controller';
 import {
+    CONFIRM_CAMPAIGN_PARTICIPATION_USE_CASE_SYMBOL,
     GET_PARTICIPANT_OWNED_RESPONSE_USE_CASE_SYMBOL,
     GET_PARTICIPANT_SESSION_QUESTIONNAIRE_MATRIX_USE_CASE_SYMBOL,
     GET_PARTICIPANT_SESSION_USE_CASE_SYMBOL,
@@ -157,6 +160,13 @@ import {
                 campaigns: ICampaignsReadPort
             ) => new ListParticipantCampaignPeersUseCase({ participants, campaigns }),
             inject: [PARTICIPANTS_REPOSITORY_PORT_SYMBOL, CAMPAIGNS_REPOSITORY_PORT_SYMBOL],
+        },
+        {
+            provide: CONFIRM_CAMPAIGN_PARTICIPATION_USE_CASE_SYMBOL,
+            useFactory: (
+                participants: IParticipantsCampaignParticipationWriterPort & IParticipantsCampaignStateReaderPort
+            ) => new ConfirmCampaignParticipationUseCase({ participants }),
+            inject: [PARTICIPANTS_REPOSITORY_PORT_SYMBOL],
         },
     ],
     exports: [PARTICIPANT_JWT_SIGNER_PORT_SYMBOL, ParticipantJwtAuthGuard],

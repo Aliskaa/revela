@@ -1,0 +1,29 @@
+---
+description: Backend NestJS conventions for the layered API under applications/backend/src.
+alwaysApply: false
+globs: applications/backend/src/*.ts, applications/backend/src/**/*.ts
+---
+
+# Backend NestJS Conventions
+
+The backend is organized by layers, not by a `modules/<feature>` tree.
+
+## Active Layout
+
+- `src/presentation/`: Nest modules, controllers, guards, and feature tokens.
+- `src/application/`: use cases and application orchestration.
+- `src/domain/`: entities, domain errors, and pure business rules.
+- `src/interfaces/`: repository and boundary contracts.
+- `src/infrastructure/`: database, mail, and technical adapters.
+- `src/shared/`: cross-feature backend helpers.
+
+## Working Rules
+
+- Add code in the existing feature subtree first instead of creating a new top-level architecture slice.
+- Use `@src/*` imports inside the backend.
+- Controllers stay thin and call use cases; they should not contain repository or SQL logic.
+- Use case files follow the existing `*.usecase.ts` naming convention.
+- Nest symbol tokens are declared in feature `*.tokens.ts` files under `src/presentation/**`.
+- Repository ports and boundary interfaces live under `src/interfaces/**` and typically use the `I*.port.ts` naming pattern.
+- Infrastructure adapters implement those ports and stay under `src/infrastructure/**`.
+- When behavior changes, update or add focused tests for the touched use case or controller.

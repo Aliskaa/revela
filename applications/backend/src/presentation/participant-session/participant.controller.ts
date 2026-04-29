@@ -21,6 +21,7 @@ import type { Request } from 'express';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
 import { updateParticipantProfileBodySchema } from '@aor/types';
+import type { ConfirmCampaignParticipationUseCase } from '@src/application/participant-session/confirm-campaign-participation.usecase';
 import type { GetParticipantSessionQuestionnaireMatrixUseCase } from '@src/application/participant-session/get-participant-session-questionnaire-matrix.usecase';
 import type { GetParticipantSessionUseCase } from '@src/application/participant-session/get-participant-session.usecase';
 import type { ListParticipantCampaignPeersUseCase } from '@src/application/participant-session/list-participant-campaign-peers.usecase';
@@ -39,6 +40,7 @@ import { ParticipantAuthExceptionFilter } from './participant-auth-exception.fil
 import { ParticipantJwtAuthGuard } from './participant-jwt-auth.guard';
 import { ParticipantSessionExceptionFilter } from './participant-session-exception.filter';
 import {
+    CONFIRM_CAMPAIGN_PARTICIPATION_USE_CASE_SYMBOL,
     GET_PARTICIPANT_OWNED_RESPONSE_USE_CASE_SYMBOL,
     GET_PARTICIPANT_SESSION_QUESTIONNAIRE_MATRIX_USE_CASE_SYMBOL,
     GET_PARTICIPANT_SESSION_USE_CASE_SYMBOL,
@@ -66,6 +68,8 @@ export class ParticipantController {
         private readonly getParticipantSessionMatrix: GetParticipantSessionQuestionnaireMatrixUseCase,
         @Inject(LIST_PARTICIPANT_CAMPAIGN_PEERS_USE_CASE_SYMBOL)
         private readonly listParticipantCampaignPeers: ListParticipantCampaignPeersUseCase,
+        @Inject(CONFIRM_CAMPAIGN_PARTICIPATION_USE_CASE_SYMBOL)
+        private readonly confirmCampaignParticipation: ConfirmCampaignParticipationUseCase,
         @Inject(PARTICIPANTS_REPOSITORY_PORT_SYMBOL)
         private readonly participantsWriter: IParticipantsIdentityReaderPort & IParticipantsWriterPort
     ) {}
@@ -110,6 +114,20 @@ export class ParticipantController {
             throw new BadRequestException('Paramètre campaign_id invalide.');
         }
         return this.getParticipantSessionMatrix.execute(participantId, normalizedQid, normalizedCampaignId);
+    }
+
+    @Post('campaigns/:campaignId/confirm')
+    @UseGuards(ParticipantJwtAuthGuard)
+    @UseFilters(ParticipantSessionExceptionFilter)
+    public async confirmCampaign(
+        @Req() req: RequestWithParticipant,
+        @Param('campaignId', ParseIntPipe) campaignId: number
+    ) {
+        const participantId = req.user.participantId;
+        if (participantId === undefined || !Number.isFinite(participantId)) {
+            throw new UnauthorizedException();
+        }
+        return this.confirmCampaignParticipation.execute(participantId, campaignId);
     }
 
     @Get('campaigns/:campaignId/peers')

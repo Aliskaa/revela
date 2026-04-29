@@ -1,4 +1,4 @@
-import { userParticipant } from '@/lib/auth';
+import { parseAdminJwtClaims, userAdmin, userParticipant } from '@/lib/auth';
 import {
     AppBar,
     Avatar,
@@ -24,20 +24,33 @@ import {
     LogOut,
     Menu,
     MessageSquareQuote,
-    Radar,
     Sparkles,
     UserRound,
     X,
 } from 'lucide-react';
 import * as React from 'react';
 
-export const Route = createFileRoute('/participant')({
+export const Route = createFileRoute('/_participant')({
     /**
-     * Garde route-level : redirige les non-authentifiés vers `/login` AVANT que la chrome
-     * participant ne soit montée. La route `/login` a sa propre `beforeLoad` qui redirige
-     * vers `/participant` si déjà authentifié, donc pas de boucle.
+     * Garde route-level pour l'espace participant (à la racine `/` depuis 2026-04-28).
+     *
+     * Cas gérés :
+     * 1. Un admin (super-admin) authentifié qui tape `/` → redirection vers `/admin`.
+     * 2. Un coach authentifié qui tape `/` → redirection vers `/coach`.
+     * 3. Un participant authentifié → laisse passer (chrome participant montée).
+     * 4. Aucun token valide → redirection vers `/login`.
+     *
+     * La route `/login` a sa propre `beforeLoad` qui redirige vers `/` si déjà authentifié
+     * comme participant — pas de boucle.
      */
     beforeLoad: () => {
+        if (userAdmin.isAuthenticated()) {
+            const claims = parseAdminJwtClaims();
+            if (claims?.scope === 'coach') {
+                throw redirect({ to: '/coach' });
+            }
+            throw redirect({ to: '/admin' });
+        }
         if (!userParticipant.isAuthenticated()) {
             throw redirect({ to: '/login' });
         }
@@ -53,12 +66,11 @@ type NavItem = {
 };
 
 const participantNav: NavItem[] = [
-    { label: 'Dashboard', to: '/participant', icon: Gauge, exact: true },
-    { label: 'Mes campagnes', to: '/participant/campaigns', icon: ClipboardList },
-    { label: 'Mon parcours', to: '/participant/journey', icon: BookOpen },
-    { label: 'Mes résultats', to: '/participant/results', icon: Radar },
-    { label: 'Mon coach', to: '/participant/coach', icon: MessageSquareQuote },
-    { label: 'Mon profil', to: '/participant/profile', icon: UserRound },
+    { label: 'Dashboard', to: '/', icon: Gauge, exact: true },
+    { label: 'Mes campagnes', to: '/campaigns', icon: ClipboardList },
+    { label: 'Mon parcours', to: '/journey', icon: BookOpen },
+    { label: 'Mon coach', to: '/my-coach', icon: MessageSquareQuote },
+    { label: 'Mon profil', to: '/profile', icon: UserRound },
 ];
 
 function isActive(item: NavItem, pathname: string): boolean {

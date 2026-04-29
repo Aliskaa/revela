@@ -6,7 +6,7 @@ import type { ElementType } from 'react';
 import type { ParticipantSession } from '@aor/types';
 
 /**
- * View-model du tableau de bord participant. Sortie de `routes/participant/index.tsx`
+ * View-model du tableau de bord participant. Sortie de `routes/index.tsx`
  * pour pouvoir tester la logique métier indépendamment du JSX.
  */
 
@@ -171,32 +171,32 @@ export const buildCampaignView = (session?: ParticipantSession, assignment?: Par
 
 export const buildJourney = (assignment?: ParticipantAssignment): JourneyStep[] => {
     const qCode = assignment?.questionnaire_id?.toUpperCase() ?? '';
-    const testRoute = qCode ? `/participant/test/${qCode}` : undefined;
+    const testRoute = qCode ? `/test/${qCode}` : undefined;
 
     if (!assignment?.progression) {
         const manualInputState: StepState = assignment ? 'current' : 'locked';
         return [
-            { ...journeyTemplate[0], state: manualInputState, to: '/participant/self-rating' },
-            { ...journeyTemplate[1], state: manualInputState, to: '/participant/peer-feedback' },
+            { ...journeyTemplate[0], state: manualInputState, to: '/self-rating' },
+            { ...journeyTemplate[1], state: manualInputState, to: '/peer-feedback' },
             {
                 ...journeyTemplate[2],
                 state: assignment?.allow_test_without_manual_inputs ? 'current' : 'locked',
                 to: testRoute,
             },
-            { ...journeyTemplate[3], state: 'locked', to: '/participant/results' },
-            { ...journeyTemplate[4], state: 'locked', to: '/participant/coach' },
+            { ...journeyTemplate[3], state: 'locked', to: '/results' },
+            { ...journeyTemplate[4], state: 'locked', to: '/my-coach' },
         ];
     }
     return [
         {
             ...journeyTemplate[0],
             state: stepStateFromStatus(assignment.progression.self_rating_status),
-            to: '/participant/self-rating',
+            to: '/self-rating',
         },
         {
             ...journeyTemplate[1],
             state: stepStateFromStatus(assignment.progression.peer_feedback_status),
-            to: '/participant/peer-feedback',
+            to: '/peer-feedback',
         },
         {
             ...journeyTemplate[2],
@@ -206,12 +206,12 @@ export const buildJourney = (assignment?: ParticipantAssignment): JourneyStep[] 
         {
             ...journeyTemplate[3],
             state: stepStateFromStatus(assignment.progression.results_status),
-            to: '/participant/results',
+            to: '/results',
         },
         {
             ...journeyTemplate[4],
             state: assignment.progression.results_status === 'completed' ? 'current' : 'locked',
-            to: '/participant/coach',
+            to: '/my-coach',
         },
     ];
 };

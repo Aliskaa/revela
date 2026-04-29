@@ -1,6 +1,7 @@
 import * as React from 'react';
 
 import { InfoCard } from '@/components/common/InfoCard';
+import { StepCompletedBanner } from '@/components/participant-dashboard/StepCompletedBanner';
 import { RatingScale } from '@/components/questionnaire/RatingScale';
 import { useParticipantSession } from '@/hooks/participantSession';
 import { useQuestionnaire, useSubmitParticipantQuestionnaire } from '@/hooks/questionnaires';
@@ -34,7 +35,7 @@ import {
     Users,
 } from 'lucide-react';
 
-export const Route = createFileRoute('/participant/test/$questionnaireCode')({
+export const Route = createFileRoute('/_participant/test/$questionnaireCode')({
     component: ParticipantTestSessionRoute,
 });
 
@@ -386,12 +387,21 @@ function ParticipantTestSessionRoute() {
         await submitMutation.mutateAsync({ series0, series1 });
         setSuccessOpen(true);
         setTimeout(() => {
-            navigate({ to: '/participant/results' });
+            navigate({ to: '/results' });
         }, 1500);
     };
 
     if (isLoading) return <LoadingState />;
     if (isError || !detail) return <ErrorState />;
+
+    if (activeAssignment?.progression?.element_humain_status === 'completed') {
+        return (
+            <StepCompletedBanner
+                title="Test Élément Humain déjà soumis"
+                description="Vous avez complété le test. Pour préserver l'intégrité du parcours, vos réponses ne peuvent plus être modifiées."
+            />
+        );
+    }
 
     const Icon = questionnaireCode === 'B' ? Users : questionnaireCode === 'F' ? Heart : Sparkles;
     const safeSeriesLabels = detail.questions.series_labels ?? [];

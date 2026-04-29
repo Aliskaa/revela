@@ -320,7 +320,137 @@ décisions actées :
 
 ---
 
-## 6. Limites assumées en V1.5 (consolidé)
+## 6. Itération « Participant à la racine `/` » (2026-04-28)
+
+Constat utilisateur : `/` retournait un 404 car le dashboard participant était sur `/participant`.
+L'expérience démarrait depuis une URL technique (`/participant`) au lieu de la racine du domaine.
+
+**Décision actée** : restructurer pour que le participant occupe la racine, garder `/admin` et
+`/coach` tels quels. Conflit résolu : la page « Mon coach » du participant (qui montre le coach
+assigné) entrait en collision avec `/coach` (espace du coach connecté). Renommée `/my-coach`.
+
+### 6.1 Mapping des routes
+
+| Avant | Après |
+|---|---|
+| `/participant` (dashboard) | `/` |
+| `/participant/campaigns` | `/campaigns` |
+| `/participant/journey` | `/journey` |
+| `/participant/results` | `/results` |
+| `/participant/profile` | `/profile` |
+| `/participant/peer-feedback` | `/peer-feedback` |
+| `/participant/self-rating` | `/self-rating` |
+| `/participant/test/$qcode` | `/test/$qcode` |
+| `/participant/coach` (« Mon coach » page info) | `/my-coach` (renommée pour éviter la collision avec l'espace coach) |
+| `/admin/*` | inchangé |
+| `/coach/*` (espace coach connecté) | inchangé |
+
+### 6.2 Restructuration TanStack Router
+
+`routes/participant/` → `routes/_participant/` (préfixe `_` = pathless layout TanStack Router).
+Le layout `route.tsx` contient toujours la chrome participant (sidebar, top bar, beforeLoad)
+mais ne contribue **pas** à l'URL — le segment `/_participant` est éliminé du chemin final.
+
+Les `createFileRoute()` paths internes deviennent `/_participant/X` (convention TanStack
+Router pour les routes enfants d'un layout pathless), tandis que les URLs visibles côté
+utilisateur sont `/X`.
+
+### 6.3 `beforeLoad` cross-rôle (`routes/_participant/route.tsx`)
+
+```ts
+beforeLoad: () => {
+    if (userAdmin.isAuthenticated()) {
+        const claims = parseAdminJwtClaims();
+        if (claims?.scope === 'coach') {
+            throw redirect({ to: '/coach' });
+        }
+        throw redirect({ to: '/admin' });
+    }
+    if (!userParticipant.isAuthenticated()) {
+        throw redirect({ to: '/login' });
+    }
+},
+```
+
+Cas couverts :
+1. Super-admin authentifié qui tape `/` → renvoyé vers `/admin`.
+2. Coach authentifié qui tape `/` → renvoyé vers `/coach`.
+3. Participant authentifié → laisse passer (chrome participant montée).
+4. Aucun token → renvoyé vers `/login`.
+
+Symétriques : `routes/admin/route.tsx` et `routes/coach/route.tsx` ont déjà leur garde qui
+redirige vers l'espace correct si le rôle ne correspond pas (livré §4.b).
+
+### 6.4 Mise à jour des liens internes
+
+Tous les liens internes (`<Link to>`, `navigate({ to })`, `redirect({ to })`, `href=`)
+qui pointaient vers `/participant/X` ont été remappés en `/X`.
+
+**Cas particulier** : `/participant/coach` traité **avant** le pattern global `/participant/X`
+→ devient `/my-coach` (au lieu de `/coach` qui aurait collisionné avec l'espace coach).
+
+### 6.5 Incident notable pendant la migration
+
+Le `sed` initial (`s|/participant/|/|g`) était **trop large** : il a aussi remplacé les chemins
+d'**API** qui commençaient par `/participant/` (ex. `participantApiClient.get('/participant/session')`
+→ `'/session'`) et les **imports** (`@/lib/participant/dashboardView` → `@/lib/dashboardView`).
+Le typecheck ne l'a pas détecté immédiatement (les chemins string ne sont pas typés).
+
+**Récupération** :
+- `git checkout HEAD --` sur les hooks `participantAuth`, `participantSession`, `questionnaires`,
+  `responses`, `useQuestionnaireOrchestrator` et les composants `questionnaire/PeerRatingStep`,
+  `ScientificTestStep`, `SelfRatingStep` — tous restaurent les chemins API d'origine.
+- `sed` ciblé pour restaurer les imports `@/lib/dashboardView` → `@/lib/participant/dashboardView`
+  dans 6 fichiers.
+
+**Leçon retenue** : pour des renames d'URL en masse, **scoper le sed à un pattern plus
+spécifique** (ex. `to: '/participant/'`, `href="/participant/"`, `<Link to="/participant/`)
+plutôt que de matcher la substring `/participant/`. À documenter pour les futurs renames.
+
+### 6.6 Validations
+
+- Frontend typecheck ✅
+- Frontend tests **45/45** ✅
+- Frontend lint **0 erreur** ✅
+- Backend cross-validation : typecheck ✅ (aucune modification backend)
+
+---
+
+## 6bis. Confirmation de participation côté participant (livré ce jour)
+
+### Contexte
+
+Bug UX repéré sur `/campaigns` : le bouton **« Commencer le parcours »** s'affiche sur toute campagne `active`, même tant que `invitation_confirmed === false`. Si le participant clique avant d'avoir confirmé, le backend rejette toute soumission avec :
+
+```
+{ "error": "Vous devez confirmer votre participation à la campagne avant de répondre." }
+```
+
+Avant ce jour, la confirmation existait **uniquement** par jeton d'invitation envoyé par e-mail (`ConfirmInviteParticipationUseCase`). Aucun endpoint participant authentifié ne permettait de confirmer depuis l'UI.
+
+### Backend
+
+- Nouveau use case `ConfirmCampaignParticipationUseCase` ([applications/backend/src/application/participant-session/confirm-campaign-participation.usecase.ts](applications/backend/src/application/participant-session/confirm-campaign-participation.usecase.ts)).
+  - Vérifie que le participant a bien été invité à la campagne via `getCampaignParticipantInviteState`. Si non → `ParticipantQuestionnaireNotAllowedError` (HTTP 403, mappé par `ParticipantSessionExceptionFilter`).
+  - Idempotent : si `joinedAt !== null`, no-op.
+  - Sinon, appelle `confirmCampaignParticipantParticipation(campaignId, participantId)`.
+- Endpoint `POST /participant/campaigns/:campaignId/confirm` ajouté dans [participant.controller.ts](applications/backend/src/presentation/participant-session/participant.controller.ts), protégé par `ParticipantJwtAuthGuard` + `ParticipantSessionExceptionFilter`.
+- DI câblé dans [participant.module.ts](applications/backend/src/presentation/participant-session/participant.module.ts) avec le symbole `CONFIRM_CAMPAIGN_PARTICIPATION_USE_CASE_SYMBOL` ([participant.tokens.ts](applications/backend/src/presentation/participant-session/participant.tokens.ts)).
+
+### Frontend
+
+- Hook `useConfirmCampaignParticipation` ajouté dans [hooks/participantSession.ts](applications/frontend/src/hooks/participantSession.ts). Invalide la query `participant.session` au succès et déclenche un toast i18n.
+- Clés i18n `toast.campaignParticipationConfirmed` / `campaignParticipationConfirmFailed` dans [fr.json](applications/frontend/src/lib/i18n/locales/fr.json).
+- [routes/_participant/campaigns.tsx](applications/frontend/src/routes/_participant/campaigns.tsx) : la `Campaign` view-model expose désormais `invitationConfirmed`. Le `CampaignCard` affiche **un Alert** + **un bouton « Confirmer ma participation »** (icône `BadgeCheck`) quand la campagne est `active` mais non confirmée. Le bouton « Commencer le parcours » n'apparaît plus que si `isActive && invitationConfirmed`.
+
+### Validations
+
+- Backend typecheck ✅ — Backend tests **18/18** ✅ — Backend lint **0 erreur sur les fichiers touchés** ✅
+- Frontend typecheck ✅ — Frontend tests **45/45** ✅ — Frontend lint **0 erreur sur les fichiers touchés** ✅
+
+---
+
+## 7. Limites assumées en V1.5 (consolidé)
 
 ### 6.1 Dashboard coach calculé côté frontend
 
@@ -342,7 +472,7 @@ La couverture du filtrage `coachId` porte sur les **listes** (`GET /admin/campai
 
 **À faire en V2** : ajouter la vérification d'accès sur chaque endpoint `:id` (responses, participants, etc.) en injectant le repository concerné dans le controller et en validant `record.campaignId ∈ campagnes du coach`.
 
-## 7. Hors scope V1.5 (à tracer dans TOTO)
+## 8. Hors scope V1.5 (à tracer dans TOTO)
 
 - **Workflow validation IA-coach** (cadrage page 8) : analyse IA générée → revue/édition coach → envoi participant. Dépend de l'analyse IA elle-même qui est un autre chantier.
 - **Impersonation super-admin → coach** pour debug.

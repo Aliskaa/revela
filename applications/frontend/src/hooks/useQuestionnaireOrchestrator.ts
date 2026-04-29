@@ -35,7 +35,7 @@ export function useQuestionnaireOrchestrator({ qid, type, campaignId }: UseQuest
         }
 
         if (type === 'self' && progression.self_rating_status === 'completed') {
-            navigate({ to: '/participant', replace: true });
+            navigate({ to: '/', replace: true });
             return;
         }
 
@@ -44,7 +44,7 @@ export function useQuestionnaireOrchestrator({ qid, type, campaignId }: UseQuest
             (progression.self_rating_status !== 'completed' || progression.peer_feedback_status === 'completed')
         ) {
             navigate({
-                to: progression.self_rating_status === 'completed' ? '/participant' : '/participant/self-rating',
+                to: progression.self_rating_status === 'completed' ? '/' : '/self-rating',
                 replace: true,
             });
             return;
@@ -54,20 +54,20 @@ export function useQuestionnaireOrchestrator({ qid, type, campaignId }: UseQuest
             const canSkipManualInputs = assignment.allow_test_without_manual_inputs === true;
             if (!canSkipManualInputs && progression.self_rating_status !== 'completed') {
                 navigate({
-                    to: '/participant/self-rating',
+                    to: '/self-rating',
                     replace: true,
                 });
                 return;
             }
             if (!canSkipManualInputs && progression.peer_feedback_status !== 'completed') {
                 navigate({
-                    to: '/participant/peer-feedback',
+                    to: '/peer-feedback',
                     replace: true,
                 });
                 return;
             }
             if (progression.element_humain_status === 'completed') {
-                navigate({ to: '/participant', replace: true });
+                navigate({ to: '/', replace: true });
             }
         }
     }, [assignment, navigate, progression, session, type]);

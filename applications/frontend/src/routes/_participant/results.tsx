@@ -2,11 +2,11 @@
 
 import * as React from 'react';
 
-import { DimensionCard } from '@/components/results/DimensionCard';
+import { QuestionnaireMatrixDisplay } from '@/components/matrix/QuestionnaireMatrixDisplay';
 import { useParticipantSession, useParticipantSessionMatrix } from '@/hooks/participantSession';
 import { useSelectedAssignment } from '@/hooks/useSelectedAssignment';
 import { exportResultsPdf } from '@/lib/exportResultsPdf';
-import { PEER_COLORS, buildDimensions } from '@/lib/results/buildDimensions';
+import { buildDimensions } from '@/lib/results/buildDimensions';
 import { useToast } from '@/lib/toast';
 import { useCampaignStore } from '@/stores/campaignStore';
 import {
@@ -26,9 +26,9 @@ import {
     Typography,
 } from '@mui/material';
 import { createFileRoute } from '@tanstack/react-router';
-import { Download, HelpCircle, Radar, Sparkles, UserRound, Users } from 'lucide-react';
+import { Download, HelpCircle, Radar, Users } from 'lucide-react';
 
-export const Route = createFileRoute('/participant/results')({
+export const Route = createFileRoute('/_participant/results')({
     component: ParticipantResultsRoute,
 });
 
@@ -47,10 +47,8 @@ function ParticipantResultsRoute() {
     const coachName = selectedAssignment?.coach_name ?? '–';
     const campaignName = selectedAssignment?.campaign_name ?? 'Résultats';
     const peerCount = matrix?.peer_columns.length ?? 0;
-    const peerLabels = React.useMemo(() => matrix?.peer_columns.map(pc => pc.label) ?? [], [matrix]);
 
     const dimensions = React.useMemo(() => (matrix ? buildDimensions(matrix) : []), [matrix]);
-
     const participantName = session ? `${session.first_name} ${session.last_name}` : '';
 
     const [pdfPending, setPdfPending] = React.useState(false);
@@ -61,8 +59,6 @@ function ParticipantResultsRoute() {
         }
         setPdfPending(true);
         try {
-            // jsPDF est synchrone mais peut bloquer le thread sur de gros PDF — on cède la main pour
-            // laisser le state "pending" se peindre avant l'export.
             await new Promise(resolve => setTimeout(resolve, 0));
             exportResultsPdf({
                 participantName,
@@ -83,7 +79,7 @@ function ParticipantResultsRoute() {
 
     if (isLoading) {
         return (
-            // biome-ignore lint/a11y/useSemanticElements: `Card` est un `<div>` MUI ; on ajoute `role="status"` (équivalent ARIA d'un live region) pour annoncer le chargement aux lecteurs d'écran.
+            // biome-ignore lint/a11y/useSemanticElements: `Card` est un `<div>` MUI ; on ajoute `role="status"` pour annoncer le chargement aux lecteurs d'écran.
             <Card variant="outlined" role="status" aria-live="polite" aria-busy="true">
                 <CardContent sx={{ p: 3 }}>
                     <Typography variant="h6" fontWeight={700} color="text.primary">
@@ -119,8 +115,8 @@ function ParticipantResultsRoute() {
                             </Typography>
                             <Stack direction="row" spacing={0.6} alignItems="center" sx={{ mt: 1, maxWidth: 860 }}>
                                 <Typography variant="body1" color="text.secondary" sx={{ lineHeight: 1.7 }}>
-                                    Synthèse des scores par dimension : auto-évaluation, moyenne des pairs et test
-                                    scientifique.
+                                    Comparaison détaillée entre l'auto-évaluation, les retours pairs et l'analyse
+                                    scientifique, avec écart absolu entre les paires « je suis / je veux ».
                                 </Typography>
                                 <Tooltip
                                     title="Le test scientifique correspond à l'Élément Humain de Will Schutz : un instrument psychométrique qui mesure vos besoins relationnels (Inclusion / Contrôle / Ouverture) et l'écart entre vos comportements actuels et souhaités."
@@ -229,133 +225,7 @@ function ParticipantResultsRoute() {
                 </CardContent>
             </Card>
 
-            <Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap>
-                <Chip
-                    label="Auto-évaluation"
-                    size="small"
-                    sx={{ borderRadius: 99, bgcolor: 'tint.primaryBg', color: 'primary.main', fontWeight: 700 }}
-                />
-                {peerLabels.map((name, i) => (
-                    <Chip
-                        key={name}
-                        label={name}
-                        size="small"
-                        sx={{
-                            borderRadius: 99,
-                            bgcolor: 'tint.secondaryBg',
-                            color: 'tint.secondaryText',
-                            fontWeight: 700,
-                            borderLeft: `3px solid ${PEER_COLORS[i % PEER_COLORS.length]}`,
-                        }}
-                    />
-                ))}
-                <Chip
-                    label="Test scientifique"
-                    size="small"
-                    sx={{ borderRadius: 99, bgcolor: 'tint.successBg', color: 'tint.successText', fontWeight: 700 }}
-                />
-            </Stack>
-
-            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(3, minmax(0, 1fr))' }, gap: 2 }}>
-                <Card variant="outlined">
-                    <CardContent sx={{ p: 2.3 }}>
-                        <Stack direction="row" justifyContent="space-between" alignItems="end">
-                            <Box>
-                                <Typography variant="body2" color="text.secondary">
-                                    Dimensions
-                                </Typography>
-                                <Typography
-                                    variant="h4"
-                                    fontWeight={800}
-                                    color="text.primary"
-                                    sx={{ mt: 0.5, letterSpacing: -0.5 }}
-                                >
-                                    {dimensions.length}
-                                </Typography>
-                            </Box>
-                            <Box
-                                sx={{
-                                    width: 42,
-                                    height: 42,
-                                    borderRadius: 3,
-                                    bgcolor: 'tint.primaryBg',
-                                    color: 'primary.main',
-                                    display: 'grid',
-                                    placeItems: 'center',
-                                }}
-                            >
-                                <Radar size={18} />
-                            </Box>
-                        </Stack>
-                    </CardContent>
-                </Card>
-                <Card variant="outlined">
-                    <CardContent sx={{ p: 2.3 }}>
-                        <Stack direction="row" justifyContent="space-between" alignItems="end">
-                            <Box>
-                                <Typography variant="body2" color="text.secondary">
-                                    Pairs
-                                </Typography>
-                                <Typography
-                                    variant="h4"
-                                    fontWeight={800}
-                                    color="text.primary"
-                                    sx={{ mt: 0.5, letterSpacing: -0.5 }}
-                                >
-                                    {peerCount}
-                                </Typography>
-                            </Box>
-                            <Box
-                                sx={{
-                                    width: 42,
-                                    height: 42,
-                                    borderRadius: 3,
-                                    bgcolor: 'tint.primaryBg',
-                                    color: 'primary.main',
-                                    display: 'grid',
-                                    placeItems: 'center',
-                                }}
-                            >
-                                <UserRound size={18} />
-                            </Box>
-                        </Stack>
-                    </CardContent>
-                </Card>
-                <Card variant="outlined">
-                    <CardContent sx={{ p: 2.3 }}>
-                        <Stack direction="row" justifyContent="space-between" alignItems="end">
-                            <Box>
-                                <Typography variant="body2" color="text.secondary">
-                                    Questionnaire
-                                </Typography>
-                                <Typography
-                                    variant="h4"
-                                    fontWeight={800}
-                                    color="text.primary"
-                                    sx={{ mt: 0.5, letterSpacing: -0.5 }}
-                                >
-                                    {matrix?.questionnaire_id ?? '–'}
-                                </Typography>
-                            </Box>
-                            <Box
-                                sx={{
-                                    width: 42,
-                                    height: 42,
-                                    borderRadius: 3,
-                                    bgcolor: 'tint.primaryBg',
-                                    color: 'primary.main',
-                                    display: 'grid',
-                                    placeItems: 'center',
-                                }}
-                            >
-                                <Sparkles size={18} />
-                            </Box>
-                        </Stack>
-                    </CardContent>
-                </Card>
-            </Box>
-
-            {dimensions.length === 0 && !matrixLoading ? (
+            {!matrix || dimensions.length === 0 ? (
                 <Card variant="outlined">
                     <CardContent sx={{ p: 3 }}>
                         <Typography variant="body2" color="text.secondary">
@@ -365,11 +235,11 @@ function ParticipantResultsRoute() {
                     </CardContent>
                 </Card>
             ) : (
-                <Stack spacing={2}>
-                    {dimensions.map(dimension => (
-                        <DimensionCard key={dimension.name} dimension={dimension} likertMax={matrix?.likert_max ?? 9} />
-                    ))}
-                </Stack>
+                <Card variant="outlined" sx={{ borderRadius: 2.5, overflow: 'visible' }}>
+                    <Box sx={{ p: { xs: 2, sm: 3 } }}>
+                        <QuestionnaireMatrixDisplay matrix={matrix} />
+                    </Box>
+                </Card>
             )}
         </Stack>
     );

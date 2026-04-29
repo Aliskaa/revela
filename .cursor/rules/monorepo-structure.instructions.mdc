@@ -1,38 +1,23 @@
 ---
-description: "Use this context for monorepo bounded-context structure and package layout conventions."
+description: Active monorepo structure and dependency boundaries for this repository.
 alwaysApply: false
-globs: packages/**/*.ts,applications/**/*.ts
+globs: applications/**/src/*.ts, applications/**/src/*.tsx, applications/**/src/**/*.ts, applications/**/src/**/*.tsx, packages/**/src/*.ts, packages/**/src/*.tsx, packages/**/src/**/*.ts, packages/**/src/**/*.tsx, package.json, pnpm-workspace.yaml
 ---
 
-# Monorepo Structure Context
+# Monorepo Structure
 
-## Active Layout (authoritative)
+## Active Repository Shape
 
-- Runnable applications live in `./applications`.
-- Reusable libraries live in `./packages`.
-- Tooling and scripts may live in `./tools`.
-- Libraries must not import from `./applications`.
-- Internal package scope is `@aor/*`.
+- `applications/backend`: NestJS API.
+- `applications/frontend`: Vite + React application.
+- `packages/aor-common/*`: shared libraries (`adapters`, `domain`, `logger`, `ports`, `types`, `utils`).
+- `packages/aor-drizzle`: Drizzle schema and database helpers.
+- `packages/aor-questionnaires`: questionnaire catalog package.
+- `packages/aor-scoring`: scoring package.
 
-## Bounded Context Library Shape
+## Dependency Boundaries
 
-- Preferred BC package family:
-  - `./packages/{bc}/types`
-  - `./packages/{bc}/write`
-  - `./packages/{bc}/read`
-- Optional packages are allowed when justified:
-  - `./packages/{bc}/core`
-  - `./packages/{bc}/write-domain`
-  - `./packages/{bc}/read-domain`
-
-## Integration Package
-
-- `./packages/integration` is the dedicated cross-BC adapter composition package.
-- Applications may import `@aor/integration`.
-- BC packages must not import from `@aor/integration`.
-
-## CQRS and Source Organization
-
-- Keep read and write responsibilities separated.
-- Prefer aggregate-first organization under `src/domains/{aggregate}/` when working inside BC packages.
-- Keep command/event artifacts atomic (one intent per file).
+- Applications may import from packages.
+- Packages must never import from applications.
+- Frontend code must stay free of backend-only dependencies such as Nest modules or `@aor/drizzle`.
+- Prefer reusing an existing package or layer before introducing a new top-level folder or package.

@@ -29,10 +29,7 @@ export function Navbar() {
         >
             <Toolbar sx={{ px: { xs: 2, md: 4, lg: 6 }, height: 64, gap: 2 }}>
                 {/* Logo et Marque */}
-                <Link
-                    to="/participant"
-                    style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 16 }}
-                >
+                <Link to="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 16 }}>
                     <Box
                         component="img"
                         src="/aor.png"
