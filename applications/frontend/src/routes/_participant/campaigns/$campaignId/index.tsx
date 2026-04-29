@@ -1,33 +1,38 @@
 import { useParticipantSession } from '@/hooks/participantSession';
-import { useSelectedAssignment } from '@/hooks/useSelectedAssignment';
-import { useCampaignStore } from '@/stores/campaignStore';
 import type { ParticipantSession } from '@aor/types';
 import {
     Alert,
     Box,
+    Button,
     ButtonBase,
     Card,
     CardContent,
     Chip,
-    FormControl,
-    InputLabel,
     LinearProgress,
-    MenuItem,
-    Select,
     Stack,
     Typography,
 } from '@mui/material';
-import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { ArrowRight, Brain, ClipboardList, Lock, MessageSquareQuote, Radar, Sparkles, Users } from 'lucide-react';
+import { Link, createFileRoute, useNavigate } from '@tanstack/react-router';
+import {
+    ArrowLeft,
+    ArrowRight,
+    Brain,
+    ClipboardList,
+    Lock,
+    MessageSquareQuote,
+    Radar,
+    Sparkles,
+    Users,
+} from 'lucide-react';
 import * as React from 'react';
 
-export const Route = createFileRoute('/_participant/journey')({
-    component: ParticipantJourneyRoute,
+export const Route = createFileRoute('/_participant/campaigns/$campaignId/')({
+    component: ParticipantCampaignWorkspaceRoute,
 });
 
 type StepState = 'completed' | 'current' | 'locked';
 
-type StepRoute = '/self-rating' | '/peer-feedback' | '/test' | '/results';
+type StepRouteKind = 'self-rating' | 'peer-feedback' | 'test' | 'results';
 
 type JourneyStep = {
     label: string;
@@ -35,7 +40,7 @@ type JourneyStep = {
     description: string;
     icon: React.ElementType;
     state: StepState;
-    route: StepRoute | null;
+    routeKind: StepRouteKind | null;
 };
 
 type ParticipantAssignment = ParticipantSession['assignments'][number];
@@ -52,35 +57,35 @@ const STEP_TEMPLATES: ReadonlyArray<Omit<JourneyStep, 'state'>> = [
         subtitle: 'Notes de 1 à 9 sur les short labels',
         description: 'Le participant note chaque short label de chaque dimension sur une échelle de 1 à 9.',
         icon: ClipboardList,
-        route: '/self-rating',
+        routeKind: 'self-rating',
     },
     {
         label: 'Feedback des pairs',
         subtitle: 'Même logique de notation',
         description: 'Les pairs renseignent les short labels sur une échelle de 1 à 9 pour compléter la lecture.',
         icon: Users,
-        route: '/peer-feedback',
+        routeKind: 'peer-feedback',
     },
     {
         label: 'Test Élément Humain',
         subtitle: '2 × 54 questions',
         description: 'Le test consiste à répondre à deux séries de 54 questions pour chaque questionnaire B, F et S.',
         icon: Brain,
-        route: '/test',
+        routeKind: 'test',
     },
     {
         label: 'Résultats',
         subtitle: 'Lecture des écarts et synthèse',
         description: 'Les résultats rassemblent les métriques, les écarts et les questions de restitution.',
         icon: Radar,
-        route: '/results',
+        routeKind: 'results',
     },
     {
         label: 'Restitution coaching',
         subtitle: "Temps d'échange avec le coach",
         description: 'Le coach accompagne la mise en sens des résultats et prépare les prochaines questions utiles.',
         icon: MessageSquareQuote,
-        route: null,
+        routeKind: null,
     },
 ];
 
@@ -97,11 +102,22 @@ const buildSteps = (assignment?: ParticipantAssignment): JourneyStep[] => {
                       : ('locked' as const),
         }));
     }
+    // Les résultats sont consultables dès qu'au moins une donnée a été produite.
+    const hasAnyData =
+        progression.self_rating_status === 'completed' ||
+        progression.peer_feedback_status === 'completed' ||
+        progression.element_humain_status === 'completed';
+    const resultsState: StepState =
+        progression.results_status === 'completed'
+            ? 'completed'
+            : hasAnyData
+              ? 'current'
+              : stepStateFromStatus(progression.results_status);
     return [
         { ...STEP_TEMPLATES[0], state: stepStateFromStatus(progression.self_rating_status) },
         { ...STEP_TEMPLATES[1], state: stepStateFromStatus(progression.peer_feedback_status) },
         { ...STEP_TEMPLATES[2], state: stepStateFromStatus(progression.element_humain_status) },
-        { ...STEP_TEMPLATES[3], state: stepStateFromStatus(progression.results_status) },
+        { ...STEP_TEMPLATES[3], state: resultsState },
         {
             ...STEP_TEMPLATES[4],
             state: progression.results_status === 'completed' ? ('current' as const) : ('locked' as const),
@@ -109,9 +125,9 @@ const buildSteps = (assignment?: ParticipantAssignment): JourneyStep[] => {
     ];
 };
 
-function StepCard({ step, onNavigate }: { step: JourneyStep; onNavigate: (route: StepRoute) => void }) {
+function StepCard({ step, onNavigate }: { step: JourneyStep; onNavigate: (routeKind: StepRouteKind) => void }) {
     const Icon = step.icon;
-    const isClickable = step.state !== 'locked' && step.route !== null;
+    const isClickable = step.state !== 'locked' && step.routeKind !== null;
     const chipLabel = step.state === 'completed' ? 'Terminé' : step.state === 'current' ? 'À faire' : 'Verrouillé';
     const chipSx =
         step.state === 'completed'
@@ -181,11 +197,11 @@ function StepCard({ step, onNavigate }: { step: JourneyStep; onNavigate: (route:
         </Stack>
     );
 
-    if (isClickable && step.route !== null) {
-        const route = step.route;
+    if (isClickable && step.routeKind !== null) {
+        const routeKind = step.routeKind;
         return (
             <ButtonBase
-                onClick={() => onNavigate(route)}
+                onClick={() => onNavigate(routeKind)}
                 focusRipple
                 aria-label={`${step.label} — ${cta ?? ''}`}
                 sx={{
@@ -231,17 +247,32 @@ function StepCard({ step, onNavigate }: { step: JourneyStep; onNavigate: (route:
     );
 }
 
-function ParticipantJourneyRoute() {
+function ParticipantCampaignWorkspaceRoute() {
+    const { campaignId: campaignIdParam } = Route.useParams();
+    const campaignId = Number(campaignIdParam);
     const { data: session, isLoading, isError } = useParticipantSession();
-    const { assignment: selectedAssignment, index: selectedIndex, assignments } = useSelectedAssignment(session);
-    const selectCampaign = useCampaignStore(s => s.select);
     const navigate = useNavigate();
-    const steps = React.useMemo(() => buildSteps(selectedAssignment), [selectedAssignment]);
+
+    const assignment = React.useMemo(() => {
+        if (!session) return undefined;
+        return session.assignments.find(a => a.campaign_id === campaignId);
+    }, [session, campaignId]);
+
+    const steps = React.useMemo(() => buildSteps(assignment), [assignment]);
+
     const handleNavigate = React.useCallback(
-        (route: StepRoute) => {
-            navigate({ to: route });
+        (routeKind: StepRouteKind) => {
+            if (!Number.isFinite(campaignId)) return;
+            if (routeKind === 'results') {
+                navigate({
+                    to: '/campaigns/$campaignId/results',
+                    params: { campaignId: String(campaignId) },
+                });
+                return;
+            }
+            navigate({ to: `/${routeKind}` });
         },
-        [navigate]
+        [navigate, campaignId]
     );
 
     if (isLoading) {
@@ -249,7 +280,7 @@ function ParticipantJourneyRoute() {
             <Card variant="outlined">
                 <CardContent sx={{ p: 3 }}>
                     <Typography variant="h6" fontWeight={700} color="text.primary">
-                        Chargement du parcours
+                        Chargement de la campagne
                     </Typography>
                     <LinearProgress sx={{ mt: 2 }} />
                 </CardContent>
@@ -258,11 +289,48 @@ function ParticipantJourneyRoute() {
     }
 
     if (isError || !session) {
-        return <Alert severity="error">Impossible de charger votre parcours pour le moment.</Alert>;
+        return <Alert severity="error">Impossible de charger la campagne pour le moment.</Alert>;
     }
+
+    if (!assignment) {
+        return (
+            <Stack spacing={2}>
+                <Alert severity="warning">Aucune campagne trouvée pour cet identifiant.</Alert>
+                <Button
+                    component={Link}
+                    to="/campaigns"
+                    startIcon={<ArrowLeft size={16} />}
+                    variant="outlined"
+                    sx={{ borderRadius: 3, alignSelf: 'flex-start' }}
+                >
+                    Retour aux campagnes
+                </Button>
+            </Stack>
+        );
+    }
+
+    const campaignName = assignment.campaign_name ?? 'Campagne';
+    const company = assignment.company_name ?? 'Organisation non renseignée';
+    const coachName = assignment.coach_name ?? 'Coach non attribué';
+    const questionnaire = assignment.questionnaire_title ?? assignment.questionnaire_id;
 
     return (
         <Stack spacing={3}>
+            <Button
+                component={Link}
+                to="/campaigns"
+                startIcon={<ArrowLeft size={16} />}
+                sx={{
+                    alignSelf: 'flex-start',
+                    fontWeight: 600,
+                    color: 'text.secondary',
+                    '&:hover': { bgcolor: 'transparent', color: 'primary.main' },
+                }}
+                disableRipple
+            >
+                Retour aux campagnes
+            </Button>
+
             <Card variant="outlined">
                 <CardContent sx={{ p: { xs: 2.5, md: 3 } }}>
                     <Stack
@@ -273,45 +341,41 @@ function ParticipantJourneyRoute() {
                     >
                         <Box>
                             <Chip
-                                label="Parcours participant"
+                                label="Campagne"
                                 sx={{ borderRadius: 99, bgcolor: 'tint.primaryBg', color: 'primary.main', mb: 1.5 }}
                             />
                             <Typography variant="h4" fontWeight={800} color="text.primary" sx={{ letterSpacing: -0.5 }}>
-                                Mon parcours Révéla
+                                {campaignName}
                             </Typography>
                             <Typography
                                 variant="body1"
                                 color="text.secondary"
                                 sx={{ mt: 1, lineHeight: 1.7, maxWidth: 860 }}
                             >
-                                Cette page explique simplement le chemin du participant : auto-évaluation, feedback des
-                                pairs, test, résultats et restitution.
+                                {company} · {questionnaire}
                             </Typography>
-                            {assignments.length > 1 && (
-                                <FormControl size="small" sx={{ mt: 2, minWidth: 300 }}>
-                                    <InputLabel>Campagne</InputLabel>
-                                    <Select
-                                        label="Campagne"
-                                        value={selectedIndex}
-                                        onChange={e => {
-                                            const idx = e.target.value as number;
-                                            const a = assignments[idx];
-                                            if (a?.campaign_id != null) selectCampaign(a.campaign_id);
-                                        }}
-                                    >
-                                        {assignments.map((a, i) => (
-                                            <MenuItem key={`${a.campaign_id}-${a.questionnaire_id}`} value={i}>
-                                                {a.campaign_name ?? 'Campagne'} —{' '}
-                                                {a.questionnaire_title ?? a.questionnaire_id}
-                                            </MenuItem>
-                                        ))}
-                                    </Select>
-                                </FormControl>
-                            )}
                         </Box>
 
-                        <Card variant="outlined" sx={{ width: { xs: '100%', sm: 340 } }}>
-                            <CardContent sx={{ p: 2 }}>
+                        <ButtonBase
+                            component={Link}
+                            to="/campaigns/$campaignId/coach"
+                            params={{ campaignId: String(campaignId) }}
+                            focusRipple
+                            sx={{
+                                width: { xs: '100%', sm: 340 },
+                                textAlign: 'left',
+                                borderRadius: 4,
+                                border: '1px solid',
+                                borderColor: 'border',
+                                bgcolor: '#fff',
+                                transition: 'border-color 0.15s, box-shadow 0.15s',
+                                '&:hover': {
+                                    borderColor: 'primary.main',
+                                    boxShadow: '0 6px 18px -10px rgba(15,23,42,0.18)',
+                                },
+                            }}
+                        >
+                            <Box sx={{ p: 2, width: '100%' }}>
                                 <Stack direction="row" spacing={1.5} alignItems="center">
                                     <Box
                                         sx={{
@@ -326,17 +390,18 @@ function ParticipantJourneyRoute() {
                                     >
                                         <Sparkles size={20} />
                                     </Box>
-                                    <Box>
-                                        <Typography fontWeight={800} color="text.primary">
-                                            Révéla
+                                    <Box sx={{ minWidth: 0, flex: 1 }}>
+                                        <Typography variant="caption" color="text.secondary">
+                                            Mon coach
                                         </Typography>
-                                        <Typography variant="body2" color="text.secondary">
-                                            Un parcours en 5 étapes
+                                        <Typography fontWeight={800} color="text.primary">
+                                            {coachName}
                                         </Typography>
                                     </Box>
+                                    <ArrowRight size={16} />
                                 </Stack>
-                            </CardContent>
-                        </Card>
+                            </Box>
+                        </ButtonBase>
                     </Stack>
                 </CardContent>
             </Card>

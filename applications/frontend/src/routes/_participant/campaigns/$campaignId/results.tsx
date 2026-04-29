@@ -4,48 +4,42 @@ import * as React from 'react';
 
 import { QuestionnaireMatrixDisplay } from '@/components/matrix/QuestionnaireMatrixDisplay';
 import { useParticipantSession, useParticipantSessionMatrix } from '@/hooks/participantSession';
-import { useSelectedAssignment } from '@/hooks/useSelectedAssignment';
 import { exportResultsPdf } from '@/lib/exportResultsPdf';
 import { buildDimensions } from '@/lib/results/buildDimensions';
 import { useToast } from '@/lib/toast';
-import { useCampaignStore } from '@/stores/campaignStore';
-import {
-    Alert,
-    Box,
-    Button,
-    Card,
-    CardContent,
-    Chip,
-    FormControl,
-    InputLabel,
-    LinearProgress,
-    MenuItem,
-    Select,
-    Stack,
-    Tooltip,
-    Typography,
-} from '@mui/material';
-import { createFileRoute } from '@tanstack/react-router';
-import { Download, HelpCircle, Radar, Users } from 'lucide-react';
+import { Alert, Box, Button, Card, CardContent, Chip, LinearProgress, Stack, Tooltip, Typography } from '@mui/material';
+import { Link, createFileRoute } from '@tanstack/react-router';
+import { ArrowLeft, Download, HelpCircle, Radar, Users } from 'lucide-react';
 
-export const Route = createFileRoute('/_participant/results')({
+export const Route = createFileRoute('/_participant/campaigns/$campaignId/results')({
     component: ParticipantResultsRoute,
 });
 
 function ParticipantResultsRoute() {
+    const { campaignId: campaignIdParam } = Route.useParams();
+    const campaignId = Number(campaignIdParam);
+
     const { data: session, isLoading: sessionLoading, isError: sessionError } = useParticipantSession();
-    const { assignment: selectedAssignment, index: selectedIndex, assignments } = useSelectedAssignment(session);
-    const selectCampaign = useCampaignStore(s => s.select);
     const toast = useToast();
 
-    const qid = selectedAssignment?.questionnaire_id ?? '';
-    const campaignId = selectedAssignment?.campaign_id ?? undefined;
+    const assignment = React.useMemo(() => {
+        if (!session) return undefined;
+        return session.assignments.find(a => a.campaign_id === campaignId);
+    }, [session, campaignId]);
 
-    const { data: matrix, isLoading: matrixLoading } = useParticipantSessionMatrix(qid.length > 0, qid, campaignId);
+    const qid = assignment?.questionnaire_id ?? '';
+
+    const { data: matrix, isLoading: matrixLoading } = useParticipantSessionMatrix(
+        qid.length > 0,
+        qid,
+        Number.isFinite(campaignId) ? campaignId : undefined
+    );
+
+    const hasResults = matrix != null && (matrix.self_response_id != null || matrix.peer_columns.length > 0 || matrix.scientific_response_id != null);
 
     const isLoading = sessionLoading || matrixLoading;
-    const coachName = selectedAssignment?.coach_name ?? '–';
-    const campaignName = selectedAssignment?.campaign_name ?? 'Résultats';
+    const coachName = assignment?.coach_name ?? '–';
+    const campaignName = assignment?.campaign_name ?? 'Résultats';
     const peerCount = matrix?.peer_columns.length ?? 0;
 
     const dimensions = React.useMemo(() => (matrix ? buildDimensions(matrix) : []), [matrix]);
@@ -79,7 +73,7 @@ function ParticipantResultsRoute() {
 
     if (isLoading) {
         return (
-            // biome-ignore lint/a11y/useSemanticElements: `Card` est un `<div>` MUI ; on ajoute `role="status"` pour annoncer le chargement aux lecteurs d'écran.
+            // biome-ignore lint/a11y/useSemanticElements: `Card` est un `<div>` MUI ; on ajoute `role=`status`` pour annoncer le chargement aux lecteurs d'écran.
             <Card variant="outlined" role="status" aria-live="polite" aria-busy="true">
                 <CardContent sx={{ p: 3 }}>
                     <Typography variant="h6" fontWeight={700} color="text.primary">
@@ -95,8 +89,40 @@ function ParticipantResultsRoute() {
         return <Alert severity="error">Impossible de charger vos résultats pour le moment.</Alert>;
     }
 
+    if (!assignment) {
+        return (
+            <Stack spacing={2}>
+                <Alert severity="warning">Aucune campagne trouvée pour cet identifiant.</Alert>
+                <Button
+                    component={Link}
+                    to="/campaigns"
+                    startIcon={<ArrowLeft size={16} />}
+                    variant="outlined"
+                    sx={{ borderRadius: 3, alignSelf: 'flex-start' }}
+                >
+                    Retour aux campagnes
+                </Button>
+            </Stack>
+        );
+    }
+
     return (
         <Stack spacing={3}>
+            <Button
+                component={Link}
+                to="/campaigns/$campaignId"
+                params={{ campaignId: String(campaignId) }}
+                startIcon={<ArrowLeft size={16} />}
+                sx={{
+                    alignSelf: 'flex-start',
+                    fontWeight: 600,
+                    color: 'text.secondary',
+                    '&:hover': { bgcolor: 'transparent', color: 'primary.main' },
+                }}
+                disableRipple
+            >
+                Retour à la campagne
+            </Button>
             <Card variant="outlined">
                 <CardContent sx={{ p: { xs: 2.5, md: 3 } }}>
                     <Stack
@@ -131,7 +157,7 @@ function ParticipantResultsRoute() {
                                     </Box>
                                 </Tooltip>
                             </Stack>
-                            {dimensions.length > 0 && (
+                            {hasResults && (
                                 <Button
                                     variant="outlined"
                                     size="small"
@@ -143,29 +169,6 @@ function ParticipantResultsRoute() {
                                 >
                                     {pdfPending ? 'Génération du PDF…' : 'Exporter en PDF'}
                                 </Button>
-                            )}
-                            {assignments.length > 1 && (
-                                <FormControl size="small" sx={{ mt: 2, minWidth: 300 }}>
-                                    <InputLabel>Campagne</InputLabel>
-                                    <Select
-                                        label="Campagne"
-                                        value={selectedIndex}
-                                        onChange={e => {
-                                            const idx = e.target.value as number;
-                                            const a = assignments[idx];
-                                            if (a?.campaign_id !== null && a?.campaign_id !== undefined) {
-                                                selectCampaign(a.campaign_id);
-                                            }
-                                        }}
-                                    >
-                                        {assignments.map((a, i) => (
-                                            <MenuItem key={`${a.campaign_id}-${a.questionnaire_id}`} value={i}>
-                                                {a.campaign_name ?? 'Campagne'} —{' '}
-                                                {a.questionnaire_title ?? a.questionnaire_id}
-                                            </MenuItem>
-                                        ))}
-                                    </Select>
-                                </FormControl>
                             )}
                         </Box>
 
@@ -224,13 +227,12 @@ function ParticipantResultsRoute() {
                     </Stack>
                 </CardContent>
             </Card>
-
-            {!matrix || dimensions.length === 0 ? (
+            {!hasResults ? (
                 <Card variant="outlined">
                     <CardContent sx={{ p: 3 }}>
                         <Typography variant="body2" color="text.secondary">
-                            Les résultats ne sont pas encore disponibles. Complétez les étapes précédentes de votre
-                            parcours pour accéder à vos scores.
+                            Les résultats ne sont pas encore disponibles. Complétez les étapes précédentes de votre parcours
+                            pour accéder à vos scores.
                         </Typography>
                     </CardContent>
                 </Card>

@@ -16,18 +16,7 @@ import {
     Typography,
 } from '@mui/material';
 import { Link, Outlet, createFileRoute, redirect, useLocation, useNavigate } from '@tanstack/react-router';
-import {
-    BookOpen,
-    ChevronRight,
-    ClipboardList,
-    Gauge,
-    LogOut,
-    Menu,
-    MessageSquareQuote,
-    Sparkles,
-    UserRound,
-    X,
-} from 'lucide-react';
+import { ChevronRight, ClipboardList, Gauge, LogOut, Menu, Sparkles, UserRound, X } from 'lucide-react';
 import * as React from 'react';
 
 export const Route = createFileRoute('/_participant')({
@@ -68,8 +57,6 @@ type NavItem = {
 const participantNav: NavItem[] = [
     { label: 'Dashboard', to: '/', icon: Gauge, exact: true },
     { label: 'Mes campagnes', to: '/campaigns', icon: ClipboardList },
-    { label: 'Mon parcours', to: '/journey', icon: BookOpen },
-    { label: 'Mon coach', to: '/my-coach', icon: MessageSquareQuote },
     { label: 'Mon profil', to: '/profile', icon: UserRound },
 ];
 

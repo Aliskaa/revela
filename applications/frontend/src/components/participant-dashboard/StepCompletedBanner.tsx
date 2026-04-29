@@ -7,15 +7,15 @@ import { ArrowRight, Lock } from 'lucide-react';
 export type StepCompletedBannerProps = {
     title: string;
     description?: string;
-    backTo?: '/journey' | '/campaigns' | '/';
+    backTo?: '/campaigns' | '/';
     backLabel?: string;
 };
 
 export function StepCompletedBanner({
     title,
     description,
-    backTo = '/journey',
-    backLabel = 'Retour au parcours',
+    backTo = '/campaigns',
+    backLabel = 'Retour aux campagnes',
 }: StepCompletedBannerProps) {
     return (
         <Card variant="outlined">

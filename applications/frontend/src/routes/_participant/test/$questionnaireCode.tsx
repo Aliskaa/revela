@@ -387,7 +387,14 @@ function ParticipantTestSessionRoute() {
         await submitMutation.mutateAsync({ series0, series1 });
         setSuccessOpen(true);
         setTimeout(() => {
-            navigate({ to: '/results' });
+            if (campaignId !== undefined) {
+                navigate({
+                    to: '/campaigns/$campaignId/results',
+                    params: { campaignId: String(campaignId) },
+                });
+            } else {
+                navigate({ to: '/campaigns' });
+            }
         }, 1500);
     };
 

@@ -173,6 +173,9 @@ export const buildJourney = (assignment?: ParticipantAssignment): JourneyStep[] 
     const qCode = assignment?.questionnaire_id?.toUpperCase() ?? '';
     const testRoute = qCode ? `/test/${qCode}` : undefined;
 
+    const campaignId = assignment?.campaign_id ?? null;
+    const resultsTo = campaignId !== null ? `/campaigns/${String(campaignId)}/results` : '/campaigns';
+    const coachTo = campaignId !== null ? `/campaigns/${String(campaignId)}/coach` : '/campaigns';
     if (!assignment?.progression) {
         const manualInputState: StepState = assignment ? 'current' : 'locked';
         return [
@@ -183,8 +186,8 @@ export const buildJourney = (assignment?: ParticipantAssignment): JourneyStep[] 
                 state: assignment?.allow_test_without_manual_inputs ? 'current' : 'locked',
                 to: testRoute,
             },
-            { ...journeyTemplate[3], state: 'locked', to: '/results' },
-            { ...journeyTemplate[4], state: 'locked', to: '/my-coach' },
+            { ...journeyTemplate[3], state: 'locked', to: resultsTo },
+            { ...journeyTemplate[4], state: 'locked', to: coachTo },
         ];
     }
     return [
@@ -206,12 +209,12 @@ export const buildJourney = (assignment?: ParticipantAssignment): JourneyStep[] 
         {
             ...journeyTemplate[3],
             state: stepStateFromStatus(assignment.progression.results_status),
-            to: '/results',
+            to: resultsTo,
         },
         {
             ...journeyTemplate[4],
             state: assignment.progression.results_status === 'completed' ? 'current' : 'locked',
-            to: '/my-coach',
+            to: coachTo,
         },
     ];
 };

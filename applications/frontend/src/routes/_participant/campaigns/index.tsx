@@ -33,7 +33,7 @@ import {
 } from 'lucide-react';
 import * as React from 'react';
 
-export const Route = createFileRoute('/_participant/campaigns')({
+export const Route = createFileRoute('/_participant/campaigns/')({
     component: ParticipantCampaignsRoute,
 });
 
@@ -167,9 +167,22 @@ function CampaignCard({ campaign }: { campaign: Campaign }) {
     const needsConfirmation = isActive && !campaign.invitationConfirmed;
     const canStartJourney = isActive && campaign.invitationConfirmed;
 
-    const goTo = (to: string) => {
-        if (campaign.campaignId != null) selectCampaign(campaign.campaignId);
-        navigate({ to });
+    const goToWorkspace = () => {
+        if (campaign.campaignId == null) return;
+        selectCampaign(campaign.campaignId);
+        navigate({
+            to: '/campaigns/$campaignId',
+            params: { campaignId: String(campaign.campaignId) },
+        });
+    };
+
+    const goToResults = () => {
+        if (campaign.campaignId == null) return;
+        selectCampaign(campaign.campaignId);
+        navigate({
+            to: '/campaigns/$campaignId/results',
+            params: { campaignId: String(campaign.campaignId) },
+        });
     };
 
     const handleConfirm = () => {
@@ -262,7 +275,7 @@ function CampaignCard({ campaign }: { campaign: Campaign }) {
                             <Button
                                 variant="contained"
                                 disableElevation
-                                onClick={() => goTo('/journey')}
+                                onClick={goToWorkspace}
                                 sx={{ borderRadius: 3, bgcolor: 'primary.main' }}
                                 endIcon={<ArrowRight size={16} />}
                             >
@@ -273,14 +286,14 @@ function CampaignCard({ campaign }: { campaign: Campaign }) {
                             <Button
                                 variant="contained"
                                 disableElevation
-                                onClick={() => goTo('/results')}
+                                onClick={goToResults}
                                 sx={{ borderRadius: 3, bgcolor: 'primary.main' }}
                                 endIcon={<ArrowRight size={16} />}
                             >
                                 Voir les résultats
                             </Button>
                         )}
-                        <Button variant="outlined" onClick={() => goTo('/results')} sx={{ borderRadius: 3 }}>
+                        <Button variant="outlined" onClick={goToResults} sx={{ borderRadius: 3 }}>
                             Voir les résultats
                         </Button>
                     </Stack>

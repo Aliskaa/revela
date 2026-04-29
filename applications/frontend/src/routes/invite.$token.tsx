@@ -457,7 +457,7 @@ function InvitePage() {
                 series0: series0 as number[],
                 series1: series1 as number[],
             });
-            navigate({ to: '/results' });
+            navigate({ to: '/campaigns' });
         } catch {
             setStep('series1');
         }

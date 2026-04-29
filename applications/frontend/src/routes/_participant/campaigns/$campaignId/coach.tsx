@@ -1,12 +1,11 @@
 import { useParticipantSession } from '@/hooks/participantSession';
-import { useSelectedAssignment } from '@/hooks/useSelectedAssignment';
 import type { ParticipantSession } from '@aor/types';
-import { Alert, Box, Card, CardContent, Chip, LinearProgress, Stack, Typography } from '@mui/material';
-import { createFileRoute } from '@tanstack/react-router';
-import { Sparkles, UserRound, Users } from 'lucide-react';
-import type * as React from 'react';
+import { Alert, Box, Button, Card, CardContent, Chip, LinearProgress, Stack, Typography } from '@mui/material';
+import { Link, createFileRoute } from '@tanstack/react-router';
+import { ArrowLeft, Sparkles, UserRound, Users } from 'lucide-react';
+import * as React from 'react';
 
-export const Route = createFileRoute('/_participant/my-coach')({
+export const Route = createFileRoute('/_participant/campaigns/$campaignId/coach')({
     component: ParticipantCoachRoute,
 });
 
@@ -71,9 +70,16 @@ function InfoPill({ label, value, icon: Icon }: { label: string; value: string; 
 }
 
 function ParticipantCoachRoute() {
+    const { campaignId: campaignIdParam } = Route.useParams();
+    const campaignId = Number(campaignIdParam);
     const { data: session, isLoading, isError } = useParticipantSession();
-    const { assignment: activeAssignment } = useSelectedAssignment(session);
-    const coachView = coachFromAssignment(activeAssignment);
+
+    const assignment = React.useMemo(() => {
+        if (!session) return undefined;
+        return session.assignments.find(a => a.campaign_id === campaignId);
+    }, [session, campaignId]);
+
+    const coachView = coachFromAssignment(assignment);
 
     if (isLoading) {
         return (
@@ -92,8 +98,41 @@ function ParticipantCoachRoute() {
         return <Alert severity="error">Impossible de charger votre coach pour le moment.</Alert>;
     }
 
+    if (!assignment) {
+        return (
+            <Stack spacing={2}>
+                <Alert severity="warning">Aucune campagne trouvée pour cet identifiant.</Alert>
+                <Button
+                    component={Link}
+                    to="/campaigns"
+                    startIcon={<ArrowLeft size={16} />}
+                    variant="outlined"
+                    sx={{ borderRadius: 3, alignSelf: 'flex-start' }}
+                >
+                    Retour aux campagnes
+                </Button>
+            </Stack>
+        );
+    }
+
     return (
         <Stack spacing={3}>
+            <Button
+                component={Link}
+                to="/campaigns/$campaignId"
+                params={{ campaignId: String(campaignId) }}
+                startIcon={<ArrowLeft size={16} />}
+                sx={{
+                    alignSelf: 'flex-start',
+                    fontWeight: 600,
+                    color: 'text.secondary',
+                    '&:hover': { bgcolor: 'transparent', color: 'primary.main' },
+                }}
+                disableRipple
+            >
+                Retour à la campagne
+            </Button>
+
             <Card variant="outlined">
                 <CardContent sx={{ p: { xs: 2.5, md: 3 } }}>
                     <Stack

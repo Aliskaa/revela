@@ -2,7 +2,7 @@
 
 import { Alert, Box, Button, Card, CardContent, Chip, LinearProgress, Stack, Typography } from '@mui/material';
 import { Link, createFileRoute } from '@tanstack/react-router';
-import { ArrowRight, CheckCircle2, Gauge, Hourglass, Layers3, Sparkles } from 'lucide-react';
+import { ArrowRight, CheckCircle2, Gauge, Hourglass, Layers3 } from 'lucide-react';
 import type * as React from 'react';
 
 import { useParticipantSession } from '@/hooks/participantSession';
@@ -201,27 +201,16 @@ export function ParticipantDashboardRoute() {
                                 Voici un aperçu rapide de vos campagnes et de leur avancement.
                             </Typography>
                         </Box>
-                        <Stack direction="row" spacing={1.2}>
-                            <Button
-                                component={Link}
-                                to="/campaigns"
-                                variant="contained"
-                                disableElevation
-                                endIcon={<ArrowRight size={14} />}
-                                sx={{ borderRadius: 3 }}
-                            >
-                                Voir mes campagnes
-                            </Button>
-                            <Button
-                                component={Link}
-                                to="/journey"
-                                variant="outlined"
-                                sx={{ borderRadius: 3 }}
-                                startIcon={<Sparkles size={14} />}
-                            >
-                                Mon parcours
-                            </Button>
-                        </Stack>
+                        <Button
+                            component={Link}
+                            to="/campaigns"
+                            variant="contained"
+                            disableElevation
+                            endIcon={<ArrowRight size={14} />}
+                            sx={{ borderRadius: 3 }}
+                        >
+                            Voir mes campagnes
+                        </Button>
                     </Stack>
                 </CardContent>
             </Card>
