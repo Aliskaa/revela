@@ -18,7 +18,7 @@ export class InviteCampaignParticipantsUseCase {
         }
     ) {}
 
-    public async execute(campaignId: number) {
+    public async execute(campaignId: number, params: { participantIds?: number[] } = {}) {
         const campaign = await this.ports.campaigns.findById(campaignId);
         if (!campaign) {
             throw new AdminResourceNotFoundError('Campagne introuvable.');
@@ -26,7 +26,25 @@ export class InviteCampaignParticipantsUseCase {
         if (!campaign.questionnaireId) {
             throw new AdminValidationError('La campagne n’a pas de questionnaire associé.');
         }
-        const participants = await this.ports.participants.listByCompanyId(campaign.companyId);
+
+        const companyParticipants = await this.ports.participants.listByCompanyId(campaign.companyId);
+
+        // Si une sélection est fournie, on filtre — et on valide que chaque ID appartient bien
+        // à l'entreprise de la campagne (sinon AdminValidationError).
+        let participants = companyParticipants;
+        if (params.participantIds !== undefined) {
+            const requested = new Set(params.participantIds);
+            const validIds = new Set(companyParticipants.map(p => p.id));
+            for (const id of requested) {
+                if (!validIds.has(id)) {
+                    throw new AdminValidationError(
+                        `Participant #${String(id)} n'appartient pas à l'entreprise de la campagne.`
+                    );
+                }
+            }
+            participants = companyParticipants.filter(p => requested.has(p.id));
+        }
+
         let created = 0;
         for (const participant of participants) {
             await this.ports.invitations.create(

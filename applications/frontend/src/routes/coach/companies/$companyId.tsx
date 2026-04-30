@@ -1,6 +1,5 @@
 // Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
 
-import { MiniStat } from '@/components/common/MiniStat';
 import { SectionTitle } from '@/components/common/SectionTitle';
 import { SkeletonTableRows } from '@/components/common/SkeletonRows';
 import { StatCard } from '@/components/common/StatCard';
@@ -245,14 +244,7 @@ function CoachCompanyDetailRoute() {
                 <StatCard label="Entreprise" value={company.name} helper={`ID ${company.id}`} icon={Building2} />
             </Box>
 
-            <Box
-                sx={{
-                    display: 'grid',
-                    gridTemplateColumns: { xs: '1fr', xl: '1.25fr 0.75fr' },
-                    gap: 3,
-                    alignItems: 'start',
-                }}
-            >
+            <Stack spacing={3}>
                 <Card variant="outlined">
                     <CardContent sx={{ p: 2.5 }}>
                         <SectionTitle
@@ -339,42 +331,29 @@ function CoachCompanyDetailRoute() {
                     </CardContent>
                 </Card>
 
-                <Stack spacing={3}>
-                    <Card variant="outlined">
-                        <CardContent sx={{ p: 2.5 }}>
-                            <SectionTitle title="Informations" subtitle="Détail de l'entreprise." />
-                            <Stack spacing={1.2} sx={{ mt: 2 }}>
-                                <MiniStat label="Nom" value={company.name} />
-                                <MiniStat label="Contact" value={company.contact_name ?? '–'} />
-                                <MiniStat label="Email contact" value={company.contact_email ?? '–'} />
-                                <MiniStat label="Collaborateurs" value={String(company.participant_count)} />
-                            </Stack>
-                        </CardContent>
-                    </Card>
+                <Card variant="outlined" sx={{ borderColor: 'rgba(239,68,68,0.3)' }}>
+                    <CardContent sx={{ p: 2.5 }}>
+                        <SectionTitle title="Zone dangereuse" subtitle="Actions irréversibles — RGPD." />
+                        <Button
+                            variant="outlined"
+                            color="error"
+                            fullWidth
+                            startIcon={<Trash2 size={16} />}
+                            disabled={deleteCompany.isPending}
+                            onClick={() => setDeleteCompanyOpen(true)}
+                            sx={{ borderRadius: 3, mt: 1 }}
+                        >
+                            Supprimer l'entreprise
+                        </Button>
+                        {deleteCompany.isError && (
+                            <Alert severity="error" sx={{ mt: 1.5 }}>
+                                Erreur lors de la suppression.
+                            </Alert>
+                        )}
+                    </CardContent>
+                </Card>
 
-                    <Card variant="outlined" sx={{ borderColor: 'rgba(239,68,68,0.3)' }}>
-                        <CardContent sx={{ p: 2.5 }}>
-                            <SectionTitle title="Zone dangereuse" subtitle="Actions irréversibles — RGPD." />
-                            <Button
-                                variant="outlined"
-                                color="error"
-                                fullWidth
-                                startIcon={<Trash2 size={16} />}
-                                disabled={deleteCompany.isPending}
-                                onClick={() => setDeleteCompanyOpen(true)}
-                                sx={{ borderRadius: 3, mt: 1 }}
-                            >
-                                Supprimer l'entreprise
-                            </Button>
-                            {deleteCompany.isError && (
-                                <Alert severity="error" sx={{ mt: 1.5 }}>
-                                    Erreur lors de la suppression.
-                                </Alert>
-                            )}
-                        </CardContent>
-                    </Card>
-                </Stack>
-            </Box>
+            </Stack>
         </Stack>
     );
 }

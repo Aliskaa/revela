@@ -11,7 +11,7 @@ import { Participant } from '@src/domain/participants';
 import type { IParticipantsRepositoryPort } from '@src/interfaces/participants/IParticipantsRepository.port';
 import { expect, test } from 'vitest';
 
-import { ParticipantLoginUseCase } from './participant-login.usecase';
+import { ParticipantLoginUseCase } from '../participant-login.usecase';
 
 const hashed = hashPassword('correct-horse');
 

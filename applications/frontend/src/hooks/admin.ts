@@ -508,11 +508,16 @@ export function useArchiveAdminCampaign() {
 export function useInviteCampaignParticipants() {
     const qc = useQueryClient();
     const toast = useToast();
-    return useMutation<{ created: number }, Error, { campaignId: number }>({
-        mutationFn: ({ campaignId }) =>
-            apiClient.post(`/admin/campaigns/${campaignId}/invite-company-participants`).then(r => r.data),
+    return useMutation<{ created: number }, Error, { campaignId: number; participantIds?: number[] }>({
+        mutationFn: ({ campaignId, participantIds }) =>
+            apiClient
+                .post(`/admin/campaigns/${campaignId}/invite-company-participants`, {
+                    ...(participantIds !== undefined ? { participant_ids: participantIds } : {}),
+                })
+                .then(r => r.data),
         onSuccess: (data, vars) => {
             qc.invalidateQueries({ queryKey: adminKeys.campaign(vars.campaignId) });
+            qc.invalidateQueries({ queryKey: adminKeys.participants() });
             toast.success(`${data.created} invitation(s) envoyée(s).`);
         },
         onError: err => toast.error(toErrorMessage(err, "Échec de l'envoi des invitations.")),

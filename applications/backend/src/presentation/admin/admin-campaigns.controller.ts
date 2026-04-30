@@ -147,10 +147,14 @@ export class AdminCampaignsController {
     @Post('campaigns/:campaignId/invite-company-participants')
     public async inviteCompanyParticipants(
         @Param('campaignId', ParseIntPipe) campaignId: number,
-        @Req() req: { user: JwtValidatedUser }
+        @Req() req: { user: JwtValidatedUser },
+        @Body() body: { participant_ids?: number[] } = {}
     ) {
         await this.ensureCampaignAccess(campaignId, req.user);
-        return this.inviteCampaignParticipants.execute(campaignId);
+        const participantIds = Array.isArray(body.participant_ids)
+            ? body.participant_ids.filter((n): n is number => Number.isFinite(n))
+            : undefined;
+        return this.inviteCampaignParticipants.execute(campaignId, { participantIds });
     }
 
     @Post('campaigns/:campaignId/import-participants')

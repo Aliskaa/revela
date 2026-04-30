@@ -6,7 +6,7 @@ import type {
 } from '@src/interfaces/responses/IResponsesRepository.port';
 import { expect, test } from 'vitest';
 
-import { ListAdminResponsesUseCase } from './list-admin-responses.usecase';
+import { ListAdminResponsesUseCase } from '../list-admin-responses.usecase';
 
 /**
  * Tests d'isolation scope=coach (cf. ADR-008 + docs/avancement-2026-04-28.md).

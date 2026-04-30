@@ -16,7 +16,7 @@ import type {
 } from '@src/interfaces/responses/IResponsesRepository.port';
 import { expect, test } from 'vitest';
 
-import { SubmitParticipantQuestionnaireUseCase } from './submit-participant-questionnaire.usecase';
+import { SubmitParticipantQuestionnaireUseCase } from '../submit-participant-questionnaire.usecase';
 
 const participant = Participant.hydrate({
     id: 7,

@@ -7,7 +7,7 @@ import type {
 } from '@src/interfaces/participants/IParticipantsRepository.port';
 import { expect, test } from 'vitest';
 
-import { ListAdminParticipantsUseCase } from './list-admin-participants.usecase';
+import { ListAdminParticipantsUseCase } from '../list-admin-participants.usecase';
 
 /**
  * Tests d'isolation scope=coach (cf. ADR-008 + docs/avancement-2026-04-28.md).

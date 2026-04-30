@@ -7,7 +7,7 @@ import type {
 } from '@src/interfaces/companies/ICompaniesRepository.port';
 import { expect, test } from 'vitest';
 
-import { ListAdminCompaniesUseCase } from './list-admin-companies.usecase';
+import { ListAdminCompaniesUseCase } from '../list-admin-companies.usecase';
 
 /**
  * Tests d'isolation scope=coach (cf. ADR-008 + docs/avancement-2026-04-28.md).

@@ -58,6 +58,12 @@ export type AdminCampaignDrawerFormProps = {
     onSubmit: (values: CampaignFormValues) => void | Promise<void>;
     isSubmitting?: boolean;
     error?: string | null;
+    /**
+     * Si fourni, le champ « Coach » est masqué et `coachId` est verrouillé sur cette valeur.
+     * Cas d'usage : un coach connecté n'a pas à se sélectionner lui-même — le backend force
+     * déjà `coach_id = req.user.coachId` pour scope=coach (cf. ADR-008).
+     */
+    lockedCoachId?: number;
 };
 
 const buildDefaults = (initial?: Partial<CampaignFormValues>): CampaignFormValues => ({
@@ -79,14 +85,18 @@ export function AdminCampaignDrawerForm({
     onSubmit,
     isSubmitting = false,
     error = null,
+    lockedCoachId,
 }: AdminCampaignDrawerFormProps) {
     const { data: companies = [] } = useCompanies();
     const { data: coaches = [] } = useCoaches();
     const { data: questionnaires = [] } = useAdminQuestionnaires();
 
+    const effectiveInitialValues =
+        lockedCoachId !== undefined ? { ...initialValues, coachId: lockedCoachId } : initialValues;
+
     const { values, errors, submit, submitting, setField, dirty } = useDrawerForm({
         schema: campaignFormSchema,
-        defaultValues: buildDefaults(initialValues),
+        defaultValues: buildDefaults(effectiveInitialValues),
         open,
         onSubmit,
     });
@@ -145,21 +155,23 @@ export function AdminCampaignDrawerForm({
                             {errors.companyId ? <FormHelperText>{errors.companyId}</FormHelperText> : null}
                         </FormControl>
 
-                        <FormControl fullWidth error={Boolean(errors.coachId)}>
-                            <InputLabel>Coach</InputLabel>
-                            <Select
-                                label="Coach"
-                                value={values.coachId === 0 ? '' : values.coachId}
-                                onChange={e => setField('coachId', Number(e.target.value) || 0)}
-                            >
-                                {coaches.map(coach => (
-                                    <MenuItem key={coach.id} value={coach.id}>
-                                        {coach.displayName}
-                                    </MenuItem>
-                                ))}
-                            </Select>
-                            {errors.coachId ? <FormHelperText>{errors.coachId}</FormHelperText> : null}
-                        </FormControl>
+                        {lockedCoachId === undefined && (
+                            <FormControl fullWidth error={Boolean(errors.coachId)}>
+                                <InputLabel>Coach</InputLabel>
+                                <Select
+                                    label="Coach"
+                                    value={values.coachId === 0 ? '' : values.coachId}
+                                    onChange={e => setField('coachId', Number(e.target.value) || 0)}
+                                >
+                                    {coaches.map(coach => (
+                                        <MenuItem key={coach.id} value={coach.id}>
+                                            {coach.displayName}
+                                        </MenuItem>
+                                    ))}
+                                </Select>
+                                {errors.coachId ? <FormHelperText>{errors.coachId}</FormHelperText> : null}
+                            </FormControl>
+                        )}
 
                         <FormControl fullWidth error={Boolean(errors.questionnaireId)}>
                             <InputLabel>Questionnaire</InputLabel>

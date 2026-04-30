@@ -6,6 +6,7 @@ import { SectionTitle } from '@/components/common/SectionTitle';
 import { SkeletonCards, SkeletonTableRows } from '@/components/common/SkeletonRows';
 import { StatCard } from '@/components/common/StatCard';
 import { useAdminCampaigns, useCompanies, useCreateAdminCampaign } from '@/hooks/admin';
+import { parseAdminJwtClaims } from '@/lib/auth';
 import { usePageResetEffect } from '@/lib/usePageResetEffect';
 import type { CampaignStatus } from '@aor/types';
 import {
@@ -84,6 +85,11 @@ function CoachCampaignsRoute() {
     const { data: companies = [] } = useCompanies();
     const createCampaign = useCreateAdminCampaign();
 
+    // Le coach connecté n'a pas à se sélectionner lui-même — on lit son id depuis le JWT
+    // pour pré-remplir et masquer le champ « Coach » du formulaire de création.
+    const coachClaims = parseAdminJwtClaims();
+    const lockedCoachId = coachClaims?.scope === 'coach' ? coachClaims.coachId : undefined;
+
     const companyName = (id: number) => companies.find(c => c.id === id)?.name ?? '–';
     const questionnairesUsed = new Set(campaigns.map(c => c.questionnaireId).filter(Boolean)).size;
 
@@ -107,6 +113,7 @@ function CoachCampaignsRoute() {
             <AdminCampaignDrawerForm
                 open={drawerOpen}
                 mode="create"
+                lockedCoachId={lockedCoachId}
                 onClose={() => {
                     setDrawerOpen(false);
                     createCampaign.reset();

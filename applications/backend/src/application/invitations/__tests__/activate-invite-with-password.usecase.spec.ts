@@ -18,8 +18,8 @@ import type { IParticipantJwtSignerPort } from '@src/interfaces/participant-sess
 import type { IParticipantsRepositoryPort } from '@src/interfaces/participants/IParticipantsRepository.port';
 import { expect, test } from 'vitest';
 
-import { ActivateInviteWithPasswordUseCase } from './activate-invite-with-password.usecase';
-import { InviteTokenValidationUseCase } from './invite-token-validation.usecase';
+import { ActivateInviteWithPasswordUseCase } from '../activate-invite-with-password.usecase';
+import { InviteTokenValidationUseCase } from '../invite-token-validation.usecase';
 
 const invitation: Invitation = Invitation.hydrate({
     id: 9,

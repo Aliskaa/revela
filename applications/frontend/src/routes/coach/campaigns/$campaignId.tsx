@@ -167,7 +167,10 @@ function CoachCampaignDetailRoute() {
 
                 <Stack spacing={3}>
                     <CampaignStatusActions campaign={campaign} />
-                    <CampaignManageParticipants campaign={campaign} />
+                    <CampaignManageParticipants
+                        campaign={campaign}
+                        alreadyInvitedIds={new Set(participants.map(p => p.participantId))}
+                    />
                 </Stack>
             </Box>
         </Stack>
