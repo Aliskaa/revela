@@ -25,7 +25,7 @@ const participantSessionProgressionSchema = z.object({
     self_rating_status: progressStatusSchema,
     peer_feedback_status: progressStatusSchema,
     element_humain_status: progressStatusSchema,
-    results_status: progressStatusSchema,
+    feedback_coach: z.string().nullable(),
 });
 
 const participantSessionAssignmentSchema = z.object({

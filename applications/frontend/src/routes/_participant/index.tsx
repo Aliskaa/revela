@@ -24,9 +24,18 @@ const progressForAssignment = (assignment: ParticipantAssignment): number => {
     const completed =
         completedValue(progression.self_rating_status) +
         completedValue(progression.peer_feedback_status) +
-        completedValue(progression.element_humain_status) +
-        completedValue(progression.results_status);
-    return Math.round((completed / 4) * 100);
+        completedValue(progression.element_humain_status);
+    return Math.round((completed / 3) * 100);
+};
+
+const isAssignmentCompleted = (assignment: ParticipantAssignment): boolean => {
+    const progression = assignment.progression;
+    if (!progression) return false;
+    return (
+        progression.self_rating_status === 'completed' &&
+        progression.peer_feedback_status === 'completed' &&
+        progression.element_humain_status === 'completed'
+    );
 };
 
 const statusLabel = (a: ParticipantAssignment): { label: string; sx: object } => {
@@ -169,7 +178,7 @@ export function ParticipantDashboardRoute() {
     const total = assignments.length;
     const active = assignments.filter(a => a.campaign_status === 'active').length;
     const toConfirm = assignments.filter(a => a.campaign_status === 'active' && !a.invitation_confirmed).length;
-    const completed = assignments.filter(a => a.progression?.results_status === 'completed').length;
+    const completed = assignments.filter(isAssignmentCompleted).length;
     const averageProgress =
         total === 0 ? 0 : Math.round(assignments.reduce((acc, a) => acc + progressForAssignment(a), 0) / total);
     const participantFirstName = session.first_name?.trim() || 'Participant';

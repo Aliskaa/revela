@@ -109,9 +109,8 @@ export const buildProgress = (assignment?: ParticipantAssignment): number => {
     const completed =
         completedStepValue(progression.self_rating_status) +
         completedStepValue(progression.peer_feedback_status) +
-        completedStepValue(progression.element_humain_status) +
-        completedStepValue(progression.results_status);
-    return Math.round((completed / 4) * 100);
+        completedStepValue(progression.element_humain_status);
+    return Math.round((completed / 3) * 100);
 };
 
 export const buildNextAction = (assignment?: ParticipantAssignment): string => {
@@ -136,10 +135,10 @@ export const buildNextAction = (assignment?: ParticipantAssignment): string => {
     if (progression.element_humain_status !== 'completed') {
         return 'Passer le test Élément Humain';
     }
-    if (progression.results_status !== 'completed') {
+    if (progression.feedback_coach == null) {
         return 'Consulter la publication des résultats';
     }
-    return 'Préparer la restitution coaching';
+    return 'Consulter les retours du coach';
 };
 
 export const buildCampaignView = (session?: ParticipantSession, assignment?: ParticipantAssignment): CampaignView => {
@@ -190,6 +189,16 @@ export const buildJourney = (assignment?: ParticipantAssignment): JourneyStep[] 
             { ...journeyTemplate[4], state: 'locked', to: coachTo },
         ];
     }
+    const anyStepCompleted =
+        assignment.progression.self_rating_status === 'completed' ||
+        assignment.progression.peer_feedback_status === 'completed' ||
+        assignment.progression.element_humain_status === 'completed';
+    const allStepsCompleted =
+        assignment.progression.self_rating_status === 'completed' &&
+        assignment.progression.peer_feedback_status === 'completed' &&
+        assignment.progression.element_humain_status === 'completed';
+    const resultsState: StepState = allStepsCompleted ? 'completed' : anyStepCompleted ? 'current' : 'locked';
+    const coachState: StepState = assignment.progression.feedback_coach != null ? 'current' : 'locked';
     return [
         {
             ...journeyTemplate[0],
@@ -208,12 +217,12 @@ export const buildJourney = (assignment?: ParticipantAssignment): JourneyStep[] 
         },
         {
             ...journeyTemplate[3],
-            state: stepStateFromStatus(assignment.progression.results_status),
+            state: resultsState,
             to: resultsTo,
         },
         {
             ...journeyTemplate[4],
-            state: assignment.progression.results_status === 'completed' ? 'current' : 'locked',
+            state: coachState,
             to: coachTo,
         },
     ];

@@ -6,7 +6,6 @@ import { ArrowLeft, BadgeCheck, MessageSquareText, Target, Users } from 'lucide-
 
 import { CampaignManageParticipants } from '@/components/admin/campaign-detail/CampaignManageParticipants';
 import { CampaignParticipantsTable } from '@/components/admin/campaign-detail/CampaignParticipantsTable';
-import { CampaignPilotage } from '@/components/admin/campaign-detail/CampaignPilotage';
 import { CampaignStatusActions } from '@/components/admin/campaign-detail/CampaignStatusActions';
 import { CampaignSummaryCard } from '@/components/admin/campaign-detail/CampaignSummaryCard';
 import { StatCard } from '@/components/common/StatCard';
@@ -169,11 +168,6 @@ function CoachCampaignDetailRoute() {
                 <Stack spacing={3}>
                     <CampaignStatusActions campaign={campaign} />
                     <CampaignManageParticipants campaign={campaign} />
-                    <CampaignPilotage
-                        questionnaireLabel={questionnaireLabel}
-                        coachName={coachName}
-                        companyName={companyName}
-                    />
                 </Stack>
             </Box>
         </Stack>

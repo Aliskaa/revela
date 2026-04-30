@@ -66,9 +66,8 @@ const progressFromAssignment = (assignment: ParticipantAssignment): number => {
     const completed =
         completedValue(progression.self_rating_status) +
         completedValue(progression.peer_feedback_status) +
-        completedValue(progression.element_humain_status) +
-        completedValue(progression.results_status);
-    return Math.round((completed / 4) * 100);
+        completedValue(progression.element_humain_status);
+    return Math.round((completed / 3) * 100);
 };
 
 const nextActionFromAssignment = (assignment: ParticipantAssignment): string => {
@@ -88,10 +87,10 @@ const nextActionFromAssignment = (assignment: ParticipantAssignment): string => 
     if (progression.element_humain_status !== 'completed') {
         return 'Passer le test Element Humain';
     }
-    if (progression.results_status !== 'completed') {
+    if (progression.feedback_coach == null) {
         return 'Consulter les resultats';
     }
-    return 'Preparer la restitution';
+    return 'Consulter les retours du coach';
 };
 
 const campaignFromAssignment = (assignment: ParticipantAssignment): Campaign => ({
@@ -279,7 +278,11 @@ function CampaignCard({ campaign }: { campaign: Campaign }) {
                                 sx={{ borderRadius: 3, bgcolor: 'primary.main' }}
                                 endIcon={<ArrowRight size={16} />}
                             >
-                                {campaign.progress > 0 ? 'Continuer le parcours' : 'Commencer le parcours'}
+                                {campaign.progress === 100
+                                    ? 'Voir mes résultats'
+                                    : campaign.progress > 0
+                                      ? 'Continuer le parcours'
+                                      : 'Commencer le parcours'}
                             </Button>
                         )}
                         {campaign.status === 'closed' && (
@@ -293,9 +296,6 @@ function CampaignCard({ campaign }: { campaign: Campaign }) {
                                 Voir les résultats
                             </Button>
                         )}
-                        <Button variant="outlined" onClick={goToResults} sx={{ borderRadius: 3 }}>
-                            Voir les résultats
-                        </Button>
                     </Stack>
                 </Stack>
             </CardContent>

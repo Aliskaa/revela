@@ -93,7 +93,7 @@ export class GetParticipantSessionUseCase {
                               self_rating_status: normalizeStepStatus(progress.selfRatingStatus),
                               peer_feedback_status: normalizeStepStatus(progress.peerFeedbackStatus),
                               element_humain_status: normalizeStepStatus(progress.elementHumainStatus),
-                              results_status: normalizeStepStatus(progress.resultsStatus),
+                              feedback_coach: null,
                           }
                         : null,
                 };

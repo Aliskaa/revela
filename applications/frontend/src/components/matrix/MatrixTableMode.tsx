@@ -58,7 +58,7 @@ export function MatrixTableMode({ matrix }: MatrixTableModeProps) {
                         color="text.secondary"
                         sx={{ textTransform: 'uppercase', letterSpacing: 0.6 }}
                     >
-                        Écart |je suis − je veux|
+                        Écart
                     </Typography>
                 </TableCell>
                 <TableCell align="center" sx={{ fontWeight: 800, color: 'primary.main' }}>
