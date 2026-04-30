@@ -15,8 +15,10 @@ import type {
     InviteToken,
     PaginatedResult,
     Participant,
+    ParticipantDetail,
     ParticipantQuestionnaireMatrix,
     ResponseDetail,
+    UpdateParticipantProfileBody,
 } from '@aor/types';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
@@ -30,6 +32,7 @@ export const adminKeys = {
     response: (id: number) => ['admin', 'responses', id] as const,
     participants: (page?: number, companyId?: number, perPage?: number) =>
         ['admin', 'participants', page, companyId, perPage] as const,
+    participant: (participantId: number) => ['admin', 'participants', participantId] as const,
     participantTokens: (participantId: number) => ['admin', 'participants', participantId, 'tokens'] as const,
     participantMatrix: (participantId: number, qid: string) =>
         ['admin', 'participants', participantId, 'matrix', qid] as const,
@@ -84,6 +87,29 @@ export function useParticipants(page = 1, companyId?: number, perPage = 25) {
             apiClient
                 .get('/admin/participants', { params: { page, company_id: companyId, per_page: perPage } })
                 .then(r => r.data),
+    });
+}
+
+export function useParticipant(participantId: number) {
+    return useQuery<ParticipantDetail>({
+        queryKey: adminKeys.participant(participantId),
+        queryFn: () => apiClient.get(`/admin/participants/${participantId}`).then(r => r.data),
+        enabled: participantId > 0,
+    });
+}
+
+export function useUpdateParticipant() {
+    const qc = useQueryClient();
+    const toast = useToast();
+    return useMutation<ParticipantDetail, Error, { participantId: number; body: UpdateParticipantProfileBody }>({
+        mutationFn: ({ participantId, body }) =>
+            apiClient.patch(`/admin/participants/${participantId}`, body).then(r => r.data),
+        onSuccess: (data, vars) => {
+            qc.setQueryData(adminKeys.participant(vars.participantId), data);
+            qc.invalidateQueries({ queryKey: adminKeys.participants() });
+            toast.success('Participant mis à jour.');
+        },
+        onError: err => toast.error(toErrorMessage(err, 'Échec de la mise à jour du participant.')),
     });
 }
 

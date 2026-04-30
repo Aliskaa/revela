@@ -1,6 +1,9 @@
 import { z } from 'zod';
 import { campaignStatusSchema, progressStatusSchema } from './api-common';
 
+export const participantFunctionLevelSchema = z.enum(['direction', 'middle_management', 'frontline_manager']);
+export type ParticipantFunctionLevel = z.infer<typeof participantFunctionLevelSchema>;
+
 export const participantSchema = z.object({
     id: z.number().int(),
     first_name: z.string(),
@@ -8,10 +11,32 @@ export const participantSchema = z.object({
     full_name: z.string(),
     email: z.string(),
     company: z.object({ id: z.number().int(), name: z.string() }).nullable(),
+    organisation: z.string().nullable(),
+    direction: z.string().nullable(),
+    service: z.string().nullable(),
+    function_level: participantFunctionLevelSchema.nullable(),
+    created_at: z.string().nullable(),
     invite_status: z.record(z.string(), z.string()),
     response_count: z.number().int(),
 });
 export type Participant = z.infer<typeof participantSchema>;
+
+export const participantCampaignAssignmentSchema = z.object({
+    campaign_id: z.number().int(),
+    campaign_name: z.string(),
+    status: z.string(),
+    company_id: z.number().int().nullable(),
+    company_name: z.string().nullable(),
+    invited_at: z.string().nullable(),
+    joined_at: z.string().nullable(),
+});
+export type ParticipantCampaignAssignment = z.infer<typeof participantCampaignAssignmentSchema>;
+
+export const participantDetailSchema = z.object({
+    participant: participantSchema,
+    campaigns: z.array(participantCampaignAssignmentSchema),
+});
+export type ParticipantDetail = z.infer<typeof participantDetailSchema>;
 
 export const campaignPeerChoiceSchema = z.object({
     participant_id: z.number().int(),
@@ -42,9 +67,6 @@ const participantSessionAssignmentSchema = z.object({
     invitation_confirmed: z.boolean(),
     progression: participantSessionProgressionSchema.nullable(),
 });
-
-export const participantFunctionLevelSchema = z.enum(['direction', 'middle_management', 'frontline_manager']);
-export type ParticipantFunctionLevel = z.infer<typeof participantFunctionLevelSchema>;
 
 export const participantSessionSchema = z.object({
     participant_id: z.number().int(),

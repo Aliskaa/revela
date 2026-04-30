@@ -3,7 +3,7 @@
 import type { IScorePersistencePort, SaveScoringResultCommand } from '@aor/ports';
 import { expect, test } from 'vitest';
 
-import { CalculateScoringUseCase } from './calculate-scoring.usecase';
+import { CalculateScoringUseCase } from '../calculate-scoring.usecase';
 import { PARITY_FIXTURES } from './testing/parity.fixtures';
 
 class StubScorePersistence implements IScorePersistencePort {

@@ -277,9 +277,18 @@ function CoachCompanyDetailRoute() {
                                         participants.map(p => (
                                             <TableRow hover key={p.id}>
                                                 <TableCell>
-                                                    <Typography fontWeight={700} color="text.primary">
-                                                        {p.full_name}
-                                                    </Typography>
+                                                    <Link
+                                                        to={`/coach/participants/${p.id}`}
+                                                        style={{ color: 'inherit', textDecoration: 'none' }}
+                                                    >
+                                                        <Typography
+                                                            fontWeight={700}
+                                                            color="primary.main"
+                                                            sx={{ '&:hover': { textDecoration: 'underline' } }}
+                                                        >
+                                                            {p.full_name}
+                                                        </Typography>
+                                                    </Link>
                                                     <Typography variant="caption" color="text.secondary">
                                                         {p.email}
                                                     </Typography>

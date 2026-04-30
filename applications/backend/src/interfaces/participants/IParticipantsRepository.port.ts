@@ -3,7 +3,7 @@
 import type { Participant, ParticipantFunctionLevel } from '@src/domain/participants';
 import type { Paginated } from '@src/shared/pagination';
 
-export { type ParticipantFunctionLevel } from '@src/domain/participants';
+export type { ParticipantFunctionLevel } from '@src/domain/participants';
 
 export const PARTICIPANTS_REPOSITORY_PORT_SYMBOL = Symbol('PARTICIPANTS_REPOSITORY_PORT_SYMBOL');
 
@@ -52,6 +52,20 @@ export type ParticipantAdminListItem = {
     company: { id: number; name: string } | null;
     readonly inviteStatus: Record<string, string>;
     readonly responseCount: number;
+};
+
+/**
+ * Vue d'une affectation de campagne pour un participant — utilisée par la fiche détail
+ * participant (admin/coach) pour lister les campagnes auxquelles il est rattaché.
+ */
+export type ParticipantCampaignAssignmentItem = {
+    campaignId: number;
+    campaignName: string;
+    status: string;
+    companyId: number | null;
+    companyName: string | null;
+    invitedAt: Date | null;
+    joinedAt: Date | null;
 };
 
 export type CampaignParticipantProgressItem = {
@@ -120,6 +134,20 @@ export interface IParticipantsAdminReadPort {
     listWithCompany(params: ListParticipantsParams): Promise<Paginated<ParticipantAdminListItem>>;
     listByCompanyId(companyId: number): Promise<Participant[]>;
     listCampaignParticipantProgress(campaignId: number): Promise<CampaignParticipantProgressItem[]>;
+    /**
+     * Variante enrichie de `findById` : inclut company name, invite_status, response_count.
+     * Si `coachId` est fourni, retourne `null` si le participant n'a aucune campagne attribuée
+     * à ce coach (filtrage scope=coach, ADR-008).
+     */
+    findByIdEnriched(id: number, params: { coachId?: number }): Promise<ParticipantAdminListItem | null>;
+    /**
+     * Liste les campagnes auxquelles un participant est rattaché (invité ou ayant rejoint).
+     * Si `coachId` est fourni, filtre aux campagnes de ce coach.
+     */
+    listCampaignsForParticipant(
+        participantId: number,
+        params: { coachId?: number }
+    ): Promise<ParticipantCampaignAssignmentItem[]>;
 }
 
 export interface IParticipantsMetricsPort {

@@ -6,8 +6,10 @@ import {
     Delete,
     Get,
     Inject,
+    NotFoundException,
     Param,
     ParseIntPipe,
+    Patch,
     Post,
     Query,
     Req,
@@ -21,9 +23,14 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
 import type { CreateParticipantInviteUseCase } from '@src/application/admin/participants/create-participant-invite.usecase';
 import type { EraseParticipantRgpdUseCase } from '@src/application/admin/participants/erase-participant-rgpd.usecase';
+import type { GetAdminParticipantDetailUseCase } from '@src/application/admin/participants/get-admin-participant-detail.usecase';
 import type { ImportParticipantsCsvUseCase } from '@src/application/admin/participants/import-participants-csv.usecase';
 import type { ListAdminParticipantsUseCase } from '@src/application/admin/participants/list-admin-participants.usecase';
 import type { ListParticipantInvitationTokensUseCase } from '@src/application/admin/participants/list-participant-invitation-tokens.usecase';
+import type {
+    UpdateAdminParticipantUseCase,
+    UpdateParticipantProfileBody,
+} from '@src/application/admin/participants/update-admin-participant.usecase';
 import type { GetParticipantQuestionnaireMatrixUseCase } from '@src/application/participant-session/get-participant-questionnaire-matrix.usecase';
 import { ResponsesExceptionFilter } from '@src/presentation/responses/responses-exception.filter';
 
@@ -31,14 +38,16 @@ import type { JwtValidatedUser } from '@src/presentation/jwt-validated-user';
 import { GET_PARTICIPANT_QUESTIONNAIRE_MATRIX_USE_CASE_SYMBOL } from '@src/presentation/participant-session/participant.tokens';
 import { AdminApplicationExceptionFilter } from './admin-application-exception.filter';
 import { AdminJwtAuthGuard } from './admin-jwt-auth.guard';
-import { participantToAdminJson } from './admin.presenters';
+import { participantDetailToAdminJson, participantToAdminJson } from './admin.presenters';
 
 import {
     CREATE_PARTICIPANT_INVITE_USE_CASE_SYMBOL,
     ERASE_PARTICIPANT_RGPD_USE_CASE_SYMBOL,
+    GET_ADMIN_PARTICIPANT_DETAIL_USE_CASE_SYMBOL,
     IMPORT_PARTICIPANTS_CSV_USE_CASE_SYMBOL,
     LIST_ADMIN_PARTICIPANTS_USE_CASE_SYMBOL,
     LIST_PARTICIPANT_INVITATION_TOKENS_USE_CASE_SYMBOL,
+    UPDATE_ADMIN_PARTICIPANT_USE_CASE_SYMBOL,
 } from './admin.tokens';
 
 @ApiTags('admin-participants')
@@ -58,6 +67,10 @@ export class AdminParticipantsController {
         private readonly listParticipantInvitationTokens: ListParticipantInvitationTokensUseCase,
         @Inject(ERASE_PARTICIPANT_RGPD_USE_CASE_SYMBOL)
         private readonly eraseParticipantRgpd: EraseParticipantRgpdUseCase,
+        @Inject(GET_ADMIN_PARTICIPANT_DETAIL_USE_CASE_SYMBOL)
+        private readonly getAdminParticipantDetail: GetAdminParticipantDetailUseCase,
+        @Inject(UPDATE_ADMIN_PARTICIPANT_USE_CASE_SYMBOL)
+        private readonly updateAdminParticipant: UpdateAdminParticipantUseCase,
         @Inject(GET_PARTICIPANT_QUESTIONNAIRE_MATRIX_USE_CASE_SYMBOL)
         private readonly getParticipantQuestionnaireMatrix: GetParticipantQuestionnaireMatrixUseCase
     ) {}
@@ -105,6 +118,30 @@ export class AdminParticipantsController {
             per_page: result.perPage,
             items: result.items.map(participantToAdminJson),
         };
+    }
+
+    @Get('participants/:participantId')
+    public async getParticipant(
+        @Req() req: { user: JwtValidatedUser },
+        @Param('participantId', ParseIntPipe) participantId: number
+    ) {
+        const coachId = req.user.scope === 'coach' ? req.user.coachId : undefined;
+        const detail = await this.getAdminParticipantDetail.execute(participantId, { coachId });
+        if (!detail) {
+            throw new NotFoundException();
+        }
+        return participantDetailToAdminJson(detail);
+    }
+
+    @Patch('participants/:participantId')
+    public async updateParticipant(
+        @Req() req: { user: JwtValidatedUser },
+        @Param('participantId', ParseIntPipe) participantId: number,
+        @Body() body: UpdateParticipantProfileBody
+    ) {
+        const coachId = req.user.scope === 'coach' ? req.user.coachId : undefined;
+        const detail = await this.updateAdminParticipant.execute(participantId, body, { coachId });
+        return participantDetailToAdminJson(detail);
     }
 
     @Post('participants/import')

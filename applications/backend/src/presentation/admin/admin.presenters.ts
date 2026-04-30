@@ -1,10 +1,14 @@
 // Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
 
 import type { AdminDashboardSnapshot } from '@aor/domain';
+import type { AdminParticipantDetail } from '@src/application/admin/participants/get-admin-participant-detail.usecase';
 import type { Campaign } from '@src/domain/campaigns';
 import type { Coach } from '@src/domain/coaches';
 import type { CompanyWithParticipantCountReadModel } from '@src/interfaces/companies/ICompaniesRepository.port';
-import type { ParticipantAdminListItem } from '@src/interfaces/participants/IParticipantsRepository.port';
+import type {
+    ParticipantAdminListItem,
+    ParticipantCampaignAssignmentItem,
+} from '@src/interfaces/participants/IParticipantsRepository.port';
 
 export const participantToAdminJson = (p: ParticipantAdminListItem) => ({
     id: p.id,
@@ -13,8 +17,28 @@ export const participantToAdminJson = (p: ParticipantAdminListItem) => ({
     full_name: `${p.firstName} ${p.lastName}`,
     email: p.email,
     company: p.company ? { id: p.company.id, name: p.company.name } : null,
+    organisation: p.organisation,
+    direction: p.direction,
+    service: p.service,
+    function_level: p.functionLevel,
+    created_at: p.createdAt ? p.createdAt.toISOString() : null,
     invite_status: p.inviteStatus,
     response_count: p.responseCount,
+});
+
+export const participantCampaignAssignmentToAdminJson = (a: ParticipantCampaignAssignmentItem) => ({
+    campaign_id: a.campaignId,
+    campaign_name: a.campaignName,
+    status: a.status,
+    company_id: a.companyId,
+    company_name: a.companyName,
+    invited_at: a.invitedAt ? a.invitedAt.toISOString() : null,
+    joined_at: a.joinedAt ? a.joinedAt.toISOString() : null,
+});
+
+export const participantDetailToAdminJson = (detail: AdminParticipantDetail) => ({
+    participant: participantToAdminJson(detail.participant),
+    campaigns: detail.campaigns.map(participantCampaignAssignmentToAdminJson),
 });
 
 export const companyToAdminJson = (c: CompanyWithParticipantCountReadModel) => ({

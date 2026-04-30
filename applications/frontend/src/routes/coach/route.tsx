@@ -18,7 +18,7 @@ import {
     Typography,
 } from '@mui/material';
 import { Link, Outlet, createFileRoute, redirect, useLocation, useNavigate } from '@tanstack/react-router';
-import { Building2, ChevronRight, ClipboardList, Gauge, LogOut, Menu, UserRound, Users, X } from 'lucide-react';
+import { Building2, ChevronRight, ClipboardList, Gauge, LogOut, Menu, UserRound, X } from 'lucide-react';
 import * as React from 'react';
 
 type CoachNavItem = {
@@ -32,7 +32,6 @@ const coachNav: CoachNavItem[] = [
     { label: 'Tableau de bord', to: '/coach', icon: Gauge, exact: true },
     { label: 'Mes campagnes', to: '/coach/campaigns', icon: ClipboardList },
     { label: 'Mes entreprises', to: '/coach/companies', icon: Building2 },
-    { label: 'Mes participants', to: '/coach/participants', icon: Users },
 ];
 
 function isActive(item: CoachNavItem, pathname: string): boolean {

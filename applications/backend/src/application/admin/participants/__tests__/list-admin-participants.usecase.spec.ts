@@ -24,6 +24,8 @@ const buildStub = () => {
         },
         listByCompanyId: async () => [],
         listCampaignParticipantProgress: async () => [],
+        findByIdEnriched: async () => null,
+        listCampaignsForParticipant: async () => [],
     };
     return { port, calls };
 };

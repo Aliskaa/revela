@@ -2,14 +2,13 @@
 
 import { ParticipantQuestionnaireMatrix } from '@/components/matrix/ParticipantQuestionnaireMatrix';
 import { Box, Button, Stack, Typography } from '@mui/material';
-import { Link, createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, useRouter } from '@tanstack/react-router';
 import { ArrowLeft, LayoutPanelLeft } from 'lucide-react';
 
 /**
  * Matrice des scores d'un participant côté coach.
  *
  * Réplique de `routes/admin/participants/$participantId.matrix.tsx` adaptée :
- * - bouton « Retour » pointe vers `/coach/participants` (la liste cross-campagnes du coach) ;
  * - le composant `<ParticipantQuestionnaireMatrix>` est partagé avec l'espace admin et
  *   consomme l'endpoint `/admin/participants/:id/matrix` qui n'est pas filtré par
  *   `coachId` à ce jour (limite V1.5 documentée dans avancement-2026-04-28.md §5.2 —
@@ -33,13 +32,13 @@ function CoachParticipantMatrixPage() {
     const { participantId } = Route.useParams();
     const { qid } = Route.useSearch();
     const navigate = Route.useNavigate();
+    const router = useRouter();
     const id = Number(participantId);
 
     return (
         <Box sx={{ p: { xs: 2, sm: 3, md: 4 } }}>
             <Button
-                component={Link}
-                to="/coach/participants"
+                onClick={() => router.history.back()}
                 startIcon={<ArrowLeft size={18} />}
                 sx={{
                     mb: 3,
@@ -49,7 +48,7 @@ function CoachParticipantMatrixPage() {
                 }}
                 disableRipple
             >
-                Retour aux participants
+                Retour
             </Button>
 
             <Stack

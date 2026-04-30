@@ -31,6 +31,7 @@ import type {
     IParticipantsRepositoryPort,
     ListParticipantsParams,
     ParticipantAdminListItem,
+    ParticipantCampaignAssignmentItem,
     ParticipantInviteAssignment,
     ParticipantProgressRecord,
 } from '@src/interfaces/participants/IParticipantsRepository.port';
@@ -476,6 +477,145 @@ export class DrizzleParticipantsRepository implements IParticipantsRepositoryPor
             pages: Math.max(1, Math.ceil(total / perPage)),
             perPage,
         };
+    }
+
+    public async findByIdEnriched(id: number, params: { coachId?: number }): Promise<ParticipantAdminListItem | null> {
+        const [row] = await this.db
+            .select({
+                participant: participantsTable,
+                companyId: companiesTable.id,
+                companyName: companiesTable.name,
+            })
+            .from(participantsTable)
+            .leftJoin(companiesTable, eq(participantsTable.companyId, companiesTable.id))
+            .where(eq(participantsTable.id, id))
+            .limit(1);
+        if (!row) {
+            return null;
+        }
+
+        if (params.coachId !== undefined) {
+            // Le coach ne voit que les participants ayant au moins une campagne attribuée à lui
+            // (invitation ou jointure confirmée). Cf. ADR-008 §scope=coach.
+            const [accessRow] = await this.db
+                .select({ id: campaignsTable.id })
+                .from(campaignsTable)
+                .innerJoin(campaignParticipantsTable, eq(campaignParticipantsTable.campaignId, campaignsTable.id))
+                .where(and(eq(campaignsTable.coachId, params.coachId), eq(campaignParticipantsTable.participantId, id)))
+                .limit(1);
+            if (!accessRow) {
+                return null;
+            }
+        }
+
+        const itemBase: ParticipantAdminListItem = {
+            id: row.participant.id,
+            companyId: row.participant.companyId,
+            firstName: row.participant.firstName,
+            lastName: row.participant.lastName,
+            email: row.participant.email,
+            organisation: row.participant.organisation,
+            direction: row.participant.direction,
+            service: row.participant.service,
+            functionLevel: row.participant.functionLevel,
+            createdAt: row.participant.createdAt,
+            company:
+                row.companyId !== null && row.companyName !== null
+                    ? { id: row.companyId, name: row.companyName }
+                    : null,
+            inviteStatus: {},
+            responseCount: 0,
+        };
+
+        const tokenRows = await this.db
+            .select()
+            .from(inviteTokensTable)
+            .where(eq(inviteTokensTable.participantId, id))
+            .orderBy(desc(inviteTokensTable.createdAt));
+
+        const [{ cnt: responseCount }] = await this.db
+            .select({ cnt: sql<number>`cast(count(*) as int)` })
+            .from(questionnaireResponsesTable)
+            .where(eq(questionnaireResponsesTable.participantId, id));
+
+        const tokenByQid = new Map<string, (typeof tokenRows)[0]>();
+        for (const token of tokenRows) {
+            const existing = tokenByQid.get(token.questionnaireId);
+            if (!existing || (token.createdAt && existing.createdAt && token.createdAt > existing.createdAt)) {
+                tokenByQid.set(token.questionnaireId, token);
+            }
+        }
+
+        const campaignIdsForJoinCheck = [
+            ...new Set([...tokenByQid.values()].map(t => t.campaignId).filter((c): c is number => c != null)),
+        ];
+        const joinedCampaigns = new Set<number>();
+        if (campaignIdsForJoinCheck.length > 0) {
+            const joinedRows = await this.db
+                .select({ campaignId: campaignParticipantsTable.campaignId })
+                .from(campaignParticipantsTable)
+                .where(
+                    and(
+                        eq(campaignParticipantsTable.participantId, id),
+                        inArray(campaignParticipantsTable.campaignId, campaignIdsForJoinCheck),
+                        isNotNull(campaignParticipantsTable.joinedAt)
+                    )
+                );
+            for (const r of joinedRows) {
+                joinedCampaigns.add(r.campaignId);
+            }
+        }
+
+        const inviteStatus: Record<string, string> = {};
+        for (const [qid, token] of tokenByQid) {
+            const participationConfirmed = token.campaignId != null && joinedCampaigns.has(token.campaignId);
+            inviteStatus[qid] = invitationTokenAdminStatus({
+                isActive: token.isActive,
+                usedAt: token.usedAt,
+                expiresAt: token.expiresAt,
+                participationConfirmed,
+            });
+        }
+
+        return {
+            ...itemBase,
+            inviteStatus,
+            responseCount,
+        };
+    }
+
+    public async listCampaignsForParticipant(
+        participantId: number,
+        params: { coachId?: number }
+    ): Promise<ParticipantCampaignAssignmentItem[]> {
+        const filters = [eq(campaignParticipantsTable.participantId, participantId)];
+        if (params.coachId !== undefined) {
+            filters.push(eq(campaignsTable.coachId, params.coachId));
+        }
+        const rows = await this.db
+            .select({
+                campaignId: campaignsTable.id,
+                campaignName: campaignsTable.name,
+                status: campaignsTable.status,
+                companyId: companiesTable.id,
+                companyName: companiesTable.name,
+                invitedAt: campaignParticipantsTable.invitedAt,
+                joinedAt: campaignParticipantsTable.joinedAt,
+            })
+            .from(campaignParticipantsTable)
+            .innerJoin(campaignsTable, eq(campaignParticipantsTable.campaignId, campaignsTable.id))
+            .leftJoin(companiesTable, eq(campaignsTable.companyId, companiesTable.id))
+            .where(and(...filters))
+            .orderBy(desc(campaignParticipantsTable.invitedAt));
+        return rows.map(r => ({
+            campaignId: r.campaignId,
+            campaignName: r.campaignName,
+            status: r.status,
+            companyId: r.companyId,
+            companyName: r.companyName,
+            invitedAt: r.invitedAt,
+            joinedAt: r.joinedAt,
+        }));
     }
 
     public async listByCompanyId(companyId: number): Promise<Participant[]> {

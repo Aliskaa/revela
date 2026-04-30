@@ -14,6 +14,7 @@ import {
     TableRow,
     Typography,
 } from '@mui/material';
+import { Link } from '@tanstack/react-router';
 import { ChevronDown, LayoutPanelLeft } from 'lucide-react';
 import * as React from 'react';
 
@@ -121,10 +122,25 @@ export function CampaignParticipantsTable({
                                                     />
                                                 </IconButton>
                                             </TableCell>
-                                            <TableCell>
-                                                <Typography fontWeight={700} color="text.primary">
-                                                    {p.fullName}
-                                                </Typography>
+                                            <TableCell onClick={e => e.stopPropagation()}>
+                                                {matrixUrlPrefix ? (
+                                                    <Link
+                                                        to={`${matrixUrlPrefix}/${p.participantId}`}
+                                                        style={{ color: 'inherit', textDecoration: 'none' }}
+                                                    >
+                                                        <Typography
+                                                            fontWeight={700}
+                                                            color="primary.main"
+                                                            sx={{ '&:hover': { textDecoration: 'underline' } }}
+                                                        >
+                                                            {p.fullName}
+                                                        </Typography>
+                                                    </Link>
+                                                ) : (
+                                                    <Typography fontWeight={700} color="text.primary">
+                                                        {p.fullName}
+                                                    </Typography>
+                                                )}
                                                 <Typography variant="caption" color="text.secondary">
                                                     {p.email}
                                                 </Typography>
