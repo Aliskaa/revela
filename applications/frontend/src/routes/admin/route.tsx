@@ -1,25 +1,20 @@
 import { Box, InputBase, Stack, Typography } from '@mui/material';
 import { Outlet, createFileRoute, redirect, useLocation } from '@tanstack/react-router';
-import {
-    Building2,
-    ClipboardList,
-    LayoutDashboard,
-    MessageSquareText,
-    Search,
-    Shield,
-    Sparkles,
-    UserRound,
-} from 'lucide-react';
+import { Building2, ClipboardList, LayoutDashboard, Search, Shield, Sparkles, UserRound } from 'lucide-react';
 
 import { ScopedAppShell, type ScopedNavItem } from '@/components/layout/ScopedAppShell';
 import { parseAdminJwtClaims, userAdmin } from '@/lib/auth';
 
+/**
+ * Pas d'item « Réponses » : une réponse n'a de sens que rattachée à un participant et à une
+ * campagne. La consultation se fait depuis la fiche campagne (table participants → matrix) ou
+ * la fiche participant — pas de vue cross-campagnes en V1.
+ */
 const adminNav: ScopedNavItem[] = [
     { label: 'Tableau de bord', to: '/admin', icon: LayoutDashboard, exact: true },
     { label: 'Campagnes', to: '/admin/campaigns', icon: ClipboardList },
     { label: 'Entreprises', to: '/admin/companies', icon: Building2 },
     { label: 'Coachs', to: '/admin/coaches', icon: UserRound },
-    { label: 'Réponses', to: '/admin/responses', icon: MessageSquareText },
     { label: 'Questionnaires', to: '/admin/questionnaires', icon: Sparkles },
 ];
 

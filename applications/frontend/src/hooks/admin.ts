@@ -17,7 +17,6 @@ import type {
     Participant,
     ParticipantDetail,
     ParticipantQuestionnaireMatrix,
-    ResponseDetail,
     UpdateParticipantProfileBody,
 } from '@aor/types';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -29,7 +28,6 @@ export const adminKeys = {
     dashboard: ['admin', 'dashboard'] as const,
     responses: (qid?: string, page?: number, campaignId?: number) =>
         ['admin', 'responses', qid, page, campaignId] as const,
-    response: (id: number) => ['admin', 'responses', id] as const,
     participants: (page?: number, companyId?: number, perPage?: number) =>
         ['admin', 'participants', page, companyId, perPage] as const,
     participant: (participantId: number) => ['admin', 'participants', participantId] as const,
@@ -69,14 +67,6 @@ export function useAdminResponses(qid?: string, page = 1, perPage = 50, campaign
                     params: { qid, campaign_id: campaignId, page, per_page: perPage },
                 })
                 .then(r => r.data),
-    });
-}
-
-export function useAdminResponse(id: number) {
-    return useQuery<ResponseDetail>({
-        queryKey: adminKeys.response(id),
-        queryFn: () => apiClient.get(`/admin/responses/${id}`).then(r => r.data),
-        enabled: !!id,
     });
 }
 
@@ -207,24 +197,6 @@ export function useDeleteParticipant() {
             );
         },
         onError: err => toast.error(toErrorMessage(err, 'Échec de la suppression du participant.')),
-    });
-}
-
-export function useDeleteResponse() {
-    const qc = useQueryClient();
-    const toast = useToast();
-    return useMutation<{ message: string; deleted_response_id: number }, Error, { responseId: number }>({
-        mutationFn: ({ responseId }) =>
-            apiClient
-                .delete(`/admin/responses/${responseId}`, {
-                    data: { confirm: true },
-                })
-                .then(r => r.data),
-        onSuccess: () => {
-            qc.invalidateQueries({ queryKey: ['admin'] });
-            toast.success('Réponse supprimée.');
-        },
-        onError: err => toast.error(toErrorMessage(err, 'Échec de la suppression de la réponse.')),
     });
 }
 
