@@ -19,10 +19,10 @@ import { ChevronDown, LayoutPanelLeft } from 'lucide-react';
 import * as React from 'react';
 
 import { SectionTitle } from '@/components/common/SectionTitle';
+import { ProgressChip } from '@/components/common/chips';
 import type { CampaignParticipantProgress } from '@aor/types';
 
 import { ParticipantTokensRow } from './ParticipantTokensRow';
-import { ProgressChip } from './ProgressChip';
 
 export type CampaignParticipantsTableProps = {
     campaignId: number;

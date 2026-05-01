@@ -1,23 +1,23 @@
 import { AdminCoachDrawerForm } from '@/components/admin/AdminCoachDrawerForm';
-import { MiniStat } from '@/components/common/MiniStat';
 import { SectionTitle } from '@/components/common/SectionTitle';
 import { SkeletonCards, SkeletonTableRows } from '@/components/common/SkeletonRows';
-import { StatCard } from '@/components/common/StatCard';
+import { StatCard } from '@/components/common/cards';
+import { ActiveStatusChip } from '@/components/common/chips';
+import { EmptyTableRow, StandardTablePagination } from '@/components/common/data-table';
+import { KpiGrid, PageHeroCard } from '@/components/common/layout';
 import { useAdminCampaigns, useCoaches, useCreateCoach } from '@/hooks/admin';
-import { usePageResetEffect } from '@/lib/usePageResetEffect';
+import { useTablePagination } from '@/lib/useTablePagination';
 import {
     Box,
     Button,
     Card,
     CardContent,
-    Chip,
     IconButton,
     Stack,
     Table,
     TableBody,
     TableCell,
     TableHead,
-    TablePagination,
     TableRow,
     TextField,
     Tooltip,
@@ -31,29 +31,9 @@ export const Route = createFileRoute('/admin/coaches/')({
     component: AdminCoachesRoute,
 });
 
-function StatusChip({ isActive }: { isActive: boolean }) {
-    if (isActive)
-        return (
-            <Chip
-                label="Actif"
-                size="small"
-                sx={{ borderRadius: 99, bgcolor: 'rgba(16,185,129,0.12)', color: 'rgb(4,120,87)' }}
-            />
-        );
-    return (
-        <Chip
-            label="Inactif"
-            size="small"
-            sx={{ borderRadius: 99, bgcolor: 'rgba(148,163,184,0.16)', color: 'rgb(100,116,139)' }}
-        />
-    );
-}
-
 function AdminCoachesRoute() {
     const [createOpen, setCreateOpen] = React.useState(false);
     const [search, setSearch] = React.useState('');
-    const [page, setPage] = React.useState(0);
-    const [rowsPerPage, setRowsPerPage] = React.useState(10);
 
     const { data: coaches = [], isLoading: coachesLoading } = useCoaches();
     const { data: campaigns = [], isLoading: campaignsLoading } = useAdminCampaigns();
@@ -81,12 +61,10 @@ function AdminCoachesRoute() {
         [coaches, search]
     );
 
-    const paged = React.useMemo(
-        () => filtered.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage),
-        [filtered, page, rowsPerPage]
-    );
-
-    usePageResetEffect(setPage, [search]);
+    const { page, rowsPerPage, paged, setPage, setRowsPerPage } = useTablePagination({
+        items: filtered,
+        resetWhen: [search],
+    });
 
     const activeCount = coaches.filter(c => c.isActive).length;
 
@@ -114,44 +92,24 @@ function AdminCoachesRoute() {
                 }}
             />
 
-            <Card variant="outlined">
-                <CardContent sx={{ p: { xs: 2.5, md: 3 } }}>
-                    <Stack
-                        spacing={2.5}
-                        direction={{ xs: 'column', lg: 'row' }}
-                        justifyContent="space-between"
-                        alignItems={{ xs: 'start', lg: 'start' }}
+            <PageHeroCard
+                eyebrow="Coachs"
+                title="Coachs"
+                subtitle="Référentiel des coachs et des campagnes qui leur sont associées."
+                actions={
+                    <Button
+                        onClick={() => setCreateOpen(true)}
+                        variant="contained"
+                        disableElevation
+                        startIcon={<Plus size={16} />}
+                        sx={{ borderRadius: 3, bgcolor: 'primary.main' }}
                     >
-                        <Box>
-                            <Chip
-                                label="Coachs"
-                                sx={{ borderRadius: 99, bgcolor: 'tint.primaryBg', color: 'primary.main', mb: 1.5 }}
-                            />
-                            <Typography variant="h4" fontWeight={800} color="text.primary" sx={{ letterSpacing: -0.5 }}>
-                                Coachs
-                            </Typography>
-                            <Typography
-                                variant="body1"
-                                color="text.secondary"
-                                sx={{ mt: 1, lineHeight: 1.7, maxWidth: 860 }}
-                            >
-                                Référentiel des coachs et des campagnes qui leur sont associées.
-                            </Typography>
-                        </Box>
-                        <Button
-                            onClick={() => setCreateOpen(true)}
-                            variant="contained"
-                            disableElevation
-                            startIcon={<Plus size={16} />}
-                            sx={{ borderRadius: 3, bgcolor: 'primary.main' }}
-                        >
-                            Ajouter un coach
-                        </Button>
-                    </Stack>
-                </CardContent>
-            </Card>
+                        Ajouter un coach
+                    </Button>
+                }
+            />
 
-            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(3, minmax(0, 1fr))' }, gap: 2 }}>
+            <KpiGrid columns={3}>
                 <StatCard
                     label="Coachs"
                     value={coaches.length}
@@ -173,7 +131,7 @@ function AdminCoachesRoute() {
                     icon={ClipboardList}
                     loading={campaignsLoading}
                 />
-            </Box>
+            </KpiGrid>
 
             <Card variant="outlined">
                 <CardContent sx={{ p: 2.5 }}>
@@ -222,7 +180,7 @@ function AdminCoachesRoute() {
                                             </TableCell>
                                             <TableCell>{campaignCountByCoach.get(coach.id) ?? 0}</TableCell>
                                             <TableCell>
-                                                <StatusChip isActive={coach.isActive} />
+                                                <ActiveStatusChip isActive={coach.isActive} />
                                             </TableCell>
                                             <TableCell>
                                                 {coach.createdAt
@@ -246,32 +204,24 @@ function AdminCoachesRoute() {
                                     ))
                                 )}
                                 {!isLoading && filtered.length === 0 && (
-                                    <TableRow>
-                                        <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
-                                            <Typography variant="body2" color="text.secondary">
-                                                {search
-                                                    ? 'Aucun coach ne correspond à la recherche.'
-                                                    : 'Aucun coach pour le moment.'}
-                                            </Typography>
-                                        </TableCell>
-                                    </TableRow>
+                                    <EmptyTableRow
+                                        colSpan={6}
+                                        message={
+                                            search
+                                                ? 'Aucun coach ne correspond à la recherche.'
+                                                : 'Aucun coach pour le moment.'
+                                        }
+                                    />
                                 )}
                             </TableBody>
                         </Table>
                         {filtered.length > 0 && (
-                            <TablePagination
-                                component="div"
+                            <StandardTablePagination
                                 count={filtered.length}
                                 page={page}
-                                onPageChange={(_, newPage) => setPage(newPage)}
                                 rowsPerPage={rowsPerPage}
-                                onRowsPerPageChange={e => {
-                                    setRowsPerPage(Number(e.target.value));
-                                    setPage(0);
-                                }}
-                                rowsPerPageOptions={[10, 25, 50]}
-                                labelRowsPerPage="Lignes par page"
-                                labelDisplayedRows={({ from, to, count }) => `${from}–${to} sur ${count}`}
+                                onPageChange={setPage}
+                                onRowsPerPageChange={setRowsPerPage}
                             />
                         )}
                     </Box>
@@ -299,7 +249,7 @@ function AdminCoachesRoute() {
                                                         {coach.username}
                                                     </Typography>
                                                 </Box>
-                                                <StatusChip isActive={coach.isActive} />
+                                                <ActiveStatusChip isActive={coach.isActive} />
                                             </Stack>
                                             <Box
                                                 sx={{
@@ -308,11 +258,13 @@ function AdminCoachesRoute() {
                                                     gap: 1.2,
                                                 }}
                                             >
-                                                <MiniStat
+                                                <StatCard
+                                                    variant="mini"
                                                     label="Campagnes"
                                                     value={String(campaignCountByCoach.get(coach.id) ?? 0)}
                                                 />
-                                                <MiniStat
+                                                <StatCard
+                                                    variant="mini"
                                                     label="Créé le"
                                                     value={
                                                         coach.createdAt

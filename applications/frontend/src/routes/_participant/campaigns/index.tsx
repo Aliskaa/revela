@@ -1,5 +1,5 @@
 import { SectionTitle } from '@/components/common/SectionTitle';
-import { StatCard } from '@/components/common/StatCard';
+import { StatCard } from '@/components/common/cards';
 import { useConfirmCampaignParticipation, useParticipantSession } from '@/hooks/participantSession';
 import { useCampaignStore } from '@/stores/campaignStore';
 import type { ParticipantSession } from '@aor/types';

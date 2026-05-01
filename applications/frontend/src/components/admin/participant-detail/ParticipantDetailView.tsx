@@ -1,10 +1,15 @@
 // Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
 
-import { MiniStat } from '@/components/common/MiniStat';
 import { SectionTitle } from '@/components/common/SectionTitle';
-import { StatCard } from '@/components/common/StatCard';
+import { StatCard } from '@/components/common/cards';
+import { CampaignStatusChip } from '@/components/common/chips';
 import { useParticipant, useUpdateParticipant } from '@/hooks/admin';
-import type { ParticipantCampaignAssignment, ParticipantFunctionLevel, UpdateParticipantProfileBody } from '@aor/types';
+import type {
+    CampaignStatus,
+    ParticipantCampaignAssignment,
+    ParticipantFunctionLevel,
+    UpdateParticipantProfileBody,
+} from '@aor/types';
 import {
     Alert,
     Box,
@@ -48,18 +53,6 @@ const FUNCTION_LEVEL_LABELS: Record<ParticipantFunctionLevel, string> = {
 
 function functionLevelLabel(level: ParticipantFunctionLevel | null): string {
     return level ? FUNCTION_LEVEL_LABELS[level] : 'Non renseigné';
-}
-
-function StatusChip({ status }: { status: string }) {
-    const palette: Record<string, { bg: string; color: string; label: string }> = {
-        draft: { bg: 'rgba(148,163,184,0.16)', color: 'rgb(100,116,139)', label: 'Brouillon' },
-        active: { bg: 'rgba(16,185,129,0.12)', color: 'rgb(4,120,87)', label: 'Active' },
-        archived: { bg: 'rgba(148,163,184,0.16)', color: 'rgb(100,116,139)', label: 'Archivée' },
-    };
-    const p = palette[status] ?? { bg: 'rgba(148,163,184,0.16)', color: 'rgb(100,116,139)', label: status };
-    return (
-        <Chip label={p.label} size="small" sx={{ borderRadius: 99, bgcolor: p.bg, color: p.color, fontWeight: 600 }} />
-    );
 }
 
 export type ParticipantDetailViewProps = {
@@ -235,10 +228,11 @@ export function ParticipantDetailView({ participantId, scopePrefix }: Participan
                         {editing ? (
                             <Stack spacing={2} sx={{ mt: 2 }}>
                                 <Stack spacing={1.2}>
-                                    <MiniStat label="Prénom" value={participant.first_name} />
-                                    <MiniStat label="Nom" value={participant.last_name} />
-                                    <MiniStat label="Email" value={participant.email} />
-                                    <MiniStat
+                                    <StatCard variant="mini" label="Prénom" value={participant.first_name} />
+                                    <StatCard variant="mini" label="Nom" value={participant.last_name} />
+                                    <StatCard variant="mini" label="Email" value={participant.email} />
+                                    <StatCard
+                                        variant="mini"
                                         label="Entreprise"
                                         value={participant.company?.name ?? 'Non renseignée'}
                                     />
@@ -312,14 +306,23 @@ export function ParticipantDetailView({ participantId, scopePrefix }: Participan
                             </Stack>
                         ) : (
                             <Stack spacing={1.2} sx={{ mt: 2 }}>
-                                <MiniStat label="Prénom" value={participant.first_name} />
-                                <MiniStat label="Nom" value={participant.last_name} />
-                                <MiniStat label="Email" value={participant.email} />
-                                <MiniStat label="Entreprise" value={participant.company?.name ?? 'Non renseignée'} />
-                                <MiniStat label="Organisation" value={participant.organisation ?? '–'} />
-                                <MiniStat label="Entité (Direction)" value={participant.direction ?? '–'} />
-                                <MiniStat label="Service" value={participant.service ?? '–'} />
-                                <MiniStat
+                                <StatCard variant="mini" label="Prénom" value={participant.first_name} />
+                                <StatCard variant="mini" label="Nom" value={participant.last_name} />
+                                <StatCard variant="mini" label="Email" value={participant.email} />
+                                <StatCard
+                                    variant="mini"
+                                    label="Entreprise"
+                                    value={participant.company?.name ?? 'Non renseignée'}
+                                />
+                                <StatCard variant="mini" label="Organisation" value={participant.organisation ?? '–'} />
+                                <StatCard
+                                    variant="mini"
+                                    label="Entité (Direction)"
+                                    value={participant.direction ?? '–'}
+                                />
+                                <StatCard variant="mini" label="Service" value={participant.service ?? '–'} />
+                                <StatCard
+                                    variant="mini"
                                     label="Niveau de fonction"
                                     value={functionLevelLabel(participant.function_level)}
                                 />
@@ -373,7 +376,7 @@ export function ParticipantDetailView({ participantId, scopePrefix }: Participan
                                                 </TableCell>
                                                 <TableCell>{c.company_name ?? '–'}</TableCell>
                                                 <TableCell>
-                                                    <StatusChip status={c.status} />
+                                                    <CampaignStatusChip status={c.status as CampaignStatus} />
                                                 </TableCell>
                                                 <TableCell align="right">
                                                     <Button

@@ -19,9 +19,8 @@ import {
 import { Link, createFileRoute } from '@tanstack/react-router';
 import { ArrowLeft, ClipboardList, Hash, MessageSquareText, Sparkles, Users } from 'lucide-react';
 
-import { MiniStat } from '@/components/common/MiniStat';
 import { SectionTitle } from '@/components/common/SectionTitle';
-import { StatCard } from '@/components/common/StatCard';
+import { StatCard } from '@/components/common/cards';
 import { useAdminResponse } from '@/hooks/admin';
 import type { ResponseSubmissionKind } from '@aor/types';
 
@@ -165,17 +164,21 @@ function AdminResponseDetailRoute() {
                             mt: 2,
                         }}
                     >
-                        <MiniStat label="Nom" value={detail.name || '–'} />
-                        <MiniStat label="Email" value={detail.email || '–'} />
-                        <MiniStat label="Organisation" value={detail.organisation || '–'} />
+                        <StatCard variant="mini" label="Nom" value={detail.name || '–'} />
+                        <StatCard variant="mini" label="Email" value={detail.email || '–'} />
+                        <StatCard variant="mini" label="Organisation" value={detail.organisation || '–'} />
                         {detail.subject_participant_id !== null && (
-                            <MiniStat label="Participant sujet" value={`#${detail.subject_participant_id}`} />
+                            <StatCard
+                                variant="mini"
+                                label="Participant sujet"
+                                value={`#${detail.subject_participant_id}`}
+                            />
                         )}
                         {detail.rater_participant_id !== null && (
-                            <MiniStat label="Évaluateur" value={`#${detail.rater_participant_id}`} />
+                            <StatCard variant="mini" label="Évaluateur" value={`#${detail.rater_participant_id}`} />
                         )}
                         {detail.rated_participant_id !== null && (
-                            <MiniStat label="Évalué" value={`#${detail.rated_participant_id}`} />
+                            <StatCard variant="mini" label="Évalué" value={`#${detail.rated_participant_id}`} />
                         )}
                     </Box>
                 </CardContent>

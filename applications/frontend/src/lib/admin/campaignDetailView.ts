@@ -3,15 +3,10 @@
 import type { CampaignParticipantProgress, CampaignStatus } from '@aor/types';
 
 /**
- * Vue-modèle pure pour `routes/admin/campaigns/$campaignId.tsx`. Sortie de la route
- * pour pouvoir tester la logique sans dépendance React/MUI.
+ * Vue-modèle pure pour le détail de campagne (admin/coach). Sortie de la route pour
+ * pouvoir tester la logique sans dépendance React/MUI. Les libellés des questionnaires
+ * sont centralisés dans `@/lib/labels/questionnaires` — ne pas les réintroduire ici.
  */
-
-export const QUESTIONNAIRE_LABELS: Record<string, string> = {
-    B: 'B — Comportement',
-    F: 'F — Ressentis',
-    S: 'S — Soi',
-};
 
 export const statusText = (status: CampaignStatus): string => {
     if (status === 'active') {

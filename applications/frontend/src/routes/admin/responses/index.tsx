@@ -1,7 +1,6 @@
-import { MiniStat } from '@/components/common/MiniStat';
 import { SectionTitle } from '@/components/common/SectionTitle';
 import { SkeletonCards, SkeletonTableRows } from '@/components/common/SkeletonRows';
-import { StatCard } from '@/components/common/StatCard';
+import { StatCard } from '@/components/common/cards';
 import { useAdminResponses } from '@/hooks/admin';
 import { usePageResetEffect } from '@/lib/usePageResetEffect';
 import type { ResponseSubmissionKind } from '@aor/types';
@@ -220,13 +219,23 @@ function AdminResponsesRoute() {
                                                     gap: 1.2,
                                                 }}
                                             >
-                                                <MiniStat label="Questionnaire" value={response.questionnaire_id} />
-                                                <MiniStat label="Organisation" value={response.organisation || '–'} />
-                                                <MiniStat
+                                                <StatCard
+                                                    variant="mini"
+                                                    label="Questionnaire"
+                                                    value={response.questionnaire_id}
+                                                />
+                                                <StatCard
+                                                    variant="mini"
+                                                    label="Organisation"
+                                                    value={response.organisation || '–'}
+                                                />
+                                                <StatCard
+                                                    variant="mini"
                                                     label="Scores"
                                                     value={String(Object.keys(response.scores).length)}
                                                 />
-                                                <MiniStat
+                                                <StatCard
+                                                    variant="mini"
                                                     label="Soumis le"
                                                     value={new Date(response.submitted_at).toLocaleDateString('fr-FR')}
                                                 />

@@ -1,7 +1,7 @@
 import { AdminCoachDrawerForm } from '@/components/admin/AdminCoachDrawerForm';
-import { MiniStat } from '@/components/common/MiniStat';
 import { SectionTitle } from '@/components/common/SectionTitle';
-import { StatCard } from '@/components/common/StatCard';
+import { StatCard } from '@/components/common/cards';
+import { ActiveStatusChip, CampaignStatusChip } from '@/components/common/chips';
 import { useAdminCoach, useCompanies, useDeleteCoach, useUpdateCoach } from '@/hooks/admin';
 import {
     Alert,
@@ -31,34 +31,6 @@ import * as React from 'react';
 export const Route = createFileRoute('/admin/coaches/$coachId')({
     component: AdminCoachDetailRoute,
 });
-
-function StatusChip({ isActive }: { isActive: boolean }) {
-    if (isActive)
-        return (
-            <Chip
-                label="Actif"
-                size="small"
-                sx={{ borderRadius: 99, bgcolor: 'rgba(16,185,129,0.12)', color: 'rgb(4,120,87)' }}
-            />
-        );
-    return (
-        <Chip
-            label="Inactif"
-            size="small"
-            sx={{ borderRadius: 99, bgcolor: 'rgba(148,163,184,0.16)', color: 'rgb(100,116,139)' }}
-        />
-    );
-}
-
-function CampaignStatusChip({ status }: { status: string }) {
-    const palette: Record<string, { bg: string; fg: string; label: string }> = {
-        draft: { bg: 'rgba(148,163,184,0.16)', fg: 'rgb(100,116,139)', label: 'Brouillon' },
-        active: { bg: 'rgba(16,185,129,0.12)', fg: 'rgb(4,120,87)', label: 'Active' },
-        archived: { bg: 'rgba(99,102,241,0.12)', fg: 'rgb(67,56,202)', label: 'Archivée' },
-    };
-    const cfg = palette[status] ?? { bg: 'rgba(148,163,184,0.16)', fg: 'rgb(100,116,139)', label: status };
-    return <Chip label={cfg.label} size="small" sx={{ borderRadius: 99, bgcolor: cfg.bg, color: cfg.fg }} />;
-}
 
 function AdminCoachDetailRoute() {
     const { coachId } = Route.useParams();
@@ -189,7 +161,7 @@ function AdminCoachDetailRoute() {
                                     label="Détail coach"
                                     sx={{ borderRadius: 99, bgcolor: 'tint.primaryBg', color: 'primary.main' }}
                                 />
-                                <StatusChip isActive={coach.isActive} />
+                                <ActiveStatusChip isActive={coach.isActive} />
                             </Stack>
                             <Typography variant="h4" fontWeight={800} color="text.primary" sx={{ letterSpacing: -0.5 }}>
                                 {coach.displayName}
@@ -311,10 +283,14 @@ function AdminCoachDetailRoute() {
                         <CardContent sx={{ p: 2.5 }}>
                             <SectionTitle title="Identité" subtitle="Informations du coach." />
                             <Stack spacing={1.4}>
-                                <MiniStat label="Nom à afficher" value={coach.displayName} />
-                                <MiniStat label="Username" value={coach.username} />
-                                <MiniStat label="Statut" value={coach.isActive ? 'Actif' : 'Désactivé'} />
-                                <MiniStat label="Campagnes" value={String(campaigns.length)} />
+                                <StatCard variant="mini" label="Nom à afficher" value={coach.displayName} />
+                                <StatCard variant="mini" label="Username" value={coach.username} />
+                                <StatCard
+                                    variant="mini"
+                                    label="Statut"
+                                    value={coach.isActive ? 'Actif' : 'Désactivé'}
+                                />
+                                <StatCard variant="mini" label="Campagnes" value={String(campaigns.length)} />
                             </Stack>
                             <Button
                                 variant="outlined"

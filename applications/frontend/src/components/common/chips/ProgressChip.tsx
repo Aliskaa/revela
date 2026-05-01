@@ -1,5 +1,3 @@
-// Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
-
 import { Chip } from '@mui/material';
 
 import type { CampaignParticipantProgress } from '@aor/types';
@@ -16,7 +14,7 @@ export function ProgressChip({ status }: ProgressChipProps) {
             <Chip
                 label="Terminé"
                 size="small"
-                sx={{ borderRadius: 99, bgcolor: 'rgba(16,185,129,0.12)', color: 'rgb(4,120,87)' }}
+                sx={{ borderRadius: 99, bgcolor: 'tint.successBg', color: 'tint.successText' }}
             />
         );
     }
@@ -33,7 +31,7 @@ export function ProgressChip({ status }: ProgressChipProps) {
         <Chip
             label="Verrouillé"
             size="small"
-            sx={{ borderRadius: 99, bgcolor: 'rgba(148,163,184,0.16)', color: 'rgb(100,116,139)' }}
+            sx={{ borderRadius: 99, bgcolor: 'tint.mutedBg', color: 'tint.mutedText' }}
         />
     );
 }

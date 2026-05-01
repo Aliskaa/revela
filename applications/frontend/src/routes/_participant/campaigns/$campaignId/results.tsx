@@ -35,7 +35,9 @@ function ParticipantResultsRoute() {
         Number.isFinite(campaignId) ? campaignId : undefined
     );
 
-    const hasResults = matrix != null && (matrix.self_response_id != null || matrix.peer_columns.length > 0 || matrix.scientific_response_id != null);
+    const hasResults =
+        matrix != null &&
+        (matrix.self_response_id != null || matrix.peer_columns.length > 0 || matrix.scientific_response_id != null);
 
     const isLoading = sessionLoading || matrixLoading;
     const coachName = assignment?.coach_name ?? '–';
@@ -230,8 +232,8 @@ function ParticipantResultsRoute() {
                 <Card variant="outlined">
                     <CardContent sx={{ p: 3 }}>
                         <Typography variant="body2" color="text.secondary">
-                            Les résultats ne sont pas encore disponibles. Complétez les étapes précédentes de votre parcours
-                            pour accéder à vos scores.
+                            Les résultats ne sont pas encore disponibles. Complétez les étapes précédentes de votre
+                            parcours pour accéder à vos scores.
                         </Typography>
                     </CardContent>
                 </Card>

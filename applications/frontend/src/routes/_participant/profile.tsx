@@ -1,4 +1,4 @@
-import { InfoCard } from '@/components/common/InfoCard';
+import { StatCard } from '@/components/common/cards';
 import { useParticipantSession, useUpdateParticipantProfile } from '@/hooks/participantSession';
 import type { ParticipantFunctionLevel } from '@aor/types';
 import {
@@ -150,9 +150,9 @@ function ParticipantProfileRoute() {
             </Card>
 
             <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(3, minmax(0, 1fr))' }, gap: 2 }}>
-                <InfoCard icon={UserRound} label="Nom" value={fullName} />
-                <InfoCard icon={Mail} label="Email" value={email} />
-                <InfoCard icon={Building2} label="Entreprise" value={company} />
+                <StatCard variant="compact" icon={UserRound} label="Nom" value={fullName} />
+                <StatCard variant="compact" icon={Mail} label="Email" value={email} />
+                <StatCard variant="compact" icon={Building2} label="Entreprise" value={company} />
             </Box>
 
             <Card variant="outlined">

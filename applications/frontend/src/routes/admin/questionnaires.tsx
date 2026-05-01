@@ -1,6 +1,6 @@
 import { SectionTitle } from '@/components/common/SectionTitle';
 import { SkeletonCards, SkeletonTableRows } from '@/components/common/SkeletonRows';
-import { StatCard } from '@/components/common/StatCard';
+import { StatCard } from '@/components/common/cards';
 import { useAdminQuestionnaires } from '@/hooks/questionnaires';
 import { usePageResetEffect } from '@/lib/usePageResetEffect';
 import {

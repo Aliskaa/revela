@@ -1,10 +1,11 @@
 // Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
 
-import { Box, Card, CardContent, Chip, Stack, Typography } from '@mui/material';
+import { Stack } from '@mui/material';
 import { createFileRoute } from '@tanstack/react-router';
 import { ClipboardList, MessageSquareText, Target, Users } from 'lucide-react';
 
-import { StatCard } from '@/components/common/StatCard';
+import { StatCard } from '@/components/common/cards';
+import { KpiGrid, PageHeroCard } from '@/components/common/layout';
 import { useAdminCampaigns, useAdminResponses, useParticipants } from '@/hooks/admin';
 
 export const Route = createFileRoute('/coach/')({
@@ -28,36 +29,13 @@ function CoachDashboardRoute() {
 
     return (
         <Stack spacing={3}>
-            <Card variant="outlined">
-                <CardContent sx={{ p: { xs: 2.5, md: 3 } }}>
-                    <Stack
-                        spacing={2.5}
-                        direction={{ xs: 'column', lg: 'row' }}
-                        justifyContent="space-between"
-                        alignItems={{ xs: 'start', lg: 'start' }}
-                    >
-                        <Box>
-                            <Chip
-                                label="Tableau de bord"
-                                sx={{ borderRadius: 99, bgcolor: 'tint.primaryBg', color: 'primary.main', mb: 1.5 }}
-                            />
-                            <Typography variant="h4" fontWeight={800} color="text.primary" sx={{ letterSpacing: -0.5 }}>
-                                Mon espace coach
-                            </Typography>
-                            <Typography
-                                variant="body1"
-                                color="text.secondary"
-                                sx={{ mt: 1, lineHeight: 1.7, maxWidth: 860 }}
-                            >
-                                Vue d'ensemble de vos campagnes, participants et soumissions. Vous ne voyez ici que les
-                                données rattachées à votre périmètre de coaching.
-                            </Typography>
-                        </Box>
-                    </Stack>
-                </CardContent>
-            </Card>
+            <PageHeroCard
+                eyebrow="Tableau de bord"
+                title="Mon espace coach"
+                subtitle="Vue d'ensemble de vos campagnes, participants et soumissions. Vous ne voyez ici que les données rattachées à votre périmètre de coaching."
+            />
 
-            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(4, minmax(0, 1fr))' }, gap: 2 }}>
+            <KpiGrid columns={4}>
                 <StatCard
                     label="Mes campagnes"
                     value={campaigns.length}
@@ -86,7 +64,7 @@ function CoachDashboardRoute() {
                     icon={MessageSquareText}
                     loading={responsesLoading}
                 />
-            </Box>
+            </KpiGrid>
         </Stack>
     );
 }

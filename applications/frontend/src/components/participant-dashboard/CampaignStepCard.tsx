@@ -38,7 +38,7 @@ const STEP_TEMPLATES: ReadonlyArray<Omit<CampaignStep, 'state'>> = [
     {
         label: 'Feedback des pairs',
         subtitle: 'Même logique de notation',
-        description: 'Vous pouvez noter jusqu\'à 5 de vos pairs.',
+        description: "Vous pouvez noter jusqu'à 5 de vos pairs.",
         icon: Users,
         routeKind: 'peer-feedback',
     },
@@ -144,7 +144,12 @@ export function CampaignStepCard({ step, onNavigate }: CampaignStepCardProps) {
                     </Stack>
                 )}
                 {step.state === 'completed' && (
-                    <Stack direction="row" spacing={0.7} alignItems="center" sx={{ mt: 1.2, color: 'tint.successText' }}>
+                    <Stack
+                        direction="row"
+                        spacing={0.7}
+                        alignItems="center"
+                        sx={{ mt: 1.2, color: 'tint.successText' }}
+                    >
                         <Lock size={14} />
                         <Typography variant="body2">Étape terminée — réponses verrouillées.</Typography>
                     </Stack>

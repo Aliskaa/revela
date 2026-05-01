@@ -1,6 +1,6 @@
 import * as React from 'react';
 
-import { InfoCard } from '@/components/common/InfoCard';
+import { StatCard } from '@/components/common/cards';
 import { StepCompletedBanner } from '@/components/participant-dashboard/StepCompletedBanner';
 import { RatingScale } from '@/components/questionnaire/RatingScale';
 import { useParticipantSession } from '@/hooks/participantSession';
@@ -310,19 +310,33 @@ function SidebarSummary({
                 <Divider sx={{ my: 2 }} />
 
                 <Stack spacing={1.4}>
-                    <InfoCard icon={BadgeCheck} label="Questionnaire" value={questionnaireCode} variant="border" />
-                    <InfoCard icon={CircleDot} label="Séries" value={String(seriesLabels.length)} variant="border" />
-                    <InfoCard
+                    <StatCard
+                        variant="compact"
+                        icon={BadgeCheck}
+                        label="Questionnaire"
+                        value={questionnaireCode}
+                        frame="box"
+                    />
+                    <StatCard
+                        variant="compact"
+                        icon={CircleDot}
+                        label="Séries"
+                        value={String(seriesLabels.length)}
+                        frame="box"
+                    />
+                    <StatCard
+                        variant="compact"
                         icon={Hash}
                         label="Questions"
                         value={`${String(QUESTIONS_PER_SERIES)} par série`}
-                        variant="border"
+                        frame="box"
                     />
-                    <InfoCard
+                    <StatCard
+                        variant="compact"
                         icon={Clock3}
                         label="Progression"
                         value={`${String(answeredCount)} / ${String(totalQuestions)}`}
-                        variant="border"
+                        frame="box"
                     />
                 </Stack>
             </CardContent>
@@ -476,20 +490,28 @@ function ParticipantTestSessionRoute() {
             </Card>
 
             <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(4, minmax(0, 1fr))' }, gap: 2 }}>
-                <InfoCard icon={BadgeCheck} label="Questionnaire actif" value={questionnaireCode} variant="border" />
-                <InfoCard
+                <StatCard
+                    variant="compact"
+                    icon={BadgeCheck}
+                    label="Questionnaire actif"
+                    value={questionnaireCode}
+                    frame="box"
+                />
+                <StatCard
+                    variant="compact"
                     icon={CircleDot}
                     label="Séries"
                     value={String(detail.questions.series.length)}
-                    variant="border"
+                    frame="box"
                 />
-                <InfoCard
+                <StatCard
+                    variant="compact"
                     icon={Hash}
                     label="Questions"
                     value={`${String(detail.questions.series[0]?.length ?? 0)} / série`}
-                    variant="border"
+                    frame="box"
                 />
-                <InfoCard icon={Sparkles} label="Étape" value="Test" variant="border" />
+                <StatCard variant="compact" icon={Sparkles} label="Étape" value="Test" frame="box" />
             </Box>
 
             <Box

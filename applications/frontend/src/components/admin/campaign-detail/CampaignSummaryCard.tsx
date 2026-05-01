@@ -3,11 +3,10 @@
 import { Box, Card, CardContent, Chip, LinearProgress, Stack, Typography } from '@mui/material';
 import { CalendarDays, Clock3 } from 'lucide-react';
 
-import { MiniStat } from '@/components/common/MiniStat';
 import { SectionTitle } from '@/components/common/SectionTitle';
+import { StatCard } from '@/components/common/cards';
+import { CampaignStatusChip } from '@/components/common/chips';
 import type { AdminCampaign } from '@aor/types';
-
-import { StatusChip } from './StatusChip';
 
 export type CampaignSummaryCardProps = {
     campaign: AdminCampaign;
@@ -41,9 +40,9 @@ export function CampaignSummaryCard({
                         mt: 2,
                     }}
                 >
-                    <MiniStat label="Entreprise" value={companyName} />
-                    <MiniStat label="Coach" value={coachName} />
-                    <MiniStat label="Questionnaire" value={questionnaireLabel} />
+                    <StatCard variant="mini" label="Entreprise" value={companyName} />
+                    <StatCard variant="mini" label="Coach" value={coachName} />
+                    <StatCard variant="mini" label="Questionnaire" value={questionnaireLabel} />
                 </Box>
 
                 <Box sx={{ mt: 2.5 }}>
@@ -83,7 +82,7 @@ export function CampaignSummaryCard({
                             sx={{ borderRadius: 99 }}
                         />
                     )}
-                    <StatusChip status={campaign.status} />
+                    <CampaignStatusChip status={campaign.status} />
                 </Stack>
             </CardContent>
         </Card>

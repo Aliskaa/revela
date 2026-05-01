@@ -143,7 +143,13 @@ function CampaignSummaryRow({ assignment }: { assignment: ParticipantAssignment 
                         </Box>
                     </Box>
                     <Link to="/campaigns/$campaignId" params={{ campaignId: String(assignment.campaign_id) }}>
-                        <Button component="a" variant="outlined" size="small" endIcon={<ArrowRight size={14} />} sx={{ borderRadius: 3, alignSelf: { xs: 'stretch', md: 'center' } }}>
+                        <Button
+                            component="a"
+                            variant="outlined"
+                            size="small"
+                            endIcon={<ArrowRight size={14} />}
+                            sx={{ borderRadius: 3, alignSelf: { xs: 'stretch', md: 'center' } }}
+                        >
                             Ouvrir
                         </Button>
                     </Link>

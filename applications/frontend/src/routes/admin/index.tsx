@@ -1,14 +1,8 @@
-import { SectionTitle } from '@/components/common/SectionTitle';
-import { SkeletonTableRows } from '@/components/common/SkeletonRows';
-import { StatCard } from '@/components/common/StatCard';
-import { useAdminCampaigns, useAdminDashboard, useCoaches, useCompanies } from '@/hooks/admin';
-import type { CampaignStatus } from '@aor/types';
 import {
     Box,
     Button,
     Card,
     CardContent,
-    Chip,
     Stack,
     Table,
     TableBody,
@@ -20,43 +14,18 @@ import {
 import { Link, createFileRoute } from '@tanstack/react-router';
 import { ArrowRight, Building2, FileText, Plus, Target, UserRound, Users } from 'lucide-react';
 
+import { SectionTitle } from '@/components/common/SectionTitle';
+import { SkeletonTableRows } from '@/components/common/SkeletonRows';
+import { StatCard } from '@/components/common/cards';
+import { CampaignStatusChip } from '@/components/common/chips';
+import { EmptyTableRow } from '@/components/common/data-table';
+import { KpiGrid, PageHeroCard } from '@/components/common/layout';
+import { useAdminCampaigns, useAdminDashboard, useCoaches, useCompanies } from '@/hooks/admin';
+import { questionnaireLabel } from '@/lib/labels';
+
 export const Route = createFileRoute('/admin/')({
     component: AdminDashboardRoute,
 });
-
-const QUESTIONNAIRE_LABELS: Record<string, string> = {
-    B: 'B — Comportement',
-    F: 'F — Ressentis',
-    S: 'S — Soi',
-};
-
-function StatusChip({ status }: { status: CampaignStatus }) {
-    if (status === 'active') {
-        return (
-            <Chip
-                label="Active"
-                size="small"
-                sx={{ borderRadius: 99, bgcolor: 'rgba(16,185,129,0.12)', color: 'rgb(4,120,87)' }}
-            />
-        );
-    }
-    if (status === 'closed' || status === 'archived') {
-        return (
-            <Chip
-                label="Archivée"
-                size="small"
-                sx={{ borderRadius: 99, bgcolor: 'rgba(148,163,184,0.16)', color: 'rgb(100,116,139)' }}
-            />
-        );
-    }
-    return (
-        <Chip
-            label="Brouillon"
-            size="small"
-            sx={{ borderRadius: 99, bgcolor: 'rgba(255,204,0,0.16)', color: 'rgb(180,120,0)' }}
-        />
-    );
-}
 
 function AdminDashboardRoute() {
     const { data: dashboard, isLoading: dashboardLoading } = useAdminDashboard();
@@ -77,62 +46,30 @@ function AdminDashboardRoute() {
 
     return (
         <Stack spacing={3}>
-            <Card variant="outlined">
-                <CardContent sx={{ p: { xs: 2.5, md: 3 } }}>
-                    <Stack
-                        spacing={2.5}
-                        direction={{ xs: 'column', lg: 'row' }}
-                        justifyContent="space-between"
-                        alignItems={{ xs: 'start', lg: 'start' }}
-                    >
-                        <Box>
-                            <Chip
-                                label="Administration"
-                                sx={{ borderRadius: 99, bgcolor: 'tint.primaryBg', color: 'primary.main', mb: 1.5 }}
-                            />
-                            <Typography variant="h4" fontWeight={800} color="text.primary" sx={{ letterSpacing: -0.5 }}>
-                                Bienvenue sur Révéla !
-                            </Typography>
-                            <Typography
-                                variant="body1"
-                                color="text.secondary"
-                                sx={{ mt: 1, lineHeight: 1.7, maxWidth: 860 }}
-                            >
-                                Le tableau de bord centralisé vous permet de visualiser rapidement l'état des campagnes,
-                                des participants, des coachs et des questionnaires.
-                            </Typography>
-                        </Box>
+            <PageHeroCard
+                eyebrow="Administration"
+                title="Bienvenue sur Révéla !"
+                subtitle="Le tableau de bord centralisé vous permet de visualiser rapidement l'état des campagnes, des participants, des coachs et des questionnaires."
+                actions={
+                    <>
+                        <Button
+                            variant="contained"
+                            disableElevation
+                            component={Link}
+                            to="/admin/campaigns"
+                            startIcon={<Plus size={16} />}
+                            sx={{ borderRadius: 3, bgcolor: 'primary.main' }}
+                        >
+                            Nouvelle campagne
+                        </Button>
+                        <Button variant="outlined" startIcon={<FileText size={16} />} sx={{ borderRadius: 3 }}>
+                            Exporter
+                        </Button>
+                    </>
+                }
+            />
 
-                        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.2}>
-                            <Button
-                                variant="contained"
-                                disableElevation
-                                component={Link}
-                                to="/admin/campaigns"
-                                startIcon={<Plus size={16} />}
-                                sx={{ borderRadius: 3, bgcolor: 'primary.main' }}
-                            >
-                                Nouvelle campagne
-                            </Button>
-                            <Button variant="outlined" startIcon={<FileText size={16} />} sx={{ borderRadius: 3 }}>
-                                Exporter
-                            </Button>
-                        </Stack>
-                    </Stack>
-                </CardContent>
-            </Card>
-
-            <Box
-                sx={{
-                    display: 'grid',
-                    gridTemplateColumns: {
-                        xs: '1fr',
-                        md: 'repeat(2, minmax(0, 1fr))',
-                        xl: 'repeat(4, minmax(0, 1fr))',
-                    },
-                    gap: 2,
-                }}
-            >
+            <KpiGrid columns={4}>
                 <StatCard
                     label="Campagnes actives"
                     value={activeCampaigns}
@@ -161,7 +98,7 @@ function AdminDashboardRoute() {
                     icon={UserRound}
                     loading={coachesLoading}
                 />
-            </Box>
+            </KpiGrid>
 
             <Card variant="outlined">
                 <CardContent sx={{ p: 2.5 }}>
@@ -201,14 +138,9 @@ function AdminDashboardRoute() {
                                             </TableCell>
                                             <TableCell>{companyName(campaign.companyId)}</TableCell>
                                             <TableCell>{coachName(campaign.coachId)}</TableCell>
+                                            <TableCell>{questionnaireLabel(campaign.questionnaireId)}</TableCell>
                                             <TableCell>
-                                                {campaign.questionnaireId
-                                                    ? (QUESTIONNAIRE_LABELS[campaign.questionnaireId] ??
-                                                      campaign.questionnaireId)
-                                                    : '–'}
-                                            </TableCell>
-                                            <TableCell>
-                                                <StatusChip status={campaign.status} />
+                                                <CampaignStatusChip status={campaign.status} />
                                             </TableCell>
                                             <TableCell>
                                                 {campaign.createdAt
@@ -228,13 +160,7 @@ function AdminDashboardRoute() {
                                     ))
                                 )}
                                 {!isLoading && recentCampaigns.length === 0 && (
-                                    <TableRow>
-                                        <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
-                                            <Typography variant="body2" color="text.secondary">
-                                                Aucune campagne pour le moment.
-                                            </Typography>
-                                        </TableCell>
-                                    </TableRow>
+                                    <EmptyTableRow colSpan={7} message="Aucune campagne pour le moment." />
                                 )}
                             </TableBody>
                         </Table>

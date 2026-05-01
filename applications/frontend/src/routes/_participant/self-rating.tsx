@@ -1,4 +1,4 @@
-import { InfoCard } from '@/components/common/InfoCard';
+import { StatCard } from '@/components/common/cards';
 import { StepCompletedBanner } from '@/components/participant-dashboard/StepCompletedBanner';
 import { RatingDimensionCard } from '@/components/questionnaire/RatingDimensionCard';
 import { useParticipantSession, useParticipantSessionMatrix } from '@/hooks/participantSession';
@@ -183,15 +183,22 @@ function ParticipantSelfRatingRoute() {
             </Card>
 
             <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(4, minmax(0, 1fr))' }, gap: 2 }}>
-                <InfoCard
+                <StatCard
+                    variant="compact"
                     icon={ClipboardList}
                     label="Questionnaire"
                     value={questionnaireCode || '–'}
-                    variant="border"
+                    frame="box"
                 />
-                <InfoCard icon={BadgeCheck} label="Type" value="Auto-évaluation" variant="border" />
-                <InfoCard icon={Hash} label="Échelle" value="1 à 9" variant="border" />
-                <InfoCard icon={Users} label="Progression" value={'${filledCount} / ${totalItems}'} variant="border" />
+                <StatCard variant="compact" icon={BadgeCheck} label="Type" value="Auto-évaluation" frame="box" />
+                <StatCard variant="compact" icon={Hash} label="Échelle" value="1 à 9" frame="box" />
+                <StatCard
+                    variant="compact"
+                    icon={Users}
+                    label="Progression"
+                    value={'${filledCount} / ${totalItems}'}
+                    frame="box"
+                />
             </Box>
 
             {!canSubmit && (
