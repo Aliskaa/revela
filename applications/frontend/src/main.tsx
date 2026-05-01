@@ -1,7 +1,9 @@
 import { RouterProvider, createRouter } from '@tanstack/react-router';
 import * as React from 'react';
 import * as ReactDOM from 'react-dom/client';
+
 import './lib/i18n';
+import { bootstrapAuth } from './lib/bootstrapAuth';
 import { routeTree } from './routeTree.gen';
 
 const router = createRouter({
@@ -21,8 +23,15 @@ if (!rootElement) {
     throw new Error('Élément racine introuvable : `<div id="root">` est attendu dans index.html.');
 }
 
-ReactDOM.createRoot(rootElement).render(
-    <React.StrictMode>
-        <RouterProvider router={router} />
-    </React.StrictMode>
-);
+/**
+ * Bootstrap synchrone de l'auth (G1 RGPD) avant le mount du `RouterProvider`.
+ * Garantit que les `beforeLoad` de TanStack Router lisent un store hydraté plutôt que
+ * vide — sinon un utilisateur authentifié serait flashé sur `/login` puis remonté.
+ */
+void bootstrapAuth().finally(() => {
+    ReactDOM.createRoot(rootElement).render(
+        <React.StrictMode>
+            <RouterProvider router={router} />
+        </React.StrictMode>
+    );
+});

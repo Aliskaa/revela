@@ -45,6 +45,14 @@ export interface IResponsesSubmissionReaderPort {
         questionnaireId: string,
         campaignId?: number
     ): Promise<Response[]>;
+
+    /**
+     * Toutes les réponses dans lesquelles le participant est impliqué — comme sujet
+     * (auto-évaluation, élément humain, peer rating reçu), comme évaluateur (peer rating
+     * envoyé), ou comme submitter via invite token. Utilisé pour l'export RGPD
+     * "mes données" (Articles 15 et 20). Plus récent d'abord.
+     */
+    listAllInvolvingParticipant(participantId: number): Promise<Response[]>;
 }
 
 export interface IResponsesAdminListPort {

@@ -3,6 +3,7 @@ import { useToast } from '@/lib/toast';
 import type {
     CampaignPeerChoice,
     ParticipantQuestionnaireMatrix,
+    ParticipantSelfDataExport,
     ParticipantSession,
     UpdateParticipantProfileBody,
 } from '@aor/types';
@@ -76,6 +77,17 @@ export function useConfirmCampaignParticipation() {
             toast.error(
                 err instanceof Error && err.message ? err.message : t('toast.campaignParticipationConfirmFailed')
             ),
+    });
+}
+
+/**
+ * Récupère le payload d'export RGPD « mes données » du participant authentifié.
+ * Utilisé à la demande (manual `refetch()`) — pas de cache prolongé pour éviter de
+ * conserver inutilement des PII en mémoire client après le téléchargement.
+ */
+export function useFetchParticipantSelfDataExport() {
+    return useMutation<ParticipantSelfDataExport, Error, void>({
+        mutationFn: () => participantApiClient.get('/participant/me/export').then(r => r.data),
     });
 }
 

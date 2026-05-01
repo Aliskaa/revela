@@ -5,6 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Révéla — Questionnaires</title>
     <meta name="description" content="Plateforme Révéla : questionnaires psychométriques et restitution coaching." />
+    <!--
+      Content Security Policy (G1 RGPD) — défense en profondeur contre XSS.
+      `'unsafe-inline'` sur style-src est nécessaire pour MUI/Emotion qui injecte des styles
+      en runtime ; `'unsafe-inline'` sur script-src reste nécessaire pour Vite en dev (HMR).
+      En prod, retirer `'unsafe-inline'` script-src après audit du bundle (Vite produit du JS
+      sans inline). `connect-src` couvre l'API même origine + Google Fonts pour la typo.
+    -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'" />
+    <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin" />
+    <meta http-equiv="X-Content-Type-Options" content="nosniff" />
     <link rel="icon" type="image/svg+xml" href="/aor.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

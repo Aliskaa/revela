@@ -40,6 +40,7 @@ import {
     RESPONSES_REPOSITORY_PORT_SYMBOL,
 } from '@src/interfaces/responses/IResponsesRepository.port';
 
+import { AuthRefreshModule } from '@src/presentation/auth/auth-refresh.module';
 import { ParticipantModule } from '@src/presentation/participant-session/participant.module';
 
 import { PublicInvitesController } from './invitations-public.controller';
@@ -52,7 +53,7 @@ import {
 } from './invitations-public.tokens';
 
 @Module({
-    imports: [ParticipantModule],
+    imports: [ParticipantModule, AuthRefreshModule],
     controllers: [PublicInvitesController],
     providers: [
         ScryptPasswordAdapter,

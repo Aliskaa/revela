@@ -3,12 +3,12 @@
 import { hashPassword, verifyPassword } from '@aor/adapters';
 import type { IPasswordHasherPort } from '@aor/ports';
 import { Invitation } from '@src/domain/invitations';
-import { Participant } from '@src/domain/participants';
 import {
     InviteActivationAlreadyCompletedError,
     InviteActivationWeakPasswordError,
     InviteTokenRequestError,
 } from '@src/domain/invitations/invitations.errors';
+import { Participant } from '@src/domain/participants';
 import type { IInvitationsRepositoryPort } from '@src/interfaces/invitations/IInvitationsRepository.port';
 import type {
     IInviteActivationWritePort,

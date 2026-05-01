@@ -17,4 +17,5 @@ export * from './schema/campaign.schema';
 export * from './schema/invite-token.schema';
 export * from './schema/participant.schema';
 export * from './schema/questionnaire-response.schema';
+export * from './schema/refresh-token.schema';
 export * from './schema/score.schema';

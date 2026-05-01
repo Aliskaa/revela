@@ -9,12 +9,15 @@ import type { IParticipantJwtSignerPort } from '@src/interfaces/participant-sess
 import type { IParticipantsIdentityReaderPort } from '@src/interfaces/participants/IParticipantsRepository.port';
 
 export class ParticipantLoginResult {
-    private constructor(public readonly accessToken: string) {
+    private constructor(
+        public readonly accessToken: string,
+        public readonly participantId: number
+    ) {
         Object.freeze(this);
     }
 
-    public static create(accessToken: string): ParticipantLoginResult {
-        return new ParticipantLoginResult(accessToken);
+    public static create(accessToken: string, participantId: number): ParticipantLoginResult {
+        return new ParticipantLoginResult(accessToken, participantId);
     }
 }
 
@@ -42,6 +45,6 @@ export class ParticipantLoginUseCase {
         if (!participant.verifyPassword(password, this.ports.passwordVerifier)) {
             throw new ParticipantInvalidCredentialsError();
         }
-        return ParticipantLoginResult.create(this.ports.jwtSigner.signAccessToken(participant.id));
+        return ParticipantLoginResult.create(this.ports.jwtSigner.signAccessToken(participant.id), participant.id);
     }
 }

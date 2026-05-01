@@ -10,13 +10,14 @@ import {
     type IAdminTokenSignerPort,
 } from '@src/interfaces/admin/IAdminTokenSigner.port';
 import { COACHES_REPOSITORY_PORT_SYMBOL, type ICoachesReadPort } from '@src/interfaces/coaches/ICoachesRepository.port';
+import { AuthRefreshModule } from '@src/presentation/auth/auth-refresh.module';
 
 import { AdminSharedModule } from './admin-shared.module';
 import { AdminController } from './admin.controller';
 import { ADMIN_AUTH_USE_CASE_SYMBOL } from './admin.tokens';
 
 @Module({
-    imports: [AdminSharedModule],
+    imports: [AdminSharedModule, AuthRefreshModule],
     controllers: [AdminController],
     providers: [
         {

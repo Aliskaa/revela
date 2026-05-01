@@ -1,12 +1,16 @@
 // Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
 
-import { Body, Controller, Get, Inject, Param, Post, UseFilters } from '@nestjs/common';
+import { Body, Controller, Get, Inject, Param, Post, Res, UseFilters } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
+import type { Response } from 'express';
 
+import type { RefreshTokenManagerUseCase } from '@src/application/auth/refresh-token-manager.usecase';
 import type { ActivateInviteWithPasswordUseCase } from '@src/application/invitations/activate-invite-with-password.usecase';
 import type { ConfirmInviteParticipationUseCase } from '@src/application/invitations/confirm-invite-participation.usecase';
 import type { GetInvitePreviewUseCase } from '@src/application/invitations/get-invite-preview.usecase';
 import type { SubmitInviteQuestionnaireUseCase } from '@src/application/invitations/submit-invite-questionnaire.usecase';
+import { setAuthCookies } from '@src/presentation/auth/auth-cookies.helper';
+import { REFRESH_TOKEN_MANAGER_SYMBOL } from '@src/presentation/auth/auth-refresh.module';
 
 import { InvitationsPublicExceptionFilter } from './invitations-public-exception.filter';
 import {
@@ -28,7 +32,9 @@ export class PublicInvitesController {
         @Inject(ACTIVATE_INVITE_WITH_PASSWORD_USE_CASE_SYMBOL)
         private readonly activateInviteWithPassword: ActivateInviteWithPasswordUseCase,
         @Inject(CONFIRM_INVITE_PARTICIPATION_USE_CASE_SYMBOL)
-        private readonly confirmInviteParticipation: ConfirmInviteParticipationUseCase
+        private readonly confirmInviteParticipation: ConfirmInviteParticipationUseCase,
+        @Inject(REFRESH_TOKEN_MANAGER_SYMBOL)
+        private readonly refreshTokens: RefreshTokenManagerUseCase
     ) {}
 
     @Get(':token')
@@ -41,10 +47,25 @@ export class PublicInvitesController {
         return this.confirmInviteParticipation.execute(token);
     }
 
+    /**
+     * Active un invite : pose le mot de passe, consume le token, et ouvre une session
+     * participant via cookies httpOnly (G1 RGPD). Le client n'a pas accès au JWT.
+     */
     @Post(':token/activate')
-    public async activateInvite(@Param('token') token: string, @Body() body: { password?: string }) {
+    public async activateInvite(
+        @Param('token') token: string,
+        @Body() body: { password?: string },
+        @Res({ passthrough: true }) res: Response
+    ) {
         const result = await this.activateInviteWithPassword.execute(token, body.password ?? '');
-        return { access_token: result.accessToken };
+        const refreshIssued = await this.refreshTokens.issue('participant', result.participantId);
+        setAuthCookies(res, {
+            scope: 'participant',
+            accessToken: result.accessToken,
+            refreshToken: refreshIssued.rawToken,
+            refreshExpiresAt: refreshIssued.expiresAt,
+        });
+        return { participant_id: result.participantId };
     }
 
     @Post(':token/submit')

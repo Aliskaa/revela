@@ -104,10 +104,7 @@ export class Campaign {
      * Transition libre vers un autre statut. Si `alignStartsAtToNow` est vrai et qu'on passe
      * à `active`, `startsAt` est écrasé par la date fournie (typiquement `new Date()`).
      */
-    public transitionTo(
-        nextStatus: CampaignStatus,
-        options?: { alignStartsAtToNow?: Date }
-    ): Campaign {
+    public transitionTo(nextStatus: CampaignStatus, options?: { alignStartsAtToNow?: Date }): Campaign {
         if (!isValidStatus(nextStatus)) {
             throw new CampaignInvalidStatusError(nextStatus);
         }

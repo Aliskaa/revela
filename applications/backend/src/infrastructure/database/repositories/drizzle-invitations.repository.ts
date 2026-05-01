@@ -36,11 +36,7 @@ export class DrizzleInvitationsRepository implements IInvitationsRepositoryPort 
     public constructor(@Inject(DRIZZLE_DB_SYMBOL) private readonly db: DrizzleDb) {}
 
     public async findByToken(token: string): Promise<Invitation | null> {
-        const [row] = await this.db
-            .select()
-            .from(inviteTokensTable)
-            .where(eq(inviteTokensTable.token, token))
-            .limit(1);
+        const [row] = await this.db.select().from(inviteTokensTable).where(eq(inviteTokensTable.token, token)).limit(1);
         return row ? hydrateInvitation(row) : null;
     }
 

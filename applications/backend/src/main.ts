@@ -7,6 +7,7 @@ import { createConsoleLogger, resolveLogLevelFromEnv } from '@aor/logger';
 import { RequestMethod } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import cookieParser from 'cookie-parser';
 
 import { AppModule } from '@src/app/app.module';
 import { NestLoggerBridge } from '@src/nest-logger-bridge';
@@ -31,6 +32,24 @@ const bootstrap = async (): Promise<void> => {
 
     const app = await NestFactory.create(AppModule, { bufferLogs: true });
     app.useLogger(new NestLoggerBridge(createConsoleLogger({ context: 'Nest', level: resolvedLevel })));
+
+    /**
+     * Cookie parser : indispensable pour lire les cookies httpOnly d'auth (G1 RGPD —
+     * `aor_admin_access`, `aor_admin_refresh`, `aor_participant_access`, `aor_participant_refresh`).
+     * Doit être enregistré avant les guards qui les consomment.
+     */
+    app.use(cookieParser());
+
+    /**
+     * CORS avec credentials : le frontend (servi sur même domaine en prod, localhost:5173 en
+     * dev) envoie les cookies d'auth via `withCredentials: true`. Sans `credentials: true` ici,
+     * le navigateur refuse d'attacher le cookie à la requête XHR.
+     * `FRONTEND_ORIGIN` est lu depuis l'env — par défaut Vite dev (port 5173).
+     */
+    app.enableCors({
+        origin: process.env.FRONTEND_ORIGIN ?? 'http://localhost:5173',
+        credentials: true,
+    });
 
     log.debug('Module racine chargé, configuration du préfixe HTTP');
 

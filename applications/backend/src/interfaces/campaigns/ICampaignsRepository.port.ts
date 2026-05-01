@@ -2,7 +2,7 @@
 
 import type { Campaign } from '@src/domain/campaigns';
 
-export { type CampaignStatus } from '@src/domain/campaigns';
+export type { CampaignStatus } from '@src/domain/campaigns';
 
 export const CAMPAIGNS_REPOSITORY_PORT_SYMBOL = Symbol('CAMPAIGNS_REPOSITORY_PORT_SYMBOL');
 

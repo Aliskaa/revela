@@ -1,6 +1,6 @@
 import { apiClient } from '@/api/client';
-import { userAdmin } from '@/lib/auth';
 import { useToast } from '@/lib/toast';
+import { useAuthStore } from '@/stores/authStore';
 import type {
     AdminCampaign,
     AdminCampaignDetail,
@@ -46,7 +46,14 @@ export function useAdminLogin() {
     return useMutation<AdminLoginResponse, Error, { username: string; password: string }>({
         mutationFn: credentials => apiClient.post('/admin/auth/login', credentials).then(r => r.data),
         onSuccess: data => {
-            userAdmin.setToken(data.access_token);
+            // L'access token est posé en cookie httpOnly côté backend (G1 RGPD). On hydrate
+            // simplement le store avec les claims renvoyés dans le body — `username` n'est
+            // pas connu ici, on le récupérera au prochain `GET /admin/auth/me` au besoin.
+            useAuthStore.getState().setAdminMe({
+                scope: data.scope,
+                coachId: data.coach_id,
+                username: '',
+            });
         },
     });
 }

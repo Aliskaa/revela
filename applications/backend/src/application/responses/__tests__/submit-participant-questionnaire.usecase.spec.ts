@@ -1,7 +1,8 @@
 // Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
 
-import { ResponsesValidationError } from '@src/domain/responses/responses.errors';
 import { Participant } from '@src/domain/participants';
+import { Response } from '@src/domain/responses';
+import { ResponsesValidationError } from '@src/domain/responses/responses.errors';
 import type { ICampaignsReadPort } from '@src/interfaces/campaigns/ICampaignsRepository.port';
 import type { ICompaniesReadPort } from '@src/interfaces/companies/ICompaniesRepository.port';
 import type {
@@ -9,7 +10,6 @@ import type {
     IParticipantsIdentityReaderPort,
     IParticipantsInviteAssignmentsReaderPort,
 } from '@src/interfaces/participants/IParticipantsRepository.port';
-import { Response } from '@src/domain/responses';
 import type {
     IResponsesSubmissionReaderPort,
     IResponsesWriterPort,

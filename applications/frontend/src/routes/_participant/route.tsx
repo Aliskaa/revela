@@ -1,3 +1,4 @@
+import { FooterLayout } from '@/components/layout/FooterLayout';
 import { parseAdminJwtClaims, userAdmin, userParticipant } from '@/lib/auth';
 import {
     AppBar,
@@ -334,9 +335,12 @@ function ParticipantShell({ children }: { children: React.ReactNode }) {
             <Box sx={{ display: 'flex', minHeight: '100vh' }}>
                 <ParticipantSidebar />
 
-                <Box component="main" sx={{ flex: 1, px: { xs: 2, sm: 3, lg: 4 }, py: { xs: 2, sm: 3, lg: 4 } }}>
-                    <TopBar />
-                    {children}
+                <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+                    <Box component="main" sx={{ flex: 1, px: { xs: 2, sm: 3, lg: 4 }, py: { xs: 2, sm: 3, lg: 4 } }}>
+                        <TopBar />
+                        {children}
+                    </Box>
+                    <FooterLayout />
                 </Box>
             </Box>
         </Box>

@@ -35,6 +35,8 @@
         "@nestjs/passport": "catalog:",
         "@nestjs/platform-express": "catalog:",
         "@nestjs/swagger": "catalog:",
+        "@types/cookie-parser": "^1.4.10",
+        "cookie-parser": "^1.4.7",
         "dotenv": "catalog:",
         "drizzle-orm": "catalog:",
         "multer": "catalog:",

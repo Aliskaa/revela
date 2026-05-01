@@ -18,12 +18,15 @@ import type { InviteTokenValidationUseCase } from './invite-token-validation.use
 const MIN_PASSWORD_LENGTH = 8;
 
 export class ActivateInviteWithPasswordResult {
-    private constructor(public readonly accessToken: string) {
+    private constructor(
+        public readonly accessToken: string,
+        public readonly participantId: number
+    ) {
         Object.freeze(this);
     }
 
-    public static create(accessToken: string): ActivateInviteWithPasswordResult {
-        return new ActivateInviteWithPasswordResult(accessToken);
+    public static create(accessToken: string, participantId: number): ActivateInviteWithPasswordResult {
+        return new ActivateInviteWithPasswordResult(accessToken, participantId);
     }
 }
 
@@ -78,6 +81,9 @@ export class ActivateInviteWithPasswordUseCase {
             passwordHash,
         });
 
-        return ActivateInviteWithPasswordResult.create(this.ports.jwtSigner.signAccessToken(participant.id));
+        return ActivateInviteWithPasswordResult.create(
+            this.ports.jwtSigner.signAccessToken(participant.id),
+            participant.id
+        );
     }
 }

@@ -30,8 +30,7 @@ export class UpdateAdminCampaignStatusUseCase {
             throw new AdminResourceNotFoundError('Campagne introuvable.');
         }
         const next = current.transitionTo(status, {
-            alignStartsAtToNow:
-                status === 'active' && options?.alignStartsAtToNow === true ? new Date() : undefined,
+            alignStartsAtToNow: status === 'active' && options?.alignStartsAtToNow === true ? new Date() : undefined,
         });
         const saved = await this.ports.campaigns.save(next);
         if (!saved) {

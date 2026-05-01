@@ -32,7 +32,9 @@ import { JwtStrategy } from './jwt.strategy';
         PassportModule.register({ defaultStrategy: 'jwt' }),
         JwtModule.register({
             secret: requireEnv('JWT_SECRET'),
-            signOptions: { expiresIn: '7d' },
+            // Access token court : 15 min. La session longue est gérée via le refresh token
+            // (cookie httpOnly, 30 j, rotation automatique). Cf. G1 RGPD.
+            signOptions: { expiresIn: '15m' },
         }),
     ],
     providers: [

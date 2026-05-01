@@ -7,6 +7,7 @@ import { PassportModule } from '@nestjs/passport';
 import { ScryptPasswordAdapter } from '@aor/adapters';
 import { type IPasswordVerifierPort, PASSWORD_VERIFIER_PORT_SYMBOL } from '@aor/ports';
 import { ConfirmCampaignParticipationUseCase } from '@src/application/participant-session/confirm-campaign-participation.usecase';
+import { ExportParticipantSelfDataUseCase } from '@src/application/participant-session/export-participant-self-data.usecase';
 import { GetParticipantQuestionnaireMatrixUseCase } from '@src/application/participant-session/get-participant-questionnaire-matrix.usecase';
 import { GetParticipantSessionQuestionnaireMatrixUseCase } from '@src/application/participant-session/get-participant-session-questionnaire-matrix.usecase';
 import { GetParticipantSessionUseCase } from '@src/application/participant-session/get-participant-session.usecase';
@@ -40,12 +41,14 @@ import {
     type IResponsesWriterPort,
     RESPONSES_REPOSITORY_PORT_SYMBOL,
 } from '@src/interfaces/responses/IResponsesRepository.port';
+import { AuthRefreshModule } from '@src/presentation/auth/auth-refresh.module';
 import { requireEnv } from '@src/shared/env';
 
 import { ParticipantJwtAuthGuard } from './participant-jwt-auth.guard';
 import { ParticipantController } from './participant.controller';
 import {
     CONFIRM_CAMPAIGN_PARTICIPATION_USE_CASE_SYMBOL,
+    EXPORT_PARTICIPANT_SELF_DATA_USE_CASE_SYMBOL,
     GET_PARTICIPANT_OWNED_RESPONSE_USE_CASE_SYMBOL,
     GET_PARTICIPANT_QUESTIONNAIRE_MATRIX_USE_CASE_SYMBOL,
     GET_PARTICIPANT_SESSION_QUESTIONNAIRE_MATRIX_USE_CASE_SYMBOL,
@@ -60,8 +63,11 @@ import {
         PassportModule.register({ defaultStrategy: 'jwt' }),
         JwtModule.register({
             secret: requireEnv('JWT_SECRET'),
-            signOptions: { expiresIn: '7d' },
+            // Access token court : 15 min. La session longue est gérée via le refresh token
+            // (cookie httpOnly, 30 j, rotation automatique). Cf. G1 RGPD.
+            signOptions: { expiresIn: '15m' },
         }),
+        AuthRefreshModule,
     ],
     controllers: [ParticipantController],
     providers: [
@@ -167,6 +173,23 @@ import {
                 participants: IParticipantsCampaignParticipationWriterPort & IParticipantsCampaignStateReaderPort
             ) => new ConfirmCampaignParticipationUseCase({ participants }),
             inject: [PARTICIPANTS_REPOSITORY_PORT_SYMBOL],
+        },
+        {
+            provide: EXPORT_PARTICIPANT_SELF_DATA_USE_CASE_SYMBOL,
+            useFactory: (
+                participants: IParticipantsIdentityReaderPort &
+                    IParticipantsInviteAssignmentsReaderPort &
+                    IParticipantsCampaignStateReaderPort,
+                companies: ICompaniesReadPort,
+                campaigns: ICampaignsReadPort,
+                responses: IResponsesSubmissionReaderPort
+            ) => new ExportParticipantSelfDataUseCase({ participants, companies, campaigns, responses }),
+            inject: [
+                PARTICIPANTS_REPOSITORY_PORT_SYMBOL,
+                COMPANIES_REPOSITORY_PORT_SYMBOL,
+                CAMPAIGNS_REPOSITORY_PORT_SYMBOL,
+                RESPONSES_REPOSITORY_PORT_SYMBOL,
+            ],
         },
     ],
     exports: [PARTICIPANT_JWT_SIGNER_PORT_SYMBOL, ParticipantJwtAuthGuard],

@@ -1,9 +1,6 @@
 // Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
 
-import type {
-    IResponsesAdminListPort,
-    ListResponsesParams,
-} from '@src/interfaces/responses/IResponsesRepository.port';
+import type { IResponsesAdminListPort, ListResponsesParams } from '@src/interfaces/responses/IResponsesRepository.port';
 import { expect, test } from 'vitest';
 
 import { ListAdminResponsesUseCase } from '../list-admin-responses.usecase';

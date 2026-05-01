@@ -88,6 +88,22 @@ export class DrizzleResponsesRepository implements IResponsesRepositoryPort {
         return attachScoresAndHydrate(this.db, rows);
     }
 
+    public async listAllInvolvingParticipant(participantId: number): Promise<Response[]> {
+        const rows = await this.db
+            .select()
+            .from(questionnaireResponsesTable)
+            .where(
+                or(
+                    eq(questionnaireResponsesTable.participantId, participantId),
+                    eq(questionnaireResponsesTable.subjectParticipantId, participantId),
+                    eq(questionnaireResponsesTable.raterParticipantId, participantId),
+                    eq(questionnaireResponsesTable.ratedParticipantId, participantId)
+                )
+            )
+            .orderBy(desc(questionnaireResponsesTable.submittedAt));
+        return attachScoresAndHydrate(this.db, rows);
+    }
+
     public async findById(id: number): Promise<Response | null> {
         const [row] = await this.db
             .select()
@@ -163,13 +179,9 @@ export class DrizzleResponsesRepository implements IResponsesRepositoryPort {
                 const canSkipManualInputs = campaign?.allowTestWithoutManualInputs === true;
 
                 const selfDoneAfter =
-                    snap.submissionKind === 'self_rating'
-                        ? true
-                        : existingProgress?.selfRatingStatus === 'completed';
+                    snap.submissionKind === 'self_rating' ? true : existingProgress?.selfRatingStatus === 'completed';
                 const peerDoneAfter =
-                    snap.submissionKind === 'peer_rating'
-                        ? true
-                        : existingProgress?.peerFeedbackStatus === 'completed';
+                    snap.submissionKind === 'peer_rating' ? true : existingProgress?.peerFeedbackStatus === 'completed';
                 const unlockElementHumain =
                     (snap.submissionKind === 'self_rating' || snap.submissionKind === 'peer_rating') &&
                     (existingProgress?.elementHumainStatus ?? 'locked') === 'locked' &&

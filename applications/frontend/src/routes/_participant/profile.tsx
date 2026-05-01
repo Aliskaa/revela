@@ -1,5 +1,11 @@
 import { StatCard } from '@/components/common/cards';
-import { useParticipantSession, useUpdateParticipantProfile } from '@/hooks/participantSession';
+import {
+    useFetchParticipantSelfDataExport,
+    useParticipantSession,
+    useUpdateParticipantProfile,
+} from '@/hooks/participantSession';
+import { downloadParticipantExportJson, downloadParticipantExportPdf } from '@/lib/exportParticipantData';
+import { useToast } from '@/lib/toast';
 import type { ParticipantFunctionLevel } from '@aor/types';
 import {
     Alert,
@@ -12,13 +18,14 @@ import {
     InputLabel,
     LinearProgress,
     MenuItem,
+    Link as MuiLink,
     Select,
     Stack,
     TextField,
     Typography,
 } from '@mui/material';
-import { createFileRoute } from '@tanstack/react-router';
-import { Building2, Mail, PencilLine, UserRound } from 'lucide-react';
+import { Link, createFileRoute } from '@tanstack/react-router';
+import { Building2, FileJson, FileText, Mail, PencilLine, ShieldCheck, UserRound } from 'lucide-react';
 import * as React from 'react';
 
 export const Route = createFileRoute('/_participant/profile')({
@@ -28,12 +35,28 @@ export const Route = createFileRoute('/_participant/profile')({
 function ParticipantProfileRoute() {
     const { data: session, isLoading, isError } = useParticipantSession();
     const updateProfile = useUpdateParticipantProfile();
+    const fetchExport = useFetchParticipantSelfDataExport();
+    const toast = useToast();
 
     const [organisation, setOrganisation] = React.useState('');
     const [direction, setDirection] = React.useState('');
     const [service, setService] = React.useState('');
     const [functionLevel, setFunctionLevel] = React.useState<ParticipantFunctionLevel | ''>('');
     const [initialized, setInitialized] = React.useState(false);
+
+    const handleDownloadExport = async (format: 'json' | 'pdf') => {
+        try {
+            const data = await fetchExport.mutateAsync();
+            if (format === 'json') {
+                downloadParticipantExportJson(data);
+            } else {
+                downloadParticipantExportPdf(data);
+            }
+            toast.success(format === 'json' ? 'Export JSON téléchargé.' : 'Export PDF téléchargé.');
+        } catch {
+            toast.error('Impossible de générer l’export pour le moment. Réessayez plus tard.');
+        }
+    };
 
     React.useEffect(() => {
         if (session && !initialized) {
@@ -220,6 +243,52 @@ function ParticipantProfileRoute() {
                         </Button>
                         <Button variant="outlined" onClick={handleReset} sx={{ borderRadius: 3 }}>
                             Réinitialiser
+                        </Button>
+                    </Stack>
+                </CardContent>
+            </Card>
+
+            <Card variant="outlined">
+                <CardContent sx={{ p: 2.5 }}>
+                    <Stack direction="row" spacing={1.2} alignItems="center" sx={{ mb: 1 }}>
+                        <ShieldCheck size={22} color="rgb(15,24,152)" />
+                        <Typography variant="h5" fontWeight={800} color="text.primary" sx={{ letterSpacing: -0.4 }}>
+                            Mes données (RGPD)
+                        </Typography>
+                    </Stack>
+                    <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.7, mb: 2 }}>
+                        Conformément aux articles 15 et 20 du RGPD, vous pouvez télécharger l'ensemble des données que
+                        nous traitons à votre sujet : profil, métadonnées professionnelles, campagnes auxquelles vous
+                        êtes rattaché·e et historique de vos réponses. Choisissez le format qui vous convient : JSON
+                        (lisible par un autre service) ou PDF (lisible humain).
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.7, mb: 2 }}>
+                        Pour le détail des finalités, durées de conservation et autres droits (rectification,
+                        effacement), consultez la{' '}
+                        <MuiLink component={Link} to="/privacy" underline="always">
+                            politique de confidentialité
+                        </MuiLink>
+                        .
+                    </Typography>
+                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.2}>
+                        <Button
+                            variant="contained"
+                            disableElevation
+                            startIcon={<FileJson size={16} />}
+                            onClick={() => handleDownloadExport('json')}
+                            disabled={fetchExport.isPending}
+                            sx={{ borderRadius: 3, bgcolor: 'primary.main' }}
+                        >
+                            {fetchExport.isPending ? 'Préparation…' : 'Télécharger en JSON'}
+                        </Button>
+                        <Button
+                            variant="outlined"
+                            startIcon={<FileText size={16} />}
+                            onClick={() => handleDownloadExport('pdf')}
+                            disabled={fetchExport.isPending}
+                            sx={{ borderRadius: 3 }}
+                        >
+                            {fetchExport.isPending ? 'Préparation…' : 'Télécharger en PDF'}
                         </Button>
                     </Stack>
                 </CardContent>

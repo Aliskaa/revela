@@ -6,6 +6,7 @@
         "moduleResolution": "bundler",
         "experimentalDecorators": true,
         "emitDecoratorMetadata": true,
+        "esModuleInterop": true,
         "paths": {
             "@src/*": ["./src/*"]
         }
