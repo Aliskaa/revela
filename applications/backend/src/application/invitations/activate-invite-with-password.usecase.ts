@@ -1,15 +1,6 @@
-/*
- * Copyright (c) 2026 AOR Conseil. All rights reserved.
- * Proprietary and confidential.
- * Licensed under the AOR Commercial License.
- *
- * Use, reproduction, modification, distribution, or disclosure of this
- * source code, in whole or in part, is prohibited except under a valid
- * written commercial agreement with AOR Conseil.
- *
- * See LICENSE.md for the full license terms.
- */
+// Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
 
+import type { IPasswordHasherPort } from '@aor/ports';
 import {
     InviteActivationAlreadyCompletedError,
     InviteActivationWeakPasswordError,
@@ -17,20 +8,25 @@ import {
     InviteTokenRequestError,
 } from '@src/domain/invitations/invitations.errors';
 import type { IInviteActivationWritePort } from '@src/interfaces/invitations/IInviteActivationWrite.port';
-import type { IParticipantJwtSignerPort } from '@src/interfaces/participant/IParticipantJwtSigner.port';
-import type { IParticipantsIdentityReaderPort, IParticipantsCampaignStateReaderPort } from '@src/interfaces/participants/IParticipantsRepository.port';
-import type { IPasswordHasherPort } from '@aor/ports';
+import type { IParticipantJwtSignerPort } from '@src/interfaces/participant-session/IParticipantJwtSigner.port';
+import type {
+    IParticipantsCampaignStateReaderPort,
+    IParticipantsIdentityReaderPort,
+} from '@src/interfaces/participants/IParticipantsRepository.port';
 import type { InviteTokenValidationUseCase } from './invite-token-validation.usecase';
 
 const MIN_PASSWORD_LENGTH = 8;
 
 export class ActivateInviteWithPasswordResult {
-    private constructor(public readonly accessToken: string) {
+    private constructor(
+        public readonly accessToken: string,
+        public readonly participantId: number
+    ) {
         Object.freeze(this);
     }
 
-    public static create(accessToken: string): ActivateInviteWithPasswordResult {
-        return new ActivateInviteWithPasswordResult(accessToken);
+    public static create(accessToken: string, participantId: number): ActivateInviteWithPasswordResult {
+        return new ActivateInviteWithPasswordResult(accessToken, participantId);
     }
 }
 
@@ -64,9 +60,7 @@ export class ActivateInviteWithPasswordUseCase {
                 invitation.participantId
             );
             if (!participation?.joinedAt) {
-                throw new InviteTokenRequestError(
-                    'Vous devez d’abord confirmer votre participation à cette campagne.'
-                );
+                throw new InviteTokenRequestError('Vous devez d’abord confirmer votre participation à cette campagne.');
             }
         }
 
@@ -74,7 +68,7 @@ export class ActivateInviteWithPasswordUseCase {
         if (!participant) {
             throw new InviteResourceNotFoundError('Participant introuvable.');
         }
-        if (participant.passwordHash) {
+        if (participant.isActivated()) {
             throw new InviteActivationAlreadyCompletedError(
                 'Ce compte est déjà activé. Connectez-vous avec votre e-mail et mot de passe.'
             );
@@ -87,6 +81,9 @@ export class ActivateInviteWithPasswordUseCase {
             passwordHash,
         });
 
-        return ActivateInviteWithPasswordResult.create(this.ports.jwtSigner.signAccessToken(participant.id));
+        return ActivateInviteWithPasswordResult.create(
+            this.ports.jwtSigner.signAccessToken(participant.id),
+            participant.id
+        );
     }
 }

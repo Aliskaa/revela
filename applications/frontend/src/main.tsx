@@ -1,16 +1,15 @@
-import { queryClient } from '@/lib/queryClient';
-import { theme } from '@/lib/theme';
-import { routeTree } from '@/routeTree.gen';
-import { CssBaseline, ThemeProvider } from '@mui/material';
-import { QueryClientProvider } from '@tanstack/react-query';
 import { RouterProvider, createRouter } from '@tanstack/react-router';
-import { StrictMode } from 'react';
-import { createRoot } from 'react-dom/client';
+import * as React from 'react';
+import * as ReactDOM from 'react-dom/client';
+
+import './lib/i18n';
+import { bootstrapAuth } from './lib/bootstrapAuth';
+import { routeTree } from './routeTree.gen';
 
 const router = createRouter({
     routeTree,
     defaultPreload: 'intent',
-    scrollRestoration: true,
+    defaultPreloadStaleTime: 0,
 });
 
 declare module '@tanstack/react-router' {
@@ -19,16 +18,20 @@ declare module '@tanstack/react-router' {
     }
 }
 
-const root = document.getElementById('root');
-if (!root) throw new Error('Root element not found');
+const rootElement = document.getElementById('root');
+if (!rootElement) {
+    throw new Error('Élément racine introuvable : `<div id="root">` est attendu dans index.html.');
+}
 
-createRoot(root).render(
-    <StrictMode>
-        <QueryClientProvider client={queryClient}>
-            <ThemeProvider theme={theme}>
-                <CssBaseline />
-                <RouterProvider router={router} />
-            </ThemeProvider>
-        </QueryClientProvider>
-    </StrictMode>
-);
+/**
+ * Bootstrap synchrone de l'auth (G1 RGPD) avant le mount du `RouterProvider`.
+ * Garantit que les `beforeLoad` de TanStack Router lisent un store hydraté plutôt que
+ * vide — sinon un utilisateur authentifié serait flashé sur `/login` puis remonté.
+ */
+void bootstrapAuth().finally(() => {
+    ReactDOM.createRoot(rootElement).render(
+        <React.StrictMode>
+            <RouterProvider router={router} />
+        </React.StrictMode>
+    );
+});

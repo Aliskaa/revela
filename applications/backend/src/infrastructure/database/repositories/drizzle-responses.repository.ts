@@ -1,19 +1,10 @@
-/*
- * Copyright (c) 2026 AOR Conseil. All rights reserved.
- * Proprietary and confidential.
- * Licensed under the AOR Commercial License.
- *
- * Use, reproduction, modification, distribution, or disclosure of this
- * source code, in whole or in part, is prohibited except under a valid
- * written commercial agreement with AOR Conseil.
- *
- * See LICENSE.md for the full license terms.
- */
+// Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
 
 import {
-    campaignParticipantsTable,
     DRIZZLE_DB_SYMBOL,
     type DrizzleDb,
+    campaignParticipantsTable,
+    campaignsTable,
     inviteTokensTable,
     participantProgressTable,
     participantsTable,
@@ -23,45 +14,57 @@ import {
 import { type SQL, and, asc, desc, eq, inArray, isNull, or, sql } from '@aor/drizzle';
 import { Inject, Injectable } from '@nestjs/common';
 
+import { Response, type ResponseScore } from '@src/domain/responses';
 import type {
-    CreateResponseCommand,
+    CreateResponseOptions,
     IResponsesRepositoryPort,
     ListResponsesParams,
-    ResponseRecord,
-    ResponseScoreRecord,
-    UpdateResponseCommand,
 } from '@src/interfaces/responses/IResponsesRepository.port';
 import type { Paginated } from '@src/shared/pagination';
 
 type QuestionnaireResponseRow = typeof questionnaireResponsesTable.$inferSelect;
 
-const attachScores = async (db: DrizzleDb, rows: QuestionnaireResponseRow[]): Promise<ResponseRecord[]> => {
+const attachScoresAndHydrate = async (db: DrizzleDb, rows: QuestionnaireResponseRow[]): Promise<Response[]> => {
     if (rows.length === 0) {
         return [];
     }
     const ids = rows.map(r => r.id);
     const scoreRows = await db.select().from(scoresTable).where(inArray(scoresTable.responseId, ids));
-    const byResponse = new Map<number, ResponseScoreRecord[]>();
+    const byResponse = new Map<number, ResponseScore[]>();
     for (const row of scoreRows) {
         const list = byResponse.get(row.responseId) ?? [];
         list.push({ scoreKey: row.scoreKey, value: row.value });
         byResponse.set(row.responseId, list);
     }
-    return rows.map(row => ({
-        ...row,
-        scores: byResponse.get(row.id) ?? [],
-    }));
+    return rows.map(row =>
+        Response.hydrate({
+            id: row.id,
+            participantId: row.participantId,
+            inviteTokenId: row.inviteTokenId,
+            questionnaireId: row.questionnaireId,
+            campaignId: row.campaignId,
+            submissionKind: row.submissionKind,
+            subjectParticipantId: row.subjectParticipantId,
+            raterParticipantId: row.raterParticipantId,
+            ratedParticipantId: row.ratedParticipantId,
+            name: row.name,
+            email: row.email,
+            organisation: row.organisation,
+            submittedAt: row.submittedAt,
+            scores: byResponse.get(row.id) ?? [],
+        })
+    );
 };
 
 @Injectable()
 export class DrizzleResponsesRepository implements IResponsesRepositoryPort {
-    public constructor(@Inject(DRIZZLE_DB_SYMBOL) private readonly db: DrizzleDb) { }
+    public constructor(@Inject(DRIZZLE_DB_SYMBOL) private readonly db: DrizzleDb) {}
 
     public async listForSubjectQuestionnaireMatrix(
         subjectParticipantId: number,
         questionnaireId: string,
         campaignId?: number
-    ): Promise<ResponseRecord[]> {
+    ): Promise<Response[]> {
         const qid = questionnaireId.toUpperCase();
         const subjectMatch = or(
             eq(questionnaireResponsesTable.subjectParticipantId, subjectParticipantId),
@@ -82,47 +85,65 @@ export class DrizzleResponsesRepository implements IResponsesRepositoryPort {
                 )
             )
             .orderBy(desc(questionnaireResponsesTable.submittedAt));
-        return attachScores(this.db, rows);
+        return attachScoresAndHydrate(this.db, rows);
     }
 
-    public async findById(id: number): Promise<ResponseRecord | null> {
-        const [response] = await this.db
+    public async listAllInvolvingParticipant(participantId: number): Promise<Response[]> {
+        const rows = await this.db
+            .select()
+            .from(questionnaireResponsesTable)
+            .where(
+                or(
+                    eq(questionnaireResponsesTable.participantId, participantId),
+                    eq(questionnaireResponsesTable.subjectParticipantId, participantId),
+                    eq(questionnaireResponsesTable.raterParticipantId, participantId),
+                    eq(questionnaireResponsesTable.ratedParticipantId, participantId)
+                )
+            )
+            .orderBy(desc(questionnaireResponsesTable.submittedAt));
+        return attachScoresAndHydrate(this.db, rows);
+    }
+
+    public async findById(id: number): Promise<Response | null> {
+        const [row] = await this.db
             .select()
             .from(questionnaireResponsesTable)
             .where(eq(questionnaireResponsesTable.id, id))
             .limit(1);
-        if (!response) {
+        if (!row) {
             return null;
         }
-        const [withScores] = await attachScores(this.db, [response]);
+        const [withScores] = await attachScoresAndHydrate(this.db, [row]);
         return withScores;
     }
 
-    public async create(command: CreateResponseCommand): Promise<ResponseRecord> {
+    public async create(response: Response, options?: CreateResponseOptions): Promise<Response> {
+        const snap = response.persistenceSnapshot();
         return this.db.transaction(async tx => {
-            const [response] = await tx
+            const [inserted] = await tx
                 .insert(questionnaireResponsesTable)
                 .values({
-                    participantId: command.participantId ?? null,
-                    inviteTokenId: command.inviteTokenId ?? null,
-                    questionnaireId: command.questionnaireId,
-                    campaignId: command.campaignId ?? null,
-                    submissionKind: command.submissionKind ?? 'element_humain',
-                    subjectParticipantId: command.subjectParticipantId ?? null,
-                    raterParticipantId: command.raterParticipantId ?? null,
-                    name: command.name,
-                    email: command.email,
-                    organisation: command.organisation ?? null,
+                    participantId: snap.participantId,
+                    inviteTokenId: snap.inviteTokenId,
+                    questionnaireId: snap.questionnaireId,
+                    campaignId: snap.campaignId,
+                    submissionKind: snap.submissionKind,
+                    subjectParticipantId: snap.subjectParticipantId,
+                    raterParticipantId: snap.raterParticipantId,
+                    ratedParticipantId: snap.ratedParticipantId,
+                    name: snap.name,
+                    email: snap.email,
+                    organisation: snap.organisation,
                 })
                 .returning();
 
-            if (command.campaignId !== undefined && command.participantId !== undefined) {
+            if (snap.campaignId !== null && snap.participantId !== null) {
                 const now = new Date();
                 await tx
                     .insert(campaignParticipantsTable)
                     .values({
-                        campaignId: command.campaignId,
-                        participantId: command.participantId,
+                        campaignId: snap.campaignId,
+                        participantId: snap.participantId,
                         invitedAt: now,
                         updatedAt: now,
                     })
@@ -143,40 +164,40 @@ export class DrizzleResponsesRepository implements IResponsesRepositoryPort {
                     .from(participantProgressTable)
                     .where(
                         and(
-                            eq(participantProgressTable.campaignId, command.campaignId),
-                            eq(participantProgressTable.participantId, command.participantId)
+                            eq(participantProgressTable.campaignId, snap.campaignId),
+                            eq(participantProgressTable.participantId, snap.participantId)
                         )
                     )
                     .limit(1);
+                const [campaign] = await tx
+                    .select({
+                        allowTestWithoutManualInputs: campaignsTable.allowTestWithoutManualInputs,
+                    })
+                    .from(campaignsTable)
+                    .where(eq(campaignsTable.id, snap.campaignId))
+                    .limit(1);
+                const canSkipManualInputs = campaign?.allowTestWithoutManualInputs === true;
 
                 const selfDoneAfter =
-                    command.submissionKind === 'self_rating'
-                        ? true
-                        : existingProgress?.selfRatingStatus === 'completed';
+                    snap.submissionKind === 'self_rating' ? true : existingProgress?.selfRatingStatus === 'completed';
                 const peerDoneAfter =
-                    command.submissionKind === 'peer_rating'
-                        ? true
-                        : existingProgress?.peerFeedbackStatus === 'completed';
+                    snap.submissionKind === 'peer_rating' ? true : existingProgress?.peerFeedbackStatus === 'completed';
                 const unlockElementHumain =
-                    (command.submissionKind === 'self_rating' ||
-                        command.submissionKind === 'peer_rating') &&
+                    (snap.submissionKind === 'self_rating' || snap.submissionKind === 'peer_rating') &&
                     (existingProgress?.elementHumainStatus ?? 'locked') === 'locked' &&
-                    selfDoneAfter &&
-                    peerDoneAfter;
+                    (canSkipManualInputs || (selfDoneAfter && peerDoneAfter));
 
-                const elementHumainUnlockPatch = unlockElementHumain
-                    ? { elementHumainStatus: 'pending' as const }
-                    : {};
+                const elementHumainUnlockPatch = unlockElementHumain ? { elementHumainStatus: 'pending' as const } : {};
 
                 const progressPatch =
-                    command.submissionKind === 'self_rating'
+                    snap.submissionKind === 'self_rating'
                         ? {
                               selfRatingStatus: 'completed' as const,
                               selfRatingCompletedAt: now,
                               updatedAt: now,
                               ...elementHumainUnlockPatch,
                           }
-                        : command.submissionKind === 'peer_rating'
+                        : snap.submissionKind === 'peer_rating'
                           ? {
                                 peerFeedbackStatus: 'completed' as const,
                                 peerFeedbackCompletedAt: now,
@@ -192,8 +213,8 @@ export class DrizzleResponsesRepository implements IResponsesRepositoryPort {
                 await tx
                     .insert(participantProgressTable)
                     .values({
-                        campaignId: command.campaignId,
-                        participantId: command.participantId,
+                        campaignId: snap.campaignId,
+                        participantId: snap.participantId,
                         ...progressPatch,
                     })
                     .onConflictDoUpdate({
@@ -202,78 +223,46 @@ export class DrizzleResponsesRepository implements IResponsesRepositoryPort {
                     });
             }
 
-            const scores =
-                command.scores.length === 0
+            const insertedScores =
+                snap.scores.length === 0
                     ? []
                     : await tx
-                        .insert(scoresTable)
-                        .values(
-                            command.scores.map(score => ({
-                                responseId: response.id,
-                                ...score,
-                            }))
-                        )
-                        .returning();
+                          .insert(scoresTable)
+                          .values(
+                              snap.scores.map(score => ({
+                                  responseId: inserted.id,
+                                  ...score,
+                              }))
+                          )
+                          .returning();
 
-            if (command.markInviteTokenUsedId !== undefined) {
+            if (options?.markInviteTokenUsedId !== undefined) {
                 await tx
                     .update(inviteTokensTable)
                     .set({ usedAt: new Date() })
-                    .where(eq(inviteTokensTable.id, command.markInviteTokenUsedId));
+                    .where(eq(inviteTokensTable.id, options.markInviteTokenUsedId));
             }
 
-            return {
-                ...response,
-                scores,
-            };
+            return Response.hydrate({
+                id: inserted.id,
+                participantId: inserted.participantId,
+                inviteTokenId: inserted.inviteTokenId,
+                questionnaireId: inserted.questionnaireId,
+                campaignId: inserted.campaignId,
+                submissionKind: inserted.submissionKind,
+                subjectParticipantId: inserted.subjectParticipantId,
+                raterParticipantId: inserted.raterParticipantId,
+                ratedParticipantId: inserted.ratedParticipantId,
+                name: inserted.name,
+                email: inserted.email,
+                organisation: inserted.organisation,
+                submittedAt: inserted.submittedAt,
+                scores: insertedScores.map(s => ({ scoreKey: s.scoreKey, value: s.value })),
+            });
         });
     }
 
-    public async update(command: UpdateResponseCommand): Promise<ResponseRecord | null> {
-        return this.db.transaction(async tx => {
-            const [existing] = await tx
-                .select()
-                .from(questionnaireResponsesTable)
-                .where(eq(questionnaireResponsesTable.id, command.id))
-                .limit(1);
-            if (!existing) {
-                return null;
-            }
-
-            const [updated] = await tx
-                .update(questionnaireResponsesTable)
-                .set({
-                    name: command.name,
-                    email: command.email,
-                    organisation: command.organisation ?? null,
-                    submittedAt: new Date(),
-                })
-                .where(eq(questionnaireResponsesTable.id, command.id))
-                .returning();
-
-            await tx.delete(scoresTable).where(eq(scoresTable.responseId, command.id));
-
-            const scores =
-                command.scores.length === 0
-                    ? []
-                    : await tx
-                        .insert(scoresTable)
-                        .values(
-                            command.scores.map(score => ({
-                                responseId: command.id,
-                                ...score,
-                            }))
-                        )
-                        .returning();
-
-            return {
-                ...updated,
-                scores,
-            };
-        });
-    }
-
-    public async list(params: ListResponsesParams): Promise<Paginated<ResponseRecord>> {
+    public async list(params: ListResponsesParams): Promise<Paginated<Response>> {
         const perPage = Math.min(params.perPage, 200);
         const page = Math.max(params.page, 1);
         const filters: SQL[] = [];
@@ -282,6 +271,16 @@ export class DrizzleResponsesRepository implements IResponsesRepositoryPort {
         }
         if (params.campaignId !== undefined) {
             filters.push(eq(questionnaireResponsesTable.campaignId, params.campaignId));
+        }
+        if (params.coachId !== undefined) {
+            // Restreint aux réponses des campagnes attribuées à ce coach (scope=coach).
+            // Le sous-select reste plus simple qu'un INNER JOIN ici (campaign_id peut être null
+            // pour des réponses historiques non rattachées, qu'on exclut donc implicitement).
+            const coachCampaignIds = this.db
+                .select({ id: campaignsTable.id })
+                .from(campaignsTable)
+                .where(eq(campaignsTable.coachId, params.coachId));
+            filters.push(inArray(questionnaireResponsesTable.campaignId, coachCampaignIds));
         }
         const whereClause: SQL | undefined = filters.length > 0 ? and(...filters) : undefined;
 
@@ -293,16 +292,16 @@ export class DrizzleResponsesRepository implements IResponsesRepositoryPort {
         const listQuery = this.db.select().from(questionnaireResponsesTable);
         const rows = whereClause
             ? await listQuery
-                .where(whereClause)
-                .orderBy(desc(questionnaireResponsesTable.submittedAt))
-                .limit(perPage)
-                .offset((page - 1) * perPage)
+                  .where(whereClause)
+                  .orderBy(desc(questionnaireResponsesTable.submittedAt))
+                  .limit(perPage)
+                  .offset((page - 1) * perPage)
             : await listQuery
-                .orderBy(desc(questionnaireResponsesTable.submittedAt))
-                .limit(perPage)
-                .offset((page - 1) * perPage);
+                  .orderBy(desc(questionnaireResponsesTable.submittedAt))
+                  .limit(perPage)
+                  .offset((page - 1) * perPage);
 
-        const items = await attachScores(this.db, rows);
+        const items = await attachScoresAndHydrate(this.db, rows);
         return {
             items,
             total,
@@ -328,16 +327,16 @@ export class DrizzleResponsesRepository implements IResponsesRepositoryPort {
         });
     }
 
-    public async listAllForQuestionnaire(questionnaireId: string): Promise<ResponseRecord[]> {
+    public async listAllForQuestionnaire(questionnaireId: string): Promise<Response[]> {
         const rows = await this.db
             .select()
             .from(questionnaireResponsesTable)
             .where(eq(questionnaireResponsesTable.questionnaireId, questionnaireId))
             .orderBy(desc(questionnaireResponsesTable.submittedAt));
-        return attachScores(this.db, rows);
+        return attachScoresAndHydrate(this.db, rows);
     }
 
-    public async listAnonymizedForCompany(questionnaireId: string, companyId: number): Promise<ResponseRecord[]> {
+    public async listAnonymizedForCompany(questionnaireId: string, companyId: number): Promise<Response[]> {
         const rows = await this.db
             .select({ response: questionnaireResponsesTable })
             .from(questionnaireResponsesTable)
@@ -351,7 +350,7 @@ export class DrizzleResponsesRepository implements IResponsesRepositoryPort {
             .orderBy(asc(questionnaireResponsesTable.submittedAt));
 
         const list = rows.map(r => r.response);
-        return attachScores(this.db, list);
+        return attachScoresAndHydrate(this.db, list);
     }
 
     public async countAll(): Promise<number> {

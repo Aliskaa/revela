@@ -1,8 +1,8 @@
 import { participantApiClient } from '@/api/participantClient';
-import type { CampaignPeerChoice, QuestionnaireDetail, SubmitParticipantPeerRatingBody } from '@/api/types';
 import { AiPlaceholder } from '@/components/common/AiPlaceholder';
 import { DimensionCards } from '@/components/common/DimensionCards';
 import { useParticipantCampaignPeers, useParticipantSessionMatrix } from '@/hooks/participantSession';
+import type { CampaignPeerChoice, QuestionnaireDetail, SubmitParticipantPeerRatingBody } from '@aor/types';
 import { Alert, Autocomplete, Box, Button, CircularProgress, Tab, Tabs, TextField, Typography } from '@mui/material';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
@@ -143,7 +143,7 @@ export function PeerRatingStep({ qid, q, campaignId }: PeerRatingStepProps) {
         },
         onSuccess: () => {
             invalidateParticipantSessionQueries(queryClient);
-            navigate({ to: '/' });
+            navigate({ to: '/participant' });
         },
     });
 
@@ -233,7 +233,6 @@ export function PeerRatingStep({ qid, q, campaignId }: PeerRatingStepProps) {
                             mb: 3,
                             minHeight: 48,
                             '& .MuiTab-root': {
-                                textTransform: 'none',
                                 fontWeight: 700,
                                 borderRadius: 2,
                                 mx: 0.5,

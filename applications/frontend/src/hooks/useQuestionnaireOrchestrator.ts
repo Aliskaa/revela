@@ -44,29 +44,24 @@ export function useQuestionnaireOrchestrator({ qid, type, campaignId }: UseQuest
             (progression.self_rating_status !== 'completed' || progression.peer_feedback_status === 'completed')
         ) {
             navigate({
-                to: progression.self_rating_status === 'completed' ? '/' : '/questionnaire/$qid',
-                params: { qid },
-                search: { type: 'self', campaign_id: resolvedCampaignId ?? undefined },
+                to: progression.self_rating_status === 'completed' ? '/' : '/self-rating',
                 replace: true,
             });
             return;
         }
 
         if (type === 'scientific') {
-            if (progression.self_rating_status !== 'completed') {
+            const canSkipManualInputs = assignment.allow_test_without_manual_inputs === true;
+            if (!canSkipManualInputs && progression.self_rating_status !== 'completed') {
                 navigate({
-                    to: '/questionnaire/$qid',
-                    params: { qid },
-                    search: { type: 'self', campaign_id: resolvedCampaignId ?? undefined },
+                    to: '/self-rating',
                     replace: true,
                 });
                 return;
             }
-            if (progression.peer_feedback_status !== 'completed') {
+            if (!canSkipManualInputs && progression.peer_feedback_status !== 'completed') {
                 navigate({
-                    to: '/questionnaire/$qid',
-                    params: { qid },
-                    search: { type: 'peer', campaign_id: resolvedCampaignId ?? undefined },
+                    to: '/peer-feedback',
                     replace: true,
                 });
                 return;
@@ -75,7 +70,7 @@ export function useQuestionnaireOrchestrator({ qid, type, campaignId }: UseQuest
                 navigate({ to: '/', replace: true });
             }
         }
-    }, [assignment, navigate, progression, qid, resolvedCampaignId, session, type]);
+    }, [assignment, navigate, progression, session, type]);
 
     return {
         q,

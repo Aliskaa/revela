@@ -1,105 +1,30 @@
 ---
-description: "Use this context to enforce BiomeJS linting and formatting rules when writing or reviewing TypeScript source code."
+description: Apply the repository Biome formatting and linting conventions.
 alwaysApply: false
-globs: biome.json, **/*.ts, **/*.tsx
+globs: biome.json, applications/**/*.ts, applications/**/*.tsx, packages/**/*.ts, packages/**/*.tsx
 ---
 
-# BiomeJS Code Style Rules
+# Biome Code Style
 
-BiomeJS (`@biomejs/biome`) is the sole linting and formatting tool for this project (see [ADR-004](../architecture/adr/ADR-004-biome-linting-formatting.md)). ESLint and Prettier are not used and must not be added.
-
-The authoritative configuration is the root [`biome.json`](../../biome.json). All rules below are derived from it.
-
----
+Biome is the only formatter and linter used in this repository.
 
 ## Formatting
 
-| Setting | Value |
-|---|---|
-| Indent style | Spaces |
-| Indent width | 4 |
-| Line ending | LF |
-| Line width | 120 characters |
-| Quote style | Single quotes `'` |
-| Semicolons | Always |
-| Trailing commas | ES5 (objects, arrays, parameters) |
-| Arrow function parentheses | Omit when single parameter (`x => x`) |
+- Indent with 4 spaces.
+- Use LF line endings.
+- Keep lines within 120 characters when practical.
+- Use single quotes.
+- Always use semicolons.
+- Keep ES5 trailing commas.
+- Use arrow-function parentheses only when needed.
 
-**Generated code must comply with these settings.** Do not use double quotes, tabs, or omit semicolons.
+## Linting
 
----
+- Let Biome organize imports.
+- Avoid unused imports and unused variables.
+- Do not introduce ESLint or Prettier configuration.
 
-## Linting Rules
+## Notes
 
-### Style
-
-- **`useConst`** (`error`): Always use `const` for variables that are never reassigned. Use `let` only when reassignment is necessary.
-
-```ts
-// ✅
-const result = compute();
-
-// ❌
-let result = compute();
-```
-
-- **`useBlockStatements`** (`error`): Always wrap `if`, `else`, `for`, `while`, `do` bodies in curly braces, even for single-line bodies.
-
-```ts
-// ✅
-if (condition) {
-    doSomething();
-}
-
-// ❌
-if (condition) doSomething();
-```
-
-### Suspicious
-
-- **`noDoubleEquals`** (`error`): Use strict equality `===` and `!==`. Never use `==` or `!=`.
-
-```ts
-// ✅
-if (value === null) { ... }
-
-// ❌
-if (value == null) { ... }
-```
-
-- **`noVar`** (`error`): Never use `var`. Use `const` or `let`.
-
-```ts
-// ✅
-const x = 1;
-
-// ❌
-var x = 1;
-```
-
-- **`noConsole`** (`off`): Console usage is allowed globally. It can be restricted per file pattern via `biome.json` overrides.
-
----
-
-## Commands
-
-Run from the workspace root:
-
-```bash
-# Lint and auto-fix
-pnpm lint
-
-# Format and auto-fix
-pnpm format
-
-# Lint + format in one pass (recommended before commit)
-pnpm check
-```
-
----
-
-## Configuration Constraints
-
-- Do **not** create per-package `biome.json` files unless a specific package requires a narrow override (e.g. relaxing a rule for generated files). All overrides must be in the root `biome.json` under the `overrides` array.
-- Do **not** add `.eslintrc`, `.prettierrc`, or any ESLint/Prettier configuration anywhere in the monorepo.
-- Test files (`*.spec.ts`, `*.test.ts`) and demo files (`*.demo.ts`) have dedicated overrides in `biome.json` and must not be formatted differently by hand.
+- The root `biome.json` is the source of truth.
+- Respect repository ignores such as `dist`, `node_modules`, and generated files like `src/routeTree.gen.ts`.

@@ -1,15 +1,12 @@
 ---
-description: "Use this context to maintain the repository TOTO list from chat commands."
-alwaysApply: true
+description: Use this context only when the user explicitly asks to update the repository TOTO list.
+alwaysApply: false
 ---
 
-# TOTO List Context
+# TOTO List
 
-- The repository TOTO list is stored in [documentations/TOTO.md](../../TOTO.md).
-- If the user's chat message starts with `TOTO` or `TODO` (case-insensitive, optionally followed by `:`), treat the rest of the message as a new TOTO entry description.
-- Append a new row to the table in [documentations/TOTO.md](../../TOTO.md) instead of replying with a plain reminder.
-- Use the current date in ISO format (`YYYY-MM-DD`).
-- Use `todo` as the default status unless the user explicitly asks for another status.
-- Preserve the Markdown table structure with the columns `#`, `Date`, `Status`, and `Description`.
-- The `#` column is a sequential integer task number. When adding a new row, use the next available number (last row number + 1).
-- If the message starts with `TOTO` but no usable description is provided, ask a short clarifying question.
+- The repository TOTO list lives in `docs/TOTO.md`.
+- Update that file only when the user explicitly asks to add, change, or close a TOTO item.
+- Do not treat every `TODO` mention in chat or code as an instruction to edit the TOTO file.
+- Preserve the existing Markdown table structure.
+- When adding an item, use the next sequential number and the current date in `YYYY-MM-DD` format.

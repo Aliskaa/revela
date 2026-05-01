@@ -1,34 +1,40 @@
-/*
- * Copyright (c) 2026 AOR Conseil. All rights reserved.
- * Proprietary and confidential.
- * Licensed under the AOR Commercial License.
- *
- * Use, reproduction, modification, distribution, or disclosure of this
- * source code, in whole or in part, is prohibited except under a valid
- * written commercial agreement with AOR Conseil.
- *
- * See LICENSE.md for the full license terms.
- */
+// Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
 
 import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
+import type { Request } from 'express';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 
-export type JwtValidatedUser = {
-    username: string;
-    role: 'admin' | 'participant';
-    scope?: 'super-admin' | 'coach';
-    coachId?: number;
-    participantId?: number;
-};
+import { ADMIN_COOKIE_NAMES, PARTICIPANT_COOKIE_NAMES } from '@src/presentation/auth/auth-cookies.helper';
+import type { JwtValidatedUser } from '@src/presentation/jwt-validated-user';
+import { requireEnv } from '@src/shared/env';
+
+/**
+ * Lit l'access token depuis l'un des cookies httpOnly (`aor_admin_access` ou
+ * `aor_participant_access`) — G1 RGPD. Le fallback `Authorization: Bearer` a été retiré :
+ * tous les clients (frontend Vite, Swagger interactif via cookies posés par login) doivent
+ * désormais envoyer leurs cookies via `withCredentials: true`.
+ */
+const fromCookie =
+    (cookieName: string) =>
+    (req: Request): string | null => {
+        const cookies = (req as Request & { cookies?: Record<string, string> }).cookies;
+        if (cookies && typeof cookies[cookieName] === 'string' && cookies[cookieName].length > 0) {
+            return cookies[cookieName];
+        }
+        return null;
+    };
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
     public constructor() {
         super({
-            jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+            jwtFromRequest: ExtractJwt.fromExtractors([
+                fromCookie(ADMIN_COOKIE_NAMES.access),
+                fromCookie(PARTICIPANT_COOKIE_NAMES.access),
+            ]),
             ignoreExpiration: false,
-            secretOrKey: process.env.JWT_SECRET ?? 'dev-insecure-change-me',
+            secretOrKey: requireEnv('JWT_SECRET'),
         });
     }
 

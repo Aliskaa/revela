@@ -1,10 +1,13 @@
-import { apiClient } from '@/api/client';
-import type { InviteInfo, SubmitResult } from '@/api/types';
-import { userParticipant } from '@/lib/auth';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-type ConfirmParticipationResult = { invitation_confirmed: boolean };
+import { apiClient } from '@/api/client';
+import { userParticipant } from '@/lib/auth';
+import { useAuthStore } from '@/stores/authStore';
+import type { InviteInfo, SubmitResult } from '@aor/types';
+
 import { participantSessionKeys } from './participantSession';
+
+type ConfirmParticipationResult = { invitation_confirmed: boolean };
 
 interface InviteSubmitPayload {
     series0: number[];
@@ -25,6 +28,8 @@ export function useConfirmInviteParticipation(token: string) {
     return useMutation<ConfirmParticipationResult, Error, void>({
         mutationFn: () => apiClient.post(`/invite/${token}/confirm-participation`).then(r => r.data),
         onSuccess: () => {
+            // Le flux invite peut être emprunté par un participant déjà connecté à un autre
+            // compte. On force la déconnexion locale pour éviter une session croisée.
             userParticipant.removeToken();
             void qc.invalidateQueries({ queryKey: participantSessionKeys.session });
             void qc.invalidateQueries({ queryKey: participantSessionKeys.matrixRoot });
@@ -42,10 +47,12 @@ export function useSubmitInvite(token: string) {
 
 export function useActivateInvite(token: string) {
     const qc = useQueryClient();
-    return useMutation<{ access_token: string }, Error, { password: string }>({
+    return useMutation<{ participant_id: number }, Error, { password: string }>({
         mutationFn: body => apiClient.post(`/invite/${token}/activate`, body).then(r => r.data),
         onSuccess: data => {
-            userParticipant.setToken(data.access_token);
+            // L'access token est posé en cookie httpOnly côté backend (G1 RGPD). On hydrate
+            // le store avec le `participantId` retourné dans le body.
+            useAuthStore.getState().setParticipantMe({ participantId: data.participant_id });
             void qc.invalidateQueries({ queryKey: participantSessionKeys.session });
             void qc.invalidateQueries({ queryKey: participantSessionKeys.matrixRoot });
         },

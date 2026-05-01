@@ -1,14 +1,4 @@
-/*
- * Copyright (c) 2026 AOR Conseil. All rights reserved.
- * Proprietary and confidential.
- * Licensed under the AOR Commercial License.
- *
- * Use, reproduction, modification, distribution, or disclosure of this
- * source code, in whole or in part, is prohibited except under a valid
- * written commercial agreement with AOR Conseil.
- *
- * See LICENSE.md for the full license terms.
- */
+// Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
 
 /** Jeton invalide, désactivé, expiré ou déjà utilisé → 400 `{ error }`. */
 export class InviteTokenRequestError extends Error {
@@ -51,6 +41,24 @@ export class InviteActivationAlreadyCompletedError extends Error {
     public constructor(message: string) {
         super(message);
         this.name = 'InviteActivationAlreadyCompletedError';
+        Object.setPrototypeOf(this, new.target.prototype);
+    }
+}
+
+/** Jeton d'invitation vide au moment de la création de l'entité — violation d'invariant. */
+export class InvitationTokenRequiredError extends Error {
+    public constructor() {
+        super("Le jeton de l'invitation est requis.");
+        this.name = 'InvitationTokenRequiredError';
+        Object.setPrototypeOf(this, new.target.prototype);
+    }
+}
+
+/** `questionnaireId` vide au moment de la création de l'entité — violation d'invariant. */
+export class InvitationQuestionnaireIdRequiredError extends Error {
+    public constructor() {
+        super("L'identifiant du questionnaire est requis.");
+        this.name = 'InvitationQuestionnaireIdRequiredError';
         Object.setPrototypeOf(this, new.target.prototype);
     }
 }

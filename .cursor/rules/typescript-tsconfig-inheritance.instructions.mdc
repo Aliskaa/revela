@@ -1,55 +1,21 @@
 ---
-description: "Use this context for tsconfig inheritance and centralization rules."
+description: Use this context when editing TypeScript project configuration files.
 alwaysApply: false
 globs: **/tsconfig*.json
 ---
 
-# TypeScript Tsconfig Inheritance Context
+# Tsconfig Conventions
 
-## Rules
+- App and package `tsconfig` files should extend the repository root `tsconfig.json`.
+- Keep shared compiler defaults in the root config; keep local files focused on local overrides.
 
-- Every package-level `tsconfig.json` must extend the repository root `./tsconfig.json` using the correct relative path from the package location (for example `../../tsconfig.json` or `../../../tsconfig.json`).
-- Shared TypeScript compiler options must be defined only in the root `./tsconfig.json`.
-- Package-level `tsconfig.json` files may define only local overrides such as `rootDir`, `outDir`, `baseUrl`, `paths`, `include`, and `exclude`.
-- Do not duplicate base compiler options across package tsconfig files.
-- Every package-level `tsconfig.json` must define the local alias `@src/*` with this exact mapping:
+## Alias Rules
 
-```json
-"paths": {
-  "@src/*": ["./src/*"]
-}
-```
+- Backend `tsconfig.json` uses the `@src/*` alias.
+- Frontend `tsconfig.app.json` uses both `@src/*` and `@/*`.
+- Packages may omit path aliases when they do not need them.
 
-## Example
+## Working Rules
 
-```json
-{
-  "extends": "../../tsconfig.json",
-  "compilerOptions": {
-    "rootDir": "./src",
-    "outDir": "./dist",
-    "paths": {
-      "@src/*": ["./src/*"]
-    }
-  },
-  "include": ["src/**/*.ts"],
-  "exclude": ["node_modules", "dist"]
-}
-```
-
-Example for nested library directories (for example `./packages/logger/some-submodule`):
-
-```json
-{
-  "extends": "../../../tsconfig.json",
-  "compilerOptions": {
-    "rootDir": "./src",
-    "outDir": "./dist",
-    "paths": {
-      "@src/*": ["./src/*"]
-    }
-  },
-  "include": ["src/**/*.ts"],
-  "exclude": ["node_modules", "dist"]
-}
-```
+- Preserve project references already used by the frontend root `tsconfig.json`.
+- Do not duplicate base compiler settings across package configs unless there is a local override requirement.

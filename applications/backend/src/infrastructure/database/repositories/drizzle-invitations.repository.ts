@@ -1,61 +1,107 @@
-/*
- * Copyright (c) 2026 AOR Conseil. All rights reserved.
- * Proprietary and confidential.
- * Licensed under the AOR Commercial License.
- *
- * Use, reproduction, modification, distribution, or disclosure of this
- * source code, in whole or in part, is prohibited except under a valid
- * written commercial agreement with AOR Conseil.
- *
- * See LICENSE.md for the full license terms.
- */
+// Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
 
-import { DRIZZLE_DB_SYMBOL, type DrizzleDb, inviteTokensTable } from '@aor/drizzle';
-import { desc, eq } from '@aor/drizzle';
+import { DRIZZLE_DB_SYMBOL, type DrizzleDb, and, desc, eq, gt, inviteTokensTable, isNull, lt, or } from '@aor/drizzle';
 import { Inject, Injectable } from '@nestjs/common';
 
-import type {
-    CreateInvitationCommand,
-    IInvitationsRepositoryPort,
-    InvitationRecord,
-} from '@src/interfaces/invitations/IInvitationsRepository.port';
+import { Invitation } from '@src/domain/invitations';
+import type { IInvitationsRepositoryPort } from '@src/interfaces/invitations/IInvitationsRepository.port';
+
+type InvitationRow = {
+    id: number;
+    token: string;
+    participantId: number;
+    campaignId: number | null;
+    questionnaireId: string;
+    createdAt: Date | null;
+    expiresAt: Date | null;
+    usedAt: Date | null;
+    isActive: boolean;
+};
+
+const hydrateInvitation = (row: InvitationRow): Invitation =>
+    Invitation.hydrate({
+        id: row.id,
+        token: row.token,
+        participantId: row.participantId,
+        campaignId: row.campaignId,
+        questionnaireId: row.questionnaireId,
+        createdAt: row.createdAt,
+        expiresAt: row.expiresAt,
+        usedAt: row.usedAt,
+        isActive: row.isActive,
+    });
 
 @Injectable()
 export class DrizzleInvitationsRepository implements IInvitationsRepositoryPort {
     public constructor(@Inject(DRIZZLE_DB_SYMBOL) private readonly db: DrizzleDb) {}
 
-    public async findByToken(token: string): Promise<InvitationRecord | null> {
-        const [invitation] = await this.db
-            .select()
-            .from(inviteTokensTable)
-            .where(eq(inviteTokensTable.token, token))
-            .limit(1);
-        return invitation ?? null;
+    public async findByToken(token: string): Promise<Invitation | null> {
+        const [row] = await this.db.select().from(inviteTokensTable).where(eq(inviteTokensTable.token, token)).limit(1);
+        return row ? hydrateInvitation(row) : null;
     }
 
-    public async create(command: CreateInvitationCommand): Promise<InvitationRecord> {
-        const [invitation] = await this.db
-            .insert(inviteTokensTable)
-            .values({
-                token: command.token,
-                participantId: command.participantId,
-                campaignId: command.campaignId ?? null,
-                questionnaireId: command.questionnaireId,
-                expiresAt: command.expiresAt,
-            })
-            .returning();
-        return invitation;
-    }
-
-    public async markUsed(id: number): Promise<void> {
-        await this.db.update(inviteTokensTable).set({ usedAt: new Date() }).where(eq(inviteTokensTable.id, id));
-    }
-
-    public async findByParticipantId(participantId: number): Promise<InvitationRecord[]> {
-        return this.db
+    public async findByParticipantId(participantId: number): Promise<Invitation[]> {
+        const rows = await this.db
             .select()
             .from(inviteTokensTable)
             .where(eq(inviteTokensTable.participantId, participantId))
             .orderBy(desc(inviteTokensTable.createdAt));
+        return rows.map(hydrateInvitation);
+    }
+
+    public async create(draft: Invitation): Promise<Invitation> {
+        return this.db.transaction(async tx => {
+            const campaignId = draft.campaignId;
+            const qid = draft.questionnaireId;
+            const assignmentMatch = and(
+                eq(inviteTokensTable.participantId, draft.participantId),
+                campaignId === null
+                    ? isNull(inviteTokensTable.campaignId)
+                    : eq(inviteTokensTable.campaignId, campaignId),
+                eq(inviteTokensTable.questionnaireId, qid)
+            );
+            const now = new Date();
+
+            await tx
+                .update(inviteTokensTable)
+                .set({ isActive: false })
+                .where(
+                    and(
+                        assignmentMatch,
+                        eq(inviteTokensTable.isActive, true),
+                        isNull(inviteTokensTable.usedAt),
+                        lt(inviteTokensTable.expiresAt, now)
+                    )
+                );
+
+            const [existing] = await tx
+                .select()
+                .from(inviteTokensTable)
+                .where(
+                    and(
+                        assignmentMatch,
+                        eq(inviteTokensTable.isActive, true),
+                        isNull(inviteTokensTable.usedAt),
+                        or(isNull(inviteTokensTable.expiresAt), gt(inviteTokensTable.expiresAt, now))
+                    )
+                )
+                .orderBy(desc(inviteTokensTable.createdAt), desc(inviteTokensTable.id))
+                .limit(1);
+            if (existing) {
+                return hydrateInvitation(existing);
+            }
+
+            const [inserted] = await tx
+                .insert(inviteTokensTable)
+                .values({
+                    token: draft.token,
+                    participantId: draft.participantId,
+                    campaignId,
+                    questionnaireId: qid,
+                    expiresAt: draft.expiresAt ?? undefined,
+                })
+                .returning();
+            return hydrateInvitation(inserted);
+        });
     }
 }

@@ -1,38 +1,58 @@
-/*
- * Copyright (c) 2026 AOR Conseil. All rights reserved.
- * Proprietary and confidential.
- * Licensed under the AOR Commercial License.
- *
- * Use, reproduction, modification, distribution, or disclosure of this
- * source code, in whole or in part, is prohibited except under a valid
- * written commercial agreement with AOR Conseil.
- *
- * See LICENSE.md for the full license terms.
- */
+// Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
 
-import { Body, Controller, Delete, Get, Inject, Param, ParseIntPipe, Post, Query, UploadedFile, UseFilters, UseGuards, UseInterceptors } from '@nestjs/common';
+import {
+    Body,
+    Controller,
+    Delete,
+    Get,
+    Inject,
+    NotFoundException,
+    Param,
+    ParseIntPipe,
+    Patch,
+    Post,
+    Query,
+    Req,
+    UploadedFile,
+    UseFilters,
+    UseGuards,
+    UseInterceptors,
+} from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
 import type { CreateParticipantInviteUseCase } from '@src/application/admin/participants/create-participant-invite.usecase';
 import type { EraseParticipantRgpdUseCase } from '@src/application/admin/participants/erase-participant-rgpd.usecase';
+import type { GetAdminParticipantDetailUseCase } from '@src/application/admin/participants/get-admin-participant-detail.usecase';
 import type { ImportParticipantsCsvUseCase } from '@src/application/admin/participants/import-participants-csv.usecase';
 import type { ListAdminParticipantsUseCase } from '@src/application/admin/participants/list-admin-participants.usecase';
 import type { ListParticipantInvitationTokensUseCase } from '@src/application/admin/participants/list-participant-invitation-tokens.usecase';
-import type { GetParticipantQuestionnaireMatrixUseCase } from '@src/application/participant/get-participant-questionnaire-matrix.usecase';
+import type {
+    UpdateAdminParticipantUseCase,
+    UpdateParticipantProfileBody,
+} from '@src/application/admin/participants/update-admin-participant.usecase';
+import { AuditLoggerService } from '@src/application/audit/audit-logger.service';
+import type { GetParticipantQuestionnaireMatrixUseCase } from '@src/application/participant-session/get-participant-questionnaire-matrix.usecase';
 import { ResponsesExceptionFilter } from '@src/presentation/responses/responses-exception.filter';
 
+import type { JwtValidatedUser } from '@src/presentation/jwt-validated-user';
+import { GET_PARTICIPANT_QUESTIONNAIRE_MATRIX_USE_CASE_SYMBOL } from '@src/presentation/participant-session/participant.tokens';
 import { AdminApplicationExceptionFilter } from './admin-application-exception.filter';
 import { AdminJwtAuthGuard } from './admin-jwt-auth.guard';
-import { participantToAdminJson } from './admin.presenters';
+import { participantDetailToAdminJson, participantToAdminJson } from './admin.presenters';
+
 import {
     CREATE_PARTICIPANT_INVITE_USE_CASE_SYMBOL,
     ERASE_PARTICIPANT_RGPD_USE_CASE_SYMBOL,
-    GET_PARTICIPANT_QUESTIONNAIRE_MATRIX_USE_CASE_SYMBOL,
+    GET_ADMIN_PARTICIPANT_DETAIL_USE_CASE_SYMBOL,
     IMPORT_PARTICIPANTS_CSV_USE_CASE_SYMBOL,
     LIST_ADMIN_PARTICIPANTS_USE_CASE_SYMBOL,
     LIST_PARTICIPANT_INVITATION_TOKENS_USE_CASE_SYMBOL,
+    UPDATE_ADMIN_PARTICIPANT_USE_CASE_SYMBOL,
 } from './admin.tokens';
 
+@ApiTags('admin-participants')
+@ApiBearerAuth('jwt')
 @Controller('admin')
 @UseGuards(AdminJwtAuthGuard)
 @UseFilters(AdminApplicationExceptionFilter, ResponsesExceptionFilter)
@@ -48,8 +68,13 @@ export class AdminParticipantsController {
         private readonly listParticipantInvitationTokens: ListParticipantInvitationTokensUseCase,
         @Inject(ERASE_PARTICIPANT_RGPD_USE_CASE_SYMBOL)
         private readonly eraseParticipantRgpd: EraseParticipantRgpdUseCase,
+        @Inject(GET_ADMIN_PARTICIPANT_DETAIL_USE_CASE_SYMBOL)
+        private readonly getAdminParticipantDetail: GetAdminParticipantDetailUseCase,
+        @Inject(UPDATE_ADMIN_PARTICIPANT_USE_CASE_SYMBOL)
+        private readonly updateAdminParticipant: UpdateAdminParticipantUseCase,
         @Inject(GET_PARTICIPANT_QUESTIONNAIRE_MATRIX_USE_CASE_SYMBOL)
-        private readonly getParticipantQuestionnaireMatrix: GetParticipantQuestionnaireMatrixUseCase
+        private readonly getParticipantQuestionnaireMatrix: GetParticipantQuestionnaireMatrixUseCase,
+        private readonly audit: AuditLoggerService
     ) {}
 
     private static normalizeQid(raw?: string): string | undefined {
@@ -78,20 +103,59 @@ export class AdminParticipantsController {
 
     @Get('participants')
     public async listParticipants(
+        @Req() req: { user: JwtValidatedUser },
         @Query('page') pageRaw: string,
         @Query('per_page') perPageRaw: string,
         @Query('company_id') companyIdRaw: string
     ) {
+        const coachId = req.user.scope === 'coach' ? req.user.coachId : undefined;
         const result = await this.listAdminParticipants.execute({
             page: AdminParticipantsController.normalizePage(pageRaw),
             perPage: AdminParticipantsController.normalizePerPage(perPageRaw),
             companyId: AdminParticipantsController.normalizePositiveInt(companyIdRaw),
+            coachId,
         });
         return {
             ...result,
             per_page: result.perPage,
             items: result.items.map(participantToAdminJson),
         };
+    }
+
+    @Get('participants/:participantId')
+    public async getParticipant(
+        @Req() req: { user: JwtValidatedUser },
+        @Param('participantId', ParseIntPipe) participantId: number
+    ) {
+        const coachId = req.user.scope === 'coach' ? req.user.coachId : undefined;
+        const detail = await this.getAdminParticipantDetail.execute(participantId, { coachId });
+        if (!detail) {
+            throw new NotFoundException();
+        }
+        return participantDetailToAdminJson(detail);
+    }
+
+    @Patch('participants/:participantId')
+    public async updateParticipant(
+        @Req() req: { user: JwtValidatedUser } & { ip?: string },
+        @Param('participantId', ParseIntPipe) participantId: number,
+        @Body() body: UpdateParticipantProfileBody
+    ) {
+        const coachId = req.user.scope === 'coach' ? req.user.coachId : undefined;
+        const detail = await this.updateAdminParticipant.execute(participantId, body, { coachId });
+
+        void this.audit.record({
+            actorType: req.user.scope === 'super-admin' ? 'super-admin' : 'coach',
+            actorId: req.user.coachId ?? null,
+            action: 'admin.participant.update',
+            resourceType: 'participant',
+            resourceId: participantId,
+            // On enregistre les CHAMPS modifiés, pas leurs valeurs (PII).
+            payload: { fields: Object.keys(body) },
+            ipAddress: req.ip ?? null,
+        });
+
+        return participantDetailToAdminJson(detail);
     }
 
     @Post('participants/import')
@@ -116,17 +180,36 @@ export class AdminParticipantsController {
     @Get('participants/:participantId/matrix')
     public getParticipantMatrix(
         @Param('participantId', ParseIntPipe) participantId: number,
-        @Query('qid') qidRaw: string
+        @Query('qid') qidRaw: string,
+        @Req() req: { user: JwtValidatedUser }
     ) {
         const qid = AdminParticipantsController.normalizeQid(qidRaw) ?? '';
-        return this.getParticipantQuestionnaireMatrix.execute({ participantId, qid });
+        const coachId = req.user.scope === 'coach' ? req.user.coachId : undefined;
+        return this.getParticipantQuestionnaireMatrix.execute({ participantId, qid, coachId });
     }
 
     @Delete('participants/:participantId')
-    public deleteParticipant(
+    public async deleteParticipant(
         @Param('participantId', ParseIntPipe) participantId: number,
-        @Body() body: { confirm?: boolean }
+        @Body() body: { confirm?: boolean },
+        @Req() req: { user: JwtValidatedUser } & { ip?: string }
     ) {
-        return this.eraseParticipantRgpd.execute(participantId, body.confirm);
+        const coachId = req.user.scope === 'coach' ? req.user.coachId : undefined;
+        const summary = await this.eraseParticipantRgpd.execute(participantId, body.confirm, { coachId });
+
+        void this.audit.record({
+            actorType: req.user.scope === 'super-admin' ? 'super-admin' : 'coach',
+            actorId: req.user.coachId ?? null,
+            action: 'admin.participant.erase',
+            resourceType: 'participant',
+            resourceId: participantId,
+            payload: {
+                responses_removed: summary.responses_removed,
+                invite_tokens_removed: summary.invite_tokens_removed,
+            },
+            ipAddress: req.ip ?? null,
+        });
+
+        return summary;
     }
 }

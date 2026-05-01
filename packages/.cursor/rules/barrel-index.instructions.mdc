@@ -1,0 +1,18 @@
+---
+description: Use this context when editing published barrel files in packages.
+alwaysApply: false
+globs: packages/**/src/index.ts, packages/**/src/**/index.ts
+---
+
+# Barrel Index Conventions
+
+- Barrels are used for published package entry points and a few intentional public subfolders.
+- Do not create a new `index.ts` for every internal folder by default.
+- When editing an existing barrel, keep exports explicit, stable, and limited to the intended public API.
+- Update the barrel whenever a public symbol is added, removed, or renamed.
+- Exclude tests, generated files, and private implementation details from barrel exports.
+
+## Import Discipline
+
+- Cross-package consumers should import from the published package entry point.
+- Inside the same package, import the real source file instead of going through a sibling or parent barrel.

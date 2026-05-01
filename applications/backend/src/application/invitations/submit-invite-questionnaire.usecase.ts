@@ -1,14 +1,4 @@
-/*
- * Copyright (c) 2026 AOR Conseil. All rights reserved.
- * Proprietary and confidential.
- * Licensed under the AOR Commercial License.
- *
- * Use, reproduction, modification, distribution, or disclosure of this
- * source code, in whole or in part, is prohibited except under a valid
- * written commercial agreement with AOR Conseil.
- *
- * See LICENSE.md for the full license terms.
- */
+// Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
 
 import { getQuestionnaireEntry } from '@aor/questionnaires';
 import { calculateScores } from '@aor/scoring';
@@ -21,9 +11,13 @@ import {
     InviteSubmissionValidationError,
     InviteTokenRequestError,
 } from '@src/domain/invitations/invitations.errors';
+import { Response } from '@src/domain/responses';
 import type { ICampaignsReadPort } from '@src/interfaces/campaigns/ICampaignsRepository.port';
 import type { ICompaniesReadPort } from '@src/interfaces/companies/ICompaniesRepository.port';
-import type { IParticipantsIdentityReaderPort, IParticipantsCampaignStateReaderPort } from '@src/interfaces/participants/IParticipantsRepository.port';
+import type {
+    IParticipantsCampaignStateReaderPort,
+    IParticipantsIdentityReaderPort,
+} from '@src/interfaces/participants/IParticipantsRepository.port';
 import type { IResponsesWriterPort } from '@src/interfaces/responses/IResponsesRepository.port';
 
 import type { InviteTokenValidationUseCase } from './invite-token-validation.usecase';
@@ -107,20 +101,22 @@ export class SubmitInviteQuestionnaireUseCase {
             value,
         }));
 
-        const record = await this.ports.responses.create({
-            questionnaireId: qid,
-            campaignId: invitation.campaignId ?? undefined,
-            submissionKind: 'element_humain',
-            subjectParticipantId: participant.id,
-            raterParticipantId: participant.id,
-            participantId: participant.id,
-            inviteTokenId: invitation.id,
-            name: info.name,
-            email: info.email,
-            organisation: info.organisation,
-            scores: scoresRows,
-            markInviteTokenUsedId: invitation.id,
-        });
+        const record = await this.ports.responses.create(
+            Response.create({
+                questionnaireId: qid,
+                campaignId: invitation.campaignId ?? undefined,
+                submissionKind: 'element_humain',
+                subjectParticipantId: participant.id,
+                raterParticipantId: participant.id,
+                participantId: participant.id,
+                inviteTokenId: invitation.id,
+                name: info.name,
+                email: info.email,
+                organisation: info.organisation,
+                scores: scoresRows,
+            }),
+            { markInviteTokenUsedId: invitation.id }
+        );
 
         const scoresOut: Record<string, number> = {};
         for (const [k, v] of Object.entries(scoresMap)) {

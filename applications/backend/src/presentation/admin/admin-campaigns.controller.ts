@@ -1,17 +1,23 @@
-/*
- * Copyright (c) 2026 AOR Conseil. All rights reserved.
- * Proprietary and confidential.
- * Licensed under the AOR Commercial License.
- *
- * Use, reproduction, modification, distribution, or disclosure of this
- * source code, in whole or in part, is prohibited except under a valid
- * written commercial agreement with AOR Conseil.
- *
- * See LICENSE.md for the full license terms.
- */
+// Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
 
-import { Body, Controller, Inject, Param, ParseIntPipe, Patch, Post, Get, Req, UnauthorizedException, UploadedFile, UseFilters, UseGuards, UseInterceptors } from '@nestjs/common';
+import {
+    Body,
+    Controller,
+    Get,
+    Inject,
+    Param,
+    ParseIntPipe,
+    Patch,
+    Post,
+    Req,
+    UnauthorizedException,
+    UploadedFile,
+    UseFilters,
+    UseGuards,
+    UseInterceptors,
+} from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
 import type { CreateAdminCampaignUseCase } from '@src/application/admin/campaigns/create-admin-campaign.usecase';
 import type { GetAdminCampaignDetailUseCase } from '@src/application/admin/campaigns/get-admin-campaign-detail.usecase';
@@ -22,6 +28,7 @@ import type { ReassignAdminCampaignCoachUseCase } from '@src/application/admin/c
 import type { UpdateAdminCampaignStatusUseCase } from '@src/application/admin/campaigns/update-admin-campaign-status.usecase';
 import { ResponsesExceptionFilter } from '@src/presentation/responses/responses-exception.filter';
 
+import type { JwtValidatedUser } from '@src/presentation/jwt-validated-user';
 import { AdminApplicationExceptionFilter } from './admin-application-exception.filter';
 import { AdminJwtAuthGuard } from './admin-jwt-auth.guard';
 import {
@@ -33,8 +40,9 @@ import {
     REASSIGN_ADMIN_CAMPAIGN_COACH_USE_CASE_SYMBOL,
     UPDATE_ADMIN_CAMPAIGN_STATUS_USE_CASE_SYMBOL,
 } from './admin.tokens';
-import type { JwtValidatedUser } from './jwt.strategy';
 
+@ApiTags('admin-campaigns')
+@ApiBearerAuth('jwt')
 @Controller('admin')
 @UseGuards(AdminJwtAuthGuard)
 @UseFilters(AdminApplicationExceptionFilter, ResponsesExceptionFilter)
@@ -139,10 +147,14 @@ export class AdminCampaignsController {
     @Post('campaigns/:campaignId/invite-company-participants')
     public async inviteCompanyParticipants(
         @Param('campaignId', ParseIntPipe) campaignId: number,
-        @Req() req: { user: JwtValidatedUser }
+        @Req() req: { user: JwtValidatedUser },
+        @Body() body: { participant_ids?: number[] } = {}
     ) {
         await this.ensureCampaignAccess(campaignId, req.user);
-        return this.inviteCampaignParticipants.execute(campaignId);
+        const participantIds = Array.isArray(body.participant_ids)
+            ? body.participant_ids.filter((n): n is number => Number.isFinite(n))
+            : undefined;
+        return this.inviteCampaignParticipants.execute(campaignId, { participantIds });
     }
 
     @Post('campaigns/:campaignId/import-participants')

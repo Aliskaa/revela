@@ -6,16 +6,19 @@ import {
     Alert,
     Box,
     Button,
+    Checkbox,
     Chip,
     CircularProgress,
     Container,
+    FormControlLabel,
+    Link as MuiLink,
     Paper,
     Stack,
     TextField,
     Typography,
     useTheme,
 } from '@mui/material';
-import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import { Link, createFileRoute, useNavigate } from '@tanstack/react-router';
 import { ArrowLeft, ArrowRight, CheckCircle, Lock, ShieldCheck, Sparkles, UserCheck } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
@@ -31,7 +34,6 @@ const aorBtnSx = {
     px: 3,
     borderRadius: 2,
     fontWeight: 700,
-    textTransform: 'none',
     boxShadow: '0 4px 14px rgba(21, 21, 176, 0.25)',
 };
 
@@ -83,6 +85,12 @@ function InvitePage() {
     const [passwordConfirm, setPasswordConfirm] = useState('');
     const [activationError, setActivationError] = useState('');
     const [confirmError, setConfirmError] = useState('');
+    /**
+     * Consentement RGPD avant traitement (Art. 13 + Art. 7). Doit être coché explicitement
+     * pour pouvoir confirmer la participation. Ne déverrouille rien d'autre — c'est une
+     * obligation légale, pas une option opt-in commerciale.
+     */
+    const [privacyConsent, setPrivacyConsent] = useState(false);
 
     const isLoading = loadingInvite || (canShowQuestionnaire && loadingQ);
 
@@ -127,6 +135,12 @@ function InvitePage() {
         async function handleConfirmParticipation(e: React.FormEvent) {
             e.preventDefault();
             setConfirmError('');
+            if (!privacyConsent) {
+                setConfirmError(
+                    'Vous devez accepter la politique de confidentialité avant de confirmer votre participation.'
+                );
+                return;
+            }
             try {
                 await confirmParticipation.mutateAsync();
                 await navigate({ to: '/invite/$token', params: { token }, replace: true });
@@ -185,11 +199,47 @@ function InvitePage() {
                         )}
                     </Stack>
 
-                    <Typography variant="body1" color="text.secondary" mb={4} lineHeight={1.6}>
+                    <Typography variant="body1" color="text.secondary" mb={3} lineHeight={1.6}>
                         Vous avez été invité·e à rejoindre une campagne d'évaluation. Merci de confirmer votre
                         participation avant de poursuivre. Vous pourrez répondre aux questionnaires lorsque la campagne
                         sera activée par votre coach.
                     </Typography>
+
+                    <Alert
+                        severity="info"
+                        icon={<ShieldCheck size={20} />}
+                        sx={{ mb: 3, borderRadius: 2, '& .MuiAlert-message': { lineHeight: 1.6 } }}
+                    >
+                        <Typography variant="body2" fontWeight={700} sx={{ mb: 0.5 }}>
+                            Traitement de vos données personnelles
+                        </Typography>
+                        <Typography variant="body2">
+                            Vos réponses sont confidentielles et ne sont accessibles qu'à vous-même et au coach mandaté.
+                            Elles ne sont jamais transmises à votre employeur sous forme nominative. Consultez notre{' '}
+                            <MuiLink component={Link} to="/privacy" target="_blank" rel="noopener" underline="always">
+                                politique de confidentialité
+                            </MuiLink>{' '}
+                            pour le détail des finalités, durées de conservation et de vos droits (accès, export,
+                            rectification, effacement).
+                        </Typography>
+                    </Alert>
+
+                    <FormControlLabel
+                        control={
+                            <Checkbox
+                                checked={privacyConsent}
+                                onChange={e => setPrivacyConsent(e.target.checked)}
+                                sx={{ alignSelf: 'flex-start', pt: 0 }}
+                            />
+                        }
+                        label={
+                            <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.6 }}>
+                                J'ai pris connaissance de la politique de confidentialité et j'accepte le traitement de
+                                mes données personnelles dans le cadre de cette campagne d'évaluation.
+                            </Typography>
+                        }
+                        sx={{ alignItems: 'flex-start', mb: 3, mr: 0 }}
+                    />
 
                     {confirmError && (
                         <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>
@@ -202,7 +252,7 @@ function InvitePage() {
                             type="submit"
                             variant="contained"
                             fullWidth
-                            disabled={confirmParticipation.isPending}
+                            disabled={confirmParticipation.isPending || !privacyConsent}
                             endIcon={
                                 confirmParticipation.isPending ? (
                                     <CircularProgress size={18} color="inherit" />
@@ -242,9 +292,7 @@ function InvitePage() {
 
                 if (campaignOpen) {
                     navigate({
-                        to: '/questionnaire/$qid',
-                        params: { qid: activationInvite.questionnaire_id },
-                        search: { type: 'self', campaign_id: activationInvite.campaign_id ?? undefined },
+                        to: '/self-rating',
                     });
                 } else {
                     navigate({ to: '/', replace: true });
@@ -456,11 +504,11 @@ function InvitePage() {
     async function handleSubmit() {
         setStep('submitting');
         try {
-            const result = await submitInvite.mutateAsync({
+            await submitInvite.mutateAsync({
                 series0: series0 as number[],
                 series1: series1 as number[],
             });
-            navigate({ to: '/results/$qid/$responseId', params: { qid, responseId: String(result.response_id) } });
+            navigate({ to: '/campaigns' });
         } catch {
             setStep('series1');
         }

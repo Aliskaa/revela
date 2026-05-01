@@ -1,0 +1,20 @@
+---
+description: Use this context when editing shared libraries under packages/aor-common.
+alwaysApply: false
+globs: packages/aor-common/**/src/*.ts, packages/aor-common/**/src/**/*.ts
+---
+
+# AOR Common Taxonomy
+
+- `@aor/types`: shared transport schemas and exported types consumed by frontend and backend.
+- `@aor/ports`: shared contracts or tokens used across package boundaries.
+- `@aor/domain`: pure shared domain logic with no framework, database, or HTTP concerns.
+- `@aor/adapters`: technical implementations of shared ports.
+- `@aor/utils`: pure stateless helpers.
+- `@aor/logger`: logging abstractions and logger implementations.
+
+## Placement Rules
+
+- Keep app-specific admin, participant, or Nest wiring out of `aor-common` unless the code is genuinely shared.
+- Backend feature-specific use case symbols should stay in backend presentation modules such as `applications/backend/src/presentation/**/**.tokens.ts`.
+- Do not move generic helpers into `@aor/adapters` or `@aor/logger` just because they are reused once; use `@aor/utils` when the code is pure.

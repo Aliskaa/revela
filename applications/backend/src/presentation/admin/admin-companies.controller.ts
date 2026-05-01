@@ -1,16 +1,22 @@
-/*
- * Copyright (c) 2026 AOR Conseil. All rights reserved.
- * Proprietary and confidential.
- * Licensed under the AOR Commercial License.
- *
- * Use, reproduction, modification, distribution, or disclosure of this
- * source code, in whole or in part, is prohibited except under a valid
- * written commercial agreement with AOR Conseil.
- *
- * See LICENSE.md for the full license terms.
- */
+// Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
 
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Inject, Param, ParseIntPipe, Patch, Post, UseFilters, UseGuards } from '@nestjs/common';
+import {
+    Body,
+    Controller,
+    Delete,
+    Get,
+    HttpCode,
+    HttpStatus,
+    Inject,
+    Param,
+    ParseIntPipe,
+    Patch,
+    Post,
+    Req,
+    UseFilters,
+    UseGuards,
+} from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
 import type { CreateAdminCompanyUseCase } from '@src/application/admin/companies/create-admin-company.usecase';
 import type { DeleteAdminCompanyUseCase } from '@src/application/admin/companies/delete-admin-company.usecase';
@@ -19,6 +25,7 @@ import type { ListAdminCompaniesUseCase } from '@src/application/admin/companies
 import type { UpdateAdminCompanyUseCase } from '@src/application/admin/companies/update-admin-company.usecase';
 import { ResponsesExceptionFilter } from '@src/presentation/responses/responses-exception.filter';
 
+import type { JwtValidatedUser } from '@src/presentation/jwt-validated-user';
 import { AdminApplicationExceptionFilter } from './admin-application-exception.filter';
 import { AdminJwtAuthGuard } from './admin-jwt-auth.guard';
 import { companyToAdminJson } from './admin.presenters';
@@ -30,6 +37,8 @@ import {
     UPDATE_ADMIN_COMPANY_USE_CASE_SYMBOL,
 } from './admin.tokens';
 
+@ApiTags('admin-companies')
+@ApiBearerAuth('jwt')
 @Controller('admin')
 @UseGuards(AdminJwtAuthGuard)
 @UseFilters(AdminApplicationExceptionFilter, ResponsesExceptionFilter)
@@ -48,8 +57,9 @@ export class AdminCompaniesController {
     ) {}
 
     @Get('companies')
-    public async listCompanies() {
-        const rows = await this.listAdminCompanies.execute();
+    public async listCompanies(@Req() req: { user: JwtValidatedUser }) {
+        const coachId = req.user.scope === 'coach' ? req.user.coachId : undefined;
+        const rows = await this.listAdminCompanies.execute({ coachId });
         return rows.map(companyToAdminJson);
     }
 

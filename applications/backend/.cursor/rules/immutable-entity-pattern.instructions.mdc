@@ -1,0 +1,15 @@
+---
+description: Immutable entity conventions for backend domain entities.
+alwaysApply: false
+globs: applications/backend/src/domain/**/*.entity.ts
+---
+
+# Immutable Entity Pattern
+
+- Backend domain entities are immutable.
+- Prefer readonly public fields.
+- Use a private constructor when it fits the existing entity style.
+- Call `Object.freeze(this)` at the end of the constructor.
+- State-changing methods must return a new entity instance instead of mutating the current one.
+- Static factories such as `create(...)` and `hydrate(...)` are acceptable and already used in this repository.
+- Persistence snapshot methods should stay pure and should not mutate entity state.

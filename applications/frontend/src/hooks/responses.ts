@@ -1,5 +1,5 @@
 import { participantApiClient } from '@/api/participantClient';
-import type { ResponseDetail } from '@/api/types';
+import type { ResponseDetail } from '@aor/types';
 import { useQuery } from '@tanstack/react-query';
 
 export const responseKeys = {

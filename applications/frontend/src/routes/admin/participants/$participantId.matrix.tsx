@@ -1,6 +1,6 @@
 import { ParticipantQuestionnaireMatrix } from '@/components/matrix/ParticipantQuestionnaireMatrix';
 import { Box, Button, Stack, Typography } from '@mui/material';
-import { Link, createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, useRouter } from '@tanstack/react-router';
 import { ArrowLeft, LayoutPanelLeft } from 'lucide-react';
 
 type MatrixSearch = { qid: string };
@@ -20,13 +20,13 @@ function ParticipantMatrixPage() {
     const { participantId } = Route.useParams();
     const { qid } = Route.useSearch();
     const navigate = Route.useNavigate();
+    const router = useRouter();
     const id = Number(participantId);
 
     return (
-        <Box sx={{ maxWidth: 1400, mx: 'auto', p: { xs: 2, sm: 3, md: 4 } }}>
+        <Box sx={{ p: { xs: 2, sm: 3, md: 4 } }}>
             <Button
-                component={Link}
-                to="/admin/participants"
+                onClick={() => router.history.back()}
                 startIcon={<ArrowLeft size={18} />}
                 sx={{
                     mb: 3,
@@ -36,7 +36,7 @@ function ParticipantMatrixPage() {
                 }}
                 disableRipple
             >
-                Retour aux participants
+                Retour
             </Button>
 
             <Stack

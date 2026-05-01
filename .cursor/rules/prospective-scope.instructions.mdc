@@ -1,7 +1,7 @@
 ---
 description: "Use this context when the user asks for a prospective study, analysis, comparison, or exploration."
 alwaysApply: false
-globs: docs/prospective/**/*.md
+globs: docs/prospective/*.md, docs/prospective/**/*.md
 ---
 
 # Prospective Scope Context

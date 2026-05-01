@@ -2,7 +2,10 @@
 
 ## Status
 
-Accepted
+Accepted — partially superseded by [ADR-008](./ADR-008-backend-layer-first-with-actor-segmentation.md) (2026-04-27).
+La clause sur la structure physique (mandate `modules/<feature>/{application,domain,infrastructure}`)
+est révoquée. Les principes (DIP strict, ports agnostiques de l'ORM, frontières
+transport/métier, interface segregation, pilotage qualité) restent en vigueur.
 
 ## Date
 

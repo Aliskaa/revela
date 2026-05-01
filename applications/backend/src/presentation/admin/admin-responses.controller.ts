@@ -1,16 +1,21 @@
-/*
- * Copyright (c) 2026 AOR Conseil. All rights reserved.
- * Proprietary and confidential.
- * Licensed under the AOR Commercial License.
- *
- * Use, reproduction, modification, distribution, or disclosure of this
- * source code, in whole or in part, is prohibited except under a valid
- * written commercial agreement with AOR Conseil.
- *
- * See LICENSE.md for the full license terms.
- */
+// Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
 
-import { Body, Controller, Delete, Get, Inject, Param, ParseIntPipe, Query, Req, Res, UnauthorizedException, UseFilters, UseGuards } from '@nestjs/common';
+import {
+    Body,
+    Controller,
+    Delete,
+    Get,
+    Inject,
+    Param,
+    ParseIntPipe,
+    Query,
+    Req,
+    Res,
+    UnauthorizedException,
+    UseFilters,
+    UseGuards,
+} from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import type { Response } from 'express';
 
 import type { GetAdminCampaignDetailUseCase } from '@src/application/admin/campaigns/get-admin-campaign-detail.usecase';
@@ -22,6 +27,7 @@ import type { GetPublicResponseUseCase } from '@src/application/responses/get-pu
 import { ResponsesExceptionFilter } from '@src/presentation/responses/responses-exception.filter';
 import { GET_PUBLIC_RESPONSE_USE_CASE_SYMBOL } from '@src/presentation/responses/responses.tokens';
 
+import type { JwtValidatedUser } from '@src/presentation/jwt-validated-user';
 import { AdminApplicationExceptionFilter } from './admin-application-exception.filter';
 import { AdminJwtAuthGuard } from './admin-jwt-auth.guard';
 import {
@@ -31,8 +37,9 @@ import {
     GET_ADMIN_CAMPAIGN_DETAIL_USE_CASE_SYMBOL,
     LIST_ADMIN_RESPONSES_USE_CASE_SYMBOL,
 } from './admin.tokens';
-import type { JwtValidatedUser } from './jwt.strategy';
 
+@ApiTags('admin-responses')
+@ApiBearerAuth('jwt')
 @Controller('admin')
 @UseGuards(AdminJwtAuthGuard)
 @UseFilters(AdminApplicationExceptionFilter, ResponsesExceptionFilter)
@@ -101,7 +108,8 @@ export class AdminResponsesController {
         if (campaignId !== undefined) {
             await this.ensureCampaignAccess(campaignId, req.user);
         }
-        const result = await this.listAdminResponses.execute({ qid, campaignId, page, perPage });
+        const coachId = req.user.scope === 'coach' ? req.user.coachId : undefined;
+        const result = await this.listAdminResponses.execute({ qid, campaignId, coachId, page, perPage });
         return {
             ...result,
             per_page: result.perPage,
@@ -109,13 +117,19 @@ export class AdminResponsesController {
     }
 
     @Get('responses/:responseId')
-    public getResponse(@Param('responseId', ParseIntPipe) responseId: number) {
-        return this.getPublicResponse.execute(responseId);
+    public getResponse(@Param('responseId', ParseIntPipe) responseId: number, @Req() req: { user: JwtValidatedUser }) {
+        const coachId = req.user.scope === 'coach' ? req.user.coachId : undefined;
+        return this.getPublicResponse.execute(responseId, { coachId });
     }
 
     @Delete('responses/:responseId')
-    public deleteResponse(@Param('responseId', ParseIntPipe) responseId: number, @Body() body: { confirm?: boolean }) {
-        return this.deleteAdminResponse.execute(responseId, body.confirm);
+    public deleteResponse(
+        @Param('responseId', ParseIntPipe) responseId: number,
+        @Body() body: { confirm?: boolean },
+        @Req() req: { user: JwtValidatedUser }
+    ) {
+        const coachId = req.user.scope === 'coach' ? req.user.coachId : undefined;
+        return this.deleteAdminResponse.execute(responseId, body.confirm, { coachId });
     }
 
     @Get('export/responses')

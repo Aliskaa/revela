@@ -1,9 +1,12 @@
 import { apiClient } from '@/api/client';
+import { useToast } from '@/lib/toast';
+import { useAuthStore } from '@/stores/authStore';
 import type {
     AdminCampaign,
     AdminCampaignDetail,
     AdminCoachDetail,
     AdminDashboard,
+    AdminLoginResponse,
     AdminResponse,
     CampaignStatus,
     Coach,
@@ -12,18 +15,22 @@ import type {
     InviteToken,
     PaginatedResult,
     Participant,
+    ParticipantDetail,
     ParticipantQuestionnaireMatrix,
-    ResponseDetail,
-} from '@/api/types';
-import { userAdmin } from '@/lib/auth';
+    UpdateParticipantProfileBody,
+} from '@aor/types';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+
+const toErrorMessage = (err: unknown, fallback: string): string =>
+    err instanceof Error && err.message.length > 0 ? err.message : fallback;
 
 export const adminKeys = {
     dashboard: ['admin', 'dashboard'] as const,
     responses: (qid?: string, page?: number, campaignId?: number) =>
         ['admin', 'responses', qid, page, campaignId] as const,
-    response: (id: number) => ['admin', 'responses', id] as const,
-    participants: (page?: number, companyId?: number) => ['admin', 'participants', page, companyId] as const,
+    participants: (page?: number, companyId?: number, perPage?: number) =>
+        ['admin', 'participants', page, companyId, perPage] as const,
+    participant: (participantId: number) => ['admin', 'participants', participantId] as const,
     participantTokens: (participantId: number) => ['admin', 'participants', participantId, 'tokens'] as const,
     participantMatrix: (participantId: number, qid: string) =>
         ['admin', 'participants', participantId, 'matrix', qid] as const,
@@ -36,10 +43,17 @@ export const adminKeys = {
 };
 
 export function useAdminLogin() {
-    return useMutation<{ access_token: string }, Error, { username: string; password: string }>({
+    return useMutation<AdminLoginResponse, Error, { username: string; password: string }>({
         mutationFn: credentials => apiClient.post('/admin/auth/login', credentials).then(r => r.data),
         onSuccess: data => {
-            userAdmin.setToken(data.access_token);
+            // L'access token est posé en cookie httpOnly côté backend (G1 RGPD). On hydrate
+            // simplement le store avec les claims renvoyés dans le body — `username` n'est
+            // pas connu ici, on le récupérera au prochain `GET /admin/auth/me` au besoin.
+            useAuthStore.getState().setAdminMe({
+                scope: data.scope,
+                coachId: data.coach_id,
+                username: '',
+            });
         },
     });
 }
@@ -63,24 +77,42 @@ export function useAdminResponses(qid?: string, page = 1, perPage = 50, campaign
     });
 }
 
-export function useAdminResponse(id: number) {
-    return useQuery<ResponseDetail>({
-        queryKey: adminKeys.response(id),
-        queryFn: () => apiClient.get(`/admin/responses/${id}`).then(r => r.data),
-        enabled: !!id,
+export function useParticipants(page = 1, companyId?: number, perPage = 25) {
+    return useQuery<PaginatedResult<Participant>>({
+        queryKey: adminKeys.participants(page, companyId, perPage),
+        queryFn: () =>
+            apiClient
+                .get('/admin/participants', { params: { page, company_id: companyId, per_page: perPage } })
+                .then(r => r.data),
     });
 }
 
-export function useParticipants(page = 1, companyId?: number) {
-    return useQuery<PaginatedResult<Participant>>({
-        queryKey: adminKeys.participants(page, companyId),
-        queryFn: () =>
-            apiClient.get('/admin/participants', { params: { page, company_id: companyId } }).then(r => r.data),
+export function useParticipant(participantId: number) {
+    return useQuery<ParticipantDetail>({
+        queryKey: adminKeys.participant(participantId),
+        queryFn: () => apiClient.get(`/admin/participants/${participantId}`).then(r => r.data),
+        enabled: participantId > 0,
+    });
+}
+
+export function useUpdateParticipant() {
+    const qc = useQueryClient();
+    const toast = useToast();
+    return useMutation<ParticipantDetail, Error, { participantId: number; body: UpdateParticipantProfileBody }>({
+        mutationFn: ({ participantId, body }) =>
+            apiClient.patch(`/admin/participants/${participantId}`, body).then(r => r.data),
+        onSuccess: (data, vars) => {
+            qc.setQueryData(adminKeys.participant(vars.participantId), data);
+            qc.invalidateQueries({ queryKey: adminKeys.participants() });
+            toast.success('Participant mis à jour.');
+        },
+        onError: err => toast.error(toErrorMessage(err, 'Échec de la mise à jour du participant.')),
     });
 }
 
 export function useImportParticipants() {
     const qc = useQueryClient();
+    const toast = useToast();
     return useMutation<{ created: number; updated: number; errors: string[] }, Error, FormData>({
         mutationFn: formData =>
             apiClient
@@ -88,14 +120,22 @@ export function useImportParticipants() {
                     headers: { 'Content-Type': 'multipart/form-data' },
                 })
                 .then(r => r.data),
-        onSuccess: () => {
+        onSuccess: data => {
             qc.invalidateQueries({ queryKey: adminKeys.participants() });
+            const summary = `${data.created} créé(s), ${data.updated} mis à jour.`;
+            if (data.errors.length > 0) {
+                toast.warning(`Import partiel : ${summary} ${data.errors.length} erreur(s).`);
+            } else {
+                toast.success(`Import terminé : ${summary}`);
+            }
         },
+        onError: err => toast.error(toErrorMessage(err, "Échec de l'import des participants.")),
     });
 }
 
 export function useCreateInvite() {
     const qc = useQueryClient();
+    const toast = useToast();
     return useMutation<
         CreateInviteResult,
         Error,
@@ -112,7 +152,9 @@ export function useCreateInvite() {
         onSuccess: (_data, vars) => {
             qc.invalidateQueries({ queryKey: adminKeys.participants() });
             qc.invalidateQueries({ queryKey: adminKeys.participantTokens(vars.participantId) });
+            toast.success(vars.sendEmail ? 'Invitation envoyée par e-mail.' : 'Lien d’invitation créé.');
         },
+        onError: err => toast.error(toErrorMessage(err, "Échec de la création de l'invitation.")),
     });
 }
 
@@ -138,6 +180,7 @@ export function useParticipantQuestionnaireMatrix(participantId: number, qid: st
 
 export function useDeleteParticipant() {
     const qc = useQueryClient();
+    const toast = useToast();
     return useMutation<
         {
             message: string;
@@ -154,24 +197,13 @@ export function useDeleteParticipant() {
                     data: { confirm: true },
                 })
                 .then(r => r.data),
-        onSuccess: () => {
+        onSuccess: data => {
             qc.invalidateQueries({ queryKey: ['admin'] });
+            toast.success(
+                `Participant supprimé. ${data.responses_removed} réponse(s) et ${data.invite_tokens_removed} jeton(s) effacé(s).`
+            );
         },
-    });
-}
-
-export function useDeleteResponse() {
-    const qc = useQueryClient();
-    return useMutation<{ message: string; deleted_response_id: number }, Error, { responseId: number }>({
-        mutationFn: ({ responseId }) =>
-            apiClient
-                .delete(`/admin/responses/${responseId}`, {
-                    data: { confirm: true },
-                })
-                .then(r => r.data),
-        onSuccess: () => {
-            qc.invalidateQueries({ queryKey: ['admin'] });
-        },
+        onError: err => toast.error(toErrorMessage(err, 'Échec de la suppression du participant.')),
     });
 }
 
@@ -184,6 +216,7 @@ export function useCompanies() {
 
 export function useCreateCompany() {
     const qc = useQueryClient();
+    const toast = useToast();
     return useMutation<Company, Error, { name: string; contactName?: string | null; contactEmail?: string | null }>({
         mutationFn: payload =>
             apiClient
@@ -193,15 +226,18 @@ export function useCreateCompany() {
                     contact_email: payload.contactEmail ?? null,
                 })
                 .then(r => r.data),
-        onSuccess: () => {
+        onSuccess: (_data, vars) => {
             qc.invalidateQueries({ queryKey: adminKeys.companies });
             qc.invalidateQueries({ queryKey: adminKeys.dashboard });
+            toast.success(`Entreprise « ${vars.name} » créée.`);
         },
+        onError: err => toast.error(toErrorMessage(err, "Échec de la création de l'entreprise.")),
     });
 }
 
 export function useUpdateCompany() {
     const qc = useQueryClient();
+    const toast = useToast();
     return useMutation<
         Company,
         Error,
@@ -224,19 +260,24 @@ export function useUpdateCompany() {
             qc.invalidateQueries({ queryKey: adminKeys.companies });
             qc.invalidateQueries({ queryKey: adminKeys.company(vars.companyId) });
             qc.invalidateQueries({ queryKey: adminKeys.dashboard });
+            toast.success('Entreprise mise à jour.');
         },
+        onError: err => toast.error(toErrorMessage(err, "Échec de la mise à jour de l'entreprise.")),
     });
 }
 
 export function useDeleteCompany() {
     const qc = useQueryClient();
+    const toast = useToast();
     return useMutation<void, Error, { companyId: number }>({
         mutationFn: ({ companyId }) => apiClient.delete(`/admin/companies/${companyId}`).then(() => undefined),
         onSuccess: (_data, vars) => {
             qc.invalidateQueries({ queryKey: adminKeys.companies });
             qc.removeQueries({ queryKey: adminKeys.company(vars.companyId) });
             qc.invalidateQueries({ queryKey: adminKeys.dashboard });
+            toast.success('Entreprise supprimée.');
         },
+        onError: err => toast.error(toErrorMessage(err, "Échec de la suppression de l'entreprise.")),
     });
 }
 
@@ -256,6 +297,7 @@ export function useCoaches() {
 
 export function useCreateCoach() {
     const qc = useQueryClient();
+    const toast = useToast();
     return useMutation<Coach, Error, { username: string; password: string; displayName: string }>({
         mutationFn: payload =>
             apiClient
@@ -265,9 +307,11 @@ export function useCreateCoach() {
                     display_name: payload.displayName,
                 })
                 .then(r => r.data),
-        onSuccess: () => {
+        onSuccess: (_data, vars) => {
             qc.invalidateQueries({ queryKey: adminKeys.coaches });
+            toast.success(`Coach « ${vars.displayName} » créé.`);
         },
+        onError: err => toast.error(toErrorMessage(err, 'Échec de la création du coach.')),
     });
 }
 
@@ -281,6 +325,7 @@ export function useAdminCoach(coachId: number, options?: { enabled?: boolean }) 
 
 export function useUpdateCoach() {
     const qc = useQueryClient();
+    const toast = useToast();
     return useMutation<
         Coach,
         Error,
@@ -306,18 +351,23 @@ export function useUpdateCoach() {
         onSuccess: (_data, vars) => {
             qc.invalidateQueries({ queryKey: adminKeys.coaches });
             qc.invalidateQueries({ queryKey: adminKeys.coach(vars.coachId) });
+            toast.success('Coach mis à jour.');
         },
+        onError: err => toast.error(toErrorMessage(err, 'Échec de la mise à jour du coach.')),
     });
 }
 
 export function useDeleteCoach() {
     const qc = useQueryClient();
+    const toast = useToast();
     return useMutation<void, Error, { coachId: number }>({
         mutationFn: ({ coachId }) => apiClient.delete(`/admin/coaches/${coachId}`).then(() => undefined),
         onSuccess: (_data, vars) => {
             qc.invalidateQueries({ queryKey: adminKeys.coaches });
             qc.removeQueries({ queryKey: adminKeys.coach(vars.coachId) });
+            toast.success('Coach supprimé.');
         },
+        onError: err => toast.error(toErrorMessage(err, 'Échec de la suppression du coach.')),
     });
 }
 
@@ -340,6 +390,7 @@ export function useAdminCampaign(campaignId: number) {
 
 export function useCreateAdminCampaign() {
     const qc = useQueryClient();
+    const toast = useToast();
     return useMutation<
         AdminCampaign,
         Error,
@@ -367,15 +418,18 @@ export function useCreateAdminCampaign() {
                     status: payload.status ?? 'draft',
                 })
                 .then(r => r.data),
-        onSuccess: () => {
+        onSuccess: (_data, vars) => {
             qc.invalidateQueries({ queryKey: adminKeys.campaigns });
             qc.invalidateQueries({ queryKey: adminKeys.dashboard });
+            toast.success(`Campagne « ${vars.name} » créée.`);
         },
+        onError: err => toast.error(toErrorMessage(err, 'Échec de la création de la campagne.')),
     });
 }
 
 export function useUpdateAdminCampaignStatus() {
     const qc = useQueryClient();
+    const toast = useToast();
     return useMutation<
         AdminCampaign,
         Error,
@@ -392,12 +446,15 @@ export function useUpdateAdminCampaignStatus() {
             qc.invalidateQueries({ queryKey: adminKeys.campaigns });
             qc.invalidateQueries({ queryKey: adminKeys.campaign(vars.campaignId) });
             qc.invalidateQueries({ queryKey: adminKeys.dashboard });
+            toast.success(`Statut de la campagne mis à jour : ${vars.status}.`);
         },
+        onError: err => toast.error(toErrorMessage(err, 'Échec du changement de statut.')),
     });
 }
 
 export function useReassignCampaignCoach() {
     const qc = useQueryClient();
+    const toast = useToast();
     return useMutation<AdminCampaign, Error, { campaignId: number; coachId: number }>({
         mutationFn: ({ campaignId, coachId }) =>
             apiClient.patch(`/admin/campaigns/${campaignId}/coach`, { coach_id: coachId }).then(r => r.data),
@@ -406,35 +463,49 @@ export function useReassignCampaignCoach() {
             qc.invalidateQueries({ queryKey: adminKeys.campaign(vars.campaignId) });
             qc.invalidateQueries({ queryKey: adminKeys.dashboard });
             qc.invalidateQueries({ queryKey: adminKeys.coaches });
+            toast.success('Coach réassigné.');
         },
+        onError: err => toast.error(toErrorMessage(err, 'Échec de la réassignation du coach.')),
     });
 }
 
 export function useArchiveAdminCampaign() {
     const qc = useQueryClient();
+    const toast = useToast();
     return useMutation<AdminCampaign, Error, { campaignId: number }>({
         mutationFn: ({ campaignId }) => apiClient.post(`/admin/campaigns/${campaignId}/archive`).then(r => r.data),
         onSuccess: (_data, vars) => {
             qc.invalidateQueries({ queryKey: adminKeys.campaigns });
             qc.invalidateQueries({ queryKey: adminKeys.campaign(vars.campaignId) });
             qc.invalidateQueries({ queryKey: adminKeys.dashboard });
+            toast.success('Campagne archivée.');
         },
+        onError: err => toast.error(toErrorMessage(err, "Échec de l'archivage de la campagne.")),
     });
 }
 
 export function useInviteCampaignParticipants() {
     const qc = useQueryClient();
-    return useMutation<{ created: number }, Error, { campaignId: number }>({
-        mutationFn: ({ campaignId }) =>
-            apiClient.post(`/admin/campaigns/${campaignId}/invite-company-participants`).then(r => r.data),
-        onSuccess: (_data, vars) => {
+    const toast = useToast();
+    return useMutation<{ created: number }, Error, { campaignId: number; participantIds?: number[] }>({
+        mutationFn: ({ campaignId, participantIds }) =>
+            apiClient
+                .post(`/admin/campaigns/${campaignId}/invite-company-participants`, {
+                    ...(participantIds !== undefined ? { participant_ids: participantIds } : {}),
+                })
+                .then(r => r.data),
+        onSuccess: (data, vars) => {
             qc.invalidateQueries({ queryKey: adminKeys.campaign(vars.campaignId) });
+            qc.invalidateQueries({ queryKey: adminKeys.participants() });
+            toast.success(`${data.created} invitation(s) envoyée(s).`);
         },
+        onError: err => toast.error(toErrorMessage(err, "Échec de l'envoi des invitations.")),
     });
 }
 
 export function useImportParticipantsToCampaign() {
     const qc = useQueryClient();
+    const toast = useToast();
     return useMutation<
         { created: number; updated: number; invited: number; errors: string[] },
         Error,
@@ -446,9 +517,16 @@ export function useImportParticipantsToCampaign() {
                     headers: { 'Content-Type': 'multipart/form-data' },
                 })
                 .then(r => r.data),
-        onSuccess: (_data, vars) => {
+        onSuccess: (data, vars) => {
             qc.invalidateQueries({ queryKey: adminKeys.campaign(vars.campaignId) });
             qc.invalidateQueries({ queryKey: adminKeys.participants() });
+            const summary = `${data.created} créé(s), ${data.updated} mis à jour, ${data.invited} invité(s).`;
+            if (data.errors.length > 0) {
+                toast.warning(`Import partiel : ${summary} ${data.errors.length} erreur(s).`);
+            } else {
+                toast.success(`Import terminé : ${summary}`);
+            }
         },
+        onError: err => toast.error(toErrorMessage(err, "Échec de l'import.")),
     });
 }

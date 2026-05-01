@@ -51,3 +51,9 @@ export type SubmitParticipantQuestionnaireBodyDto = z.infer<typeof submitPartici
 export type SubmitParticipantSelfRatingBodyDto = z.infer<typeof submitParticipantSelfRatingBodySchema>;
 export type SubmitParticipantPeerRatingBodyDto = z.infer<typeof submitParticipantPeerRatingBodySchema>;
 export type QuestionnaireInfoDto = z.infer<typeof questionnaireInfoSchema>;
+
+// Aliases without Dto suffix — preferred for frontend use
+export type SubmitParticipantElementHumainBody = SubmitInviteQuestionnaireBodyDto;
+export type SubmitParticipantSelfRatingBody = SubmitParticipantSelfRatingBodyDto;
+export type SubmitParticipantPeerRatingBody = SubmitParticipantPeerRatingBodyDto;
+export type SubmitParticipantQuestionnaireBody = SubmitParticipantQuestionnaireBodyDto;

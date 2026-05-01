@@ -1,42 +1,25 @@
 ---
-description: "Use this context for unit test file placement, naming, and configuration conventions."
+description: Test runner and test file conventions used in this repository.
 alwaysApply: false
-globs: **/*.spec.ts, **/*.spec.tsx, tests/**/*.ts, vitest*.ts
+globs: applications/**/*.spec.ts, applications/**/*.spec.tsx, applications/**/vitest*.ts, applications/frontend/src/test/**/*.ts, applications/frontend/src/test/**/*.tsx, packages/**/*.spec.ts, packages/**/*.spec.tsx, packages/**/*.test.ts, packages/**/*.test.tsx
 ---
 
 # Testing Conventions
 
-## Framework
+## Runner
 
-- Always use **Vitest** for tests (backend, packages, and packages), never Jest.
-- Each package must declare a `test` script running Vitest (`vitest` or `vitest run`).
-- A `test:watch` script is recommended (`vitest --watch` or equivalent).
+- Keep the existing local runner for the touched area.
+- Frontend and backend application tests use Vitest.
+- `@aor/scoring` currently uses `tsx --test`; do not rewrite that runner unless the task is explicitly about test tooling.
 
-## File placement and naming
+## File Naming
 
-- Preferred location: colocated in `src/**/tests/` relative to source files.
-- `*.spec.ts` and `*.spec.tsx` are the default naming patterns.
-- Legacy `*.test.ts` may exist during migration and should not be introduced in new tests.
+- In applications, prefer the existing `*.spec.ts` and `*.spec.tsx` pattern.
+- In packages, preserve the local convention already used by the package (`*.spec.ts` or `*.test.ts`).
 
-## Imports and architecture
+## Style
 
-- In tests, use the `@src/` alias for source imports when available; avoid deep relative paths like `../../`.
-- Apply dependency injection for testability:
-  - NestJS: use `Test.createTestingModule` and mock use cases with `{ provide: UseCase, useValue: mock }`.
-  - Unit tests: inject mocked repositories/adapters through constructors (DIP).
-
-## Vitest setup and isolation
-
-- If needed by the package, `vitest.setup.ts` can mock `@aor/nestjs-common` to avoid Prometheus conflicts.
-- Tests must be isolated and independent; reset mocks in `beforeEach`.
-- Avoid mocking Redis directly when constructor-injected adapters/repositories can be mocked.
-
-## Build and config
-
-- `*.spec.ts` and `*.spec.tsx` files must be excluded from TypeScript build via `tsconfig.json` `exclude`.
-- When tests exist for a package, a `vite.config.ts` should configure Vitest include patterns.
-
-## Commands
-
-- `pnpm test`: run tests once.
-- `pnpm test:watch`: run tests in watch mode.
+- Test behavior, not implementation details.
+- Keep tests close to the code they cover, or under the existing `src/test` folder when that pattern already exists.
+- In frontend tests, reuse existing helpers such as `@/test/render`.
+- In backend tests, use `@src/*` imports when that alias is available.

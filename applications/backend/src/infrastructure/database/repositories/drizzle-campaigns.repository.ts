@@ -1,171 +1,120 @@
-/*
- * Copyright (c) 2026 AOR Conseil. All rights reserved.
- * Proprietary and confidential.
- * Licensed under the AOR Commercial License.
- *
- * Use, reproduction, modification, distribution, or disclosure of this
- * source code, in whole or in part, is prohibited except under a valid
- * written commercial agreement with AOR Conseil.
- *
- * See LICENSE.md for the full license terms.
- */
+// Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
 
-import { DRIZZLE_DB_SYMBOL, type DrizzleDb, and, asc, campaignsTable, eq } from '@aor/drizzle';
+import { DRIZZLE_DB_SYMBOL, type DrizzleDb, and, asc, campaignsTable, eq, sql } from '@aor/drizzle';
 import { Inject, Injectable } from '@nestjs/common';
 
-import type { CampaignRecord, ICampaignsRepositoryPort } from '@src/interfaces/campaigns/ICampaignsRepository.port';
+import { Campaign, type CampaignStatus } from '@src/domain/campaigns';
+import type { ICampaignsRepositoryPort } from '@src/interfaces/campaigns/ICampaignsRepository.port';
+
+type CampaignRow = {
+    id: number;
+    coachId: number;
+    companyId: number;
+    name: string;
+    questionnaireId: string | null;
+    status: CampaignStatus;
+    allowTestWithoutManualInputs: boolean;
+    startsAt: Date | null;
+    endsAt: Date | null;
+    createdAt: Date | null;
+};
+
+const SELECT_COLUMNS = {
+    id: campaignsTable.id,
+    coachId: campaignsTable.coachId,
+    companyId: campaignsTable.companyId,
+    name: campaignsTable.name,
+    questionnaireId: campaignsTable.questionnaireId,
+    status: campaignsTable.status,
+    allowTestWithoutManualInputs: campaignsTable.allowTestWithoutManualInputs,
+    startsAt: campaignsTable.startsAt,
+    endsAt: campaignsTable.endsAt,
+    createdAt: campaignsTable.createdAt,
+} as const;
+
+const hydrateCampaign = (row: CampaignRow): Campaign =>
+    Campaign.hydrate({
+        id: row.id,
+        coachId: row.coachId,
+        companyId: row.companyId,
+        name: row.name,
+        questionnaireId: row.questionnaireId,
+        status: row.status,
+        allowTestWithoutManualInputs: row.allowTestWithoutManualInputs,
+        startsAt: row.startsAt,
+        endsAt: row.endsAt,
+        createdAt: row.createdAt,
+    });
 
 @Injectable()
 export class DrizzleCampaignsRepository implements ICampaignsRepositoryPort {
     public constructor(@Inject(DRIZZLE_DB_SYMBOL) private readonly db: DrizzleDb) {}
 
-    public async listAll(params?: { coachId?: number }): Promise<CampaignRecord[]> {
-        const query = this.db
-            .select({
-                id: campaignsTable.id,
-                coachId: campaignsTable.coachId,
-                companyId: campaignsTable.companyId,
-                name: campaignsTable.name,
-                questionnaireId: campaignsTable.questionnaireId,
-                status: campaignsTable.status,
-                allowTestWithoutManualInputs: campaignsTable.allowTestWithoutManualInputs,
-                startsAt: campaignsTable.startsAt,
-                endsAt: campaignsTable.endsAt,
-                createdAt: campaignsTable.createdAt,
-            })
-            .from(campaignsTable)
-            .orderBy(asc(campaignsTable.id));
-        if (params?.coachId) {
-            return query.where(eq(campaignsTable.coachId, params.coachId));
-        }
-        return query;
+    public async listAll(params?: { coachId?: number }): Promise<Campaign[]> {
+        const query = this.db.select(SELECT_COLUMNS).from(campaignsTable).orderBy(asc(campaignsTable.id));
+        const rows = params?.coachId ? await query.where(eq(campaignsTable.coachId, params.coachId)) : await query;
+        return rows.map(hydrateCampaign);
     }
 
-    public async findById(id: number, params?: { coachId?: number }): Promise<CampaignRecord | null> {
-        const query = this.db
-            .select({
-                id: campaignsTable.id,
-                coachId: campaignsTable.coachId,
-                companyId: campaignsTable.companyId,
-                name: campaignsTable.name,
-                questionnaireId: campaignsTable.questionnaireId,
-                status: campaignsTable.status,
-                allowTestWithoutManualInputs: campaignsTable.allowTestWithoutManualInputs,
-                startsAt: campaignsTable.startsAt,
-                endsAt: campaignsTable.endsAt,
-                createdAt: campaignsTable.createdAt,
-            })
-            .from(campaignsTable)
-            .limit(1);
-        const [campaign] =
+    public async findById(id: number, params?: { coachId?: number }): Promise<Campaign | null> {
+        const query = this.db.select(SELECT_COLUMNS).from(campaignsTable).limit(1);
+        const [row] =
             params?.coachId !== undefined
                 ? await query.where(and(eq(campaignsTable.id, id), eq(campaignsTable.coachId, params.coachId)))
                 : await query.where(eq(campaignsTable.id, id));
-        return campaign ?? null;
+        return row ? hydrateCampaign(row) : null;
     }
 
-    public async findByCompanyAndName(companyId: number, name: string): Promise<CampaignRecord | null> {
-        const [campaign] = await this.db
-            .select({
-                id: campaignsTable.id,
-                coachId: campaignsTable.coachId,
-                companyId: campaignsTable.companyId,
-                name: campaignsTable.name,
-                questionnaireId: campaignsTable.questionnaireId,
-                status: campaignsTable.status,
-                allowTestWithoutManualInputs: campaignsTable.allowTestWithoutManualInputs,
-                startsAt: campaignsTable.startsAt,
-                endsAt: campaignsTable.endsAt,
-                createdAt: campaignsTable.createdAt,
-            })
+    public async findByCompanyAndName(companyId: number, name: string): Promise<Campaign | null> {
+        const [row] = await this.db
+            .select(SELECT_COLUMNS)
             .from(campaignsTable)
             .where(and(eq(campaignsTable.companyId, companyId), eq(campaignsTable.name, name)))
             .limit(1);
-        return campaign ?? null;
+        return row ? hydrateCampaign(row) : null;
     }
 
-    public async create(input: {
-        coachId: number;
-        companyId: number;
-        name: string;
-        questionnaireId: string;
-        status: 'draft' | 'active' | 'closed' | 'archived';
-        allowTestWithoutManualInputs: boolean;
-        startsAt: Date | null;
-        endsAt: Date | null;
-    }): Promise<CampaignRecord> {
-        const [created] = await this.db
+    public async create(campaign: Campaign): Promise<Campaign> {
+        const snap = campaign.persistenceSnapshot();
+        if (snap.questionnaireId === null) {
+            throw new Error('Cannot create a Campaign without questionnaireId.');
+        }
+        const [row] = await this.db
             .insert(campaignsTable)
             .values({
-                coachId: input.coachId,
-                companyId: input.companyId,
-                name: input.name,
-                questionnaireId: input.questionnaireId,
-                status: input.status,
-                allowTestWithoutManualInputs: input.allowTestWithoutManualInputs,
-                startsAt: input.startsAt,
-                endsAt: input.endsAt,
+                coachId: snap.coachId,
+                companyId: snap.companyId,
+                name: snap.name,
+                questionnaireId: snap.questionnaireId,
+                status: snap.status,
+                allowTestWithoutManualInputs: snap.allowTestWithoutManualInputs,
+                startsAt: snap.startsAt,
+                endsAt: snap.endsAt,
             })
-            .returning({
-                id: campaignsTable.id,
-                coachId: campaignsTable.coachId,
-                companyId: campaignsTable.companyId,
-                name: campaignsTable.name,
-                questionnaireId: campaignsTable.questionnaireId,
-                status: campaignsTable.status,
-                allowTestWithoutManualInputs: campaignsTable.allowTestWithoutManualInputs,
-                startsAt: campaignsTable.startsAt,
-                endsAt: campaignsTable.endsAt,
-                createdAt: campaignsTable.createdAt,
-            });
-        return created;
+            .returning(SELECT_COLUMNS);
+        return hydrateCampaign(row);
     }
 
-    public async updateStatus(
-        id: number,
-        status: 'draft' | 'active' | 'closed' | 'archived',
-        patch?: { startsAt?: Date }
-    ): Promise<CampaignRecord | null> {
-        const now = new Date();
-        const baseSet = { status, updatedAt: now };
-        const setPayload = patch?.startsAt !== undefined ? { ...baseSet, startsAt: patch.startsAt } : baseSet;
-        const [updated] = await this.db
+    public async save(campaign: Campaign): Promise<Campaign | null> {
+        if (!campaign.isPersisted()) {
+            throw new Error('Cannot save() a non-persisted Campaign. Use create() instead.');
+        }
+        const snap = campaign.persistenceSnapshot();
+        const [row] = await this.db
             .update(campaignsTable)
-            .set(setPayload)
-            .where(eq(campaignsTable.id, id))
-            .returning({
-                id: campaignsTable.id,
-                coachId: campaignsTable.coachId,
-                companyId: campaignsTable.companyId,
-                name: campaignsTable.name,
-                questionnaireId: campaignsTable.questionnaireId,
-                status: campaignsTable.status,
-                allowTestWithoutManualInputs: campaignsTable.allowTestWithoutManualInputs,
-                startsAt: campaignsTable.startsAt,
-                endsAt: campaignsTable.endsAt,
-                createdAt: campaignsTable.createdAt,
-            });
-        return updated ?? null;
-    }
-
-    public async updateCoachId(id: number, coachId: number): Promise<CampaignRecord | null> {
-        const now = new Date();
-        const [updated] = await this.db
-            .update(campaignsTable)
-            .set({ coachId, updatedAt: now })
-            .where(eq(campaignsTable.id, id))
-            .returning({
-                id: campaignsTable.id,
-                coachId: campaignsTable.coachId,
-                companyId: campaignsTable.companyId,
-                name: campaignsTable.name,
-                questionnaireId: campaignsTable.questionnaireId,
-                status: campaignsTable.status,
-                allowTestWithoutManualInputs: campaignsTable.allowTestWithoutManualInputs,
-                startsAt: campaignsTable.startsAt,
-                endsAt: campaignsTable.endsAt,
-                createdAt: campaignsTable.createdAt,
-            });
-        return updated ?? null;
+            .set({
+                coachId: snap.coachId,
+                companyId: snap.companyId,
+                name: snap.name,
+                questionnaireId: snap.questionnaireId,
+                status: snap.status,
+                allowTestWithoutManualInputs: snap.allowTestWithoutManualInputs,
+                startsAt: snap.startsAt,
+                endsAt: snap.endsAt,
+                updatedAt: sql`now()`,
+            })
+            .where(eq(campaignsTable.id, snap.id))
+            .returning(SELECT_COLUMNS);
+        return row ? hydrateCampaign(row) : null;
     }
 }

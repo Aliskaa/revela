@@ -33,7 +33,7 @@ export function Navbar() {
                     <Box
                         component="img"
                         src="/aor.png"
-                        alt="Logo AOR Conseil"
+                        alt="Logo Révéla"
                         sx={{
                             height: 36, // Légèrement affiné pour s'intégrer parfaitement dans les 64px
                             width: 'auto',
@@ -54,7 +54,6 @@ export function Navbar() {
 
                 {/* Actions Utilisateur / Admin */}
                 <Stack direction="row" spacing={1.5} alignItems="center">
-
                     {!isAdminArea && !isAuthPage && !participantLoggedIn && (
                         <Button
                             component={Link}

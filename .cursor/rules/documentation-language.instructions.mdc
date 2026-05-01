@@ -1,13 +1,12 @@
 ---
-description: "Use this context for all documentation and documentary content language."
-alwaysApply: true
+description: Use this context when editing Markdown documentation in the repository.
+alwaysApply: false
+globs: README.md, docs/*.md, docs/**/*.md, applications/**/README.md, packages/**/README.md
 ---
 
-# Documentation Language Context
+# Documentation Language
 
-- All documentation must be written in French (en-en).
-- All documentation files must be created and maintained in Markdown format (`.md`).
-- In documentation, references to files and sections must use clickable Markdown links.
-- This includes README content, Markdown docs, architecture notes, runbooks, ADRs, and inline documentation prose.
-- If source material is in another language, translate and publish documentation in French.
-- Keep terminology consistent across documents.
+- Write repository documentation in French.
+- Keep code identifiers, CLI commands, environment variables, routes, and package names unchanged.
+- Prefer concise Markdown with working relative links.
+- When source material is in English, translate the narrative prose but keep technical identifiers intact.

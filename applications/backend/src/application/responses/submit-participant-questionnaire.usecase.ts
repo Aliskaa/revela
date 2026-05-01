@@ -1,28 +1,20 @@
-/*
- * Copyright (c) 2026 AOR Conseil. All rights reserved.
- * Proprietary and confidential.
- * Licensed under the AOR Commercial License.
- *
- * Use, reproduction, modification, distribution, or disclosure of this
- * source code, in whole or in part, is prohibited except under a valid
- * written commercial agreement with AOR Conseil.
- *
- * See LICENSE.md for the full license terms.
- */
+// Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
 
 import { getQuestionnaireEntry, isQuestionnaireUserFacing } from '@aor/questionnaires';
 import { calculateScores } from '@aor/scoring';
 import type { QuestionnaireId } from '@aor/types';
 import { submitParticipantQuestionnaireBodySchema } from '@aor/types';
 
-import {
-    formatPeerRatingStoredName,
-    parsePeerRatingTargetParticipantId,
-} from '@aor/domain';
+import { parsePeerRatingTargetParticipantId } from '@aor/domain';
+import { Response } from '@src/domain/responses';
 import { ResponsesQuestionnaireNotFoundError, ResponsesValidationError } from '@src/domain/responses/responses.errors';
 import type { ICampaignsReadPort } from '@src/interfaces/campaigns/ICampaignsRepository.port';
 import type { ICompaniesReadPort } from '@src/interfaces/companies/ICompaniesRepository.port';
-import type { IParticipantsIdentityReaderPort, IParticipantsInviteAssignmentsReaderPort, IParticipantsCampaignStateReaderPort } from '@src/interfaces/participants/IParticipantsRepository.port';
+import type {
+    IParticipantsCampaignStateReaderPort,
+    IParticipantsIdentityReaderPort,
+    IParticipantsInviteAssignmentsReaderPort,
+} from '@src/interfaces/participants/IParticipantsRepository.port';
 import type {
     IResponsesSubmissionReaderPort,
     IResponsesWriterPort,
@@ -33,7 +25,9 @@ import { validateLikertScoresRecord, validateSubmissionSeries } from '@aor/domai
 export class SubmitParticipantQuestionnaireUseCase {
     public constructor(
         private readonly ports: {
-            readonly participants: IParticipantsIdentityReaderPort & IParticipantsInviteAssignmentsReaderPort & IParticipantsCampaignStateReaderPort;
+            readonly participants: IParticipantsIdentityReaderPort &
+                IParticipantsInviteAssignmentsReaderPort &
+                IParticipantsCampaignStateReaderPort;
             readonly companies: ICompaniesReadPort;
             readonly campaigns: ICampaignsReadPort;
             readonly responses: IResponsesWriterPort & IResponsesSubmissionReaderPort;
@@ -66,7 +60,7 @@ export class SubmitParticipantQuestionnaireUseCase {
         if (!participant) {
             throw new ResponsesValidationError('Participant introuvable.');
         }
-        if (!participant.passwordHash) {
+        if (!participant.isActivated()) {
             throw new ResponsesValidationError('Compte non activé.');
         }
 
@@ -125,18 +119,20 @@ export class SubmitParticipantQuestionnaireUseCase {
                 scoreKey: Number(scoreKey),
                 value,
             }));
-            const record = await this.ports.responses.create({
-                questionnaireId: qid,
-                campaignId,
-                submissionKind: 'self_rating',
-                subjectParticipantId: participant.id,
-                raterParticipantId: participant.id,
-                participantId: participant.id,
-                name: info.name,
-                email: info.email,
-                organisation: info.organisation,
-                scores: scoresRows,
-            });
+            const record = await this.ports.responses.create(
+                Response.create({
+                    questionnaireId: qid,
+                    campaignId,
+                    submissionKind: 'self_rating',
+                    subjectParticipantId: participant.id,
+                    raterParticipantId: participant.id,
+                    participantId: participant.id,
+                    name: info.name,
+                    email: info.email,
+                    organisation: info.organisation,
+                    scores: scoresRows,
+                })
+            );
             const scoresOut: Record<string, number> = {};
             for (const row of scoresRows) {
                 scoresOut[String(row.scoreKey)] = row.value;
@@ -171,9 +167,17 @@ export class SubmitParticipantQuestionnaireUseCase {
             const peerResponses = existing.filter(r => r.submissionKind === 'peer_rating');
             const isDuplicate = peerResponses.some(r => {
                 if (ratedParticipantId !== undefined) {
-                    return parsePeerRatingTargetParticipantId(r.name) === ratedParticipantId;
+                    return (
+                        r.ratedParticipantId === ratedParticipantId ||
+                        (r.ratedParticipantId === null &&
+                            parsePeerRatingTargetParticipantId(r.name) === ratedParticipantId)
+                    );
                 }
-                return parsePeerRatingTargetParticipantId(r.name) === null && r.name.trim() === peerLabel;
+                return (
+                    r.ratedParticipantId === null &&
+                    parsePeerRatingTargetParticipantId(r.name) === null &&
+                    r.name.trim() === peerLabel
+                );
             });
             if (isDuplicate) {
                 throw new ResponsesValidationError('Feedback pair deja soumis. Modification non autorisee.');
@@ -184,11 +188,6 @@ export class SubmitParticipantQuestionnaireUseCase {
                 );
             }
 
-            const storedPeerName =
-                ratedParticipantId !== undefined
-                    ? formatPeerRatingStoredName(ratedParticipantId, peerLabel)
-                    : peerLabel;
-
             const errLikert = validateLikertScoresRecord(questionnaire, payload.scores);
             if (errLikert) {
                 throw new ResponsesValidationError(errLikert);
@@ -197,18 +196,21 @@ export class SubmitParticipantQuestionnaireUseCase {
                 scoreKey: Number(scoreKey),
                 value,
             }));
-            const record = await this.ports.responses.create({
-                questionnaireId: qid,
-                campaignId,
-                submissionKind: 'peer_rating',
-                subjectParticipantId: participant.id,
-                raterParticipantId: null,
-                participantId: participant.id,
-                name: storedPeerName,
-                email: participant.email,
-                organisation: info.organisation,
-                scores: scoresRows,
-            });
+            const record = await this.ports.responses.create(
+                Response.create({
+                    questionnaireId: qid,
+                    campaignId,
+                    submissionKind: 'peer_rating',
+                    subjectParticipantId: participant.id,
+                    raterParticipantId: null,
+                    ratedParticipantId: ratedParticipantId ?? null,
+                    participantId: participant.id,
+                    name: peerLabel,
+                    email: participant.email,
+                    organisation: info.organisation,
+                    scores: scoresRows,
+                })
+            );
             const scoresOut: Record<string, number> = {};
             for (const row of scoresRows) {
                 scoresOut[String(row.scoreKey)] = row.value;
@@ -221,6 +223,14 @@ export class SubmitParticipantQuestionnaireUseCase {
         if (existing.some(r => r.submissionKind === 'element_humain')) {
             throw new ResponsesValidationError('Test scientifique deja soumis. Modification non autorisee.');
         }
+        const manualInputsCompleted =
+            existing.some(r => r.submissionKind === 'self_rating') &&
+            existing.some(r => r.submissionKind === 'peer_rating');
+        if (!campaign.allowTestWithoutManualInputs && !manualInputsCompleted) {
+            throw new ResponsesValidationError(
+                "Le test Element Humain sera disponible apres l'auto-evaluation et le feedback pair."
+            );
+        }
         const errSeries = validateSubmissionSeries(questionnaire, series0, series1);
         if (errSeries) {
             throw new ResponsesValidationError(errSeries);
@@ -232,18 +242,20 @@ export class SubmitParticipantQuestionnaireUseCase {
             value,
         }));
 
-        const record = await this.ports.responses.create({
-            questionnaireId: qid,
-            campaignId,
-            submissionKind: 'element_humain',
-            subjectParticipantId: participant.id,
-            raterParticipantId: participant.id,
-            participantId: participant.id,
-            name: info.name,
-            email: info.email,
-            organisation: info.organisation,
-            scores: scoresRows,
-        });
+        const record = await this.ports.responses.create(
+            Response.create({
+                questionnaireId: qid,
+                campaignId,
+                submissionKind: 'element_humain',
+                subjectParticipantId: participant.id,
+                raterParticipantId: participant.id,
+                participantId: participant.id,
+                name: info.name,
+                email: info.email,
+                organisation: info.organisation,
+                scores: scoresRows,
+            })
+        );
 
         const scoresOut: Record<string, number> = {};
         for (const [k, v] of Object.entries(scoresMap)) {

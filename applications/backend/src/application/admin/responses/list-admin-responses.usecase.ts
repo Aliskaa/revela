@@ -1,14 +1,4 @@
-/*
- * Copyright (c) 2026 AOR Conseil. All rights reserved.
- * Proprietary and confidential.
- * Licensed under the AOR Commercial License.
- *
- * Use, reproduction, modification, distribution, or disclosure of this
- * source code, in whole or in part, is prohibited except under a valid
- * written commercial agreement with AOR Conseil.
- *
- * See LICENSE.md for the full license terms.
- */
+// Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
 
 import { responseBaseJson } from '@src/application/responses/response-serialization';
 import type { IResponsesAdminListPort } from '@src/interfaces/responses/IResponsesRepository.port';
@@ -19,6 +9,7 @@ export class ListAdminResponsesUseCase {
     public async execute(params: {
         qid?: string;
         campaignId?: number;
+        coachId?: number;
         page: number;
         perPage: number;
     }): Promise<{
@@ -31,6 +22,7 @@ export class ListAdminResponsesUseCase {
         const result = await this.ports.responses.list({
             questionnaireId: params.qid,
             campaignId: params.campaignId,
+            coachId: params.coachId,
             page: params.page,
             perPage: params.perPage,
         });

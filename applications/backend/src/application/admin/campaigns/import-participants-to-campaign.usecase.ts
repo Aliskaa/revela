@@ -5,10 +5,16 @@ import {
     AdminResourceNotFoundError,
     AdminValidationError,
 } from '@src/domain/admin/admin.errors';
+import { Invitation } from '@src/domain/invitations';
+import { Participant } from '@src/domain/participants';
 import type { ICampaignsReadPort } from '@src/interfaces/campaigns/ICampaignsRepository.port';
 import type { ICompaniesReadPort } from '@src/interfaces/companies/ICompaniesRepository.port';
 import type { IInvitationsWritePort } from '@src/interfaces/invitations/IInvitationsRepository.port';
-import type { IParticipantsIdentityReaderPort, IParticipantsWriterPort, IParticipantsCampaignParticipationWriterPort } from '@src/interfaces/participants/IParticipantsRepository.port';
+import type {
+    IParticipantsCampaignParticipationWriterPort,
+    IParticipantsIdentityReaderPort,
+    IParticipantsWriterPort,
+} from '@src/interfaces/participants/IParticipantsRepository.port';
 
 import { parseSemicolonCsv } from '@aor/utils';
 
@@ -17,7 +23,9 @@ export class ImportParticipantsToCampaignUseCase {
         private readonly ports: {
             readonly campaigns: ICampaignsReadPort;
             readonly companies: ICompaniesReadPort;
-            readonly participants: IParticipantsIdentityReaderPort & IParticipantsWriterPort & IParticipantsCampaignParticipationWriterPort;
+            readonly participants: IParticipantsIdentityReaderPort &
+                IParticipantsWriterPort &
+                IParticipantsCampaignParticipationWriterPort;
             readonly invitations: IInvitationsWritePort;
         }
     ) {}
@@ -58,24 +66,32 @@ export class ImportParticipantsToCampaignUseCase {
                 }
                 let participant = await this.ports.participants.findByEmail(email);
                 if (!participant) {
-                    participant = await this.ports.participants.create({
-                        firstName,
-                        lastName,
-                        email,
-                        companyId: company.id,
-                    });
+                    participant = await this.ports.participants.create(
+                        Participant.create({
+                            firstName,
+                            lastName,
+                            email,
+                            companyId: company.id,
+                        })
+                    );
                     created += 1;
                 } else {
-                    await this.ports.participants.updateCompanyId(participant.id, company.id);
+                    const reassigned = participant.setCompanyId(company.id);
+                    const saved = await this.ports.participants.save(reassigned);
+                    if (saved) {
+                        participant = saved;
+                    }
                     updated += 1;
                 }
-                await this.ports.invitations.create({
-                    token: randomBytes(32).toString('base64url'),
-                    participantId: participant.id,
-                    campaignId: campaign.id,
-                    questionnaireId: campaign.questionnaireId,
-                    expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-                });
+                await this.ports.invitations.create(
+                    Invitation.create({
+                        token: randomBytes(32).toString('base64url'),
+                        participantId: participant.id,
+                        campaignId: campaign.id,
+                        questionnaireId: campaign.questionnaireId,
+                        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+                    })
+                );
                 await this.ports.participants.ensureCampaignParticipantInvited(campaign.id, participant.id);
                 invited += 1;
             } catch (exc) {

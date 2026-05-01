@@ -1,0 +1,147 @@
+// Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
+
+import { getQuestionnaireEntry } from '@aor/questionnaires';
+import type {
+    ParticipantQuestionnaireMatrix,
+    ParticipantQuestionnaireMatrixPeerColumn,
+    ParticipantQuestionnaireMatrixRow,
+    ResultDim,
+} from '@aor/types';
+
+import { displayPeerRatingStoredLabel, parsePeerRatingTargetParticipantId } from '@aor/domain';
+import { AdminInvalidQuestionnaireError, AdminResourceNotFoundError } from '@src/domain/admin/admin.errors';
+import type {
+    IParticipantsAdminReadPort,
+    IParticipantsIdentityReaderPort,
+} from '@src/interfaces/participants/IParticipantsRepository.port';
+import type {
+    IResponsesSubmissionReaderPort,
+    ResponseRecord,
+    SubmissionKind,
+} from '@src/interfaces/responses/IResponsesRepository.port';
+
+const LIKERT_MAX = 9;
+
+const scoresToMap = (record: ResponseRecord | null): Map<number, number> => {
+    const map = new Map<number, number>();
+    if (!record) {
+        return map;
+    }
+    for (const s of record.scores) {
+        map.set(s.scoreKey, s.value);
+    }
+    return map;
+};
+
+const latestBySubmittedAt = (records: ResponseRecord[]): ResponseRecord | null => {
+    if (records.length === 0) {
+        return null;
+    }
+    return records.reduce((best, cur) => {
+        const tb = best.submittedAt?.getTime() ?? 0;
+        const tc = cur.submittedAt?.getTime() ?? 0;
+        return tc >= tb ? cur : best;
+    });
+};
+
+const byKind = (records: ResponseRecord[], kind: SubmissionKind): ResponseRecord[] =>
+    records.filter(r => r.submissionKind === kind);
+
+export class GetParticipantQuestionnaireMatrixUseCase {
+    public constructor(
+        private readonly ports: {
+            readonly participants: IParticipantsIdentityReaderPort & IParticipantsAdminReadPort;
+            readonly responses: IResponsesSubmissionReaderPort;
+        }
+    ) {}
+
+    /**
+     * Filtrage scope=coach (G5 RGPD) : si `params.coachId` est fourni, on vérifie via
+     * `findByIdEnriched` que le participant appartient à au moins une campagne du coach.
+     * Sinon → 404 (`AdminResourceNotFoundError`), pour ne pas leak l'existence de la
+     * ressource. Les appels participant-side passent `coachId: undefined` (le participant
+     * consulte sa propre matrix, pas de filtrage à appliquer).
+     */
+    public async execute(params: {
+        participantId: number;
+        qid: string;
+        campaignId?: number;
+        coachId?: number;
+    }): Promise<ParticipantQuestionnaireMatrix> {
+        if (params.coachId !== undefined) {
+            const allowed = await this.ports.participants.findByIdEnriched(params.participantId, {
+                coachId: params.coachId,
+            });
+            if (!allowed) {
+                throw new AdminResourceNotFoundError('Participant introuvable.');
+            }
+        }
+        const participant = await this.ports.participants.findById(params.participantId);
+        if (!participant) {
+            throw new AdminResourceNotFoundError('Participant introuvable.');
+        }
+        const qid = params.qid;
+        const catalog = getQuestionnaireEntry(qid);
+        if (!catalog) {
+            throw new AdminInvalidQuestionnaireError('Questionnaire invalide.');
+        }
+
+        const responses = await this.ports.responses.listForSubjectQuestionnaireMatrix(
+            params.participantId,
+            qid,
+            params.campaignId
+        );
+
+        const selfRecord = latestBySubmittedAt(byKind(responses, 'self_rating'));
+        const scientificRecord = latestBySubmittedAt(byKind(responses, 'element_humain'));
+
+        const peerCandidates = byKind(responses, 'peer_rating');
+        peerCandidates.sort((a, b) => (b.submittedAt?.getTime() ?? 0) - (a.submittedAt?.getTime() ?? 0));
+        const peerRecords = peerCandidates.slice(0, 5).reverse();
+
+        const peer_columns: ParticipantQuestionnaireMatrixPeerColumn[] = peerRecords.map(r => {
+            const rawName = r.name.trim() || `Pair #${String(r.id)}`;
+            return {
+                response_id: r.id,
+                label: displayPeerRatingStoredLabel(rawName),
+                rater_participant_id: r.raterParticipantId,
+                rated_participant_id: r.ratedParticipantId ?? parsePeerRatingTargetParticipantId(rawName),
+            };
+        });
+
+        const scoreKeys = Object.keys(catalog.short_labels)
+            .map(k => Number(k))
+            .filter(n => Number.isFinite(n))
+            .sort((a, b) => a - b);
+
+        const selfMap = scoresToMap(selfRecord);
+        const scientificMap = scoresToMap(scientificRecord);
+        const peerMaps = peerRecords.map(r => scoresToMap(r));
+
+        const rows: ParticipantQuestionnaireMatrixRow[] = scoreKeys.map(score_key => ({
+            score_key,
+            label: catalog.short_labels[String(score_key)] ?? String(score_key),
+            self: selfMap.get(score_key) ?? null,
+            peers: peerMaps.map(m => m.get(score_key) ?? null),
+            scientific: scientificMap.get(score_key) ?? null,
+        }));
+
+        const scientificValues = rows.map(r => r.scientific).filter((v): v is number => v !== null);
+        const scientific_value_max =
+            scientificValues.length > 0 ? Math.max(LIKERT_MAX, ...scientificValues) : LIKERT_MAX;
+
+        return {
+            subject_id: participant.id,
+            questionnaire_id: catalog.id,
+            questionnaire_title: catalog.title,
+            likert_max: LIKERT_MAX,
+            scientific_value_max,
+            peer_columns,
+            self_response_id: selfRecord?.id ?? null,
+            scientific_response_id: scientificRecord?.id ?? null,
+            rows,
+            result_dims: catalog.result_dims as ResultDim[],
+            short_labels: catalog.short_labels,
+        };
+    }
+}

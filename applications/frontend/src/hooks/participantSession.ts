@@ -1,6 +1,14 @@
 import { participantApiClient } from '@/api/participantClient';
-import type { CampaignPeerChoice, ParticipantQuestionnaireMatrix, ParticipantSession } from '@/api/types';
-import { useQuery } from '@tanstack/react-query';
+import { useToast } from '@/lib/toast';
+import type {
+    CampaignPeerChoice,
+    ParticipantQuestionnaireMatrix,
+    ParticipantSelfDataExport,
+    ParticipantSession,
+    UpdateParticipantProfileBody,
+} from '@aor/types';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 
 export const participantSessionKeys = {
     session: ['participant', 'session'] as const,
@@ -20,18 +28,20 @@ export function useParticipantSession() {
 
 export function useParticipantSessionMatrix(enabled: boolean, qid: string, campaignId?: number | null) {
     const q = qid.trim().toUpperCase();
+    const validCampaignId = typeof campaignId === 'number' && campaignId > 0 ? campaignId : null;
     return useQuery<ParticipantQuestionnaireMatrix>({
-        queryKey: participantSessionKeys.matrix(q, campaignId),
-        queryFn: () =>
-            participantApiClient
-                .get('/participant/matrix', {
-                    params: {
-                        qid: q,
-                        campaign_id: campaignId ?? undefined,
-                    },
+        queryKey: participantSessionKeys.matrix(q, validCampaignId),
+        queryFn: () => {
+            if (validCampaignId === null) {
+                return Promise.reject(new Error('campaignId requis pour charger la matrice'));
+            }
+            return participantApiClient
+                .get(`/participant/campaigns/${validCampaignId}/matrix`, {
+                    params: { qid: q },
                 })
-                .then(r => r.data),
-        enabled: enabled && q.length > 0,
+                .then(r => r.data);
+        },
+        enabled: enabled && q.length > 0 && validCampaignId !== null,
     });
 }
 
@@ -49,5 +59,48 @@ export function useParticipantCampaignPeers(campaignId: number | null) {
             return r.data;
         },
         enabled,
+    });
+}
+
+export function useConfirmCampaignParticipation() {
+    const qc = useQueryClient();
+    const toast = useToast();
+    const { t } = useTranslation();
+    return useMutation<{ invitation_confirmed: boolean }, Error, number>({
+        mutationFn: campaignId =>
+            participantApiClient.post(`/participant/campaigns/${campaignId}/confirm`).then(r => r.data),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: participantSessionKeys.session });
+            toast.success(t('toast.campaignParticipationConfirmed'));
+        },
+        onError: err =>
+            toast.error(
+                err instanceof Error && err.message ? err.message : t('toast.campaignParticipationConfirmFailed')
+            ),
+    });
+}
+
+/**
+ * Récupère le payload d'export RGPD « mes données » du participant authentifié.
+ * Utilisé à la demande (manual `refetch()`) — pas de cache prolongé pour éviter de
+ * conserver inutilement des PII en mémoire client après le téléchargement.
+ */
+export function useFetchParticipantSelfDataExport() {
+    return useMutation<ParticipantSelfDataExport, Error, void>({
+        mutationFn: () => participantApiClient.get('/participant/me/export').then(r => r.data),
+    });
+}
+
+export function useUpdateParticipantProfile() {
+    const qc = useQueryClient();
+    const toast = useToast();
+    const { t } = useTranslation();
+    return useMutation<{ ok: boolean }, Error, UpdateParticipantProfileBody>({
+        mutationFn: payload => participantApiClient.patch('/participant/profile', payload).then(r => r.data),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: participantSessionKeys.session });
+            toast.success(t('toast.profileUpdated'));
+        },
+        onError: err => toast.error(err instanceof Error && err.message ? err.message : t('toast.profileUpdateFailed')),
     });
 }

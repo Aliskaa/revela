@@ -42,7 +42,7 @@ export const LayoutSidebar = ({ subtitle, items, onLogout }: LayoutSidebarProps)
                         lineHeight={1.1}
                         letterSpacing={-0.5}
                     >
-                        AOR CONSEIL
+                        RÉVÉLA
                     </Typography>
                     <Typography
                         variant="caption"
@@ -118,7 +118,10 @@ export const LayoutSidebar = ({ subtitle, items, onLogout }: LayoutSidebarProps)
                     <ListItemIcon sx={{ minWidth: 40, color: 'inherit' }}>
                         <LogOut size={22} />
                     </ListItemIcon>
-                    <ListItemText primary="Déconnexion" slotProps={{ primary: { fontSize: '0.95rem', fontWeight: 600 } }} />
+                    <ListItemText
+                        primary="Déconnexion"
+                        slotProps={{ primary: { fontSize: '0.95rem', fontWeight: 600 } }}
+                    />
                 </ListItemButton>
             </Box>
         </Box>

@@ -1,86 +1,17 @@
 ---
-description: "Use this context when writing or reviewing Zod schemas to enforce Zod v4 API conventions."
+description: Zod v4 conventions for shared schema packages.
 alwaysApply: false
-globs: **/*Schema.ts, **/*Dto.ts
+globs: packages/aor-common/types/src/*.ts, packages/aor-common/types/src/**/*.ts, packages/aor-questionnaires/src/*.ts, packages/aor-questionnaires/src/**/*.ts
 ---
 
-# Zod v4 API Conventions
+# Zod v4 Conventions
 
-This project uses **Zod v4**. Do not use Zod v3 API patterns. The two versions have significant API differences that must not be mixed.
+- Use Zod v4 APIs only.
+- Prefer `export const fooSchema = z.object(...)` plus `export type Foo = z.infer<typeof fooSchema>`.
+- Keep schema constants in lower camel case and exported inferred types in PascalCase.
+- When a schema already defines the transport contract, do not duplicate the shape as a separate handwritten type.
 
----
+## Validators
 
-## String format validators
-
-In Zod v4, string format validators were split into two categories:
-
-1. **Top-level primitives** — standalone schema types, no longer chained on `z.string()`.
-2. **`z.iso.*` namespace** — ISO 8601 date/time formats.
-
-### UUID
-
-```ts
-// ❌ Zod v3 — forbidden
-z.string().uuid()
-
-// ✅ Zod v4
-z.uuid()
-```
-
-### ISO 8601 datetime
-
-```ts
-// ❌ Zod v3 — forbidden
-z.string().datetime()
-
-// ✅ Zod v4
-z.iso.datetime()
-```
-
-### ISO 8601 date
-
-```ts
-// ❌ Zod v3 — forbidden
-z.string().date()
-
-// ✅ Zod v4
-z.iso.date()
-```
-
-### ISO 8601 time
-
-```ts
-// ❌ Zod v3 — forbidden
-z.string().time()
-
-// ✅ Zod v4
-z.iso.time()
-```
-
-### Email
-
-```ts
-// ❌ Zod v3 — forbidden
-z.string().email()
-
-// ✅ Zod v4
-z.email()
-```
-
-### URL
-
-```ts
-// ❌ Zod v3 — forbidden
-z.string().url()
-
-// ✅ Zod v4
-z.url()
-```
-
----
-
-## General rule
-
-> If you are chaining a format specifier (uuid, email, url, datetime, date, time) on `z.string()`, it is a Zod v3 pattern and must be replaced with the Zod v4 equivalent.
-
-Plain `z.string()` without a format specifier remains valid for unformatted strings.
+- Use v4 validators such as `z.uuid()`, `z.email()`, and `z.iso.datetime()` when those formats are needed.
+- Avoid old chained v3-style patterns like `z.string().uuid()` when a v4 top-level validator exists.

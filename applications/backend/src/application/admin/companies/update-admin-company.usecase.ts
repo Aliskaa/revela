@@ -1,17 +1,11 @@
-/*
- * Copyright (c) 2026 AOR Conseil. All rights reserved.
- * Proprietary and confidential.
- * Licensed under the AOR Commercial License.
- *
- * Use, reproduction, modification, distribution, or disclosure of this
- * source code, in whole or in part, is prohibited except under a valid
- * written commercial agreement with AOR Conseil.
- *
- * See LICENSE.md for the full license terms.
- */
+// Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
 
 import { AdminResourceNotFoundError, AdminValidationError } from '@src/domain/admin/admin.errors';
-import type { ICompaniesReadPort, ICompaniesWritePort } from '@src/interfaces/companies/ICompaniesRepository.port';
+import type {
+    CompanyWithParticipantCountReadModel,
+    ICompaniesReadPort,
+    ICompaniesWritePort,
+} from '@src/interfaces/companies/ICompaniesRepository.port';
 
 const normalizeNullable = (value: string | undefined | null): string | null => {
     if (value === undefined || value === null) {
@@ -27,29 +21,34 @@ export class UpdateAdminCompanyUseCase {
     public async execute(
         companyId: number,
         body: { name?: string; contact_name?: string | null; contact_email?: string | null }
-    ) {
+    ): Promise<CompanyWithParticipantCountReadModel> {
         const current = await this.ports.companies.findById(companyId);
         if (!current) {
             throw new AdminResourceNotFoundError('Entreprise introuvable.');
         }
-        const name = body.name !== undefined ? body.name.trim() : current.name;
-        if (name.length === 0) {
+
+        const nextName = body.name !== undefined ? body.name.trim() : current.name;
+        if (nextName.length === 0) {
             throw new AdminValidationError("Le nom de l'entreprise est requis.");
         }
-        if (name !== current.name) {
-            const taken = await this.ports.companies.findByName(name);
+        if (nextName !== current.name) {
+            const taken = await this.ports.companies.findByName(nextName);
             if (taken && taken.id !== companyId) {
                 throw new AdminValidationError('Une entreprise avec ce nom existe déjà.');
             }
         }
-        const contactName =
+
+        const nextContactName =
             body.contact_name !== undefined ? normalizeNullable(body.contact_name) : current.contactName;
-        const contactEmail =
+        const nextContactEmail =
             body.contact_email !== undefined ? normalizeNullable(body.contact_email) : current.contactEmail;
-        const updated = await this.ports.companies.update(companyId, { name, contactName, contactEmail });
-        if (!updated) {
+
+        const updated = current.rename(nextName).updateContact(nextContactName, nextContactEmail);
+        const saved = await this.ports.companies.save(updated);
+        if (!saved) {
             throw new AdminResourceNotFoundError('Entreprise introuvable.');
         }
+
         const withCount = await this.ports.companies.findByIdWithParticipantCount(companyId);
         if (!withCount) {
             throw new AdminResourceNotFoundError('Entreprise introuvable.');

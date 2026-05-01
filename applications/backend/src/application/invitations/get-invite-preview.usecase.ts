@@ -1,21 +1,14 @@
-/*
- * Copyright (c) 2026 AOR Conseil. All rights reserved.
- * Proprietary and confidential.
- * Licensed under the AOR Commercial License.
- *
- * Use, reproduction, modification, distribution, or disclosure of this
- * source code, in whole or in part, is prohibited except under a valid
- * written commercial agreement with AOR Conseil.
- *
- * See LICENSE.md for the full license terms.
- */
+// Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
 
 import { getQuestionnaireEntry } from '@aor/questionnaires';
 
 import { InviteResourceNotFoundError, InviteTokenRequestError } from '@src/domain/invitations/invitations.errors';
 import type { CampaignStatus, ICampaignsReadPort } from '@src/interfaces/campaigns/ICampaignsRepository.port';
 import type { ICompaniesReadPort } from '@src/interfaces/companies/ICompaniesRepository.port';
-import type { IParticipantsIdentityReaderPort, IParticipantsCampaignStateReaderPort } from '@src/interfaces/participants/IParticipantsRepository.port';
+import type {
+    IParticipantsCampaignStateReaderPort,
+    IParticipantsIdentityReaderPort,
+} from '@src/interfaces/participants/IParticipantsRepository.port';
 
 import type { InviteTokenValidationUseCase } from './invite-token-validation.usecase';
 
@@ -69,7 +62,7 @@ export class GetInvitePreviewUseCase {
             token,
             questionnaire_id: invitation.questionnaireId,
             questionnaire_title: qMeta?.title ?? '',
-            needs_activation: participant.passwordHash === null,
+            needs_activation: !participant.isActivated(),
             campaign_id: campaignId,
             campaign_status: campaignStatus,
             invitation_confirmed: invitationConfirmed,

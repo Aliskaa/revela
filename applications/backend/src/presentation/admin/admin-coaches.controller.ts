@@ -1,16 +1,23 @@
-/*
- * Copyright (c) 2026 AOR Conseil. All rights reserved.
- * Proprietary and confidential.
- * Licensed under the AOR Commercial License.
- *
- * Use, reproduction, modification, distribution, or disclosure of this
- * source code, in whole or in part, is prohibited except under a valid
- * written commercial agreement with AOR Conseil.
- *
- * See LICENSE.md for the full license terms.
- */
+// Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
 
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Inject, Param, ParseIntPipe, Patch, Post, Req, UnauthorizedException, UseFilters, UseGuards } from '@nestjs/common';
+import {
+    Body,
+    Controller,
+    Delete,
+    Get,
+    HttpCode,
+    HttpStatus,
+    Inject,
+    Param,
+    ParseIntPipe,
+    Patch,
+    Post,
+    Req,
+    UnauthorizedException,
+    UseFilters,
+    UseGuards,
+} from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
 import type { CreateAdminCoachUseCase } from '@src/application/admin/coaches/create-admin-coach.usecase';
 import type { DeleteAdminCoachUseCase } from '@src/application/admin/coaches/delete-admin-coach.usecase';
@@ -19,9 +26,10 @@ import type { ListAdminCoachesUseCase } from '@src/application/admin/coaches/lis
 import type { UpdateAdminCoachUseCase } from '@src/application/admin/coaches/update-admin-coach.usecase';
 import { ResponsesExceptionFilter } from '@src/presentation/responses/responses-exception.filter';
 
+import type { JwtValidatedUser } from '@src/presentation/jwt-validated-user';
 import { AdminApplicationExceptionFilter } from './admin-application-exception.filter';
 import { AdminJwtAuthGuard } from './admin-jwt-auth.guard';
-import { adminCoachDetailToJson } from './admin.presenters';
+import { adminCoachDetailToJson, coachToAdminJson } from './admin.presenters';
 import {
     CREATE_ADMIN_COACH_USE_CASE_SYMBOL,
     DELETE_ADMIN_COACH_USE_CASE_SYMBOL,
@@ -29,8 +37,9 @@ import {
     LIST_ADMIN_COACHES_USE_CASE_SYMBOL,
     UPDATE_ADMIN_COACH_USE_CASE_SYMBOL,
 } from './admin.tokens';
-import type { JwtValidatedUser } from './jwt.strategy';
 
+@ApiTags('admin-coaches')
+@ApiBearerAuth('jwt')
 @Controller('admin')
 @UseGuards(AdminJwtAuthGuard)
 @UseFilters(AdminApplicationExceptionFilter, ResponsesExceptionFilter)
@@ -59,9 +68,10 @@ export class AdminCoachesController {
 
     @Get('coaches')
     public async listCoaches(@Req() req: { user: JwtValidatedUser }) {
-        const rows = await this.listAdminCoaches.execute();
-        const visibleRows = req.user.scope === 'coach' ? rows.filter(row => row.id === req.user.coachId) : rows;
-        return visibleRows.map(({ password: _password, ...rest }) => rest);
+        const coaches = await this.listAdminCoaches.execute();
+        const visibleCoaches =
+            req.user.scope === 'coach' ? coaches.filter(coach => coach.id === req.user.coachId) : coaches;
+        return visibleCoaches.map(coachToAdminJson);
     }
 
     @Post('coaches')
@@ -73,8 +83,7 @@ export class AdminCoachesController {
             throw new UnauthorizedException();
         }
         const coach = await this.createAdminCoach.execute(body);
-        const { password: _password, ...safeCoach } = coach;
-        return safeCoach;
+        return coachToAdminJson(coach);
     }
 
     @Get('coaches/:coachId')
@@ -91,7 +100,8 @@ export class AdminCoachesController {
         @Body() body: { username?: string; password?: string; display_name?: string; is_active?: boolean }
     ) {
         this.ensureCoachEntityAccess(coachId, req.user);
-        return this.updateAdminCoach.execute(coachId, body);
+        const coach = await this.updateAdminCoach.execute(coachId, body);
+        return coachToAdminJson(coach);
     }
 
     @Delete('coaches/:coachId')

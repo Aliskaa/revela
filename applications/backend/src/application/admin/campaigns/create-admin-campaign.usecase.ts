@@ -1,6 +1,9 @@
+// Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
+
 import { isQuestionnaireUserFacing } from '@aor/questionnaires';
 
 import { AdminResourceNotFoundError, AdminValidationError } from '@src/domain/admin/admin.errors';
+import { Campaign } from '@src/domain/campaigns';
 import type { ICampaignsReadPort, ICampaignsWritePort } from '@src/interfaces/campaigns/ICampaignsRepository.port';
 import type { ICoachesReadPort } from '@src/interfaces/coaches/ICoachesRepository.port';
 import type { ICompaniesReadPort } from '@src/interfaces/companies/ICompaniesRepository.port';
@@ -23,7 +26,7 @@ export class CreateAdminCampaignUseCase {
         ends_at?: string | null;
         allow_test_without_manual_inputs?: boolean;
         status?: 'draft' | 'active' | 'closed' | 'archived';
-    }) {
+    }): Promise<Campaign> {
         const coachId = body.coach_id;
         if (!Number.isFinite(coachId) || (coachId as number) <= 0) {
             throw new AdminValidationError('coach_id invalide.');
@@ -43,10 +46,7 @@ export class CreateAdminCampaignUseCase {
         }
 
         const name = (body.name ?? '').trim();
-        if (name.length < 3) {
-            throw new AdminValidationError('Le nom de campagne doit contenir au moins 3 caractères.');
-        }
-        const existing = await this.ports.campaigns.findByCompanyAndName(company.id, name);
+        const existing = name.length >= 3 ? await this.ports.campaigns.findByCompanyAndName(company.id, name) : null;
         if (existing) {
             throw new AdminValidationError('Une campagne avec ce nom existe déjà pour cette entreprise.');
         }
@@ -64,22 +64,18 @@ export class CreateAdminCampaignUseCase {
         if (endsAt && Number.isNaN(endsAt.getTime())) {
             throw new AdminValidationError('ends_at invalide.');
         }
-        if (startsAt && endsAt && startsAt > endsAt) {
-            throw new AdminValidationError('ends_at doit être postérieur à starts_at.');
-        }
 
-        const status = body.status ?? 'draft';
-        const allowTestWithoutManualInputs = Boolean(body.allow_test_without_manual_inputs);
-
-        return this.ports.campaigns.create({
+        const draft = Campaign.create({
             coachId: coach.id,
             companyId: company.id,
             name,
             questionnaireId,
-            status,
-            allowTestWithoutManualInputs,
+            status: body.status ?? 'draft',
+            allowTestWithoutManualInputs: Boolean(body.allow_test_without_manual_inputs),
             startsAt,
             endsAt,
         });
+
+        return this.ports.campaigns.create(draft);
     }
 }

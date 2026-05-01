@@ -1,18 +1,12 @@
-/*
- * Copyright (c) 2026 AOR Conseil. All rights reserved.
- * Proprietary and confidential.
- * Licensed under the AOR Commercial License.
- *
- * Use, reproduction, modification, distribution, or disclosure of this
- * source code, in whole or in part, is prohibited except under a valid
- * written commercial agreement with AOR Conseil.
- *
- * See LICENSE.md for the full license terms.
- */
+// Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
 
 import { Module } from '@nestjs/common';
 
 import { GetPublicResponseUseCase } from '@src/application/responses/get-public-response.usecase';
+import {
+    CAMPAIGNS_REPOSITORY_PORT_SYMBOL,
+    type ICampaignsReadPort,
+} from '@src/interfaces/campaigns/ICampaignsRepository.port';
 import {
     type IResponsesRecordReaderPort,
     RESPONSES_REPOSITORY_PORT_SYMBOL,
@@ -24,8 +18,9 @@ import { GET_PUBLIC_RESPONSE_USE_CASE_SYMBOL } from './responses.tokens';
     providers: [
         {
             provide: GET_PUBLIC_RESPONSE_USE_CASE_SYMBOL,
-            useFactory: (responses: IResponsesRecordReaderPort) => new GetPublicResponseUseCase({ responses }),
-            inject: [RESPONSES_REPOSITORY_PORT_SYMBOL],
+            useFactory: (responses: IResponsesRecordReaderPort, campaigns: ICampaignsReadPort) =>
+                new GetPublicResponseUseCase({ responses, campaigns }),
+            inject: [RESPONSES_REPOSITORY_PORT_SYMBOL, CAMPAIGNS_REPOSITORY_PORT_SYMBOL],
         },
     ],
     exports: [GET_PUBLIC_RESPONSE_USE_CASE_SYMBOL],

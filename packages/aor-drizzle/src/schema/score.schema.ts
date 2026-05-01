@@ -1,4 +1,4 @@
-import { index, integer, pgTable, serial } from 'drizzle-orm/pg-core';
+import { index, integer, pgTable, serial, unique } from 'drizzle-orm/pg-core';
 
 import { questionnaireResponsesTable } from './questionnaire-response.schema';
 
@@ -12,5 +12,8 @@ export const scoresTable = pgTable(
         scoreKey: integer('score_key').notNull(),
         value: integer('value').notNull(),
     },
-    table => [index('scores_response_id_idx').on(table.responseId)]
+    table => [
+        index('scores_response_id_idx').on(table.responseId),
+        unique('scores_response_id_score_key_unique').on(table.responseId, table.scoreKey),
+    ]
 );

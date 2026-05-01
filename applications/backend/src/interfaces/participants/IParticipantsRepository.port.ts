@@ -1,28 +1,11 @@
-/*
- * Copyright (c) 2026 AOR Conseil. All rights reserved.
- * Proprietary and confidential.
- * Licensed under the AOR Commercial License.
- *
- * Use, reproduction, modification, distribution, or disclosure of this
- * source code, in whole or in part, is prohibited except under a valid
- * written commercial agreement with AOR Conseil.
- *
- * See LICENSE.md for the full license terms.
- */
+// Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
 
+import type { Participant, ParticipantFunctionLevel } from '@src/domain/participants';
 import type { Paginated } from '@src/shared/pagination';
 
-export const PARTICIPANTS_REPOSITORY_PORT_SYMBOL = Symbol('PARTICIPANTS_REPOSITORY_PORT_SYMBOL');
+export type { ParticipantFunctionLevel } from '@src/domain/participants';
 
-export type ParticipantRecord = {
-    id: number;
-    companyId: number | null;
-    firstName: string;
-    lastName: string;
-    email: string;
-    passwordHash: string | null;
-    createdAt: Date | null;
-};
+export const PARTICIPANTS_REPOSITORY_PORT_SYMBOL = Symbol('PARTICIPANTS_REPOSITORY_PORT_SYMBOL');
 
 export type ParticipantInviteAssignment = {
     campaignId: number | null;
@@ -43,27 +26,46 @@ export type ParticipantProgressRecord = {
     resultsStatus: 'locked' | 'pending' | 'completed';
 };
 
-export type CreateParticipantCommand = {
-    companyId?: number;
-    firstName: string;
-    lastName: string;
-    email: string;
-};
-
 export type ListParticipantsParams = {
     companyId?: number;
+    /**
+     * Si défini, ne retourne que les participants ayant rejoint au moins une campagne
+     * attribuée à ce coach. Utilisé pour le scope=coach des endpoints admin (cf. ADR-008).
+     */
+    coachId?: number;
     page: number;
     perPage: number;
 };
 
-export type ParticipantWithCompany = ParticipantRecord & {
+/** Élément de liste admin : participant enrichi avec sa société, ses invitations et le nombre de réponses. */
+export type ParticipantAdminListItem = {
+    id: number;
+    companyId: number | null;
+    firstName: string;
+    lastName: string;
+    email: string;
+    organisation: string | null;
+    direction: string | null;
+    service: string | null;
+    functionLevel: ParticipantFunctionLevel | null;
+    createdAt: Date | null;
     company: { id: number; name: string } | null;
-};
-
-/** Élément de liste admin aligné sur le `to_dict` Python (champs snake_case côté API). */
-export type ParticipantAdminListItem = ParticipantWithCompany & {
     readonly inviteStatus: Record<string, string>;
     readonly responseCount: number;
+};
+
+/**
+ * Vue d'une affectation de campagne pour un participant — utilisée par la fiche détail
+ * participant (admin/coach) pour lister les campagnes auxquelles il est rattaché.
+ */
+export type ParticipantCampaignAssignmentItem = {
+    campaignId: number;
+    campaignName: string;
+    status: string;
+    companyId: number | null;
+    companyName: string | null;
+    invitedAt: Date | null;
+    joinedAt: Date | null;
 };
 
 export type CampaignParticipantProgressItem = {
@@ -85,31 +87,19 @@ export type CampaignPeerChoiceItemDto = {
 };
 
 export interface IParticipantsIdentityReaderPort {
-    findByEmail(email: string): Promise<ParticipantRecord | null>;
-    findById(id: number): Promise<ParticipantRecord | null>;
+    findByEmail(email: string): Promise<Participant | null>;
+    findById(id: number): Promise<Participant | null>;
 }
 
 export interface IParticipantsInviteAssignmentsReaderPort {
-    /**
-     * Identifiants de questionnaires distincts présents sur les jetons d’invitation du participant,
-     * triés par activité la plus récente par questionnaire (`max(created_at, used_at)`), décroissant.
-     */
     listQuestionnaireIdsFromInvitesForParticipant(participantId: number): Promise<string[]>;
-    /** Liste des assignations campagne/questionnaire dérivées des invitations (plus récentes d'abord). */
     listInviteAssignmentsForParticipant(participantId: number): Promise<ParticipantInviteAssignment[]>;
-    /** Campagnes où le participant a confirmé sa participation (`joined_at` renseigné). */
     listCampaignIdsWithConfirmedParticipation(participantId: number): Promise<number[]>;
-    /** Dernière affectation issue des invitations: paire campagne/questionnaire. */
     getLatestInviteAssignmentForParticipant(participantId: number): Promise<ParticipantInviteAssignment | null>;
 }
 
 export interface IParticipantsCampaignParticipationWriterPort {
-    /**
-     * Crée ou met à jour la ligne `campaign_participants` avec `invited_at` (sans forcer `joined_at`).
-     * Appelé lorsqu’une invitation de campagne est émise.
-     */
     ensureCampaignParticipantInvited(campaignId: number, participantId: number): Promise<void>;
-    /** Marque la participation comme confirmée (`joined_at`) si ce n’est pas déjà le cas. */
     confirmCampaignParticipantParticipation(campaignId: number, participantId: number): Promise<void>;
 }
 
@@ -118,15 +108,10 @@ export interface IParticipantsCampaignStateReaderPort {
         campaignId: number,
         participantId: number
     ): Promise<CampaignParticipantInviteState | null>;
-    /** Progression métier du participant pour une campagne donnée, si initialisée. */
     findProgressForCampaignParticipant(
         campaignId: number,
         participantId: number
     ): Promise<ParticipantProgressRecord | null>;
-    /**
-     * Participants ayant confirmé leur participation (`joined_at`) à la campagne,
-     * hors `exceptParticipantId`, triés par nom.
-     */
     listJoinedCampaignPeerChoices(
         campaignId: number,
         exceptParticipantId: number
@@ -134,21 +119,35 @@ export interface IParticipantsCampaignStateReaderPort {
 }
 
 export interface IParticipantsWriterPort {
-    create(command: CreateParticipantCommand): Promise<ParticipantRecord>;
-    updateCompanyId(participantId: number, companyId: number | null): Promise<void>;
-    setPasswordHash(participantId: number, passwordHash: string): Promise<void>;
-    deleteById(id: number): Promise<boolean>;
+    /** Persiste une nouvelle entité et retourne l'entité hydratée avec id + createdAt de la DB. */
+    create(participant: Participant): Promise<Participant>;
+    /** Persiste les changements d'une entité existante. Retourne `null` si l'id n'existe pas. */
+    save(participant: Participant): Promise<Participant | null>;
     /**
      * Effacement RGPD : supprime réponses (+ scores), jetons, puis participant.
-     * Retourne les compteurs ou `null` si le participant n’existait pas.
+     * Retourne les compteurs ou `null` si le participant n'existait pas.
      */
     eraseParticipantRgpd(id: number): Promise<{ responsesRemoved: number; inviteTokensRemoved: number } | null>;
 }
 
 export interface IParticipantsAdminReadPort {
     listWithCompany(params: ListParticipantsParams): Promise<Paginated<ParticipantAdminListItem>>;
-    listByCompanyId(companyId: number): Promise<ParticipantRecord[]>;
+    listByCompanyId(companyId: number): Promise<Participant[]>;
     listCampaignParticipantProgress(campaignId: number): Promise<CampaignParticipantProgressItem[]>;
+    /**
+     * Variante enrichie de `findById` : inclut company name, invite_status, response_count.
+     * Si `coachId` est fourni, retourne `null` si le participant n'a aucune campagne attribuée
+     * à ce coach (filtrage scope=coach, ADR-008).
+     */
+    findByIdEnriched(id: number, params: { coachId?: number }): Promise<ParticipantAdminListItem | null>;
+    /**
+     * Liste les campagnes auxquelles un participant est rattaché (invité ou ayant rejoint).
+     * Si `coachId` est fourni, filtre aux campagnes de ce coach.
+     */
+    listCampaignsForParticipant(
+        participantId: number,
+        params: { coachId?: number }
+    ): Promise<ParticipantCampaignAssignmentItem[]>;
 }
 
 export interface IParticipantsMetricsPort {

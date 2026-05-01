@@ -1,20 +1,13 @@
-/*
- * Copyright (c) 2026 AOR Conseil. All rights reserved.
- * Proprietary and confidential.
- * Licensed under the AOR Commercial License.
- *
- * Use, reproduction, modification, distribution, or disclosure of this
- * source code, in whole or in part, is prohibited except under a valid
- * written commercial agreement with AOR Conseil.
- *
- * See LICENSE.md for the full license terms.
- */
+// Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
 
+import './load-env';
 import 'reflect-metadata';
 
 import { createConsoleLogger, resolveLogLevelFromEnv } from '@aor/logger';
 import { RequestMethod } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import cookieParser from 'cookie-parser';
 
 import { AppModule } from '@src/app/app.module';
 import { NestLoggerBridge } from '@src/nest-logger-bridge';
@@ -40,10 +33,62 @@ const bootstrap = async (): Promise<void> => {
     const app = await NestFactory.create(AppModule, { bufferLogs: true });
     app.useLogger(new NestLoggerBridge(createConsoleLogger({ context: 'Nest', level: resolvedLevel })));
 
+    /**
+     * Cookie parser : indispensable pour lire les cookies httpOnly d'auth (G1 RGPD —
+     * `aor_admin_access`, `aor_admin_refresh`, `aor_participant_access`, `aor_participant_refresh`).
+     * Doit être enregistré avant les guards qui les consomment.
+     */
+    app.use(cookieParser());
+
+    /**
+     * CORS avec credentials : le frontend (servi sur même domaine en prod, localhost:5173 en
+     * dev) envoie les cookies d'auth via `withCredentials: true`. Sans `credentials: true` ici,
+     * le navigateur refuse d'attacher le cookie à la requête XHR.
+     * `FRONTEND_ORIGIN` est lu depuis l'env — par défaut Vite dev (port 5173).
+     */
+    app.enableCors({
+        origin: process.env.FRONTEND_ORIGIN ?? 'http://localhost:5173',
+        credentials: true,
+    });
+
     log.debug('Module racine chargé, configuration du préfixe HTTP');
 
     app.setGlobalPrefix('api', {
         exclude: [{ path: 'health', method: RequestMethod.GET }],
+    });
+
+    const swaggerConfig = new DocumentBuilder()
+        .setTitle('Révéla — Questionnaire Platform API')
+        .setDescription(
+            'API NestJS de la plateforme Révéla : authentification admin et participant, ' +
+                'campagnes, coachs, entreprises, participants, invitations, réponses et scoring.'
+        )
+        .setVersion('0.1.0')
+        .addBearerAuth(
+            {
+                type: 'http',
+                scheme: 'bearer',
+                bearerFormat: 'JWT',
+                description: 'JWT admin (super-admin/coach) ou participant.',
+            },
+            'jwt'
+        )
+        .addTag('admin-auth', 'Authentification admin (super-admin et coachs)')
+        .addTag('admin-management', 'Tableau de bord et statut des intégrations admin')
+        .addTag('admin-campaigns', 'CRUD des campagnes admin')
+        .addTag('admin-coaches', 'CRUD des coachs admin')
+        .addTag('admin-companies', 'CRUD des entreprises admin')
+        .addTag('admin-participants', 'Gestion des participants depuis l’admin')
+        .addTag('admin-responses', 'Liste, suppression et exports des réponses admin')
+        .addTag('participant', 'Endpoints du parcours participant authentifié')
+        .addTag('invitations', 'Activation et soumission via lien d’invitation public')
+        .addTag('questionnaires', 'Catalogue des questionnaires')
+        .addTag('scoring', 'Calcul de scores')
+        .addTag('health', 'Healthcheck')
+        .build();
+    const swaggerDocument = SwaggerModule.createDocument(app, swaggerConfig);
+    SwaggerModule.setup('api/docs', app, swaggerDocument, {
+        swaggerOptions: { persistAuthorization: true },
     });
 
     const parsedPort = Number.parseInt(process.env.PORT ?? '', 10);
@@ -56,6 +101,7 @@ const bootstrap = async (): Promise<void> => {
     log.info('API prête', {
         baseUrl: `http://127.0.0.1:${listenPort}/api`,
         globalPrefix: 'api',
+        swaggerDocsUrl: `http://127.0.0.1:${listenPort}/api/docs`,
     });
 };
 

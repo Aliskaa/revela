@@ -5,7 +5,7 @@ import type {
     QuestionnaireListItem,
     SubmitParticipantQuestionnaireBody,
     SubmitResult,
-} from '@/api/types';
+} from '@aor/types';
 import { useMutation, useQuery } from '@tanstack/react-query';
 
 export const questionnaireKeys = {
@@ -43,11 +43,13 @@ export function useQuestionnaire(qid: string, options?: { enabled?: boolean }) {
 
 export function useSubmitParticipantQuestionnaire(qid: string, campaignId?: number | null) {
     return useMutation<SubmitResult, Error, SubmitParticipantQuestionnaireBody>({
-        mutationFn: payload =>
-            participantApiClient
-                .post(`/participant/questionnaires/${qid}/submit`, payload, {
-                    params: { campaign_id: campaignId ?? undefined },
-                })
-                .then(r => r.data),
+        mutationFn: payload => {
+            if (typeof campaignId !== 'number' || campaignId <= 0) {
+                return Promise.reject(new Error('campaignId requis pour soumettre les réponses'));
+            }
+            return participantApiClient
+                .post(`/participant/campaigns/${campaignId}/questionnaires/${qid}/submit`, payload)
+                .then(r => r.data);
+        },
     });
 }

@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(xargs -I {} sh -c 'echo \"=== {} ===\" && cat {}')",
+      "Bash(python -c \"import json, sys; d=json.load\\(sys.stdin\\); print\\(json.dumps\\(d.get\\('scripts', {}\\), indent=2\\)\\)\")",
+      "Bash(pnpm --filter @aor/drizzle db:generate)",
+      "Bash(python -c \"import json, sys; d=json.load\\(sys.stdin\\); print\\(json.dumps\\({k:v for k,v in d.get\\('dependencies', {}\\).items\\(\\) if 'cookie' in k or 'express' in k}, indent=2\\)\\)\")",
+      "Bash(pnpm --filter @aor/backend-api add cookie-parser @types/cookie-parser)",
+      "Bash(pnpm typecheck *)",
+      "Bash(pnpm --filter @aor/backend-api lint)",
+      "Bash(pnpm --filter @aor/backend-api lint:fix)",
+      "Bash(pnpm --filter @aor/backend-api build)",
+      "Bash(pnpm --filter @aor/drizzle db:migrate)",
+      "Bash(pnpm exec *)",
+      "Bash(echo \"---exit: $?---\")",
+      "Bash(node packages/aor-drizzle/scripts/run-migrations.mjs)",
+      "Bash(node packages/aor-drizzle/scripts/reset-refresh-tokens.mjs)",
+      "Bash(node -e ' *)",
+      "Bash(pnpm --filter @aor/backend-api add @nestjs/throttler)"
+    ]
+  }
+}

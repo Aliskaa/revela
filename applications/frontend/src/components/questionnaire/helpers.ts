@@ -1,5 +1,5 @@
-import type { QuestionnaireDetail } from '@/api/types';
 import { participantSessionKeys } from '@/hooks/participantSession';
+import type { QuestionnaireDetail } from '@aor/types';
 import type { QueryClient } from '@tanstack/react-query';
 
 export function invalidateParticipantSessionQueries(queryClient: QueryClient) {
@@ -23,6 +23,5 @@ export const aorPrimaryButtonSx = {
     px: 3.5,
     borderRadius: 2,
     fontWeight: 700,
-    textTransform: 'none' as const,
     boxShadow: '0 4px 14px rgba(21, 21, 176, 0.25)',
 };

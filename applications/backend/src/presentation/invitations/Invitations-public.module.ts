@@ -1,23 +1,14 @@
-/*
- * Copyright (c) 2026 AOR Conseil. All rights reserved.
- * Proprietary and confidential.
- * Licensed under the AOR Commercial License.
- *
- * Use, reproduction, modification, distribution, or disclosure of this
- * source code, in whole or in part, is prohibited except under a valid
- * written commercial agreement with AOR Conseil.
- *
- * See LICENSE.md for the full license terms.
- */
+// Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
 
 import { Module } from '@nestjs/common';
 
+import { ScryptPasswordAdapter } from '@aor/adapters';
+import { type IPasswordHasherPort, PASSWORD_HASHER_PORT_SYMBOL } from '@aor/ports';
 import { ActivateInviteWithPasswordUseCase } from '@src/application/invitations/activate-invite-with-password.usecase';
 import { ConfirmInviteParticipationUseCase } from '@src/application/invitations/confirm-invite-participation.usecase';
 import { GetInvitePreviewUseCase } from '@src/application/invitations/get-invite-preview.usecase';
 import { InviteTokenValidationUseCase } from '@src/application/invitations/invite-token-validation.usecase';
 import { SubmitInviteQuestionnaireUseCase } from '@src/application/invitations/submit-invite-questionnaire.usecase';
-import { ScryptPasswordAdapter } from '@aor/adapters';
 import {
     CAMPAIGNS_REPOSITORY_PORT_SYMBOL,
     type ICampaignsReadPort,
@@ -37,7 +28,7 @@ import {
 import {
     type IParticipantJwtSignerPort,
     PARTICIPANT_JWT_SIGNER_PORT_SYMBOL,
-} from '@src/interfaces/participant/IParticipantJwtSigner.port';
+} from '@src/interfaces/participant-session/IParticipantJwtSigner.port';
 import {
     type IParticipantsCampaignParticipationWriterPort,
     type IParticipantsCampaignStateReaderPort,
@@ -48,12 +39,9 @@ import {
     type IResponsesWriterPort,
     RESPONSES_REPOSITORY_PORT_SYMBOL,
 } from '@src/interfaces/responses/IResponsesRepository.port';
-import {
-    PASSWORD_HASHER_PORT_SYMBOL,
-    type IPasswordHasherPort,
-} from '@aor/ports';
 
-import { ParticipantModule } from '@src/presentation/participant/participant.module';
+import { AuthRefreshModule } from '@src/presentation/auth/auth-refresh.module';
+import { ParticipantModule } from '@src/presentation/participant-session/participant.module';
 
 import { PublicInvitesController } from './invitations-public.controller';
 import {
@@ -65,7 +53,7 @@ import {
 } from './invitations-public.tokens';
 
 @Module({
-    imports: [ParticipantModule],
+    imports: [ParticipantModule, AuthRefreshModule],
     controllers: [PublicInvitesController],
     providers: [
         ScryptPasswordAdapter,
@@ -95,8 +83,7 @@ import {
             useFactory: (
                 tokenValidation: InviteTokenValidationUseCase,
                 participants: IParticipantsCampaignParticipationWriterPort
-            ) =>
-                new ConfirmInviteParticipationUseCase({ tokenValidation, participants }),
+            ) => new ConfirmInviteParticipationUseCase({ tokenValidation, participants }),
             inject: [INVITE_TOKEN_VALIDATION_USE_CASE_SYMBOL, PARTICIPANTS_REPOSITORY_PORT_SYMBOL],
         },
         {

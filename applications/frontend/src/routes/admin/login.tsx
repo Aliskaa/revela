@@ -17,8 +17,10 @@ function AdminLoginPage() {
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
         try {
-            await login.mutateAsync({ username, password });
-            navigate({ to: '/admin' });
+            const result = await login.mutateAsync({ username, password });
+            // Redirige selon le scope effectif renvoyé par le backend (cf. ADR-008 + V1.5 espace coach).
+            // Un super-admin atterrit sur /admin (vue globale), un coach sur /coach (périmètre filtré).
+            navigate({ to: result.scope === 'coach' ? '/coach' : '/admin' });
         } catch {
             // error handled by mutation state
         }
@@ -42,7 +44,7 @@ function AdminLoginPage() {
                             mb: 2,
                         }}
                     >
-                        AOR
+                        Révéla
                     </Box>
                     <Typography variant="h6" fontWeight={700}>
                         Espace Admin
