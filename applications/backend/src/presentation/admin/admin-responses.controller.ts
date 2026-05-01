@@ -117,13 +117,19 @@ export class AdminResponsesController {
     }
 
     @Get('responses/:responseId')
-    public getResponse(@Param('responseId', ParseIntPipe) responseId: number) {
-        return this.getPublicResponse.execute(responseId);
+    public getResponse(@Param('responseId', ParseIntPipe) responseId: number, @Req() req: { user: JwtValidatedUser }) {
+        const coachId = req.user.scope === 'coach' ? req.user.coachId : undefined;
+        return this.getPublicResponse.execute(responseId, { coachId });
     }
 
     @Delete('responses/:responseId')
-    public deleteResponse(@Param('responseId', ParseIntPipe) responseId: number, @Body() body: { confirm?: boolean }) {
-        return this.deleteAdminResponse.execute(responseId, body.confirm);
+    public deleteResponse(
+        @Param('responseId', ParseIntPipe) responseId: number,
+        @Body() body: { confirm?: boolean },
+        @Req() req: { user: JwtValidatedUser }
+    ) {
+        const coachId = req.user.scope === 'coach' ? req.user.coachId : undefined;
+        return this.deleteAdminResponse.execute(responseId, body.confirm, { coachId });
     }
 
     @Get('export/responses')

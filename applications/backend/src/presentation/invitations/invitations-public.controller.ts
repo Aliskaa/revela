@@ -2,6 +2,7 @@
 
 import { Body, Controller, Get, Inject, Param, Post, Res, UseFilters } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import type { Response } from 'express';
 
 import type { RefreshTokenManagerUseCase } from '@src/application/auth/refresh-token-manager.usecase';
@@ -50,8 +51,11 @@ export class PublicInvitesController {
     /**
      * Active un invite : pose le mot de passe, consume le token, et ouvre une session
      * participant via cookies httpOnly (G1 RGPD). Le client n'a pas accès au JWT.
+     * Rate limit strict (G8) : 5 tentatives/min/IP — la consommation du token réussie est
+     * de toute façon irréversible, mais on bloque le brute-force sur le token + password.
      */
     @Post(':token/activate')
+    @Throttle({ 'auth-strict': { limit: 5, ttl: 60_000 } })
     public async activateInvite(
         @Param('token') token: string,
         @Body() body: { password?: string },

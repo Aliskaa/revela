@@ -38,6 +38,7 @@ import {
     type IResponsesSubmissionReaderPort,
     RESPONSES_REPOSITORY_PORT_SYMBOL,
 } from '@src/interfaces/responses/IResponsesRepository.port';
+import { AuditModule } from '@src/presentation/audit/audit.module';
 
 import { GET_PARTICIPANT_QUESTIONNAIRE_MATRIX_USE_CASE_SYMBOL } from '@src/presentation/participant-session/participant.tokens';
 
@@ -54,7 +55,7 @@ import {
 } from './admin.tokens';
 
 @Module({
-    imports: [AdminSharedModule],
+    imports: [AdminSharedModule, AuditModule],
     controllers: [AdminParticipantsController],
     providers: [
         {
@@ -108,7 +109,8 @@ import {
         },
         {
             provide: ERASE_PARTICIPANT_RGPD_USE_CASE_SYMBOL,
-            useFactory: (participants: IParticipantsWriterPort) => new EraseParticipantRgpdUseCase({ participants }),
+            useFactory: (participants: IParticipantsWriterPort & IParticipantsAdminReadPort) =>
+                new EraseParticipantRgpdUseCase({ participants }),
             inject: [PARTICIPANTS_REPOSITORY_PORT_SYMBOL],
         },
         {
@@ -126,8 +128,10 @@ import {
         },
         {
             provide: GET_PARTICIPANT_QUESTIONNAIRE_MATRIX_USE_CASE_SYMBOL,
-            useFactory: (participants: IParticipantsIdentityReaderPort, responses: IResponsesSubmissionReaderPort) =>
-                new GetParticipantQuestionnaireMatrixUseCase({ participants, responses }),
+            useFactory: (
+                participants: IParticipantsIdentityReaderPort & IParticipantsAdminReadPort,
+                responses: IResponsesSubmissionReaderPort
+            ) => new GetParticipantQuestionnaireMatrixUseCase({ participants, responses }),
             inject: [PARTICIPANTS_REPOSITORY_PORT_SYMBOL, RESPONSES_REPOSITORY_PORT_SYMBOL],
         },
     ],

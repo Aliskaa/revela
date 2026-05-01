@@ -29,6 +29,7 @@ import {
     PARTICIPANT_JWT_SIGNER_PORT_SYMBOL,
 } from '@src/interfaces/participant-session/IParticipantJwtSigner.port';
 import {
+    type IParticipantsAdminReadPort,
     type IParticipantsCampaignParticipationWriterPort,
     type IParticipantsCampaignStateReaderPort,
     type IParticipantsIdentityReaderPort,
@@ -41,6 +42,7 @@ import {
     type IResponsesWriterPort,
     RESPONSES_REPOSITORY_PORT_SYMBOL,
 } from '@src/interfaces/responses/IResponsesRepository.port';
+import { AuditModule } from '@src/presentation/audit/audit.module';
 import { AuthRefreshModule } from '@src/presentation/auth/auth-refresh.module';
 import { requireEnv } from '@src/shared/env';
 
@@ -68,6 +70,7 @@ import {
             signOptions: { expiresIn: '15m' },
         }),
         AuthRefreshModule,
+        AuditModule,
     ],
     controllers: [ParticipantController],
     providers: [
@@ -97,8 +100,10 @@ import {
         },
         {
             provide: GET_PARTICIPANT_QUESTIONNAIRE_MATRIX_USE_CASE_SYMBOL,
-            useFactory: (participants: IParticipantsIdentityReaderPort, responses: IResponsesSubmissionReaderPort) =>
-                new GetParticipantQuestionnaireMatrixUseCase({ participants, responses }),
+            useFactory: (
+                participants: IParticipantsIdentityReaderPort & IParticipantsAdminReadPort,
+                responses: IResponsesSubmissionReaderPort
+            ) => new GetParticipantQuestionnaireMatrixUseCase({ participants, responses }),
             inject: [PARTICIPANTS_REPOSITORY_PORT_SYMBOL, RESPONSES_REPOSITORY_PORT_SYMBOL],
         },
         {

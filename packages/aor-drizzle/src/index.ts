@@ -11,6 +11,7 @@ export {
 // as the tables defined inside this package (prevents pnpm multi-install type conflicts).
 export * from 'drizzle-orm';
 
+export * from './schema/audit-event.schema';
 export * from './schema/company.schema';
 export * from './schema/coach.schema';
 export * from './schema/campaign.schema';

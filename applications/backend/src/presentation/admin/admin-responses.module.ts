@@ -7,12 +7,17 @@ import { ExportAdminAnonymizedResponsesCsvUseCase } from '@src/application/admin
 import { ExportAdminResponsesCsvUseCase } from '@src/application/admin/responses/export-admin-responses-csv.usecase';
 import { ListAdminResponsesUseCase } from '@src/application/admin/responses/list-admin-responses.usecase';
 import {
+    CAMPAIGNS_REPOSITORY_PORT_SYMBOL,
+    type ICampaignsReadPort,
+} from '@src/interfaces/campaigns/ICampaignsRepository.port';
+import {
     COMPANIES_REPOSITORY_PORT_SYMBOL,
     type ICompaniesReadPort,
 } from '@src/interfaces/companies/ICompaniesRepository.port';
 import {
     type IResponsesAdminListPort,
     type IResponsesExportPort,
+    type IResponsesRecordReaderPort,
     type IResponsesWriterPort,
     RESPONSES_REPOSITORY_PORT_SYMBOL,
 } from '@src/interfaces/responses/IResponsesRepository.port';
@@ -43,8 +48,9 @@ import {
         },
         {
             provide: DELETE_ADMIN_RESPONSE_USE_CASE_SYMBOL,
-            useFactory: (responses: IResponsesWriterPort) => new DeleteAdminResponseUseCase({ responses }),
-            inject: [RESPONSES_REPOSITORY_PORT_SYMBOL],
+            useFactory: (responses: IResponsesWriterPort & IResponsesRecordReaderPort, campaigns: ICampaignsReadPort) =>
+                new DeleteAdminResponseUseCase({ responses, campaigns }),
+            inject: [RESPONSES_REPOSITORY_PORT_SYMBOL, CAMPAIGNS_REPOSITORY_PORT_SYMBOL],
         },
         {
             provide: EXPORT_ADMIN_RESPONSES_CSV_USE_CASE_SYMBOL,

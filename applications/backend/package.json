@@ -35,6 +35,7 @@
         "@nestjs/passport": "catalog:",
         "@nestjs/platform-express": "catalog:",
         "@nestjs/swagger": "catalog:",
+        "@nestjs/throttler": "^6.5.0",
         "@types/cookie-parser": "^1.4.10",
         "cookie-parser": "^1.4.7",
         "dotenv": "catalog:",

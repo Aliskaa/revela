@@ -10,7 +10,10 @@ import type {
 
 import { displayPeerRatingStoredLabel, parsePeerRatingTargetParticipantId } from '@aor/domain';
 import { AdminInvalidQuestionnaireError, AdminResourceNotFoundError } from '@src/domain/admin/admin.errors';
-import type { IParticipantsIdentityReaderPort } from '@src/interfaces/participants/IParticipantsRepository.port';
+import type {
+    IParticipantsAdminReadPort,
+    IParticipantsIdentityReaderPort,
+} from '@src/interfaces/participants/IParticipantsRepository.port';
 import type {
     IResponsesSubmissionReaderPort,
     ResponseRecord,
@@ -47,16 +50,32 @@ const byKind = (records: ResponseRecord[], kind: SubmissionKind): ResponseRecord
 export class GetParticipantQuestionnaireMatrixUseCase {
     public constructor(
         private readonly ports: {
-            readonly participants: IParticipantsIdentityReaderPort;
+            readonly participants: IParticipantsIdentityReaderPort & IParticipantsAdminReadPort;
             readonly responses: IResponsesSubmissionReaderPort;
         }
     ) {}
 
+    /**
+     * Filtrage scope=coach (G5 RGPD) : si `params.coachId` est fourni, on vérifie via
+     * `findByIdEnriched` que le participant appartient à au moins une campagne du coach.
+     * Sinon → 404 (`AdminResourceNotFoundError`), pour ne pas leak l'existence de la
+     * ressource. Les appels participant-side passent `coachId: undefined` (le participant
+     * consulte sa propre matrix, pas de filtrage à appliquer).
+     */
     public async execute(params: {
         participantId: number;
         qid: string;
         campaignId?: number;
+        coachId?: number;
     }): Promise<ParticipantQuestionnaireMatrix> {
+        if (params.coachId !== undefined) {
+            const allowed = await this.ports.participants.findByIdEnriched(params.participantId, {
+                coachId: params.coachId,
+            });
+            if (!allowed) {
+                throw new AdminResourceNotFoundError('Participant introuvable.');
+            }
+        }
         const participant = await this.ports.participants.findById(params.participantId);
         if (!participant) {
             throw new AdminResourceNotFoundError('Participant introuvable.');

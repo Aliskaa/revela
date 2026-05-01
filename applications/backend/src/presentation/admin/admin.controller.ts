@@ -13,9 +13,11 @@ import {
     UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import type { Request, Response } from 'express';
 
 import type { AdminAuthUseCase } from '@src/application/admin/auth/admin-auth.usecase';
+import { AuditLoggerService } from '@src/application/audit/audit-logger.service';
 import {
     RefreshTokenInvalidError,
     type RefreshTokenManagerUseCase,
@@ -52,21 +54,41 @@ export class AdminController {
         @Inject(ADMIN_AUTH_USE_CASE_SYMBOL) private readonly adminAuth: AdminAuthUseCase,
         @Inject(REFRESH_TOKEN_MANAGER_SYMBOL) private readonly refreshTokens: RefreshTokenManagerUseCase,
         @Inject(ADMIN_TOKEN_SIGNER_PORT_SYMBOL) private readonly tokenSigner: IAdminTokenSignerPort,
-        @Inject(COACHES_REPOSITORY_PORT_SYMBOL) private readonly coaches: ICoachesReadPort
+        @Inject(COACHES_REPOSITORY_PORT_SYMBOL) private readonly coaches: ICoachesReadPort,
+        private readonly audit: AuditLoggerService
     ) {}
 
     @Post('auth/login')
+    @Throttle({ 'auth-strict': { limit: 5, ttl: 60_000 } })
     @ApiOperation({
         summary:
             'Authentification admin — super-admin via env vars ou coach via DB. Pose les cookies httpOnly d’access et de refresh, retourne le scope effectif et le coach_id éventuel.',
     })
     public async login(
         @Body() body: { username?: string; password?: string },
+        @Req() req: Request,
         @Res({ passthrough: true }) res: Response
     ) {
         const username = body.username ?? '';
         const password = body.password ?? '';
-        const result = await this.adminAuth.login(username, password);
+        const ipAddress = req.ip ?? null;
+        let result: Awaited<ReturnType<AdminAuthUseCase['login']>>;
+        try {
+            result = await this.adminAuth.login(username, password);
+        } catch (err) {
+            // G6 audit : trace l'échec en `anonymous` (on ne sait pas si username
+            // correspond à un compte légitime — ne pas leak via l'audit).
+            void this.audit.record({
+                actorType: 'anonymous',
+                actorId: null,
+                action: 'admin.login.failure',
+                resourceType: null,
+                resourceId: null,
+                payload: { username },
+                ipAddress,
+            });
+            throw err;
+        }
 
         const subjectId = result.coachId ?? SUPER_ADMIN_SUBJECT_ID;
         const refreshIssued = await this.refreshTokens.issue('admin', subjectId);
@@ -76,6 +98,16 @@ export class AdminController {
             accessToken: result.accessToken,
             refreshToken: refreshIssued.rawToken,
             refreshExpiresAt: refreshIssued.expiresAt,
+        });
+
+        void this.audit.record({
+            actorType: result.scope === 'super-admin' ? 'super-admin' : 'coach',
+            actorId: result.coachId ?? null,
+            action: 'admin.login.success',
+            resourceType: null,
+            resourceId: null,
+            payload: { scope: result.scope },
+            ipAddress,
         });
 
         // L'access token vit exclusivement dans le cookie httpOnly `aor_admin_access`
@@ -92,6 +124,7 @@ export class AdminController {
      * présente un token déjà utilisé → revoke famille (détection de vol).
      */
     @Post('auth/refresh')
+    @Throttle({ 'auth-refresh': { limit: 30, ttl: 60_000 } })
     @ApiOperation({ summary: 'Rotation de la paire de cookies d’authentification admin.' })
     public async refresh(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
         const cookies = (req as Request & { cookies?: Record<string, string> }).cookies ?? {};
@@ -161,6 +194,18 @@ export class AdminController {
             await this.refreshTokens.revoke(rawRefresh);
         }
         clearAuthCookies(res, 'admin');
+
+        const user = (req as Request & { user?: JwtValidatedUser }).user;
+        void this.audit.record({
+            actorType: user?.scope === 'super-admin' ? 'super-admin' : 'coach',
+            actorId: user?.coachId ?? null,
+            action: 'admin.logout',
+            resourceType: null,
+            resourceId: null,
+            payload: null,
+            ipAddress: req.ip ?? null,
+        });
+
         return { ok: true };
     }
 

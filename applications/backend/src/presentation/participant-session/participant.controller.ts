@@ -18,9 +18,11 @@ import {
     UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import type { Request, Response } from 'express';
 
 import { updateParticipantProfileBodySchema } from '@aor/types';
+import { AuditLoggerService } from '@src/application/audit/audit-logger.service';
 import {
     RefreshTokenInvalidError,
     type RefreshTokenManagerUseCase,
@@ -88,7 +90,8 @@ export class ParticipantController {
         @Inject(PARTICIPANT_JWT_SIGNER_PORT_SYMBOL)
         private readonly participantJwtSigner: IParticipantJwtSignerPort,
         @Inject(PARTICIPANTS_REPOSITORY_PORT_SYMBOL)
-        private readonly participants: IParticipantsIdentityReaderPort & IParticipantsWriterPort
+        private readonly participants: IParticipantsIdentityReaderPort & IParticipantsWriterPort,
+        private readonly audit: AuditLoggerService
     ) {}
 
     private static normalizeQid(raw?: string): string | undefined {
@@ -97,11 +100,33 @@ export class ParticipantController {
     }
 
     @Post('auth/login')
+    @Throttle({ 'auth-strict': { limit: 5, ttl: 60_000 } })
     @UseFilters(ParticipantAuthExceptionFilter)
-    public async login(@Body() body: { email?: string; password?: string }, @Res({ passthrough: true }) res: Response) {
+    public async login(
+        @Body() body: { email?: string; password?: string },
+        @Req() req: Request,
+        @Res({ passthrough: true }) res: Response
+    ) {
         const email = body.email ?? '';
         const password = body.password ?? '';
-        const result = await this.participantLogin.execute(email, password);
+        const ipAddress = req.ip ?? null;
+
+        let result: Awaited<ReturnType<ParticipantLoginUseCase['execute']>>;
+        try {
+            result = await this.participantLogin.execute(email, password);
+        } catch (err) {
+            // G6 audit : échec login en `anonymous` (ne pas leak l'existence du compte).
+            void this.audit.record({
+                actorType: 'anonymous',
+                actorId: null,
+                action: 'participant.login.failure',
+                resourceType: null,
+                resourceId: null,
+                payload: { email },
+                ipAddress,
+            });
+            throw err;
+        }
 
         // Le JWT participant encode `sub = participantId`. On utilise donc le même ID comme
         // subjectId du refresh token pour pouvoir relier les deux sans champ supplémentaire.
@@ -115,6 +140,16 @@ export class ParticipantController {
             refreshExpiresAt: refreshIssued.expiresAt,
         });
 
+        void this.audit.record({
+            actorType: 'participant',
+            actorId: participantId,
+            action: 'participant.login.success',
+            resourceType: null,
+            resourceId: null,
+            payload: null,
+            ipAddress,
+        });
+
         // L'access token vit exclusivement dans le cookie httpOnly `aor_participant_access`
         // (G1 RGPD). Le frontend lit ses claims via `GET /participant/auth/me`.
         return { participant_id: participantId };
@@ -125,6 +160,7 @@ export class ParticipantController {
      * Rotation : ancien token marqué `usedAt`. Réutilisation détectée → revoke famille.
      */
     @Post('auth/refresh')
+    @Throttle({ 'auth-refresh': { limit: 30, ttl: 60_000 } })
     public async refreshAuth(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
         const cookies = (req as Request & { cookies?: Record<string, string> }).cookies ?? {};
         const rawRefresh = cookies[PARTICIPANT_COOKIE_NAMES.refresh];
@@ -174,6 +210,18 @@ export class ParticipantController {
             await this.refreshTokens.revoke(rawRefresh);
         }
         clearAuthCookies(res, 'participant');
+
+        const user = (req as Request & { user?: JwtValidatedUser }).user;
+        void this.audit.record({
+            actorType: 'participant',
+            actorId: user?.participantId ?? null,
+            action: 'participant.logout',
+            resourceType: null,
+            resourceId: null,
+            payload: null,
+            ipAddress: req.ip ?? null,
+        });
+
         return { ok: true };
     }
 

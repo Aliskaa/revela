@@ -31,6 +31,7 @@ import type {
     UpdateAdminParticipantUseCase,
     UpdateParticipantProfileBody,
 } from '@src/application/admin/participants/update-admin-participant.usecase';
+import { AuditLoggerService } from '@src/application/audit/audit-logger.service';
 import type { GetParticipantQuestionnaireMatrixUseCase } from '@src/application/participant-session/get-participant-questionnaire-matrix.usecase';
 import { ResponsesExceptionFilter } from '@src/presentation/responses/responses-exception.filter';
 
@@ -72,7 +73,8 @@ export class AdminParticipantsController {
         @Inject(UPDATE_ADMIN_PARTICIPANT_USE_CASE_SYMBOL)
         private readonly updateAdminParticipant: UpdateAdminParticipantUseCase,
         @Inject(GET_PARTICIPANT_QUESTIONNAIRE_MATRIX_USE_CASE_SYMBOL)
-        private readonly getParticipantQuestionnaireMatrix: GetParticipantQuestionnaireMatrixUseCase
+        private readonly getParticipantQuestionnaireMatrix: GetParticipantQuestionnaireMatrixUseCase,
+        private readonly audit: AuditLoggerService
     ) {}
 
     private static normalizeQid(raw?: string): string | undefined {
@@ -135,12 +137,24 @@ export class AdminParticipantsController {
 
     @Patch('participants/:participantId')
     public async updateParticipant(
-        @Req() req: { user: JwtValidatedUser },
+        @Req() req: { user: JwtValidatedUser } & { ip?: string },
         @Param('participantId', ParseIntPipe) participantId: number,
         @Body() body: UpdateParticipantProfileBody
     ) {
         const coachId = req.user.scope === 'coach' ? req.user.coachId : undefined;
         const detail = await this.updateAdminParticipant.execute(participantId, body, { coachId });
+
+        void this.audit.record({
+            actorType: req.user.scope === 'super-admin' ? 'super-admin' : 'coach',
+            actorId: req.user.coachId ?? null,
+            action: 'admin.participant.update',
+            resourceType: 'participant',
+            resourceId: participantId,
+            // On enregistre les CHAMPS modifiés, pas leurs valeurs (PII).
+            payload: { fields: Object.keys(body) },
+            ipAddress: req.ip ?? null,
+        });
+
         return participantDetailToAdminJson(detail);
     }
 
@@ -166,17 +180,36 @@ export class AdminParticipantsController {
     @Get('participants/:participantId/matrix')
     public getParticipantMatrix(
         @Param('participantId', ParseIntPipe) participantId: number,
-        @Query('qid') qidRaw: string
+        @Query('qid') qidRaw: string,
+        @Req() req: { user: JwtValidatedUser }
     ) {
         const qid = AdminParticipantsController.normalizeQid(qidRaw) ?? '';
-        return this.getParticipantQuestionnaireMatrix.execute({ participantId, qid });
+        const coachId = req.user.scope === 'coach' ? req.user.coachId : undefined;
+        return this.getParticipantQuestionnaireMatrix.execute({ participantId, qid, coachId });
     }
 
     @Delete('participants/:participantId')
-    public deleteParticipant(
+    public async deleteParticipant(
         @Param('participantId', ParseIntPipe) participantId: number,
-        @Body() body: { confirm?: boolean }
+        @Body() body: { confirm?: boolean },
+        @Req() req: { user: JwtValidatedUser } & { ip?: string }
     ) {
-        return this.eraseParticipantRgpd.execute(participantId, body.confirm);
+        const coachId = req.user.scope === 'coach' ? req.user.coachId : undefined;
+        const summary = await this.eraseParticipantRgpd.execute(participantId, body.confirm, { coachId });
+
+        void this.audit.record({
+            actorType: req.user.scope === 'super-admin' ? 'super-admin' : 'coach',
+            actorId: req.user.coachId ?? null,
+            action: 'admin.participant.erase',
+            resourceType: 'participant',
+            resourceId: participantId,
+            payload: {
+                responses_removed: summary.responses_removed,
+                invite_tokens_removed: summary.invite_tokens_removed,
+            },
+            ipAddress: req.ip ?? null,
+        });
+
+        return summary;
     }
 }
