@@ -14,3 +14,4 @@ export * from './participant-export';
 export * from './invite';
 export * from './matrix';
 export * from './participant-results-view';
+export * from './audit';

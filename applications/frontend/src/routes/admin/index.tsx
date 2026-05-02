@@ -12,7 +12,7 @@ import {
     Typography,
 } from '@mui/material';
 import { Link, createFileRoute } from '@tanstack/react-router';
-import { ArrowRight, Building2, FileText, Plus, Target, UserRound, Users } from 'lucide-react';
+import { ArrowRight, Building2, Plus, Target, UserRound, Users } from 'lucide-react';
 
 import { SectionTitle } from '@/components/common/SectionTitle';
 import { SkeletonTableRows } from '@/components/common/SkeletonRows';
@@ -113,11 +113,11 @@ function AdminDashboardRoute() {
                         <Table sx={{ minWidth: 800 }}>
                             <TableHead>
                                 <TableRow>
+                                    <TableCell></TableCell>
                                     <TableCell>Campagne</TableCell>
                                     <TableCell>Entreprise</TableCell>
                                     <TableCell>Coach</TableCell>
                                     <TableCell>Questionnaire</TableCell>
-                                    <TableCell>Statut</TableCell>
                                     <TableCell>Créée le</TableCell>
                                     <TableCell />
                                 </TableRow>
@@ -129,6 +129,9 @@ function AdminDashboardRoute() {
                                     recentCampaigns.map(campaign => (
                                         <TableRow hover key={campaign.id}>
                                             <TableCell>
+                                                <CampaignStatusChip status={campaign.status} />
+                                            </TableCell>
+                                            <TableCell>
                                                 <Typography fontWeight={700} color="text.primary">
                                                     {campaign.name}
                                                 </Typography>
@@ -136,9 +139,6 @@ function AdminDashboardRoute() {
                                             <TableCell>{companyName(campaign.companyId)}</TableCell>
                                             <TableCell>{coachName(campaign.coachId)}</TableCell>
                                             <TableCell>{questionnaireLabel(campaign.questionnaireId)}</TableCell>
-                                            <TableCell>
-                                                <CampaignStatusChip status={campaign.status} />
-                                            </TableCell>
                                             <TableCell>
                                                 {campaign.createdAt
                                                     ? new Date(campaign.createdAt).toLocaleDateString('fr-FR')

@@ -14,7 +14,7 @@ import {
     TextField,
     Typography,
 } from '@mui/material';
-import { ChevronRight, ClipboardList, Plus, Sparkles, Target, Users } from 'lucide-react';
+import { ClipboardList, Plus, Sparkles, Target, Users } from 'lucide-react';
 import * as React from 'react';
 
 import { AdminCampaignDrawerForm } from '@/components/admin/AdminCampaignDrawerForm';
@@ -22,7 +22,7 @@ import { SectionTitle } from '@/components/common/SectionTitle';
 import { SkeletonCards, SkeletonTableRows } from '@/components/common/SkeletonRows';
 import { StatCard } from '@/components/common/cards';
 import { CampaignStatusChip } from '@/components/common/chips';
-import { EmptyTableRow, StandardTablePagination } from '@/components/common/data-table';
+import { EmptyTableRow, OpenDetailButton, StandardTablePagination } from '@/components/common/data-table';
 import { KpiGrid, PageHeroCard } from '@/components/common/layout';
 import { useAdminCampaigns, useAdminDashboard, useCoaches, useCompanies, useCreateAdminCampaign } from '@/hooks/admin';
 import { parseAdminJwtClaims } from '@/lib/auth';
@@ -221,11 +221,11 @@ export function CampaignsListPage({ scope }: CampaignsListPageProps) {
                         <Table sx={{ minWidth: isAdmin ? 1000 : 900 }}>
                             <TableHead>
                                 <TableRow>
+                                    <TableCell></TableCell>
                                     <TableCell>Campagne</TableCell>
                                     <TableCell>Entreprise</TableCell>
                                     {isAdmin ? <TableCell>Coach</TableCell> : null}
                                     <TableCell>Questionnaire</TableCell>
-                                    <TableCell>Statut</TableCell>
                                     <TableCell>Créée le</TableCell>
                                     <TableCell />
                                 </TableRow>
@@ -237,6 +237,9 @@ export function CampaignsListPage({ scope }: CampaignsListPageProps) {
                                     paged.map(campaign => (
                                         <TableRow hover key={campaign.id}>
                                             <TableCell>
+                                                <CampaignStatusChip status={campaign.status} />
+                                            </TableCell>
+                                            <TableCell>
                                                 <Typography fontWeight={700} color="text.primary">
                                                     {campaign.name}
                                                 </Typography>
@@ -245,21 +248,12 @@ export function CampaignsListPage({ scope }: CampaignsListPageProps) {
                                             {isAdmin ? <TableCell>{coachName(campaign.coachId)}</TableCell> : null}
                                             <TableCell>{questionnaireLabel(campaign.questionnaireId)}</TableCell>
                                             <TableCell>
-                                                <CampaignStatusChip status={campaign.status} />
-                                            </TableCell>
-                                            <TableCell>
                                                 {campaign.createdAt
                                                     ? new Date(campaign.createdAt).toLocaleDateString('fr-FR')
                                                     : '–'}
                                             </TableCell>
                                             <TableCell align="right">
-                                                <Button
-                                                    href={`${detailPathPrefix}/${campaign.id}`}
-                                                    variant="text"
-                                                    endIcon={<ChevronRight size={16} />}
-                                                >
-                                                    Détail
-                                                </Button>
+                                                <OpenDetailButton to={`${detailPathPrefix}/${campaign.id}`} />
                                             </TableCell>
                                         </TableRow>
                                     ))
@@ -341,15 +335,10 @@ export function CampaignsListPage({ scope }: CampaignsListPageProps) {
                                                 />
                                             </Box>
 
-                                            <Button
-                                                variant="contained"
-                                                disableElevation
-                                                href={`${detailPathPrefix}/${campaign.id}`}
-                                                endIcon={<ChevronRight size={16} />}
-                                                sx={{ borderRadius: 3, bgcolor: 'primary.main', width: 'fit-content' }}
-                                            >
-                                                Ouvrir
-                                            </Button>
+                                            <OpenDetailButton
+                                                to={`${detailPathPrefix}/${campaign.id}`}
+                                                variant="card"
+                                            />
                                         </Stack>
                                     </CardContent>
                                 </Card>

@@ -16,6 +16,6 @@ import { AUDIT_EVENTS_REPOSITORY_PORT_SYMBOL } from '@src/interfaces/audit/IAudi
         { provide: AUDIT_EVENTS_REPOSITORY_PORT_SYMBOL, useExisting: DrizzleAuditEventsRepository },
         AuditLoggerService,
     ],
-    exports: [AuditLoggerService],
+    exports: [AuditLoggerService, AUDIT_EVENTS_REPOSITORY_PORT_SYMBOL],
 })
 export class AuditModule {}

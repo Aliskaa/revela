@@ -2,6 +2,7 @@ import { apiClient } from '@/api/client';
 import { useToast } from '@/lib/toast';
 import { useAuthStore } from '@/stores/authStore';
 import type {
+    AdminAuditEvent,
     AdminCampaign,
     AdminCampaignDetail,
     AdminCoachDetail,
@@ -500,6 +501,16 @@ export function useInviteCampaignParticipants() {
             toast.success(`${data.created} invitation(s) envoyée(s).`);
         },
         onError: err => toast.error(toErrorMessage(err, "Échec de l'envoi des invitations.")),
+    });
+}
+
+export function useAdminAuditEvents(page = 1, perPage = 50) {
+    return useQuery<PaginatedResult<AdminAuditEvent>>({
+        queryKey: ['admin', 'audit-events', page, perPage] as const,
+        queryFn: () =>
+            apiClient
+                .get('/admin/audit-events', { params: { page, per_page: perPage } })
+                .then(r => r.data),
     });
 }
 

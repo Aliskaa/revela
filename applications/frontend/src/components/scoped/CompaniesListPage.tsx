@@ -15,14 +15,14 @@ import {
     TextField,
     Typography,
 } from '@mui/material';
-import { ArrowRight, Building2, ClipboardList, Plus, Users } from 'lucide-react';
+import { Building2, ClipboardList, Plus, Users } from 'lucide-react';
 import * as React from 'react';
 
 import { AdminCompanyDrawerForm } from '@/components/admin/AdminCompanyDrawerForm';
 import { SectionTitle } from '@/components/common/SectionTitle';
 import { SkeletonCards, SkeletonTableRows } from '@/components/common/SkeletonRows';
 import { StatCard } from '@/components/common/cards';
-import { EmptyTableRow, StandardTablePagination } from '@/components/common/data-table';
+import { EmptyTableRow, OpenDetailButton, StandardTablePagination } from '@/components/common/data-table';
 import { KpiGrid, PageHeroCard } from '@/components/common/layout';
 import { useAdminCampaigns, useCompanies, useCreateCompany } from '@/hooks/admin';
 import { useTablePagination } from '@/lib/useTablePagination';
@@ -249,13 +249,7 @@ export function CompaniesListPage({ scope }: CompaniesListPageProps) {
                                             </TableCell>
                                             <TableCell>{company.participant_count}</TableCell>
                                             <TableCell align="right">
-                                                <Button
-                                                    href={`${detailPathPrefix}/${company.id}`}
-                                                    variant="text"
-                                                    endIcon={<ArrowRight size={16} />}
-                                                >
-                                                    Ouvrir
-                                                </Button>
+                                                <OpenDetailButton to={`${detailPathPrefix}/${company.id}`} />
                                             </TableCell>
                                         </TableRow>
                                     ))
@@ -316,15 +310,10 @@ export function CompaniesListPage({ scope }: CompaniesListPageProps) {
                                                     value={String(company.participant_count)}
                                                 />
                                             </Box>
-                                            <Button
-                                                variant="contained"
-                                                disableElevation
-                                                href={`${detailPathPrefix}/${company.id}`}
-                                                endIcon={<ArrowRight size={16} />}
-                                                sx={{ borderRadius: 3, bgcolor: 'primary.main', width: 'fit-content' }}
-                                            >
-                                                Ouvrir
-                                            </Button>
+                                            <OpenDetailButton
+                                                to={`${detailPathPrefix}/${company.id}`}
+                                                variant="card"
+                                            />
                                         </Stack>
                                     </CardContent>
                                 </Card>

@@ -3,7 +3,7 @@ import { SectionTitle } from '@/components/common/SectionTitle';
 import { SkeletonCards, SkeletonTableRows } from '@/components/common/SkeletonRows';
 import { StatCard } from '@/components/common/cards';
 import { ActiveStatusChip } from '@/components/common/chips';
-import { EmptyTableRow, StandardTablePagination } from '@/components/common/data-table';
+import { EmptyTableRow, OpenDetailButton, StandardTablePagination } from '@/components/common/data-table';
 import { KpiGrid, PageHeroCard } from '@/components/common/layout';
 import { useAdminCampaigns, useCoaches, useCreateCoach } from '@/hooks/admin';
 import { useTablePagination } from '@/lib/useTablePagination';
@@ -12,7 +12,6 @@ import {
     Button,
     Card,
     CardContent,
-    IconButton,
     Stack,
     Table,
     TableBody,
@@ -20,11 +19,10 @@ import {
     TableHead,
     TableRow,
     TextField,
-    Tooltip,
     Typography,
 } from '@mui/material';
 import { createFileRoute } from '@tanstack/react-router';
-import { ArrowRight, ClipboardList, Plus, UserRound } from 'lucide-react';
+import { ClipboardList, Plus, UserRound } from 'lucide-react';
 import * as React from 'react';
 
 export const Route = createFileRoute('/admin/coaches/')({
@@ -53,10 +51,10 @@ function AdminCoachesRoute() {
         () =>
             search.trim()
                 ? coaches.filter(
-                      c =>
-                          c.displayName.toLowerCase().includes(search.toLowerCase()) ||
-                          c.username.toLowerCase().includes(search.toLowerCase())
-                  )
+                    c =>
+                        c.displayName.toLowerCase().includes(search.toLowerCase()) ||
+                        c.username.toLowerCase().includes(search.toLowerCase())
+                )
                 : coaches,
         [coaches, search]
     );
@@ -154,12 +152,12 @@ function AdminCoachesRoute() {
                         <Table sx={{ minWidth: 800 }}>
                             <TableHead>
                                 <TableRow>
+                                    <TableCell></TableCell>
                                     <TableCell>Coach</TableCell>
                                     <TableCell>Username</TableCell>
                                     <TableCell>Campagnes</TableCell>
-                                    <TableCell>Statut</TableCell>
                                     <TableCell>Créé le</TableCell>
-                                    <TableCell align="right">Actions</TableCell>
+                                    <TableCell></TableCell>
                                 </TableRow>
                             </TableHead>
                             <TableBody>
@@ -168,6 +166,9 @@ function AdminCoachesRoute() {
                                 ) : (
                                     paged.map(coach => (
                                         <TableRow hover key={coach.id}>
+                                            <TableCell>
+                                                <ActiveStatusChip isActive={coach.isActive} />
+                                            </TableCell>
                                             <TableCell>
                                                 <Typography fontWeight={700} color="text.primary">
                                                     {coach.displayName}
@@ -180,25 +181,15 @@ function AdminCoachesRoute() {
                                             </TableCell>
                                             <TableCell>{campaignCountByCoach.get(coach.id) ?? 0}</TableCell>
                                             <TableCell>
-                                                <ActiveStatusChip isActive={coach.isActive} />
-                                            </TableCell>
-                                            <TableCell>
                                                 {coach.createdAt
                                                     ? new Date(coach.createdAt).toLocaleDateString('fr-FR')
                                                     : '–'}
                                             </TableCell>
                                             <TableCell align="right">
-                                                <Stack direction="row" spacing={0.5} justifyContent="flex-end">
-                                                    <Tooltip title="Ouvrir le détail">
-                                                        <IconButton
-                                                            href={`/admin/coaches/${coach.id}`}
-                                                            size="small"
-                                                            aria-label={`Ouvrir ${coach.displayName}`}
-                                                        >
-                                                            <ArrowRight size={16} />
-                                                        </IconButton>
-                                                    </Tooltip>
-                                                </Stack>
+                                                <OpenDetailButton
+                                                    to={`/admin/coaches/${coach.id}`}
+                                                    ariaLabel={`Ouvrir ${coach.displayName}`}
+                                                />
                                             </TableCell>
                                         </TableRow>
                                     ))
@@ -273,17 +264,7 @@ function AdminCoachesRoute() {
                                                     }
                                                 />
                                             </Box>
-                                            <Stack direction="row" spacing={1}>
-                                                <Button
-                                                    size="small"
-                                                    variant="outlined"
-                                                    href={`/admin/coaches/${coach.id}`}
-                                                    startIcon={<ArrowRight size={14} />}
-                                                    sx={{ borderRadius: 3 }}
-                                                >
-                                                    Détail
-                                                </Button>
-                                            </Stack>
+                                            <OpenDetailButton to={`/admin/coaches/${coach.id}`} variant="card" />
                                         </Stack>
                                     </CardContent>
                                 </Card>
