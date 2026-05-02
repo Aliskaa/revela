@@ -52,6 +52,12 @@ const STEP_TEMPLATES: ReadonlyArray<Omit<CampaignStep, 'state'>> = [
 ];
 
 export const buildCampaignSteps = (assignment?: ParticipantAssignment): CampaignStep[] => {
+    // Tant que la campagne n'a pas été lancée par l'admin/le coach, le participant ne peut
+    // commencer aucune étape — on force toutes les cards en `locked`. Le bandeau au-dessus
+    // explique pourquoi (cf. ParticipantCampaignWorkspaceRoute).
+    if (assignment && assignment.campaign_status !== 'active') {
+        return STEP_TEMPLATES.map(t => ({ ...t, state: 'locked' as const }));
+    }
     const progression = assignment?.progression;
     if (!progression) {
         return STEP_TEMPLATES.map((t, i) => ({

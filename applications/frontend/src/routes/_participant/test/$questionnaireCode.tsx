@@ -1,6 +1,7 @@
 import * as React from 'react';
 
 import { StatCard } from '@/components/common/cards';
+import { CampaignNotActiveBlock } from '@/components/participant-dashboard/CampaignNotActiveBlock';
 import { StepCompletedBanner } from '@/components/participant-dashboard/StepCompletedBanner';
 import { RatingScale } from '@/components/questionnaire/RatingScale';
 import { useParticipantSession } from '@/hooks/participantSession';
@@ -422,6 +423,10 @@ function ParticipantTestSessionRoute() {
                 description="Vous avez complété le test. Pour préserver l'intégrité du parcours, vos réponses ne peuvent plus être modifiées."
             />
         );
+    }
+
+    if (activeAssignment && activeAssignment.campaign_status !== 'active') {
+        return <CampaignNotActiveBlock campaignId={activeAssignment.campaign_id} />;
     }
 
     const Icon = questionnaireCode === 'B' ? Users : questionnaireCode === 'F' ? Heart : Sparkles;

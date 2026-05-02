@@ -18,7 +18,8 @@
       "Bash(node -e ' *)",
       "Bash(pnpm --filter @aor/backend-api add @nestjs/throttler)",
       "Bash(pnpm --filter @aor/backend-api typecheck)",
-      "Bash(pnpm --filter @aor/frontend-app typecheck)"
+      "Bash(pnpm --filter @aor/frontend-app typecheck)",
+      "Read(//c/Users/kevin/Documents/DataLoco/Nora/base/questionnaire-platform/applications/frontend/src/routes/_participant/test/**)"
     ]
   }
 }

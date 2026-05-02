@@ -1,3 +1,4 @@
+import { CampaignNotActiveBlock } from '@/components/participant-dashboard/CampaignNotActiveBlock';
 import { StepCompletedBanner } from '@/components/participant-dashboard/StepCompletedBanner';
 import { RatingDimensionCard } from '@/components/questionnaire/RatingDimensionCard';
 import {
@@ -199,6 +200,10 @@ function ParticipantPeerFeedbackRoute() {
                 description="Vous avez validé le feedback des pairs. Pour préserver l'intégrité du parcours, il ne peut plus être modifié."
             />
         );
+    }
+
+    if (activeAssignment && !campaignActive) {
+        return <CampaignNotActiveBlock campaignId={activeAssignment.campaign_id} />;
     }
 
     return (

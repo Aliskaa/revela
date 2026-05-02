@@ -1,4 +1,5 @@
 import { StatCard } from '@/components/common/cards';
+import { CampaignNotActiveBlock } from '@/components/participant-dashboard/CampaignNotActiveBlock';
 import { StepCompletedBanner } from '@/components/participant-dashboard/StepCompletedBanner';
 import { RatingDimensionCard } from '@/components/questionnaire/RatingDimensionCard';
 import { useParticipantSession, useParticipantSessionMatrix } from '@/hooks/participantSession';
@@ -111,6 +112,10 @@ function ParticipantSelfRatingRoute() {
                 description="Vous avez validé votre auto-évaluation. Pour préserver l'intégrité du parcours, elle ne peut plus être modifiée."
             />
         );
+    }
+
+    if (activeAssignment && !campaignActive) {
+        return <CampaignNotActiveBlock campaignId={activeAssignment.campaign_id} />;
     }
 
     return (

@@ -93,6 +93,7 @@ function ParticipantCampaignWorkspaceRoute() {
     const company = assignment.company_name ?? 'Organisation non renseignée';
     const coachName = assignment.coach_name ?? 'Coach non attribué';
     const questionnaire = assignment.questionnaire_title ?? assignment.questionnaire_id;
+    const campaignNotActive = assignment.campaign_status !== 'active';
 
     return (
         <Stack spacing={3}>
@@ -118,6 +119,13 @@ function ParticipantCampaignWorkspaceRoute() {
                 questionnaire={questionnaire}
                 coachName={coachName}
             />
+
+            {campaignNotActive && (
+                <Alert severity="info" sx={{ borderRadius: 3 }}>
+                    Cette campagne n'est pas encore active. Vous pourrez commencer les étapes dès qu'elle aura été
+                    lancée par votre coach.
+                </Alert>
+            )}
 
             <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2 }}>
                 <Card variant="outlined">
