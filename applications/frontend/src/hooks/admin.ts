@@ -503,6 +503,40 @@ export function useInviteCampaignParticipants() {
     });
 }
 
+export function useImportParticipantsToCompany() {
+    const qc = useQueryClient();
+    const toast = useToast();
+    return useMutation<
+        { created: number; updated: number; errors: string[] },
+        Error,
+        { companyId: number; formData: FormData }
+    >({
+        mutationFn: ({ companyId, formData }) =>
+            apiClient
+                .post(`/admin/companies/${companyId}/participants/import`, formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' },
+                })
+                .then(r => r.data),
+        onSuccess: (data, vars) => {
+            // Invalidation par préfixe : `adminKeys.participants()` produit
+            // `[..., undefined, undefined, undefined]` qui ne matche pas les clés paginées
+            // (React Query 5 n'applique pas de wildcard sur `undefined`). On passe donc le
+            // préfixe brut pour rafraîchir toutes les variantes (page/companyId/perPage).
+            qc.invalidateQueries({ queryKey: ['admin', 'participants'] });
+            qc.invalidateQueries({ queryKey: adminKeys.companies });
+            qc.invalidateQueries({ queryKey: adminKeys.company(vars.companyId) });
+            qc.invalidateQueries({ queryKey: adminKeys.dashboard });
+            const summary = `${data.created} créé(s), ${data.updated} mis à jour.`;
+            if (data.errors.length > 0) {
+                toast.warning(`Import partiel : ${summary} ${data.errors.length} erreur(s).`);
+            } else {
+                toast.success(`Import terminé : ${summary}`);
+            }
+        },
+        onError: err => toast.error(toErrorMessage(err, "Échec de l'import.")),
+    });
+}
+
 export function useImportParticipantsToCampaign() {
     const qc = useQueryClient();
     const toast = useToast();

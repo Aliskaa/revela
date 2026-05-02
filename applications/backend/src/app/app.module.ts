@@ -27,6 +27,9 @@ import { AppController } from '@src/app/app.controller';
  *
  * Le `ThrottlerGuard` est enregistré comme `APP_GUARD` global : chaque endpoint hérite
  * du throttle `default` sauf override explicite via `@Throttle()`.
+ *
+ * `skipIf` désactive entièrement le throttle hors production pour ne pas gêner le dev
+ * et les tests locaux. La protection reste active dès que `NODE_ENV === 'production'`.
  */
 @Module({
     imports: [
@@ -36,6 +39,7 @@ import { AppController } from '@src/app/app.controller';
                 { name: 'auth-strict', limit: 5, ttl: seconds(60) },
                 { name: 'auth-refresh', limit: 30, ttl: seconds(60) },
             ],
+            skipIf: () => process.env.NODE_ENV !== 'production',
         }),
         DatabaseModule,
         AdminModule,

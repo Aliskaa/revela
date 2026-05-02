@@ -57,6 +57,7 @@ import {
 @Module({
     imports: [AdminSharedModule, AuditModule],
     controllers: [AdminParticipantsController],
+    exports: [IMPORT_PARTICIPANTS_CSV_USE_CASE_SYMBOL],
     providers: [
         {
             provide: LIST_ADMIN_PARTICIPANTS_USE_CASE_SYMBOL,

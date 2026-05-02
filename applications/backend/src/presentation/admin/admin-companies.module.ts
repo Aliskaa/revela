@@ -12,8 +12,14 @@ import {
     type ICompaniesReadPort,
     type ICompaniesWritePort,
 } from '@src/interfaces/companies/ICompaniesRepository.port';
+import {
+    type IParticipantsAdminReadPort,
+    type IParticipantsWriterPort,
+    PARTICIPANTS_REPOSITORY_PORT_SYMBOL,
+} from '@src/interfaces/participants/IParticipantsRepository.port';
 
 import { AdminCompaniesController } from './admin-companies.controller';
+import { AdminParticipantsModule } from './admin-participants.module';
 import { AdminSharedModule } from './admin-shared.module';
 import {
     CREATE_ADMIN_COMPANY_USE_CASE_SYMBOL,
@@ -24,7 +30,7 @@ import {
 } from './admin.tokens';
 
 @Module({
-    imports: [AdminSharedModule],
+    imports: [AdminSharedModule, AdminParticipantsModule],
     controllers: [AdminCompaniesController],
     providers: [
         {
@@ -51,9 +57,11 @@ import {
         },
         {
             provide: DELETE_ADMIN_COMPANY_USE_CASE_SYMBOL,
-            useFactory: (companies: ICompaniesReadPort & ICompaniesWritePort) =>
-                new DeleteAdminCompanyUseCase({ companies }),
-            inject: [COMPANIES_REPOSITORY_PORT_SYMBOL],
+            useFactory: (
+                companies: ICompaniesReadPort & ICompaniesWritePort,
+                participants: IParticipantsAdminReadPort & IParticipantsWriterPort
+            ) => new DeleteAdminCompanyUseCase({ companies, participants }),
+            inject: [COMPANIES_REPOSITORY_PORT_SYMBOL, PARTICIPANTS_REPOSITORY_PORT_SYMBOL],
         },
     ],
 })

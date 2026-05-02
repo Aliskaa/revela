@@ -20,43 +20,14 @@ const adminNav: ScopedNavItem[] = [
 
 function AdminDesktopTopBar() {
     return (
-        <Stack
-            direction="row"
-            alignItems="center"
-            justifyContent="space-between"
-            sx={{ display: { xs: 'none', lg: 'flex' }, mb: 3 }}
-        >
-            <Box>
-                <Typography variant="h5" fontWeight={800} color="text.primary">
-                    Vue d'ensemble
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                    Pilotage global des campagnes, participants et coachs.
-                </Typography>
-            </Box>
-
-            <Box
-                sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 1,
-                    px: 1.5,
-                    py: 1,
-                    minWidth: 320,
-                    borderRadius: 999,
-                    border: '1px solid',
-                    borderColor: 'border',
-                    bgcolor: 'background.paper',
-                }}
-            >
-                <Search size={16} color="rgb(100,116,139)" />
-                <InputBase
-                    placeholder="Recherche globale…"
-                    inputProps={{ 'aria-label': 'Recherche globale' }}
-                    sx={{ width: '100%', fontSize: 14 }}
-                />
-            </Box>
-        </Stack>
+        <Box sx={{ mb: 3 }}>
+            <Typography variant="h5" fontWeight={800} color="text.primary">
+                Vue d'ensemble
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+                Pilotage global des campagnes, participants et coachs.
+            </Typography>
+        </Box>
     );
 }
 

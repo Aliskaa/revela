@@ -164,7 +164,7 @@ export function CampaignDetailPage({ scope, campaignId }: CampaignDetailPageProp
                 </Stack>
 
                 <Stack spacing={3}>
-                    <CampaignStatusActions campaign={campaign} />
+                    <CampaignStatusActions campaign={campaign} participantsCount={participants.length} />
                     <CampaignManageParticipants
                         campaign={campaign}
                         alreadyInvitedIds={new Set(participants.map(p => p.participantId))}

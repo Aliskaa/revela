@@ -107,6 +107,8 @@ export function AdminCampaignDrawerForm({
             ? 'Créer une campagne et lui associer un questionnaire.'
             : 'Mettre à jour les informations de la campagne.';
 
+    const noCompanies = companies.length === 0;
+
     return (
         <AdminDrawerForm
             open={open}
@@ -116,6 +118,7 @@ export function AdminCampaignDrawerForm({
             onSubmit={submit}
             submitLabel={mode === 'create' ? 'Créer' : 'Enregistrer'}
             isSubmitting={isSubmitting || submitting}
+            isSubmitDisabled={noCompanies}
             dirty={dirty}
         >
             <Stack spacing={2.25}>
@@ -139,7 +142,13 @@ export function AdminCampaignDrawerForm({
                         Affectation
                     </Typography>
                     <Stack spacing={2}>
-                        <FormControl fullWidth error={Boolean(errors.companyId)}>
+                        {noCompanies ? (
+                            <Alert severity="warning">
+                                Aucune entreprise enregistrée. Créez d'abord une entreprise avant de pouvoir lancer une
+                                campagne.
+                            </Alert>
+                        ) : null}
+                        <FormControl fullWidth error={Boolean(errors.companyId)} disabled={noCompanies}>
                             <InputLabel>Entreprise</InputLabel>
                             <Select
                                 label="Entreprise"

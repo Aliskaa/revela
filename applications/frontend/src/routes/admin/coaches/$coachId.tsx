@@ -312,7 +312,7 @@ function AdminCoachDetailRoute() {
                                 color="error"
                                 fullWidth
                                 startIcon={<Trash2 size={16} />}
-                                disabled={deleteCoach.isPending}
+                                disabled={deleteCoach.isPending || campaigns.length > 0}
                                 onClick={() => setDeleteOpen(true)}
                                 sx={{ borderRadius: 3, mt: 1 }}
                             >

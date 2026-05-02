@@ -1,6 +1,6 @@
 // Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
 
-import { Button, Card, CardContent, Stack, Typography } from '@mui/material';
+import { Alert, Button, Card, CardContent, Stack, Tooltip, Typography } from '@mui/material';
 import { Archive, Play, Square } from 'lucide-react';
 
 import { SectionTitle } from '@/components/common/SectionTitle';
@@ -9,12 +9,14 @@ import type { AdminCampaign } from '@aor/types';
 
 export type CampaignStatusActionsProps = {
     campaign: AdminCampaign;
+    participantsCount: number;
 };
 
-export function CampaignStatusActions({ campaign }: CampaignStatusActionsProps) {
+export function CampaignStatusActions({ campaign, participantsCount }: CampaignStatusActionsProps) {
     const updateStatus = useUpdateAdminCampaignStatus();
 
     const isPending = updateStatus.isPending;
+    const cannotLaunch = participantsCount === 0;
 
     return (
         <Card variant="outlined">
@@ -24,27 +26,40 @@ export function CampaignStatusActions({ campaign }: CampaignStatusActionsProps) 
                     subtitle="Les participants ne peuvent commencer que si la campagne est active."
                 />
                 <Stack spacing={1.2} sx={{ mt: 2 }}>
+                    {campaign.status === 'draft' && cannotLaunch && (
+                        <Alert severity="warning">
+                            Invitez au moins un participant avant de pouvoir lancer la campagne.
+                        </Alert>
+                    )}
                     {campaign.status === 'draft' && (
-                        <Button
-                            variant="contained"
-                            disableElevation
-                            startIcon={<Play size={16} />}
-                            disabled={isPending}
-                            onClick={() =>
-                                updateStatus.mutate({
-                                    campaignId: campaign.id,
-                                    status: 'active',
-                                    align_starts_at_to_now: true,
-                                })
-                            }
-                            sx={{
-                                borderRadius: 3,
-                                bgcolor: 'rgb(4,120,87)',
-                                '&:hover': { bgcolor: 'rgb(3,100,70)' },
-                            }}
+                        <Tooltip
+                            title={cannotLaunch ? 'Aucun participant invité — impossible de lancer la campagne.' : ''}
+                            disableHoverListener={!cannotLaunch}
                         >
-                            {isPending ? 'En cours…' : 'Lancer la campagne'}
-                        </Button>
+                            <span>
+                                <Button
+                                    fullWidth
+                                    variant="contained"
+                                    disableElevation
+                                    startIcon={<Play size={16} />}
+                                    disabled={isPending || cannotLaunch}
+                                    onClick={() =>
+                                        updateStatus.mutate({
+                                            campaignId: campaign.id,
+                                            status: 'active',
+                                            align_starts_at_to_now: true,
+                                        })
+                                    }
+                                    sx={{
+                                        borderRadius: 3,
+                                        bgcolor: 'rgb(4,120,87)',
+                                        '&:hover': { bgcolor: 'rgb(3,100,70)' },
+                                    }}
+                                >
+                                    {isPending ? 'En cours…' : 'Lancer la campagne'}
+                                </Button>
+                            </span>
+                        </Tooltip>
                     )}
                     {campaign.status === 'active' && (
                         <Button

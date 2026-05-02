@@ -22,7 +22,7 @@ import {
     Typography,
 } from '@mui/material';
 import { Link, useNavigate } from '@tanstack/react-router';
-import { Building2, Mail, Trash2, Users } from 'lucide-react';
+import { Building2, Mail, Trash2, Upload, Users } from 'lucide-react';
 import * as React from 'react';
 
 import { SectionTitle } from '@/components/common/SectionTitle';
@@ -31,7 +31,18 @@ import { StatCard } from '@/components/common/cards';
 import { ParticipantStatusChip } from '@/components/common/chips';
 import { EmptyTableRow, StandardTablePagination } from '@/components/common/data-table';
 import { KpiGrid, PageHeroCard } from '@/components/common/layout';
-import { useCompanies, useDeleteCompany, useDeleteParticipant, useParticipants } from '@/hooks/admin';
+import {
+    useCompanies,
+    useDeleteCompany,
+    useDeleteParticipant,
+    useImportParticipantsToCompany,
+    useParticipants,
+} from '@/hooks/admin';
+import {
+    type ParticipantImportPreviewRow,
+    buildParticipantImportPreview,
+    parseSemicolonCsvText,
+} from '@/lib/parseCsv';
 import { usePageResetEffect } from '@/lib/usePageResetEffect';
 import type { Participant } from '@aor/types';
 
@@ -79,10 +90,67 @@ export function CompanyDetailPage({ scope, companyId }: CompanyDetailPageProps) 
 
     const deleteCompany = useDeleteCompany();
     const deleteParticipant = useDeleteParticipant();
+    const importParticipants = useImportParticipantsToCompany();
 
     const [deleteCompanyOpen, setDeleteCompanyOpen] = React.useState(false);
     const [deleteParticipantTarget, setDeleteParticipantTarget] = React.useState<Participant | null>(null);
     const [snack, setSnack] = React.useState<string | null>(null);
+    const fileInputRef = React.useRef<HTMLInputElement>(null);
+    const [csvPreview, setCsvPreview] = React.useState<{
+        file: File;
+        rows: ParticipantImportPreviewRow[];
+        parseError: string | null;
+    } | null>(null);
+    const isImporting = importParticipants.isPending;
+
+    const validPreviewCount = csvPreview?.rows.filter(r => r.valid).length ?? 0;
+    const invalidPreviewCount = (csvPreview?.rows.length ?? 0) - validPreviewCount;
+
+    const resetFileInput = () => {
+        if (fileInputRef.current) fileInputRef.current.value = '';
+    };
+
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        try {
+            const text = await file.text();
+            const rows = parseSemicolonCsvText(text);
+            const preview = buildParticipantImportPreview(rows);
+            setCsvPreview({
+                file,
+                rows: preview,
+                parseError:
+                    preview.length === 0
+                        ? 'Le fichier est vide ou ne contient pas d’en-tête (séparateur attendu : « ; »).'
+                        : null,
+            });
+        } catch (err) {
+            setCsvPreview({
+                file,
+                rows: [],
+                parseError: err instanceof Error ? err.message : 'Impossible de lire le fichier.',
+            });
+        }
+    };
+
+    const handleCancelImport = () => {
+        setCsvPreview(null);
+        resetFileInput();
+    };
+
+    const handleConfirmImport = () => {
+        if (!csvPreview) return;
+        const formData = new FormData();
+        formData.append('file', csvPreview.file);
+        importParticipants.mutate(
+            { companyId, formData },
+            {
+                onSettled: resetFileInput,
+                onSuccess: () => setCsvPreview(null),
+            }
+        );
+    };
 
     const company = companies.find(c => c.id === companyId);
     const participants = participantsData?.items ?? [];
@@ -138,7 +206,15 @@ export function CompanyDetailPage({ scope, companyId }: CompanyDetailPageProps) 
                 <DialogContent>
                     <DialogContentText>
                         Vous êtes sur le point de supprimer <strong>{company.name}</strong>. Cette action est
-                        irréversible (RGPD). Les participants ne seront pas supprimés mais perdront leur rattachement.
+                        irréversible (RGPD).
+                        {company.participant_count > 0 && (
+                            <>
+                                {' '}
+                                Les <strong>{company.participant_count} participant(s)</strong> rattaché(s) seront
+                                également supprimés, ainsi que toutes leurs réponses, scores et invitations. Les
+                                campagnes de l'entreprise seront aussi supprimées.
+                            </>
+                        )}
                     </DialogContentText>
                 </DialogContent>
                 <DialogActions>
@@ -178,6 +254,81 @@ export function CompanyDetailPage({ scope, companyId }: CompanyDetailPageProps) 
                 </DialogActions>
             </Dialog>
 
+            <Dialog
+                open={csvPreview !== null}
+                onClose={isImporting ? undefined : handleCancelImport}
+                maxWidth="md"
+                fullWidth
+            >
+                <DialogTitle>Confirmer l'import</DialogTitle>
+                <DialogContent dividers>
+                    {csvPreview?.parseError ? (
+                        <Alert severity="error">{csvPreview.parseError}</Alert>
+                    ) : (
+                        <Stack spacing={1.5}>
+                            <DialogContentText>
+                                Fichier <strong>{csvPreview?.file.name}</strong> — {csvPreview?.rows.length ?? 0}{' '}
+                                ligne(s) détectée(s) ({validPreviewCount} valide(s)
+                                {invalidPreviewCount > 0 ? `, ${invalidPreviewCount} ignorée(s)` : ''}). Tous les
+                                participants valides seront rattachés à <strong>{company.name}</strong>.
+                            </DialogContentText>
+                            <Box sx={{ maxHeight: 360, overflowY: 'auto' }}>
+                                <Table size="small" stickyHeader>
+                                    <TableHead>
+                                        <TableRow>
+                                            <TableCell>Ligne</TableCell>
+                                            <TableCell>Prénom</TableCell>
+                                            <TableCell>Nom</TableCell>
+                                            <TableCell>Email</TableCell>
+                                            <TableCell>Statut</TableCell>
+                                        </TableRow>
+                                    </TableHead>
+                                    <TableBody>
+                                        {csvPreview?.rows.map(row => (
+                                            <TableRow
+                                                key={`${row.line}-${row.email}`}
+                                                sx={!row.valid ? { bgcolor: 'tint.warningBg' } : undefined}
+                                            >
+                                                <TableCell>{row.line}</TableCell>
+                                                <TableCell>{row.firstName || '—'}</TableCell>
+                                                <TableCell>{row.lastName || '—'}</TableCell>
+                                                <TableCell>{row.email || '—'}</TableCell>
+                                                <TableCell>
+                                                    {row.valid ? (
+                                                        <Typography variant="caption" color="success.main">
+                                                            OK
+                                                        </Typography>
+                                                    ) : (
+                                                        <Typography variant="caption" color="warning.main">
+                                                            {row.error}
+                                                        </Typography>
+                                                    )}
+                                                </TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </Box>
+                        </Stack>
+                    )}
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleCancelImport} disabled={isImporting}>
+                        Annuler
+                    </Button>
+                    <Button
+                        onClick={handleConfirmImport}
+                        variant="contained"
+                        disableElevation
+                        disabled={isImporting || csvPreview?.parseError !== null || validPreviewCount === 0}
+                    >
+                        {isImporting
+                            ? 'Import en cours…'
+                            : `Importer ${validPreviewCount} participant${validPreviewCount > 1 ? 's' : ''}`}
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
             <PageHeroCard
                 eyebrow="Détail entreprise"
                 title={company.name}
@@ -208,10 +359,41 @@ export function CompanyDetailPage({ scope, companyId }: CompanyDetailPageProps) 
             <Stack spacing={3}>
                 <Card variant="outlined">
                     <CardContent sx={{ p: 2.5 }}>
-                        <SectionTitle
-                            title="Collaborateurs"
-                            subtitle={`Les participants rattachés à ${company.name}.`}
-                        />
+                        <Stack
+                            direction={{ xs: 'column', sm: 'row' }}
+                            justifyContent="space-between"
+                            alignItems={{ xs: 'flex-start', sm: 'center' }}
+                            spacing={1.5}
+                            sx={{ mb: 1 }}
+                        >
+                            <SectionTitle
+                                title="Collaborateurs"
+                                subtitle={`Les participants rattachés à ${company.name}.`}
+                            />
+                            <input
+                                ref={fileInputRef}
+                                type="file"
+                                accept=".csv"
+                                hidden
+                                onChange={handleFileChange}
+                            />
+                            <Button
+                                variant="outlined"
+                                startIcon={<Upload size={16} />}
+                                disabled={isImporting}
+                                onClick={() => fileInputRef.current?.click()}
+                                sx={{ borderRadius: 3, flexShrink: 0 }}
+                            >
+                                {isImporting ? 'Import en cours…' : 'Importer un CSV'}
+                            </Button>
+                        </Stack>
+
+                        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
+                            CSV (séparateur « ; ») avec colonnes : <code>first_name</code>, <code>last_name</code>,{' '}
+                            <code>email</code> (obligatoires), puis <code>organisation</code>, <code>direction</code>,{' '}
+                            <code>service</code>, <code>function_level</code> (optionnels). Tous les participants
+                            seront rattachés à <strong>{company.name}</strong>.
+                        </Typography>
 
                         <Box sx={{ overflowX: 'auto' }}>
                             <Table sx={{ minWidth: 600 }}>

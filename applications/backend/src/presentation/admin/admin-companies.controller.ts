@@ -13,9 +13,12 @@ import {
     Patch,
     Post,
     Req,
+    UploadedFile,
     UseFilters,
     UseGuards,
+    UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
 import type { CreateAdminCompanyUseCase } from '@src/application/admin/companies/create-admin-company.usecase';
@@ -23,6 +26,7 @@ import type { DeleteAdminCompanyUseCase } from '@src/application/admin/companies
 import type { GetAdminCompanyUseCase } from '@src/application/admin/companies/get-admin-company.usecase';
 import type { ListAdminCompaniesUseCase } from '@src/application/admin/companies/list-admin-companies.usecase';
 import type { UpdateAdminCompanyUseCase } from '@src/application/admin/companies/update-admin-company.usecase';
+import type { ImportParticipantsCsvUseCase } from '@src/application/admin/participants/import-participants-csv.usecase';
 import { ResponsesExceptionFilter } from '@src/presentation/responses/responses-exception.filter';
 
 import type { JwtValidatedUser } from '@src/presentation/jwt-validated-user';
@@ -33,6 +37,7 @@ import {
     CREATE_ADMIN_COMPANY_USE_CASE_SYMBOL,
     DELETE_ADMIN_COMPANY_USE_CASE_SYMBOL,
     GET_ADMIN_COMPANY_USE_CASE_SYMBOL,
+    IMPORT_PARTICIPANTS_CSV_USE_CASE_SYMBOL,
     LIST_ADMIN_COMPANIES_USE_CASE_SYMBOL,
     UPDATE_ADMIN_COMPANY_USE_CASE_SYMBOL,
 } from './admin.tokens';
@@ -53,7 +58,9 @@ export class AdminCompaniesController {
         @Inject(UPDATE_ADMIN_COMPANY_USE_CASE_SYMBOL)
         private readonly updateAdminCompany: UpdateAdminCompanyUseCase,
         @Inject(DELETE_ADMIN_COMPANY_USE_CASE_SYMBOL)
-        private readonly deleteAdminCompany: DeleteAdminCompanyUseCase
+        private readonly deleteAdminCompany: DeleteAdminCompanyUseCase,
+        @Inject(IMPORT_PARTICIPANTS_CSV_USE_CASE_SYMBOL)
+        private readonly importParticipantsCsv: ImportParticipantsCsvUseCase
     ) {}
 
     @Get('companies')
@@ -90,5 +97,15 @@ export class AdminCompaniesController {
     @HttpCode(HttpStatus.NO_CONTENT)
     public async deleteCompany(@Param('companyId', ParseIntPipe) companyId: number): Promise<void> {
         await this.deleteAdminCompany.execute(companyId);
+    }
+
+    @Post('companies/:companyId/participants/import')
+    @UseInterceptors(FileInterceptor('file'))
+    public async importParticipantsForCompany(
+        @Param('companyId', ParseIntPipe) companyId: number,
+        @UploadedFile() file: Express.Multer.File | undefined
+    ) {
+        await this.getAdminCompany.execute(companyId);
+        return this.importParticipantsCsv.execute(file?.buffer, { forcedCompanyId: companyId });
     }
 }

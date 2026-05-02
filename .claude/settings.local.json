@@ -16,7 +16,9 @@
       "Bash(node packages/aor-drizzle/scripts/run-migrations.mjs)",
       "Bash(node packages/aor-drizzle/scripts/reset-refresh-tokens.mjs)",
       "Bash(node -e ' *)",
-      "Bash(pnpm --filter @aor/backend-api add @nestjs/throttler)"
+      "Bash(pnpm --filter @aor/backend-api add @nestjs/throttler)",
+      "Bash(pnpm --filter @aor/backend-api typecheck)",
+      "Bash(pnpm --filter @aor/frontend-app typecheck)"
     ]
   }
 }

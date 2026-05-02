@@ -62,9 +62,6 @@ function AdminDashboardRoute() {
                         >
                             Nouvelle campagne
                         </Button>
-                        <Button variant="outlined" startIcon={<FileText size={16} />} sx={{ borderRadius: 3 }}>
-                            Exporter
-                        </Button>
                     </>
                 }
             />

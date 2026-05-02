@@ -29,7 +29,17 @@ export class ImportParticipantsCsvUseCase {
         }
     ) {}
 
-    public async execute(buffer: Buffer | undefined): Promise<{
+    /**
+     * Import CSV des participants.
+     *
+     * Si `options.forcedCompanyId` est fourni (cas d'un import depuis la fiche d'une entreprise),
+     * la colonne `company_name` du CSV et la colonne `questionnaire_type` sont **ignorées** :
+     * tous les participants sont rattachés à la company de l'URL et aucune invitation n'est créée.
+     */
+    public async execute(
+        buffer: Buffer | undefined,
+        options?: { forcedCompanyId?: number }
+    ): Promise<{
         created: number;
         updated: number;
         errors: string[];
@@ -37,6 +47,7 @@ export class ImportParticipantsCsvUseCase {
         if (!buffer) {
             throw new AdminCsvFileRequiredError();
         }
+        const forcedCompanyId = options?.forcedCompanyId ?? null;
         const rows = parseSemicolonCsv(buffer);
         let created = 0;
         let updated = 0;
@@ -50,7 +61,7 @@ export class ImportParticipantsCsvUseCase {
                 const firstName = (row.first_name ?? '').trim();
                 const lastName = (row.last_name ?? '').trim();
                 const email = (row.email ?? '').trim().toLowerCase();
-                const qid = (row.questionnaire_type ?? '').trim().toUpperCase();
+                const qid = forcedCompanyId !== null ? '' : (row.questionnaire_type ?? '').trim().toUpperCase();
                 const organisation = (row.organisation ?? '').trim() || null;
                 const direction = (row.direction ?? '').trim() || null;
                 const service = (row.service ?? '').trim() || null;
@@ -64,8 +75,8 @@ export class ImportParticipantsCsvUseCase {
                     continue;
                 }
 
-                let companyId: number | null = null;
-                if (companyName) {
+                let companyId: number | null = forcedCompanyId;
+                if (companyId === null && companyName) {
                     let company = await this.ports.companies.findByName(companyName);
                     if (!company) {
                         company = await this.ports.companies.create(Company.create({ name: companyName }));
