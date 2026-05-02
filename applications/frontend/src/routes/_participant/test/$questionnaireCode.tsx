@@ -15,11 +15,10 @@ import {
     Card,
     CardContent,
     Chip,
-    Divider,
     LinearProgress,
     Snackbar,
     Stack,
-    Typography,
+    Typography
 } from '@mui/material';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import {
@@ -27,20 +26,18 @@ import {
     ArrowRight,
     BadgeCheck,
     CircleDot,
-    Clock3,
     Hash,
     Heart,
     Loader2,
     Send,
     Sparkles,
-    Users,
+    Users
 } from 'lucide-react';
 
 export const Route = createFileRoute('/_participant/test/$questionnaireCode')({
     component: ParticipantTestSessionRoute,
 });
 
-const QUESTIONS_PER_SERIES = 54;
 const ANSWER_MIN = 0;
 const ANSWER_MAX = 5;
 
@@ -288,63 +285,6 @@ function QuestionCard({
     );
 }
 
-function SidebarSummary({
-    questionnaireCode,
-    seriesLabels,
-    answeredCount,
-    totalQuestions,
-}: {
-    questionnaireCode: string;
-    seriesLabels: string[];
-    answeredCount: number;
-    totalQuestions: number;
-}) {
-    return (
-        <Card variant="outlined">
-            <CardContent sx={{ p: 2.5 }}>
-                <Typography variant="h6" fontWeight={800} color="text.primary">
-                    Résumé
-                </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                    Ce test est lié à la campagne et ne se choisit pas ici.
-                </Typography>
-                <Divider sx={{ my: 2 }} />
-
-                <Stack spacing={1.4}>
-                    <StatCard
-                        variant="compact"
-                        icon={BadgeCheck}
-                        label="Questionnaire"
-                        value={questionnaireCode}
-                        frame="box"
-                    />
-                    <StatCard
-                        variant="compact"
-                        icon={CircleDot}
-                        label="Séries"
-                        value={String(seriesLabels.length)}
-                        frame="box"
-                    />
-                    <StatCard
-                        variant="compact"
-                        icon={Hash}
-                        label="Questions"
-                        value={`${String(QUESTIONS_PER_SERIES)} par série`}
-                        frame="box"
-                    />
-                    <StatCard
-                        variant="compact"
-                        icon={Clock3}
-                        label="Progression"
-                        value={`${String(answeredCount)} / ${String(totalQuestions)}`}
-                        frame="box"
-                    />
-                </Stack>
-            </CardContent>
-        </Card>
-    );
-}
-
 function ParticipantTestSessionRoute() {
     const navigate = useNavigate();
     const params = Route.useParams();
@@ -367,7 +307,6 @@ function ParticipantTestSessionRoute() {
     const seriesCount = detail?.questions.series.length ?? 0;
     const questionCount = detail?.questions.series[0]?.length ?? 0;
     const totalQuestions = seriesCount * questionCount;
-    const answeredCount = Object.values(answers).filter(v => v !== null).length;
 
     const handleDevFill = () => {
         const filled: Record<string, number> = {};
@@ -593,13 +532,6 @@ function ParticipantTestSessionRoute() {
                         </CardContent>
                     </Card>
                 </Stack>
-
-                <SidebarSummary
-                    questionnaireCode={questionnaireCode}
-                    seriesLabels={effectiveSeriesLabels}
-                    answeredCount={answeredCount}
-                    totalQuestions={totalQuestions}
-                />
             </Box>
 
             <Snackbar
