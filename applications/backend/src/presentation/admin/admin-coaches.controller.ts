@@ -24,6 +24,7 @@ import type { DeleteAdminCoachUseCase } from '@src/application/admin/coaches/del
 import type { GetAdminCoachDetailUseCase } from '@src/application/admin/coaches/get-admin-coach-detail.usecase';
 import type { ListAdminCoachesUseCase } from '@src/application/admin/coaches/list-admin-coaches.usecase';
 import type { UpdateAdminCoachUseCase } from '@src/application/admin/coaches/update-admin-coach.usecase';
+import { ADMIN_AUTH_CONFIG_PORT_SYMBOL, type IAdminAuthConfigPort } from '@src/interfaces/admin/IAdminAuthConfig.port';
 import { ResponsesExceptionFilter } from '@src/presentation/responses/responses-exception.filter';
 
 import type { JwtValidatedUser } from '@src/presentation/jwt-validated-user';
@@ -54,7 +55,9 @@ export class AdminCoachesController {
         @Inject(UPDATE_ADMIN_COACH_USE_CASE_SYMBOL)
         private readonly updateAdminCoach: UpdateAdminCoachUseCase,
         @Inject(DELETE_ADMIN_COACH_USE_CASE_SYMBOL)
-        private readonly deleteAdminCoach: DeleteAdminCoachUseCase
+        private readonly deleteAdminCoach: DeleteAdminCoachUseCase,
+        @Inject(ADMIN_AUTH_CONFIG_PORT_SYMBOL)
+        private readonly authConfig: IAdminAuthConfigPort
     ) {}
 
     private ensureCoachEntityAccess(coachId: number, user: JwtValidatedUser): void {
@@ -66,12 +69,16 @@ export class AdminCoachesController {
         }
     }
 
+    private isAdminCoachUsername(username: string): boolean {
+        return username === this.authConfig.superAdminUsername.trim().toLowerCase();
+    }
+
     @Get('coaches')
     public async listCoaches(@Req() req: { user: JwtValidatedUser }) {
         const coaches = await this.listAdminCoaches.execute();
         const visibleCoaches =
             req.user.scope === 'coach' ? coaches.filter(coach => coach.id === req.user.coachId) : coaches;
-        return visibleCoaches.map(coachToAdminJson);
+        return visibleCoaches.map(coach => coachToAdminJson(coach, { isAdmin: this.isAdminCoachUsername(coach.username) }));
     }
 
     @Post('coaches')
@@ -83,14 +90,14 @@ export class AdminCoachesController {
             throw new UnauthorizedException();
         }
         const coach = await this.createAdminCoach.execute(body);
-        return coachToAdminJson(coach);
+        return coachToAdminJson(coach, { isAdmin: this.isAdminCoachUsername(coach.username) });
     }
 
     @Get('coaches/:coachId')
     public async getCoach(@Param('coachId', ParseIntPipe) coachId: number, @Req() req: { user: JwtValidatedUser }) {
         this.ensureCoachEntityAccess(coachId, req.user);
         const detail = await this.getAdminCoachDetail.execute(coachId);
-        return adminCoachDetailToJson(detail);
+        return adminCoachDetailToJson(detail, { isAdmin: this.isAdminCoachUsername(detail.coach.username) });
     }
 
     @Patch('coaches/:coachId')
@@ -101,7 +108,7 @@ export class AdminCoachesController {
     ) {
         this.ensureCoachEntityAccess(coachId, req.user);
         const coach = await this.updateAdminCoach.execute(coachId, body);
-        return coachToAdminJson(coach);
+        return coachToAdminJson(coach, { isAdmin: this.isAdminCoachUsername(coach.username) });
     }
 
     @Delete('coaches/:coachId')

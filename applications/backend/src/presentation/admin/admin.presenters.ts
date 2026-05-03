@@ -52,17 +52,22 @@ export const companyToAdminJson = (c: CompanyWithParticipantCountReadModel) => (
 /**
  * Sérialise un `Coach` en enveloppe publique : uniquement les champs safe explicitement listés.
  * Le `#passwordHash` (champ privé ECMAScript) n'est jamais atteignable ici.
+ *
+ * `isAdmin` distingue la ligne sentinelle « Admin » (cible d'assignation des campagnes
+ * détenues par l'admin) du reste des coachs. Le frontend l'utilise pour désactiver
+ * édition / suppression sur cette ligne.
  */
-export const coachToAdminJson = (c: Coach) => ({
+export const coachToAdminJson = (c: Coach, opts?: { isAdmin?: boolean }) => ({
     id: c.id,
     username: c.username,
     displayName: c.displayName,
     isActive: c.isActive,
     createdAt: c.createdAt,
+    isAdmin: opts?.isAdmin ?? false,
 });
 
-export const adminCoachDetailToJson = (detail: { coach: Coach; campaigns: Campaign[] }) => ({
-    coach: coachToAdminJson(detail.coach),
+export const adminCoachDetailToJson = (detail: { coach: Coach; campaigns: Campaign[] }, opts?: { isAdmin?: boolean }) => ({
+    coach: coachToAdminJson(detail.coach, opts),
     campaigns: detail.campaigns.map(campaignToAdminJson),
 });
 

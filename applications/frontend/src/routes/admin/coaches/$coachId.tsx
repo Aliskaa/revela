@@ -25,7 +25,7 @@ import {
     Typography,
 } from '@mui/material';
 import { Link, createFileRoute, useNavigate } from '@tanstack/react-router';
-import { ArrowRight, ClipboardList, Pencil, Trash2, UserRound } from 'lucide-react';
+import { ArrowRight, ClipboardList, Lock, Pencil, ShieldCheck, Trash2, UserRound } from 'lucide-react';
 import * as React from 'react';
 
 export const Route = createFileRoute('/admin/coaches/$coachId')({
@@ -47,6 +47,7 @@ function AdminCoachDetailRoute() {
 
     const coach = data?.coach;
     const campaigns = data?.campaigns ?? [];
+    const isAdminCoach = coach?.isAdmin ?? false;
 
     const companyNameById = React.useMemo(() => {
         const m = new Map<number, string>();
@@ -127,9 +128,18 @@ function AdminCoachDetailRoute() {
                 <DialogTitle>Supprimer le coach</DialogTitle>
                 <DialogContent>
                     <DialogContentText>
-                        Vous êtes sur le point de supprimer <strong>{coach.displayName}</strong> ({coach.username}). Ses
-                        campagnes ne seront pas supprimées mais devront être réaffectées à un autre coach. Cette action
-                        est irréversible.
+                        Vous êtes sur le point de supprimer <strong>{coach.displayName}</strong> ({coach.username}).
+                        {campaigns.length > 0 ? (
+                            <>
+                                {' '}
+                                Ses {campaigns.length} campagne{campaigns.length > 1 ? 's' : ''} ser
+                                {campaigns.length > 1 ? 'ont' : 'a'} automatiquement réaffectée
+                                {campaigns.length > 1 ? 's' : ''} au compte admin.
+                            </>
+                        ) : (
+                            <> Ce coach n'a aucune campagne rattachée.</>
+                        )}{' '}
+                        Cette action est irréversible.
                     </DialogContentText>
                 </DialogContent>
                 <DialogActions>
@@ -161,6 +171,18 @@ function AdminCoachDetailRoute() {
                                     label="Détail coach"
                                     sx={{ borderRadius: 99, bgcolor: 'tint.primaryBg', color: 'primary.main' }}
                                 />
+                                {isAdminCoach && (
+                                    <Chip
+                                        icon={<ShieldCheck size={14} />}
+                                        label="Compte admin"
+                                        sx={{
+                                            borderRadius: 99,
+                                            bgcolor: 'rgb(254,243,199)',
+                                            color: 'rgb(120,53,15)',
+                                            fontWeight: 700,
+                                        }}
+                                    />
+                                )}
                                 <ActiveStatusChip isActive={coach.isActive} />
                             </Stack>
                             <Typography variant="h4" fontWeight={800} color="text.primary" sx={{ letterSpacing: -0.5 }}>
@@ -295,42 +317,52 @@ function AdminCoachDetailRoute() {
                             <Button
                                 variant="outlined"
                                 fullWidth
-                                startIcon={<Pencil size={16} />}
+                                startIcon={isAdminCoach ? <Lock size={16} /> : <Pencil size={16} />}
                                 onClick={() => setEditOpen(true)}
+                                disabled={isAdminCoach}
                                 sx={{ borderRadius: 3, mt: 2 }}
                             >
-                                Éditer le coach
+                                {isAdminCoach ? 'Édition verrouillée' : 'Éditer le coach'}
                             </Button>
+                            {isAdminCoach && (
+                                <Alert severity="info" icon={<ShieldCheck size={18} />} sx={{ mt: 1.5 }}>
+                                    Ce compte est la cible d'assignation des campagnes détenues par l'admin. Il ne peut
+                                    être ni édité ni supprimé depuis cette interface.
+                                </Alert>
+                            )}
                         </CardContent>
                     </Card>
 
-                    <Card variant="outlined" sx={{ borderColor: 'rgba(239,68,68,0.3)' }}>
-                        <CardContent sx={{ p: 2.5 }}>
-                            <SectionTitle title="Zone dangereuse" subtitle="Actions irréversibles." />
-                            <Button
-                                variant="outlined"
-                                color="error"
-                                fullWidth
-                                startIcon={<Trash2 size={16} />}
-                                disabled={deleteCoach.isPending || campaigns.length > 0}
-                                onClick={() => setDeleteOpen(true)}
-                                sx={{ borderRadius: 3, mt: 1 }}
-                            >
-                                Supprimer le coach
-                            </Button>
-                            {campaigns.length > 0 && (
-                                <Alert severity="warning" sx={{ mt: 1.5 }}>
-                                    Ce coach pilote {campaigns.length} campagne{campaigns.length > 1 ? 's' : ''}. Pensez
-                                    à les réassigner avant suppression.
-                                </Alert>
-                            )}
-                            {deleteCoach.isError && (
-                                <Alert severity="error" sx={{ mt: 1.5 }}>
-                                    Erreur lors de la suppression.
-                                </Alert>
-                            )}
-                        </CardContent>
-                    </Card>
+                    {!isAdminCoach && (
+                        <Card variant="outlined" sx={{ borderColor: 'rgba(239,68,68,0.3)' }}>
+                            <CardContent sx={{ p: 2.5 }}>
+                                <SectionTitle title="Zone dangereuse" subtitle="Actions irréversibles." />
+                                <Button
+                                    variant="outlined"
+                                    color="error"
+                                    fullWidth
+                                    startIcon={<Trash2 size={16} />}
+                                    disabled={deleteCoach.isPending}
+                                    onClick={() => setDeleteOpen(true)}
+                                    sx={{ borderRadius: 3, mt: 1 }}
+                                >
+                                    Supprimer le coach
+                                </Button>
+                                {campaigns.length > 0 && (
+                                    <Alert severity="info" sx={{ mt: 1.5 }}>
+                                        À la suppression, les {campaigns.length} campagne
+                                        {campaigns.length > 1 ? 's' : ''} de ce coach seront automatiquement réaffectée
+                                        {campaigns.length > 1 ? 's' : ''} au compte admin.
+                                    </Alert>
+                                )}
+                                {deleteCoach.isError && (
+                                    <Alert severity="error" sx={{ mt: 1.5 }}>
+                                        Erreur lors de la suppression.
+                                    </Alert>
+                                )}
+                            </CardContent>
+                        </Card>
+                    )}
                 </Stack>
             </Box>
         </Stack>

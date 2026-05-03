@@ -339,9 +339,9 @@ export function ParticipantDetailView({ participantId, scopePrefix }: Participan
                             <Table sx={{ minWidth: 520 }}>
                                 <TableHead>
                                     <TableRow>
+                                        <TableCell></TableCell>
                                         <TableCell>Campagne</TableCell>
                                         <TableCell>Entreprise</TableCell>
-                                        <TableCell>Statut</TableCell>
                                         <TableCell />
                                     </TableRow>
                                 </TableHead>
@@ -361,6 +361,9 @@ export function ParticipantDetailView({ participantId, scopePrefix }: Participan
                                         campaigns.map(c => (
                                             <TableRow hover key={c.campaign_id}>
                                                 <TableCell>
+                                                    <CampaignStatusChip status={c.status as CampaignStatus} />
+                                                </TableCell>
+                                                <TableCell>
                                                     <Link
                                                         to={`${scopePrefix}/campaigns/${c.campaign_id}`}
                                                         style={{ color: 'inherit', textDecoration: 'none' }}
@@ -375,9 +378,6 @@ export function ParticipantDetailView({ participantId, scopePrefix }: Participan
                                                     </Link>
                                                 </TableCell>
                                                 <TableCell>{c.company_name ?? '–'}</TableCell>
-                                                <TableCell>
-                                                    <CampaignStatusChip status={c.status as CampaignStatus} />
-                                                </TableCell>
                                                 <TableCell align="right">
                                                     <Button
                                                         size="small"

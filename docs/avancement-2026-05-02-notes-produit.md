@@ -9,7 +9,7 @@
 
 ## Checklist rapide
 
-- [ ] L'admin peut etre un coach
+- [x] L'admin peut etre un coach
 - [ ] Bloquer la saisie des statuts `cloturee` / `archivee` sans creation prealable
 - [ ] Ajouter une barre de recherche participant (liste participants)
 - [ ] Definir `Actif` si invitation acceptee
@@ -39,7 +39,7 @@
 
 | ID | Sujet | Statut | Notes |
 |---|---|---|---|
-| P01 | Admin peut etre coach | Pas encore fait | Verifier role model + permissions + ecrans admin |
+| P01 | Admin peut etre coach | Fait | Frontend uniquement (backend deja permissif) : suppression du redirect bloquant `/coach` pour super-admin, libelles adaptatifs sur la chrome et le dashboard coach, ajout entree « Vue coach » dans la sidebar admin |
 | P02 | Interdire `cloturee/archivee` sans creation prealable | Pas encore fait | Regle metier + validation backend + UI disable |
 | P03 | Recherche participant dans liste | Pas encore fait | Champ recherche + filtrage nom/email |
 | P04 | Statut participant "Actif" si invitation acceptee | Pas encore fait | Clarifier mapping exact des statuts |

@@ -4,6 +4,7 @@ import type { IPasswordHasherPort } from '@aor/ports';
 
 import { AdminValidationError } from '@src/domain/admin/admin.errors';
 import { Coach } from '@src/domain/coaches';
+import type { IAdminAuthConfigPort } from '@src/interfaces/admin/IAdminAuthConfig.port';
 import type { ICoachesReadPort, ICoachesWritePort } from '@src/interfaces/coaches/ICoachesRepository.port';
 
 export class CreateAdminCoachUseCase {
@@ -11,6 +12,7 @@ export class CreateAdminCoachUseCase {
         private readonly ports: {
             readonly coaches: ICoachesReadPort & ICoachesWritePort;
             readonly passwordHasher: IPasswordHasherPort;
+            readonly authConfig: IAdminAuthConfigPort;
         }
     ) {}
 
@@ -25,6 +27,11 @@ export class CreateAdminCoachUseCase {
             passwordHash: this.ports.passwordHasher.hash(password),
             displayName: body.display_name ?? '',
         });
+
+        const reservedAdminUsername = this.ports.authConfig.superAdminUsername.trim().toLowerCase();
+        if (draft.username === reservedAdminUsername) {
+            throw new AdminValidationError('Ce username est réservé au compte admin.');
+        }
 
         const existing = await this.ports.coaches.findByUsername(draft.username);
         if (existing) {

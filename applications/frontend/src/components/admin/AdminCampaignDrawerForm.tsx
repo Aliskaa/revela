@@ -172,11 +172,13 @@ export function AdminCampaignDrawerForm({
                                     value={values.coachId === 0 ? '' : values.coachId}
                                     onChange={e => setField('coachId', Number(e.target.value) || 0)}
                                 >
-                                    {coaches.map(coach => (
-                                        <MenuItem key={coach.id} value={coach.id}>
-                                            {coach.displayName}
-                                        </MenuItem>
-                                    ))}
+                                    {[...coaches]
+                                        .sort((a, b) => Number(b.isAdmin) - Number(a.isAdmin))
+                                        .map(coach => (
+                                            <MenuItem key={coach.id} value={coach.id}>
+                                                {coach.isAdmin ? `${coach.displayName} (compte admin)` : coach.displayName}
+                                            </MenuItem>
+                                        ))}
                                 </Select>
                                 {errors.coachId ? <FormHelperText>{errors.coachId}</FormHelperText> : null}
                             </FormControl>

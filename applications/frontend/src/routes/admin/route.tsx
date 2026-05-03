@@ -1,6 +1,15 @@
 import { Box, Typography } from '@mui/material';
 import { Outlet, createFileRoute, redirect, useLocation } from '@tanstack/react-router';
-import { Building2, ClipboardList, LayoutDashboard, ScrollText, Shield, Sparkles, UserRound } from 'lucide-react';
+import {
+    Building2,
+    ClipboardList,
+    Gauge,
+    LayoutDashboard,
+    ScrollText,
+    Shield,
+    Sparkles,
+    UserRound,
+} from 'lucide-react';
 
 import { ScopedAppShell, type ScopedNavItem } from '@/components/layout/ScopedAppShell';
 import { parseAdminJwtClaims, userAdmin } from '@/lib/auth';
@@ -9,6 +18,9 @@ import { parseAdminJwtClaims, userAdmin } from '@/lib/auth';
  * Pas d'item « Réponses » : une réponse n'a de sens que rattachée à un participant et à une
  * campagne. La consultation se fait depuis la fiche campagne (table participants → matrix) ou
  * la fiche participant — pas de vue cross-campagnes en V1.
+ *
+ * L'entrée « Vue coach » ouvre la chrome `/coach` avec le scope super-admin : matérialise
+ * la règle « l'admin peut être un coach » (l'admin voit toutes les données sans filtrage).
  */
 const adminNav: ScopedNavItem[] = [
     { label: 'Tableau de bord', to: '/admin', icon: LayoutDashboard, exact: true },
@@ -17,6 +29,7 @@ const adminNav: ScopedNavItem[] = [
     { label: 'Coachs', to: '/admin/coaches', icon: UserRound },
     { label: 'Questionnaires', to: '/admin/questionnaires', icon: Sparkles },
     { label: 'Audit log', to: '/admin/audit-log', icon: ScrollText },
+    { label: 'Vue coach', to: '/coach', icon: Gauge },
 ];
 
 function AdminDesktopTopBar() {

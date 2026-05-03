@@ -41,6 +41,12 @@ export type ScopedAppShellProps = {
     nav: ScopedNavItem[];
     /** TopBar desktop optionnelle (titre + recherche globale, etc.). */
     desktopTopBar?: React.ReactNode;
+    /**
+     * Bandeau optionnel en pleine largeur, posé au-dessus du contenu principal (et juste sous
+     * la topbar mobile). Utilisé pour signaler un mode dégradé/spécial (ex. super-admin
+     * consultant la vue coach).
+     */
+    topBanner?: React.ReactNode;
     children: React.ReactNode;
 };
 
@@ -305,6 +311,7 @@ export function ScopedAppShell({
     avatarInitial,
     nav,
     desktopTopBar,
+    topBanner,
     children,
 }: ScopedAppShellProps) {
     const location = useLocation();
@@ -326,6 +333,7 @@ export function ScopedAppShell({
                 onLogout={handleLogout}
                 avatarInitial={avatarInitial}
             />
+            {topBanner}
             <Box sx={{ display: 'flex', minHeight: '100vh' }}>
                 <Sidebar {...brand} nav={nav} pathname={location.pathname} onLogout={handleLogout} />
                 <Box component="main" sx={{ flex: 1, px: { xs: 2, sm: 3, lg: 4 }, py: { xs: 2, sm: 3, lg: 4 } }}>

@@ -17,6 +17,12 @@ export interface ICampaignsWritePort {
     create(campaign: Campaign): Promise<Campaign>;
     /** Persiste les changements d'une entité existante. Retourne `null` si l'id n'existe pas. */
     save(campaign: Campaign): Promise<Campaign | null>;
+    /**
+     * Bulk-réassigne toutes les campagnes d'un coach vers un autre coach. Retourne le nombre de
+     * campagnes affectées. Utilisé lors de la suppression d'un coach pour basculer ses
+     * campagnes vers le compte admin sentinelle.
+     */
+    reassignAllByCoach(fromCoachId: number, toCoachId: number): Promise<number>;
 }
 
 export interface ICampaignsRepositoryPort extends ICampaignsReadPort, ICampaignsWritePort {}

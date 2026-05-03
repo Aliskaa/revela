@@ -4,6 +4,7 @@ import type { IPasswordHasherPort } from '@aor/ports';
 
 import { AdminResourceNotFoundError, AdminValidationError } from '@src/domain/admin/admin.errors';
 import type { Coach } from '@src/domain/coaches';
+import type { IAdminAuthConfigPort } from '@src/interfaces/admin/IAdminAuthConfig.port';
 import type { ICoachesReadPort, ICoachesWritePort } from '@src/interfaces/coaches/ICoachesRepository.port';
 
 export class UpdateAdminCoachUseCase {
@@ -11,6 +12,7 @@ export class UpdateAdminCoachUseCase {
         private readonly ports: {
             readonly coaches: ICoachesReadPort & ICoachesWritePort;
             readonly passwordHasher: IPasswordHasherPort;
+            readonly authConfig: IAdminAuthConfigPort;
         }
     ) {}
 
@@ -26,6 +28,9 @@ export class UpdateAdminCoachUseCase {
         const current = await this.ports.coaches.findById(coachId);
         if (!current) {
             throw new AdminResourceNotFoundError('Coach introuvable.');
+        }
+        if (current.username === this.ports.authConfig.superAdminUsername.trim().toLowerCase()) {
+            throw new AdminValidationError('Le compte admin ne peut pas être modifié depuis cette interface.');
         }
 
         const hasUsername = body.username !== undefined;

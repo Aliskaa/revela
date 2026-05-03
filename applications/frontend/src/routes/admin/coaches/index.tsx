@@ -12,6 +12,7 @@ import {
     Button,
     Card,
     CardContent,
+    Chip,
     Stack,
     Table,
     TableBody,
@@ -22,7 +23,7 @@ import {
     Typography,
 } from '@mui/material';
 import { createFileRoute } from '@tanstack/react-router';
-import { ClipboardList, Plus, UserRound } from 'lucide-react';
+import { ClipboardList, Plus, ShieldCheck, UserRound } from 'lucide-react';
 import * as React from 'react';
 
 export const Route = createFileRoute('/admin/coaches/')({
@@ -48,14 +49,18 @@ function AdminCoachesRoute() {
     }, [campaigns]);
 
     const filtered = React.useMemo(
-        () =>
-            search.trim()
+        () => {
+            const base = search.trim()
                 ? coaches.filter(
                     c =>
                         c.displayName.toLowerCase().includes(search.toLowerCase()) ||
                         c.username.toLowerCase().includes(search.toLowerCase())
                 )
-                : coaches,
+                : coaches;
+            // L'admin remonte en tête : c'est la cible d'assignation par défaut, on veut
+            // qu'elle soit immédiatement repérable.
+            return [...base].sort((a, b) => Number(b.isAdmin) - Number(a.isAdmin));
+        },
         [coaches, search]
     );
 
@@ -170,9 +175,25 @@ function AdminCoachesRoute() {
                                                 <ActiveStatusChip isActive={coach.isActive} />
                                             </TableCell>
                                             <TableCell>
-                                                <Typography fontWeight={700} color="text.primary">
-                                                    {coach.displayName}
-                                                </Typography>
+                                                <Stack direction="row" spacing={1} alignItems="center">
+                                                    <Typography fontWeight={700} color="text.primary">
+                                                        {coach.displayName}
+                                                    </Typography>
+                                                    {coach.isAdmin && (
+                                                        <Chip
+                                                            size="small"
+                                                            icon={<ShieldCheck size={12} />}
+                                                            label="Admin"
+                                                            sx={{
+                                                                borderRadius: 99,
+                                                                bgcolor: 'rgb(254,243,199)',
+                                                                color: 'rgb(120,53,15)',
+                                                                fontWeight: 700,
+                                                                height: 22,
+                                                            }}
+                                                        />
+                                                    )}
+                                                </Stack>
                                             </TableCell>
                                             <TableCell>
                                                 <Typography variant="body2" color="text.secondary">
@@ -233,9 +254,25 @@ function AdminCoachesRoute() {
                                                 spacing={2}
                                             >
                                                 <Box>
-                                                    <Typography variant="h6" fontWeight={800} color="text.primary">
-                                                        {coach.displayName}
-                                                    </Typography>
+                                                    <Stack direction="row" spacing={1} alignItems="center">
+                                                        <Typography variant="h6" fontWeight={800} color="text.primary">
+                                                            {coach.displayName}
+                                                        </Typography>
+                                                        {coach.isAdmin && (
+                                                            <Chip
+                                                                size="small"
+                                                                icon={<ShieldCheck size={12} />}
+                                                                label="Admin"
+                                                                sx={{
+                                                                    borderRadius: 99,
+                                                                    bgcolor: 'rgb(254,243,199)',
+                                                                    color: 'rgb(120,53,15)',
+                                                                    fontWeight: 700,
+                                                                    height: 22,
+                                                                }}
+                                                            />
+                                                        )}
+                                                    </Stack>
                                                     <Typography variant="body2" color="text.secondary" sx={{ mt: 0.4 }}>
                                                         {coach.username}
                                                     </Typography>

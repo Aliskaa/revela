@@ -7,6 +7,11 @@ export const coachSchema = z.object({
     displayName: z.string(),
     isActive: z.boolean(),
     createdAt: z.string().nullable(),
+    /**
+     * `true` pour la ligne sentinelle « Admin » (cible d'assignation des campagnes
+     * détenues par l'admin). Cette ligne ne peut être ni éditée ni supprimée via l'UI.
+     */
+    isAdmin: z.boolean().default(false),
 });
 export type Coach = z.infer<typeof coachSchema>;
 

@@ -117,4 +117,13 @@ export class DrizzleCampaignsRepository implements ICampaignsRepositoryPort {
             .returning(SELECT_COLUMNS);
         return row ? hydrateCampaign(row) : null;
     }
+
+    public async reassignAllByCoach(fromCoachId: number, toCoachId: number): Promise<number> {
+        const rows = await this.db
+            .update(campaignsTable)
+            .set({ coachId: toCoachId, updatedAt: sql`now()` })
+            .where(eq(campaignsTable.coachId, fromCoachId))
+            .returning({ id: campaignsTable.id });
+        return rows.length;
+    }
 }
