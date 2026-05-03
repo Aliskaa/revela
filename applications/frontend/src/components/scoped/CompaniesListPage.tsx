@@ -63,8 +63,9 @@ const SCOPE_LABELS: Record<
  * donc ce composant reste agnostique du scope sauf pour les libellés et les liens de détail.
  */
 export function CompaniesListPage({ scope }: CompaniesListPageProps) {
+    const isAdmin = scope === 'admin';
     const labels = SCOPE_LABELS[scope];
-    const detailPathPrefix = scope === 'admin' ? '/admin/companies' : '/coach/companies';
+    const detailPathPrefix = isAdmin ? '/admin/companies' : '/coach/companies';
 
     const [drawerOpen, setDrawerOpen] = React.useState(false);
     const [search, setSearch] = React.useState('');
@@ -115,41 +116,45 @@ export function CompaniesListPage({ scope }: CompaniesListPageProps) {
 
     return (
         <Stack spacing={3}>
-            <AdminCompanyDrawerForm
-                open={drawerOpen}
-                mode="create"
-                onClose={() => {
-                    setDrawerOpen(false);
-                    createCompany.reset();
-                }}
-                onSubmit={async values => {
-                    try {
-                        await createCompany.mutateAsync({
-                            name: values.name,
-                            contactName: values.contactName || null,
-                            contactEmail: values.contactEmail || null,
-                        });
+            {isAdmin && (
+                <AdminCompanyDrawerForm
+                    open={drawerOpen}
+                    mode="create"
+                    onClose={() => {
                         setDrawerOpen(false);
-                    } catch {
-                        // Le toast d'erreur est émis par le hook ; on garde le drawer ouvert.
-                    }
-                }}
-            />
+                        createCompany.reset();
+                    }}
+                    onSubmit={async values => {
+                        try {
+                            await createCompany.mutateAsync({
+                                name: values.name,
+                                contactName: values.contactName || null,
+                                contactEmail: values.contactEmail || null,
+                            });
+                            setDrawerOpen(false);
+                        } catch {
+                            // Le toast d'erreur est émis par le hook ; on garde le drawer ouvert.
+                        }
+                    }}
+                />
+            )}
 
             <PageHeroCard
                 eyebrow={labels.eyebrow}
                 title={labels.title}
                 subtitle={labels.subtitle}
                 actions={
-                    <Button
-                        onClick={() => setDrawerOpen(true)}
-                        variant="contained"
-                        disableElevation
-                        startIcon={<Plus size={16} />}
-                        sx={{ borderRadius: 3, bgcolor: 'primary.main' }}
-                    >
-                        Ajouter une entreprise
-                    </Button>
+                    isAdmin ? (
+                        <Button
+                            onClick={() => setDrawerOpen(true)}
+                            variant="contained"
+                            disableElevation
+                            startIcon={<Plus size={16} />}
+                            sx={{ borderRadius: 3, bgcolor: 'primary.main' }}
+                        >
+                            Ajouter une entreprise
+                        </Button>
+                    ) : undefined
                 }
             />
 

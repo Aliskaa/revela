@@ -13,6 +13,7 @@ import {
     Patch,
     Post,
     Req,
+    UnauthorizedException,
     UploadedFile,
     UseFilters,
     UseGuards,
@@ -21,6 +22,7 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
+import type { AddParticipantToCompanyUseCase } from '@src/application/admin/companies/add-participant-to-company.usecase';
 import type { CreateAdminCompanyUseCase } from '@src/application/admin/companies/create-admin-company.usecase';
 import type { DeleteAdminCompanyUseCase } from '@src/application/admin/companies/delete-admin-company.usecase';
 import type { GetAdminCompanyUseCase } from '@src/application/admin/companies/get-admin-company.usecase';
@@ -34,6 +36,7 @@ import { AdminApplicationExceptionFilter } from './admin-application-exception.f
 import { AdminJwtAuthGuard } from './admin-jwt-auth.guard';
 import { companyToAdminJson } from './admin.presenters';
 import {
+    ADD_PARTICIPANT_TO_COMPANY_USE_CASE_SYMBOL,
     CREATE_ADMIN_COMPANY_USE_CASE_SYMBOL,
     DELETE_ADMIN_COMPANY_USE_CASE_SYMBOL,
     GET_ADMIN_COMPANY_USE_CASE_SYMBOL,
@@ -60,7 +63,9 @@ export class AdminCompaniesController {
         @Inject(DELETE_ADMIN_COMPANY_USE_CASE_SYMBOL)
         private readonly deleteAdminCompany: DeleteAdminCompanyUseCase,
         @Inject(IMPORT_PARTICIPANTS_CSV_USE_CASE_SYMBOL)
-        private readonly importParticipantsCsv: ImportParticipantsCsvUseCase
+        private readonly importParticipantsCsv: ImportParticipantsCsvUseCase,
+        @Inject(ADD_PARTICIPANT_TO_COMPANY_USE_CASE_SYMBOL)
+        private readonly addParticipantToCompany: AddParticipantToCompanyUseCase
     ) {}
 
     @Get('companies')
@@ -78,8 +83,13 @@ export class AdminCompaniesController {
 
     @Post('companies')
     public async createCompany(
+        @Req() req: { user: JwtValidatedUser },
         @Body() body: { name?: string; contact_name?: string | null; contact_email?: string | null }
     ) {
+        // Création d'entreprise réservée à l'admin (cf. P07 du suivi produit 2026-05-02).
+        if (req.user.scope === 'coach') {
+            throw new UnauthorizedException("La création d'une entreprise est réservée à l'admin.");
+        }
         const row = await this.createAdminCompany.execute(body);
         return companyToAdminJson(row);
     }
@@ -95,7 +105,14 @@ export class AdminCompaniesController {
 
     @Delete('companies/:companyId')
     @HttpCode(HttpStatus.NO_CONTENT)
-    public async deleteCompany(@Param('companyId', ParseIntPipe) companyId: number): Promise<void> {
+    public async deleteCompany(
+        @Param('companyId', ParseIntPipe) companyId: number,
+        @Req() req: { user: JwtValidatedUser }
+    ): Promise<void> {
+        // Suppression d'entreprise réservée à l'admin (cf. P07 du suivi produit 2026-05-02).
+        if (req.user.scope === 'coach') {
+            throw new UnauthorizedException("La suppression d'une entreprise est réservée à l'admin.");
+        }
         await this.deleteAdminCompany.execute(companyId);
     }
 
@@ -103,9 +120,38 @@ export class AdminCompaniesController {
     @UseInterceptors(FileInterceptor('file'))
     public async importParticipantsForCompany(
         @Param('companyId', ParseIntPipe) companyId: number,
+        @Req() req: { user: JwtValidatedUser },
         @UploadedFile() file: Express.Multer.File | undefined
     ) {
+        // L'import CSV en masse est réservé à l'admin. Les coachs ajoutent les participants
+        // unitairement via le formulaire de la fiche campagne (cf. P08 du suivi produit).
+        if (req.user.scope === 'coach') {
+            throw new UnauthorizedException(
+                "L'import CSV en masse est réservé à l'admin. Pour ajouter un participant, utilisez le formulaire d'ajout unitaire depuis la fiche campagne."
+            );
+        }
         await this.getAdminCompany.execute(companyId);
         return this.importParticipantsCsv.execute(file?.buffer, { forcedCompanyId: companyId });
+    }
+
+    @Post('companies/:companyId/participants')
+    public async addParticipantToCompanyEndpoint(
+        @Param('companyId', ParseIntPipe) companyId: number,
+        @Req() req: { user: JwtValidatedUser },
+        @Body()
+        body: {
+            first_name?: string;
+            last_name?: string;
+            email?: string;
+            organisation?: string | null;
+            direction?: string | null;
+            service?: string | null;
+            function_level?: string | null;
+        }
+    ) {
+        // Ouvert à l'admin et au coach. Pour le coach, le use case vérifie qu'il a au moins
+        // une campagne dans cette entreprise. Cf. P08 du suivi produit 2026-05-02.
+        const coachId = req.user.scope === 'coach' ? req.user.coachId : undefined;
+        return this.addParticipantToCompany.execute(companyId, body, { coachId });
     }
 }

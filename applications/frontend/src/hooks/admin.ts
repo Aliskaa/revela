@@ -575,3 +575,78 @@ export function useImportParticipantsToCampaign() {
         onError: err => toast.error(toErrorMessage(err, "Échec de l'import.")),
     });
 }
+
+export type AddParticipantToCampaignPayload = {
+    firstName: string;
+    lastName: string;
+    email: string;
+    organisation?: string;
+    direction?: string;
+    service?: string;
+    functionLevel?: 'direction' | 'middle_management' | 'frontline_manager' | '';
+};
+
+export function useAddParticipantToCampaign() {
+    const qc = useQueryClient();
+    const toast = useToast();
+    return useMutation<
+        { participantId: number; created: boolean; invited: boolean },
+        Error,
+        { campaignId: number; payload: AddParticipantToCampaignPayload }
+    >({
+        mutationFn: ({ campaignId, payload }) =>
+            apiClient
+                .post(`/admin/campaigns/${campaignId}/participants`, {
+                    first_name: payload.firstName,
+                    last_name: payload.lastName,
+                    email: payload.email,
+                    organisation: payload.organisation || null,
+                    direction: payload.direction || null,
+                    service: payload.service || null,
+                    function_level: payload.functionLevel || null,
+                })
+                .then(r => r.data),
+        onSuccess: (data, vars) => {
+            qc.invalidateQueries({ queryKey: adminKeys.campaign(vars.campaignId) });
+            qc.invalidateQueries({ queryKey: adminKeys.participants() });
+            toast.success(
+                data.created ? 'Participant créé et invité.' : 'Participant existant ajouté à la campagne et invité.'
+            );
+        },
+        onError: err => toast.error(toErrorMessage(err, "Échec de l'ajout du participant.")),
+    });
+}
+
+export function useAddParticipantToCompany() {
+    const qc = useQueryClient();
+    const toast = useToast();
+    return useMutation<
+        { participantId: number; created: boolean },
+        Error,
+        { companyId: number; payload: AddParticipantToCampaignPayload }
+    >({
+        mutationFn: ({ companyId, payload }) =>
+            apiClient
+                .post(`/admin/companies/${companyId}/participants`, {
+                    first_name: payload.firstName,
+                    last_name: payload.lastName,
+                    email: payload.email,
+                    organisation: payload.organisation || null,
+                    direction: payload.direction || null,
+                    service: payload.service || null,
+                    function_level: payload.functionLevel || null,
+                })
+                .then(r => r.data),
+        onSuccess: (data, vars) => {
+            qc.invalidateQueries({ queryKey: ['admin', 'participants'] });
+            qc.invalidateQueries({ queryKey: adminKeys.companies });
+            qc.invalidateQueries({ queryKey: adminKeys.company(vars.companyId) });
+            toast.success(
+                data.created
+                    ? "Participant créé et rattaché à l'entreprise."
+                    : "Participant existant rattaché à l'entreprise."
+            );
+        },
+        onError: err => toast.error(toErrorMessage(err, "Échec de l'ajout du participant.")),
+    });
+}

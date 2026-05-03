@@ -110,48 +110,52 @@ export function CampaignsListPage({ scope }: CampaignsListPageProps) {
 
     return (
         <Stack spacing={3}>
-            <AdminCampaignDrawerForm
-                open={drawerOpen}
-                mode="create"
-                lockedCoachId={lockedCoachId}
-                onClose={() => {
-                    setDrawerOpen(false);
-                    createCampaign.reset();
-                }}
-                onSubmit={async values => {
-                    try {
-                        await createCampaign.mutateAsync({
-                            name: values.name,
-                            companyId: values.companyId,
-                            coachId: values.coachId,
-                            questionnaireId: values.questionnaireId,
-                            startsAt: values.startDate ? new Date(values.startDate).toISOString() : null,
-                            endsAt: values.endDate ? new Date(values.endDate).toISOString() : null,
-                            allowTestWithoutManualInputs: values.allowTestWithoutManualInputs,
-                            status: values.status,
-                        });
+            {isAdmin && (
+                <AdminCampaignDrawerForm
+                    open={drawerOpen}
+                    mode="create"
+                    lockedCoachId={lockedCoachId}
+                    onClose={() => {
                         setDrawerOpen(false);
-                    } catch {
-                        // Le toast d'erreur est émis par le hook ; on garde le drawer ouvert.
-                    }
-                }}
-                isSubmitting={createCampaign.isPending}
-            />
+                        createCampaign.reset();
+                    }}
+                    onSubmit={async values => {
+                        try {
+                            await createCampaign.mutateAsync({
+                                name: values.name,
+                                companyId: values.companyId,
+                                coachId: values.coachId,
+                                questionnaireId: values.questionnaireId,
+                                startsAt: values.startDate ? new Date(values.startDate).toISOString() : null,
+                                endsAt: values.endDate ? new Date(values.endDate).toISOString() : null,
+                                allowTestWithoutManualInputs: values.allowTestWithoutManualInputs,
+                                status: values.status,
+                            });
+                            setDrawerOpen(false);
+                        } catch {
+                            // Le toast d'erreur est émis par le hook ; on garde le drawer ouvert.
+                        }
+                    }}
+                    isSubmitting={createCampaign.isPending}
+                />
+            )}
 
             <PageHeroCard
                 eyebrow={labels.eyebrow}
                 title={labels.title}
                 subtitle={labels.subtitle}
                 actions={
-                    <Button
-                        variant="contained"
-                        disableElevation
-                        startIcon={<Plus size={16} />}
-                        onClick={() => setDrawerOpen(true)}
-                        sx={{ borderRadius: 3, bgcolor: 'primary.main' }}
-                    >
-                        Nouvelle campagne
-                    </Button>
+                    isAdmin ? (
+                        <Button
+                            variant="contained"
+                            disableElevation
+                            startIcon={<Plus size={16} />}
+                            onClick={() => setDrawerOpen(true)}
+                            sx={{ borderRadius: 3, bgcolor: 'primary.main' }}
+                        >
+                            Nouvelle campagne
+                        </Button>
+                    ) : undefined
                 }
             />
 

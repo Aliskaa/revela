@@ -11,12 +11,11 @@
 
 - [x] L'admin peut etre un coach
 - [x] Bloquer la saisie des statuts `cloturee` / `archivee` sans creation prealable
-- [ ] Ajouter une barre de recherche participant (liste participants)
-- [ ] Definir `Actif` si invitation acceptee
+- [ ] Ajouter une barre de recherche participant (liste participants) — un participant est `Actif` une fois l'invitation acceptee
 - [x] Reaffecter automatiquement les campagnes d'un coach supprime vers l'admin
-- [ ] Retirer la creation de campagne autonome cote coach
-- [ ] Retirer la creation/suppression d'entreprise cote coach
-- [ ] Ajouter un bouton d'ajout manuel d'un participant a une campagne
+- [x] Retirer la creation de campagne autonome cote coach
+- [x] Retirer la creation/suppression d'entreprise cote coach
+- [x] Ajouter un bouton d'ajout manuel d'un participant a une campagne
 - [ ] Rediriger vers le dashboard apres creation du compte participant
 - [ ] Revenir au detail de campagne apres validation d'une etape du parcours
 - [ ] Ajouter un commentaire optionnel pour les pairs lors des feedbacks
@@ -41,12 +40,11 @@
 |---|---|---|---|
 | P01 | Admin peut etre coach | Fait | Frontend : suppression redirect bloquant `/coach`, libelles adaptatifs, entree « Vue coach » dans sidebar admin, bandeau ambre + bouton retour dans sidebar coach quand vu par super-admin. Backend : ligne sentinelle « Admin » dans coachesTable (cf. P05) — apparait dans la liste/picker, peut etre assignee comme coach d'une campagne |
 | P02 | Interdire `cloturee/archivee` sans creation prealable | Fait | Backend : `create-admin-campaign` rejette `closed` / `archived` avec message explicatif. Frontend : le select de statut au form de creation ne propose plus que `draft` / `active`, helper text indiquant que cloture/archivage se font sur la campagne existante |
-| P03 | Recherche participant dans liste | Pas encore fait | Champ recherche + filtrage nom/email |
-| P04 | Statut participant "Actif" si invitation acceptee | Pas encore fait | Clarifier mapping exact des statuts |
+| P03 | Recherche participant dans liste | Pas encore fait | Champ recherche + filtrage nom/email. Regle d'affichage du statut : un participant est `Actif` une fois l'invitation acceptee (= `joined_at` non nul sur `campaign_participants`) |
 | P05 | Suppression coach => campagnes reassignees admin | Fait | Ligne sentinelle « Admin » bootstrappee au demarrage (`EnsureAdminCoachService`) ; suppression d'un coach bascule automatiquement ses campagnes vers cette ligne via `reassignAllByCoach` ; refus de supprimer / editer / cloner la ligne admin ; flag `isAdmin` expose cote API + UI (badge, edition verrouillee, picker campagne) |
-| P06 | Retirer creation campagne cote coach | Pas encore fait | Cacher UI + bloquer endpoint |
-| P07 | Retirer creation/suppression entreprise cote coach | Pas encore fait | Cacher UI + bloquer endpoint |
-| P08 | Ajout manuel d'un participant a une campagne | Pas encore fait | Bouton + modal + API association |
+| P06 | Retirer creation campagne cote coach | Fait | Backend : `POST /admin/campaigns` rejette `scope === 'coach'` (401). Frontend : bouton « Nouvelle campagne » et drawer cachés en scope coach dans `CampaignsListPage` |
+| P07 | Retirer creation/suppression entreprise cote coach | Fait | Backend : `POST /admin/companies` et `DELETE /admin/companies/:id` rejettent `scope === 'coach'` (401). Frontend : bouton « Ajouter une entreprise » + drawer cachés en scope coach dans `CompaniesListPage` ; `CompanyDangerZone` + `DeleteCompanyDialog` cachés en scope coach dans `CompanyDetailPage` |
+| P08 | Ajout manuel d'un participant a une campagne | Fait | **Facette A (bulk)** : `POST /admin/companies/:id/participants/import` rejette `scope === 'coach'` (401). Bouton CSV + texte d'aide caches en scope coach via prop `showCsvImport` sur `CompanyParticipantsTable`. **Facette B (unitaire)** : 2 endpoints (`POST /admin/campaigns/:id/participants` avec auto-invitation + `POST /admin/companies/:id/participants` sans invitation) ouverts admin + coach. Use cases dedies (`AddParticipantToCampaignUseCase`, `AddParticipantToCompanyUseCase`). Drawer `AddParticipantToCampaignDrawerForm` reutilisable via props `subtitle` / `submitLabel`. Hooks `useAddParticipantToCampaign`, `useAddParticipantToCompany`. Boutons « Ajouter un participant » dans `CampaignManageParticipants` (fiche campagne) **et** `CompanyParticipantsTable` (fiche entreprise) |
 | P09 | Post-creation compte participant => dashboard | Pas encore fait | Verifier redirection login/activation |
 | P10 | Fin etape parcours => retour detail campagne | Pas encore fait | Uniformiser navigation post-submit |
 | P11 | Commentaire optionnel sur feedback pair | Pas encore fait | Ajouter champ optionnel |

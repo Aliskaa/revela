@@ -13,12 +13,15 @@ import {
     TableRow,
     Typography,
 } from '@mui/material';
-import { Trash2 } from 'lucide-react';
+import { Trash2, UserPlus } from 'lucide-react';
+import * as React from 'react';
 
+import { AddParticipantToCampaignDrawerForm } from '@/components/admin/AddParticipantToCampaignDrawerForm';
 import { SectionTitle } from '@/components/common/SectionTitle';
 import { SkeletonTableRows } from '@/components/common/SkeletonRows';
 import { ParticipantStatusChip } from '@/components/common/chips';
 import { EmptyTableRow, StandardTablePagination } from '@/components/common/data-table';
+import { useAddParticipantToCompany } from '@/hooks/admin';
 import type { Participant } from '@aor/types';
 
 import { CompanyImportCsv } from './CompanyImportCsv';
@@ -35,6 +38,8 @@ export type CompanyParticipantsTableProps = {
     onRowsPerPageChange: (next: number) => void;
     participantPathPrefix: string;
     onDeleteClick: (participant: Participant) => void;
+    /** Si `true`, affiche les contrôles d'import CSV (réservés à l'admin, cf. P08). */
+    showCsvImport?: boolean;
 };
 
 export function CompanyParticipantsTable({
@@ -49,10 +54,44 @@ export function CompanyParticipantsTable({
     onRowsPerPageChange,
     participantPathPrefix,
     onDeleteClick,
+    showCsvImport = true,
 }: CompanyParticipantsTableProps) {
+    const [addDrawerOpen, setAddDrawerOpen] = React.useState(false);
+    const addParticipant = useAddParticipantToCompany();
+
     return (
         <Card variant="outlined">
             <CardContent sx={{ p: 2.5 }}>
+                <AddParticipantToCampaignDrawerForm
+                    open={addDrawerOpen}
+                    isSubmitting={addParticipant.isPending}
+                    subtitle={`Le participant est rattaché à ${companyName}. Aucune invitation n'est envoyée — il sera invité depuis une campagne.`}
+                    submitLabel="Ajouter à l'entreprise"
+                    onClose={() => {
+                        setAddDrawerOpen(false);
+                        addParticipant.reset();
+                    }}
+                    onSubmit={async values => {
+                        try {
+                            await addParticipant.mutateAsync({
+                                companyId,
+                                payload: {
+                                    firstName: values.firstName,
+                                    lastName: values.lastName,
+                                    email: values.email,
+                                    organisation: values.organisation,
+                                    direction: values.direction,
+                                    service: values.service,
+                                    functionLevel: values.functionLevel,
+                                },
+                            });
+                            setAddDrawerOpen(false);
+                        } catch {
+                            // Toast émis par le hook ; on garde le drawer ouvert.
+                        }
+                    }}
+                />
+
                 <Stack
                     direction={{ xs: 'column', sm: 'row' }}
                     justifyContent="space-between"
@@ -61,15 +100,28 @@ export function CompanyParticipantsTable({
                     sx={{ mb: 1 }}
                 >
                     <SectionTitle title="Collaborateurs" subtitle={`Les participants rattachés à ${companyName}.`} />
-                    <CompanyImportCsv companyId={companyId} companyName={companyName} />
+                    <Stack direction="row" spacing={1.2} alignItems="center" sx={{ flexShrink: 0 }}>
+                        <Button
+                            variant="contained"
+                            disableElevation
+                            startIcon={<UserPlus size={16} />}
+                            onClick={() => setAddDrawerOpen(true)}
+                            sx={{ borderRadius: 3, bgcolor: 'primary.main' }}
+                        >
+                            Ajouter un participant
+                        </Button>
+                        {showCsvImport && <CompanyImportCsv companyId={companyId} companyName={companyName} />}
+                    </Stack>
                 </Stack>
 
-                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
-                    CSV (séparateur « ; ») avec colonnes : <code>first_name</code>, <code>last_name</code>,{' '}
-                    <code>email</code> (obligatoires), puis <code>organisation</code>, <code>direction</code>,{' '}
-                    <code>service</code>, <code>function_level</code> (optionnels). Tous les participants seront
-                    rattachés à <strong>{companyName}</strong>.
-                </Typography>
+                {showCsvImport && (
+                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
+                        CSV (séparateur « ; ») avec colonnes : <code>first_name</code>, <code>last_name</code>,{' '}
+                        <code>email</code> (obligatoires), puis <code>organisation</code>, <code>direction</code>,{' '}
+                        <code>service</code>, <code>function_level</code> (optionnels). Tous les participants seront
+                        rattachés à <strong>{companyName}</strong>.
+                    </Typography>
+                )}
 
                 <Box sx={{ overflowX: 'auto' }}>
                     <Table sx={{ minWidth: 600 }}>

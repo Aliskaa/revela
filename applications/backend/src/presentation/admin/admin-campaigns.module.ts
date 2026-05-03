@@ -2,6 +2,7 @@
 
 import { Module } from '@nestjs/common';
 
+import { AddParticipantToCampaignUseCase } from '@src/application/admin/campaigns/add-participant-to-campaign.usecase';
 import { CreateAdminCampaignUseCase } from '@src/application/admin/campaigns/create-admin-campaign.usecase';
 import { GetAdminCampaignDetailUseCase } from '@src/application/admin/campaigns/get-admin-campaign-detail.usecase';
 import { ImportParticipantsToCampaignUseCase } from '@src/application/admin/campaigns/import-participants-to-campaign.usecase';
@@ -38,6 +39,7 @@ import {
 import { AdminCampaignsController } from './admin-campaigns.controller';
 import { AdminSharedModule } from './admin-shared.module';
 import {
+    ADD_PARTICIPANT_TO_CAMPAIGN_USE_CASE_SYMBOL,
     CREATE_ADMIN_CAMPAIGN_USE_CASE_SYMBOL,
     GET_ADMIN_CAMPAIGN_DETAIL_USE_CASE_SYMBOL,
     IMPORT_PARTICIPANTS_TO_CAMPAIGN_USE_CASE_SYMBOL,
@@ -117,6 +119,23 @@ import {
                     IParticipantsCampaignParticipationWriterPort,
                 invitations: IInvitationsWritePort
             ) => new ImportParticipantsToCampaignUseCase({ campaigns, companies, participants, invitations }),
+            inject: [
+                CAMPAIGNS_REPOSITORY_PORT_SYMBOL,
+                COMPANIES_REPOSITORY_PORT_SYMBOL,
+                PARTICIPANTS_REPOSITORY_PORT_SYMBOL,
+                INVITATIONS_REPOSITORY_PORT_SYMBOL,
+            ],
+        },
+        {
+            provide: ADD_PARTICIPANT_TO_CAMPAIGN_USE_CASE_SYMBOL,
+            useFactory: (
+                campaigns: ICampaignsReadPort,
+                companies: ICompaniesReadPort,
+                participants: IParticipantsIdentityReaderPort &
+                    IParticipantsWriterPort &
+                    IParticipantsCampaignParticipationWriterPort,
+                invitations: IInvitationsWritePort
+            ) => new AddParticipantToCampaignUseCase({ campaigns, companies, participants, invitations }),
             inject: [
                 CAMPAIGNS_REPOSITORY_PORT_SYMBOL,
                 COMPANIES_REPOSITORY_PORT_SYMBOL,

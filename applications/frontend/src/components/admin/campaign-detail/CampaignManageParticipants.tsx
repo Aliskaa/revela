@@ -18,11 +18,17 @@ import {
     Stack,
     Typography,
 } from '@mui/material';
-import { Send, Upload } from 'lucide-react';
+import { Send, Upload, UserPlus } from 'lucide-react';
 import * as React from 'react';
 
+import { AddParticipantToCampaignDrawerForm } from '@/components/admin/AddParticipantToCampaignDrawerForm';
 import { SectionTitle } from '@/components/common/SectionTitle';
-import { useImportParticipantsToCampaign, useInviteCampaignParticipants, useParticipants } from '@/hooks/admin';
+import {
+    useAddParticipantToCampaign,
+    useImportParticipantsToCampaign,
+    useInviteCampaignParticipants,
+    useParticipants,
+} from '@/hooks/admin';
 import type { AdminCampaign } from '@aor/types';
 
 export type CampaignManageParticipantsProps = {
@@ -37,11 +43,13 @@ export type CampaignManageParticipantsProps = {
 export function CampaignManageParticipants({ campaign, alreadyInvitedIds }: CampaignManageParticipantsProps) {
     const inviteParticipants = useInviteCampaignParticipants();
     const importParticipants = useImportParticipantsToCampaign();
+    const addParticipant = useAddParticipantToCampaign();
     const { data: companyParticipants, isLoading: participantsLoading } = useParticipants(1, campaign.companyId, 200);
 
     const fileInputRef = React.useRef<HTMLInputElement>(null);
     const [csvFileName, setCsvFileName] = React.useState<string | null>(null);
     const [selectedIds, setSelectedIds] = React.useState<ReadonlySet<number>>(() => new Set());
+    const [addDrawerOpen, setAddDrawerOpen] = React.useState(false);
 
     const isArchived = campaign.status === 'archived';
     const isImporting = importParticipants.isPending;
@@ -126,10 +134,56 @@ export function CampaignManageParticipants({ campaign, alreadyInvitedIds }: Camp
     return (
         <Card variant="outlined">
             <CardContent sx={{ p: 2.5 }}>
-                <SectionTitle
-                    title="Inviter des participants"
-                    subtitle="Sélectionnez les participants de l'entreprise à inviter, ou importez un CSV."
+                <AddParticipantToCampaignDrawerForm
+                    open={addDrawerOpen}
+                    isSubmitting={addParticipant.isPending}
+                    onClose={() => {
+                        setAddDrawerOpen(false);
+                        addParticipant.reset();
+                    }}
+                    onSubmit={async values => {
+                        try {
+                            await addParticipant.mutateAsync({
+                                campaignId: campaign.id,
+                                payload: {
+                                    firstName: values.firstName,
+                                    lastName: values.lastName,
+                                    email: values.email,
+                                    organisation: values.organisation,
+                                    direction: values.direction,
+                                    service: values.service,
+                                    functionLevel: values.functionLevel,
+                                },
+                            });
+                            setAddDrawerOpen(false);
+                        } catch {
+                            // Toast émis par le hook ; on garde le drawer ouvert.
+                        }
+                    }}
                 />
+
+                <Stack
+                    direction={{ xs: 'column', sm: 'row' }}
+                    justifyContent="space-between"
+                    alignItems={{ xs: 'flex-start', sm: 'center' }}
+                    spacing={1.5}
+                    sx={{ mb: 1 }}
+                >
+                    <SectionTitle
+                        title="Inviter des participants"
+                        subtitle="Sélectionnez les participants de l'entreprise à inviter, ou ajoutez-en un nouveau."
+                    />
+                    <Button
+                        variant="contained"
+                        disableElevation
+                        startIcon={<UserPlus size={16} />}
+                        disabled={isArchived}
+                        onClick={() => setAddDrawerOpen(true)}
+                        sx={{ borderRadius: 3, bgcolor: 'primary.main', flexShrink: 0 }}
+                    >
+                        Ajouter un participant
+                    </Button>
+                </Stack>
 
                 <Stack spacing={1.5} sx={{ mt: 1 }}>
                     {participantsLoading ? (

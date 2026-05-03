@@ -19,6 +19,7 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
+import type { AddParticipantToCampaignUseCase } from '@src/application/admin/campaigns/add-participant-to-campaign.usecase';
 import type { CreateAdminCampaignUseCase } from '@src/application/admin/campaigns/create-admin-campaign.usecase';
 import type { GetAdminCampaignDetailUseCase } from '@src/application/admin/campaigns/get-admin-campaign-detail.usecase';
 import type { ImportParticipantsToCampaignUseCase } from '@src/application/admin/campaigns/import-participants-to-campaign.usecase';
@@ -32,6 +33,7 @@ import type { JwtValidatedUser } from '@src/presentation/jwt-validated-user';
 import { AdminApplicationExceptionFilter } from './admin-application-exception.filter';
 import { AdminJwtAuthGuard } from './admin-jwt-auth.guard';
 import {
+    ADD_PARTICIPANT_TO_CAMPAIGN_USE_CASE_SYMBOL,
     CREATE_ADMIN_CAMPAIGN_USE_CASE_SYMBOL,
     GET_ADMIN_CAMPAIGN_DETAIL_USE_CASE_SYMBOL,
     IMPORT_PARTICIPANTS_TO_CAMPAIGN_USE_CASE_SYMBOL,
@@ -61,7 +63,9 @@ export class AdminCampaignsController {
         @Inject(IMPORT_PARTICIPANTS_TO_CAMPAIGN_USE_CASE_SYMBOL)
         private readonly importParticipantsToCampaign: ImportParticipantsToCampaignUseCase,
         @Inject(LIST_ADMIN_CAMPAIGNS_USE_CASE_SYMBOL)
-        private readonly listAdminCampaigns: ListAdminCampaignsUseCase
+        private readonly listAdminCampaigns: ListAdminCampaignsUseCase,
+        @Inject(ADD_PARTICIPANT_TO_CAMPAIGN_USE_CASE_SYMBOL)
+        private readonly addParticipantToCampaign: AddParticipantToCampaignUseCase
     ) {}
 
     private async ensureCampaignAccess(campaignId: number, user: JwtValidatedUser): Promise<void> {
@@ -117,8 +121,12 @@ export class AdminCampaignsController {
             status?: 'draft' | 'active' | 'closed' | 'archived';
         }
     ) {
+        // Un coach ne peut pas créer de campagne en autonomie : c'est une responsabilité admin.
+        // Cf. P06 du suivi produit 2026-05-02.
         if (req.user.scope === 'coach') {
-            body.coach_id = req.user.coachId;
+            throw new UnauthorizedException(
+                "La création d'une campagne est réservée à l'admin. Demandez à l'admin de vous attribuer une campagne."
+            );
         }
         return this.createAdminCampaign.execute(body);
     }
@@ -166,5 +174,26 @@ export class AdminCampaignsController {
     ) {
         await this.ensureCampaignAccess(campaignId, req.user);
         return this.importParticipantsToCampaign.execute(campaignId, file?.buffer);
+    }
+
+    @Post('campaigns/:campaignId/participants')
+    public async addParticipantToCampaignEndpoint(
+        @Param('campaignId', ParseIntPipe) campaignId: number,
+        @Req() req: { user: JwtValidatedUser },
+        @Body()
+        body: {
+            first_name?: string;
+            last_name?: string;
+            email?: string;
+            organisation?: string | null;
+            direction?: string | null;
+            service?: string | null;
+            function_level?: string | null;
+        }
+    ) {
+        // Ouvert à l'admin et au coach (le coach est restreint à ses campagnes via
+        // `ensureCampaignAccess`). Cf. P08 du suivi produit 2026-05-02.
+        await this.ensureCampaignAccess(campaignId, req.user);
+        return this.addParticipantToCampaign.execute(campaignId, body);
     }
 }

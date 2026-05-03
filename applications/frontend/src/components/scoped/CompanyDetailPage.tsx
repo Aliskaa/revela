@@ -44,6 +44,7 @@ const SCOPE_CFG: Record<
 
 export function CompanyDetailPage({ scope, companyId }: CompanyDetailPageProps) {
     const cfg = SCOPE_CFG[scope];
+    const isAdmin = scope === 'admin';
     const navigate = useNavigate();
 
     const { data: companies = [], isLoading: companiesLoading } = useCompanies();
@@ -95,12 +96,14 @@ export function CompanyDetailPage({ scope, companyId }: CompanyDetailPageProps) 
         <Stack spacing={3}>
             <Snackbar open={!!snack} autoHideDuration={4000} onClose={() => setSnack(null)} message={snack} />
 
-            <DeleteCompanyDialog
-                open={deleteCompanyOpen}
-                company={company}
-                onClose={() => setDeleteCompanyOpen(false)}
-                onDeleted={() => navigate({ to: cfg.backTo })}
-            />
+            {isAdmin && (
+                <DeleteCompanyDialog
+                    open={deleteCompanyOpen}
+                    company={company}
+                    onClose={() => setDeleteCompanyOpen(false)}
+                    onDeleted={() => navigate({ to: cfg.backTo })}
+                />
+            )}
 
             <DeleteCompanyParticipantDialog
                 participant={deleteParticipantTarget}
@@ -148,9 +151,10 @@ export function CompanyDetailPage({ scope, companyId }: CompanyDetailPageProps) 
                     onRowsPerPageChange={setRowsPerPage}
                     participantPathPrefix={cfg.participantPathPrefix}
                     onDeleteClick={setDeleteParticipantTarget}
+                    showCsvImport={isAdmin}
                 />
 
-                <CompanyDangerZone onDeleteClick={() => setDeleteCompanyOpen(true)} />
+                {isAdmin && <CompanyDangerZone onDeleteClick={() => setDeleteCompanyOpen(true)} />}
             </Stack>
         </Stack>
     );
