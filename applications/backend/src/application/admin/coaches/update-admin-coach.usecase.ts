@@ -29,9 +29,6 @@ export class UpdateAdminCoachUseCase {
         if (!current) {
             throw new AdminResourceNotFoundError('Coach introuvable.');
         }
-        if (current.username === this.ports.authConfig.superAdminUsername.trim().toLowerCase()) {
-            throw new AdminValidationError('Le compte admin ne peut pas être modifié depuis cette interface.');
-        }
 
         const hasUsername = body.username !== undefined;
         const hasPassword = body.password !== undefined;
@@ -39,6 +36,25 @@ export class UpdateAdminCoachUseCase {
         const hasIsActive = body.is_active !== undefined;
         if (!hasUsername && !hasPassword && !hasDisplayName && !hasIsActive) {
             throw new AdminValidationError('Aucun champ à mettre à jour.');
+        }
+
+        // Ligne sentinelle « Admin » : seul `display_name` est modifiable. Le `username` reste
+        // verrouillé (c'est lui qui identifie la ligne via `ADMIN_USERNAME` env), le password
+        // n'a pas de sens (auth via env, pas via cette ligne), et `is_active` doit rester `true`.
+        const isAdminCoach =
+            current.username === this.ports.authConfig.superAdminUsername.trim().toLowerCase();
+        if (isAdminCoach) {
+            if (hasUsername) {
+                throw new AdminValidationError('Le username du compte admin ne peut pas être modifié.');
+            }
+            if (hasPassword) {
+                throw new AdminValidationError(
+                    "Le mot de passe du compte admin n'est pas modifiable depuis cette interface."
+                );
+            }
+            if (hasIsActive) {
+                throw new AdminValidationError('Le compte admin ne peut pas être désactivé.');
+            }
         }
 
         let next = current;

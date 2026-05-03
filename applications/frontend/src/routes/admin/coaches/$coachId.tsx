@@ -25,7 +25,7 @@ import {
     Typography,
 } from '@mui/material';
 import { Link, createFileRoute, useNavigate } from '@tanstack/react-router';
-import { ArrowRight, ClipboardList, Lock, Pencil, ShieldCheck, Trash2, UserRound } from 'lucide-react';
+import { ArrowRight, ClipboardList, Pencil, ShieldCheck, Trash2, UserRound } from 'lucide-react';
 import * as React from 'react';
 
 export const Route = createFileRoute('/admin/coaches/$coachId')({
@@ -104,6 +104,11 @@ function AdminCoachDetailRoute() {
                     username: coach.username,
                     isActive: coach.isActive,
                 }}
+                lockedFields={
+                    isAdminCoach
+                        ? { username: true, password: true, isActive: true }
+                        : undefined
+                }
                 onClose={() => {
                     setEditOpen(false);
                     updateCoach.reset();
@@ -113,9 +118,15 @@ function AdminCoachDetailRoute() {
                         await updateCoach.mutateAsync({
                             coachId: numericId,
                             displayName: values.displayName,
-                            username: values.username,
-                            password: values.password.length > 0 ? values.password : undefined,
-                            isActive: values.isActive,
+                            // Pour la ligne admin, seul `displayName` est envoyé : les autres
+                            // champs sont verrouillés côté UI et refusés côté backend.
+                            ...(isAdminCoach
+                                ? {}
+                                : {
+                                      username: values.username,
+                                      password: values.password.length > 0 ? values.password : undefined,
+                                      isActive: values.isActive,
+                                  }),
                         });
                         setEditOpen(false);
                     } catch {
@@ -317,17 +328,17 @@ function AdminCoachDetailRoute() {
                             <Button
                                 variant="outlined"
                                 fullWidth
-                                startIcon={isAdminCoach ? <Lock size={16} /> : <Pencil size={16} />}
+                                startIcon={<Pencil size={16} />}
                                 onClick={() => setEditOpen(true)}
-                                disabled={isAdminCoach}
                                 sx={{ borderRadius: 3, mt: 2 }}
                             >
-                                {isAdminCoach ? 'Édition verrouillée' : 'Éditer le coach'}
+                                {isAdminCoach ? 'Éditer le nom à afficher' : 'Éditer le coach'}
                             </Button>
                             {isAdminCoach && (
                                 <Alert severity="info" icon={<ShieldCheck size={18} />} sx={{ mt: 1.5 }}>
-                                    Ce compte est la cible d'assignation des campagnes détenues par l'admin. Il ne peut
-                                    être ni édité ni supprimé depuis cette interface.
+                                    Ce compte est la cible d'assignation des campagnes détenues par l'admin. Seul le
+                                    nom à afficher est modifiable depuis cette interface ; le username, le mot de passe
+                                    et le statut sont verrouillés.
                                 </Alert>
                             )}
                         </CardContent>

@@ -42,6 +42,15 @@ export type AdminCoachDrawerFormProps = {
     onClose: () => void;
     onSubmit: (values: CoachFormValues) => Promise<unknown> | unknown;
     isSubmitting?: boolean;
+    /**
+     * Verrouille certains champs (rendus en lecture seule). Utilisé pour la ligne sentinelle
+     * « Admin » dont seul le `displayName` est modifiable depuis l'UI.
+     */
+    lockedFields?: {
+        username?: boolean;
+        password?: boolean;
+        isActive?: boolean;
+    };
 };
 
 const buildDefaults = (initial?: Partial<CoachFormValues>): CoachFormValues => ({
@@ -58,9 +67,14 @@ export function AdminCoachDrawerForm({
     onClose,
     onSubmit,
     isSubmitting = false,
+    lockedFields,
 }: AdminCoachDrawerFormProps) {
     const schema = React.useMemo(() => buildCoachSchema(mode), [mode]);
     const defaults = React.useMemo(() => buildDefaults(initialValues), [initialValues]);
+
+    const usernameLocked = lockedFields?.username ?? false;
+    const passwordLocked = lockedFields?.password ?? false;
+    const isActiveLocked = lockedFields?.isActive ?? false;
 
     const { values, errors, submit, submitting, setField, dirty } = useDrawerForm({
         schema,
@@ -114,8 +128,14 @@ export function AdminCoachDrawerForm({
                             value={values.username}
                             onChange={e => setField('username', e.target.value)}
                             error={Boolean(errors.username)}
-                            helperText={errors.username ?? 'Identifiant utilisé pour se connecter.'}
+                            helperText={
+                                errors.username ??
+                                (usernameLocked
+                                    ? 'Verrouillé pour le compte admin (défini par ADMIN_USERNAME).'
+                                    : 'Identifiant utilisé pour se connecter.')
+                            }
                             fullWidth
+                            disabled={usernameLocked}
                         />
                         <TextField
                             label={mode === 'create' ? 'Mot de passe initial' : 'Nouveau mot de passe (optionnel)'}
@@ -125,14 +145,17 @@ export function AdminCoachDrawerForm({
                             error={Boolean(errors.password)}
                             helperText={
                                 errors.password ??
-                                (mode === 'create'
-                                    ? 'Sera communiqué au coach pour sa première connexion.'
-                                    : 'Laisser vide pour conserver le mot de passe actuel.')
+                                (passwordLocked
+                                    ? "Verrouillé pour le compte admin (auth via variables d'environnement)."
+                                    : mode === 'create'
+                                      ? 'Sera communiqué au coach pour sa première connexion.'
+                                      : 'Laisser vide pour conserver le mot de passe actuel.')
                             }
                             fullWidth
+                            disabled={passwordLocked}
                             slotProps={{
                                 input: {
-                                    endAdornment: (
+                                    endAdornment: passwordLocked ? null : (
                                         <InputAdornment position="end">
                                             <IconButton
                                                 size="small"
@@ -163,12 +186,15 @@ export function AdminCoachDrawerForm({
                                 <Switch
                                     checked={values.isActive}
                                     onChange={(_, checked) => setField('isActive', checked)}
+                                    disabled={isActiveLocked}
                                 />
                             }
                             label={values.isActive ? 'Coach actif' : 'Coach désactivé'}
                         />
                         <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
-                            Un coach désactivé conserve ses campagnes mais ne peut plus se connecter.
+                            {isActiveLocked
+                                ? 'Le compte admin reste toujours actif.'
+                                : 'Un coach désactivé conserve ses campagnes mais ne peut plus se connecter.'}
                         </Typography>
                     </Box>
                 )}
