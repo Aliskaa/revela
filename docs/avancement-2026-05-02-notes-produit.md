@@ -10,7 +10,7 @@
 ## Checklist rapide
 
 - [x] L'admin peut etre un coach
-- [ ] Bloquer la saisie des statuts `cloturee` / `archivee` sans creation prealable
+- [x] Bloquer la saisie des statuts `cloturee` / `archivee` sans creation prealable
 - [ ] Ajouter une barre de recherche participant (liste participants)
 - [ ] Definir `Actif` si invitation acceptee
 - [x] Reaffecter automatiquement les campagnes d'un coach supprime vers l'admin
@@ -40,7 +40,7 @@
 | ID | Sujet | Statut | Notes |
 |---|---|---|---|
 | P01 | Admin peut etre coach | Fait | Frontend : suppression redirect bloquant `/coach`, libelles adaptatifs, entree « Vue coach » dans sidebar admin, bandeau ambre + bouton retour dans sidebar coach quand vu par super-admin. Backend : ligne sentinelle « Admin » dans coachesTable (cf. P05) — apparait dans la liste/picker, peut etre assignee comme coach d'une campagne |
-| P02 | Interdire `cloturee/archivee` sans creation prealable | Pas encore fait | Regle metier + validation backend + UI disable |
+| P02 | Interdire `cloturee/archivee` sans creation prealable | Fait | Backend : `create-admin-campaign` rejette `closed` / `archived` avec message explicatif. Frontend : le select de statut au form de creation ne propose plus que `draft` / `active`, helper text indiquant que cloture/archivage se font sur la campagne existante |
 | P03 | Recherche participant dans liste | Pas encore fait | Champ recherche + filtrage nom/email |
 | P04 | Statut participant "Actif" si invitation acceptee | Pas encore fait | Clarifier mapping exact des statuts |
 | P05 | Suppression coach => campagnes reassignees admin | Fait | Ligne sentinelle « Admin » bootstrappee au demarrage (`EnsureAdminCoachService`) ; suppression d'un coach bascule automatiquement ses campagnes vers cette ligne via `reassignAllByCoach` ; refus de supprimer / editer / cloner la ligne admin ; flag `isAdmin` expose cote API + UI (badge, edition verrouillee, picker campagne) |

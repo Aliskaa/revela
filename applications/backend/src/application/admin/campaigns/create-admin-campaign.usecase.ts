@@ -65,12 +65,21 @@ export class CreateAdminCampaignUseCase {
             throw new AdminValidationError('ends_at invalide.');
         }
 
+        // Une campagne ne peut naître que `draft` ou `active`. Les statuts terminaux (`closed`,
+        // `archived`) doivent passer par une transition explicite sur une campagne existante.
+        const requestedStatus = body.status ?? 'draft';
+        if (requestedStatus === 'closed' || requestedStatus === 'archived') {
+            throw new AdminValidationError(
+                "Une campagne ne peut être créée qu'en statut « brouillon » ou « active ». La clôture ou l'archivage doit s'effectuer ensuite sur la campagne existante."
+            );
+        }
+
         const draft = Campaign.create({
             coachId: coach.id,
             companyId: company.id,
             name,
             questionnaireId,
-            status: body.status ?? 'draft',
+            status: requestedStatus,
             allowTestWithoutManualInputs: Boolean(body.allow_test_without_manual_inputs),
             startsAt,
             endsAt,

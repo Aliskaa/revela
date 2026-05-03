@@ -236,9 +236,17 @@ export function AdminCampaignDrawerForm({
                             >
                                 <MenuItem value="draft">Brouillon</MenuItem>
                                 <MenuItem value="active">Active</MenuItem>
-                                <MenuItem value="closed">Clôturée</MenuItem>
-                                <MenuItem value="archived">Archivée</MenuItem>
+                                {/* `closed` et `archived` ne sont pas proposés à la création :
+                                    ces statuts sont des transitions appliquées sur une campagne
+                                    existante (cf. P02 du suivi produit). */}
+                                {mode === 'edit' && <MenuItem value="closed">Clôturée</MenuItem>}
+                                {mode === 'edit' && <MenuItem value="archived">Archivée</MenuItem>}
                             </Select>
+                            {mode === 'create' && (
+                                <FormHelperText>
+                                    La clôture et l'archivage se font ensuite sur la campagne existante.
+                                </FormHelperText>
+                            )}
                         </FormControl>
                     </Stack>
                 </Box>
