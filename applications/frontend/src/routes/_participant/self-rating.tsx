@@ -125,7 +125,13 @@ function ParticipantSelfRatingRoute() {
                 autoHideDuration={3000}
                 onClose={() => {
                     setSuccessOpen(false);
-                    navigate({ to: '/' });
+                    // Après validation d'une étape du parcours, retour systématique sur la fiche
+                    // de la campagne concernée (cf. P10 du suivi produit 2026-05-02).
+                    if (campaignId !== undefined) {
+                        navigate({ to: '/campaigns/$campaignId', params: { campaignId: String(campaignId) } });
+                    } else {
+                        navigate({ to: '/' });
+                    }
                 }}
                 message="Auto-évaluation enregistrée"
             />

@@ -16,8 +16,8 @@
 - [x] Retirer la creation de campagne autonome cote coach
 - [x] Retirer la creation/suppression d'entreprise cote coach
 - [x] Ajouter un bouton d'ajout manuel d'un participant a une campagne
-- [ ] Rediriger vers le dashboard apres creation du compte participant
-- [ ] Revenir au detail de campagne apres validation d'une etape du parcours
+- [x] Rediriger vers le dashboard apres creation du compte participant
+- [x] Revenir au detail de campagne apres validation d'une etape du parcours
 - [ ] Ajouter un commentaire optionnel pour les pairs lors des feedbacks
 - [ ] Autoriser la poursuite du parcours feedback tant que moins de 5 pairs enregistres
 - [ ] Exiger une confirmation explicite de fin de feedback pairs avant suite parcours/test
@@ -45,8 +45,8 @@
 | P06 | Retirer creation campagne cote coach | Fait | Backend : `POST /admin/campaigns` rejette `scope === 'coach'` (401). Frontend : bouton « Nouvelle campagne » et drawer cachés en scope coach dans `CampaignsListPage` |
 | P07 | Retirer creation/suppression entreprise cote coach | Fait | Backend : `POST /admin/companies` et `DELETE /admin/companies/:id` rejettent `scope === 'coach'` (401). Frontend : bouton « Ajouter une entreprise » + drawer cachés en scope coach dans `CompaniesListPage` ; `CompanyDangerZone` + `DeleteCompanyDialog` cachés en scope coach dans `CompanyDetailPage` |
 | P08 | Ajout manuel d'un participant a une campagne | Fait | **Facette A (bulk)** : `POST /admin/companies/:id/participants/import` rejette `scope === 'coach'` (401). Bouton CSV + texte d'aide caches en scope coach via prop `showCsvImport` sur `CompanyParticipantsTable`. **Facette B (unitaire)** : 2 endpoints (`POST /admin/campaigns/:id/participants` avec auto-invitation + `POST /admin/companies/:id/participants` sans invitation) ouverts admin + coach. Use cases dedies (`AddParticipantToCampaignUseCase`, `AddParticipantToCompanyUseCase`). Drawer `AddParticipantToCampaignDrawerForm` reutilisable via props `subtitle` / `submitLabel`. Hooks `useAddParticipantToCampaign`, `useAddParticipantToCompany`. Boutons « Ajouter un participant » dans `CampaignManageParticipants` (fiche campagne) **et** `CompanyParticipantsTable` (fiche entreprise) |
-| P09 | Post-creation compte participant => dashboard | Pas encore fait | Verifier redirection login/activation |
-| P10 | Fin etape parcours => retour detail campagne | Pas encore fait | Uniformiser navigation post-submit |
+| P09 | Post-creation compte participant => dashboard | Fait | Suppression de la branche conditionnelle qui redirigeait vers `/self-rating` quand la campagne etait ouverte. Le participant atterrit systematiquement sur `/` (dashboard) apres activation, conformement a la regle produit |
+| P10 | Fin etape parcours => retour detail campagne | Fait | Auto-evaluation : redirection `/` -> `/campaigns/$campaignId` (avec fallback `/` si campaignId absent). Test : redirection `/campaigns/$campaignId/results` -> `/campaigns/$campaignId` (l'utilisateur clique ensuite pour les resultats). Peer-feedback non touche : la logique multi-pairs + confirmation finale est partie de P12/P13 |
 | P11 | Commentaire optionnel sur feedback pair | Pas encore fait | Ajouter champ optionnel |
 | P12 | Feedback pairs: continuer tant que < 5 enregistres | Pas encore fait | Regle de progression a confirmer |
 | P13 | Confirmation "j'ai termine les feedbacks" obligatoire | Pas encore fait | Etape de confirmation explicite |

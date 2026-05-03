@@ -286,17 +286,10 @@ function InvitePage() {
             }
             try {
                 await activateInvite.mutateAsync({ password });
-                const status = activationInvite.campaign_status;
-                const hasCampaign = activationInvite.campaign_id != null;
-                const campaignOpen = !hasCampaign || status === 'active';
-
-                if (campaignOpen) {
-                    navigate({
-                        to: '/self-rating',
-                    });
-                } else {
-                    navigate({ to: '/', replace: true });
-                }
+                // Après activation, le participant arrive systématiquement sur son dashboard
+                // (cf. P09 du suivi produit 2026-05-02). De là il peut démarrer son parcours
+                // (auto-évaluation, feedback pairs, test) selon l'état de ses campagnes.
+                navigate({ to: '/', replace: true });
             } catch (err) {
                 const ax = err as { response?: { status?: number; data?: { error?: string } } };
                 const status = ax?.response?.status;

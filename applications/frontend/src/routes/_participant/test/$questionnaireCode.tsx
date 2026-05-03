@@ -341,9 +341,12 @@ function ParticipantTestSessionRoute() {
         await submitMutation.mutateAsync({ series0, series1 });
         setSuccessOpen(true);
         setTimeout(() => {
+            // Après validation d'une étape du parcours, retour systématique sur la fiche
+            // de la campagne concernée (cf. P10 du suivi produit 2026-05-02). Le participant
+            // accède aux résultats depuis la fiche, pas en passant directement par eux.
             if (campaignId !== undefined) {
                 navigate({
-                    to: '/campaigns/$campaignId/results',
+                    to: '/campaigns/$campaignId',
                     params: { campaignId: String(campaignId) },
                 });
             } else {
