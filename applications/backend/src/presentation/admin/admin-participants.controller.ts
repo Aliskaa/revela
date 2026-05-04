@@ -185,7 +185,13 @@ export class AdminParticipantsController {
     ) {
         const qid = AdminParticipantsController.normalizeQid(qidRaw) ?? '';
         const coachId = req.user.scope === 'coach' ? req.user.coachId : undefined;
-        return this.getParticipantQuestionnaireMatrix.execute({ participantId, qid, coachId });
+        return this.getParticipantQuestionnaireMatrix.execute({
+            participantId,
+            qid,
+            coachId,
+            peerColumnPerspective: 'received',
+            anonymizeReceivedPeerLabels: false,
+        });
     }
 
     @Delete('participants/:participantId')

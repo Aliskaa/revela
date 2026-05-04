@@ -164,7 +164,9 @@ export class SubmitParticipantQuestionnaireUseCase {
                 }
             }
 
-            const peerResponses = existing.filter(r => r.submissionKind === 'peer_rating');
+            const peerResponses = existing.filter(
+                r => r.submissionKind === 'peer_rating' && r.subjectParticipantId === participant.id
+            );
             const isDuplicate = peerResponses.some(r => {
                 if (ratedParticipantId !== undefined) {
                     return (
@@ -225,7 +227,10 @@ export class SubmitParticipantQuestionnaireUseCase {
         }
         const manualInputsCompleted =
             existing.some(r => r.submissionKind === 'self_rating') &&
-            existing.some(r => r.submissionKind === 'peer_rating');
+            existing.some(
+                r =>
+                    r.submissionKind === 'peer_rating' && r.subjectParticipantId === participant.id
+            );
         if (!campaign.allowTestWithoutManualInputs && !manualInputsCompleted) {
             throw new ResponsesValidationError(
                 "Le test Element Humain sera disponible apres l'auto-evaluation et le feedback pair."

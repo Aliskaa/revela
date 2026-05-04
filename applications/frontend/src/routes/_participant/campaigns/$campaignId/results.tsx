@@ -32,7 +32,8 @@ function ParticipantResultsRoute() {
     const { data: matrix, isLoading: matrixLoading } = useParticipantSessionMatrix(
         qid.length > 0,
         qid,
-        Number.isFinite(campaignId) ? campaignId : undefined
+        Number.isFinite(campaignId) ? campaignId : undefined,
+        'received'
     );
 
     const hasResults =

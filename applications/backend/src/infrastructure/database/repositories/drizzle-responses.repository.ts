@@ -69,6 +69,10 @@ export class DrizzleResponsesRepository implements IResponsesRepositoryPort {
         const subjectMatch = or(
             eq(questionnaireResponsesTable.subjectParticipantId, subjectParticipantId),
             and(
+                eq(questionnaireResponsesTable.submissionKind, 'peer_rating'),
+                eq(questionnaireResponsesTable.ratedParticipantId, subjectParticipantId)
+            ),
+            and(
                 eq(questionnaireResponsesTable.submissionKind, 'element_humain'),
                 isNull(questionnaireResponsesTable.subjectParticipantId),
                 eq(questionnaireResponsesTable.participantId, subjectParticipantId)
