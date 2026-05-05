@@ -73,7 +73,7 @@ function PrivacyPolicyPage() {
                     </Paragraph>
                     <ul>
                         <li>
-                            Permettre la passation des questionnaires d'évaluation comportementale (auto-évaluation,
+                            Permettre la passation des questionnaires d'évaluation comportementale (Regard sur soi,
                             feedback de pairs, élément humain) dans le cadre d'une mission de coaching ou de bilan
                             mandatée par votre employeur.
                         </li>

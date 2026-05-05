@@ -143,7 +143,7 @@ function ParticipantResultsRoute() {
                             </Typography>
                             <Stack direction="row" spacing={0.6} alignItems="center" sx={{ mt: 1, maxWidth: 860 }}>
                                 <Typography variant="body1" color="text.secondary" sx={{ lineHeight: 1.7 }}>
-                                    Comparaison détaillée entre l'auto-évaluation, les retours pairs et l'analyse
+                                    Comparaison détaillée entre l'Regard sur soi, les retours pairs et l'analyse
                                     scientifique, avec écart absolu entre les paires « je suis / je veux ».
                                 </Typography>
                                 <Tooltip

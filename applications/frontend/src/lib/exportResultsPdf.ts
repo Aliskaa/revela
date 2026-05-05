@@ -117,7 +117,7 @@ export const exportResultsPdf = (params: ExportParams) => {
         `Participant : ${participantName}`,
         `Coach : ${coachName}`,
         `Questionnaire : ${questionnaireId}`,
-        `Sources : Auto-évaluation · ${String(peerCount)} pair${peerCount !== 1 ? 's' : ''} · Test scientifique`,
+        `Sources : Regard sur soi · ${String(peerCount)} pair${peerCount !== 1 ? 's' : ''} · Test scientifique`,
     ];
     for (const line of infoLines) {
         doc.text(line, marginX, y);
@@ -143,7 +143,7 @@ export const exportResultsPdf = (params: ExportParams) => {
     }
 
     const legendItems: Array<{ label: string; color: { r: number; g: number; b: number } }> = [
-        { label: 'Auto-évaluation', color: BLUE },
+        { label: 'Regard sur soi', color: BLUE },
     ];
     let peerIdx = 0;
     for (const pLabel of allPeerLabels) {

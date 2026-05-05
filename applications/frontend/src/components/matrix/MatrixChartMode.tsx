@@ -92,7 +92,7 @@ function RowBars({ matrix, row }: { matrix: ParticipantQuestionnaireMatrix; row:
                 {row.label}
             </Typography>
             <Stack direction="row" flexWrap="wrap" gap={1.4} useFlexGap>
-                <MiniBar label="Auto-évaluation" value={row.self} max={matrix.likert_max} color="#1515B0" />
+                <MiniBar label="Regard sur soi" value={row.self} max={matrix.likert_max} color="#1515B0" />
                 {row.peers.map((v, i) => (
                     <MiniBar
                         key={matrix.peer_columns[i]?.response_id ?? i}

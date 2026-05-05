@@ -43,7 +43,7 @@ export type CampaignView = {
 
 const journeyTemplate: JourneyStep[] = [
     {
-        label: 'Auto-évaluation',
+        label: 'Regard sur soi',
         state: 'locked',
         description: 'Vos réponses sont enregistrées pour la campagne en cours.',
         icon: BadgeCheck,
@@ -77,7 +77,7 @@ const journeyTemplate: JourneyStep[] = [
 
 const metricsTemplate: Metric[] = [
     { label: 'Progression', value: '—', helper: 'parcours complété', icon: Gauge },
-    { label: 'Auto-évaluation', value: '—', helper: 'première étape du parcours', icon: ClipboardCheck },
+    { label: 'Regard sur soi', value: '—', helper: 'première étape du parcours', icon: ClipboardCheck },
     { label: 'Feedback pairs', value: '—', helper: 'retours liés à la campagne', icon: Users },
     { label: 'Questionnaire', value: '—', helper: 'lié à la campagne', icon: Brain },
 ];
@@ -127,7 +127,7 @@ export const buildNextAction = (assignment?: ParticipantAssignment): string => {
             : 'Démarrer votre parcours';
     }
     if (progression.self_rating_status !== 'completed') {
-        return 'Compléter votre auto-évaluation';
+        return 'Compléter votre Regard sur soi';
     }
     if (progression.peer_feedback_status !== 'completed') {
         return 'Finaliser le feedback des pairs';
@@ -231,7 +231,7 @@ export const buildJourney = (assignment?: ParticipantAssignment): JourneyStep[] 
 /**
  * Estimation grossière du temps restant pour finir le parcours, basée sur des constantes de
  * référence (mesurées sur les premiers utilisateurs, à recalibrer avec les données prod) :
- * auto-évaluation ~10 min, feedback pairs ~10 min, test Élément Humain ~15 min.
+ * Regard sur soi ~10 min, feedback pairs ~10 min, test Élément Humain ~15 min.
  * La consultation des résultats et la restitution coaching ne sont pas comptées (lecture libre,
  * dépend du coach).
  */

@@ -23,7 +23,7 @@ const FUNCTION_LEVEL_FR: Record<string, string> = {
 };
 
 const SUBMISSION_KIND_FR: Record<string, string> = {
-    self_rating: 'Auto-évaluation',
+    self_rating: 'Regard sur soi',
     peer_rating: 'Feedback de pairs',
     element_humain: 'Élément humain',
 };

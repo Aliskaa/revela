@@ -356,7 +356,7 @@ function ParticipantTestIndexRoute() {
                                 subtitle="La page est un point d’entrée, pas le questionnaire complet."
                             />
                             <Typography variant="body2" color="text.secondary" sx={{ mt: 1.5, lineHeight: 1.8 }}>
-                                L’auto-évaluation et les pairs utilisent les short labels notés de 1 à 9. Ici, on
+                                L’Regard sur soi et les pairs utilisent les short labels notés de 1 à 9. Ici, on
                                 bascule sur le test Élément Humain assigné par la campagne, sans option de sélection
                                 manuelle.
                             </Typography>

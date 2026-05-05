@@ -123,7 +123,7 @@ export function MatrixTableMode({ matrix }: MatrixTableModeProps) {
                                 py: 2,
                             }}
                         >
-                            Auto-évaluation
+                            Regard sur soi
                         </TableCell>
                         {peerHeaders.map((label, i) => (
                             <TableCell

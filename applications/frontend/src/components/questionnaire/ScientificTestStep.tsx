@@ -190,7 +190,7 @@ export function ScientificTestStep({ qid, q, campaignId }: ScientificTestStepPro
                         submitPending={submit.isPending}
                     />
                     <AiPlaceholder title="Analyse croisée IA (Théorie vs. pratique - placeholder)" fullWidth>
-                        Exemple de rendu : vos réponses au test pourront être comparées à vos auto-évaluations et aux
+                        Exemple de rendu : vos réponses au test pourront être comparées à vos Regard sur sois et aux
                         retours pairs lorsque ces données seront disponibles. Aucun moteur IA n&apos;est connecté pour
                         l&apos;instant.
                     </AiPlaceholder>

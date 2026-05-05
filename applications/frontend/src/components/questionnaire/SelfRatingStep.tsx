@@ -82,7 +82,7 @@ export function SelfRatingStep({ qid, q, campaignId }: SelfRatingStepProps) {
                     endIcon={<Sparkles size={18} />}
                     sx={aorPrimaryButtonSx}
                 >
-                    {submitSelf.isPending ? 'Enregistrement...' : 'Valider mon auto-évaluation'}
+                    {submitSelf.isPending ? 'Enregistrement...' : 'Valider mon Regard sur soi'}
                 </Button>
             </Box>
         </Box>
