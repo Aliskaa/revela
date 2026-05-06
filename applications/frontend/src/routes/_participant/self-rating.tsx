@@ -66,7 +66,7 @@ function ParticipantSelfRatingRoute() {
         !activeAssignment?.progression;
     const canSubmit = campaignActive && stepAvailable;
     const questionnaireTitle =
-        matrix?.questionnaire_title ?? activeAssignment?.questionnaire_title ?? 'Auto-évaluation';
+        matrix?.questionnaire_title ?? activeAssignment?.questionnaire_title ?? 'Regard sur soi';
     const questionnaireCode = matrix?.questionnaire_id ?? qid;
 
     const dimensions = useBuildDimensions(matrix);
@@ -93,7 +93,7 @@ function ParticipantSelfRatingRoute() {
             <Card variant="outlined">
                 <CardContent sx={{ p: 3 }}>
                     <Typography variant="h6" fontWeight={700} color="text.primary">
-                        Chargement de l'auto-évaluation
+                        Chargement de l'Regard sur soi
                     </Typography>
                     <LinearProgress sx={{ mt: 2 }} />
                 </CardContent>
@@ -102,14 +102,14 @@ function ParticipantSelfRatingRoute() {
     }
 
     if (isError || !session) {
-        return <Alert severity="error">Impossible de charger l'auto-évaluation pour le moment.</Alert>;
+        return <Alert severity="error">Impossible de charger l'Regard sur soi pour le moment.</Alert>;
     }
 
     if (activeAssignment?.progression?.self_rating_status === 'completed') {
         return (
             <StepCompletedBanner
-                title="Auto-évaluation déjà soumise"
-                description="Vous avez validé votre auto-évaluation. Pour préserver l'intégrité du parcours, elle ne peut plus être modifiée."
+                title="Regard sur soi déjà soumise"
+                description="Vous avez validé votre Regard sur soi. Pour préserver l'intégrité du parcours, elle ne peut plus être modifiée."
             />
         );
     }
@@ -133,7 +133,7 @@ function ParticipantSelfRatingRoute() {
                         navigate({ to: '/' });
                     }
                 }}
-                message="Auto-évaluation enregistrée"
+                message="Regard sur soi enregistrée"
             />
 
             <Card variant="outlined">
@@ -146,7 +146,7 @@ function ParticipantSelfRatingRoute() {
                     >
                         <Box>
                             <Chip
-                                label="Auto-évaluation"
+                                label="Regard sur soi"
                                 sx={{ borderRadius: 99, bgcolor: 'tint.primaryBg', color: 'primary.main', mb: 1.5 }}
                             />
                             <Typography variant="h4" fontWeight={800} color="text.primary" sx={{ letterSpacing: -0.5 }}>
@@ -201,7 +201,7 @@ function ParticipantSelfRatingRoute() {
                     value={questionnaireCode || '–'}
                     frame="box"
                 />
-                <StatCard variant="compact" icon={BadgeCheck} label="Type" value="Auto-évaluation" frame="box" />
+                <StatCard variant="compact" icon={BadgeCheck} label="Type" value="Regard sur soi" frame="box" />
                 <StatCard variant="compact" icon={Hash} label="Échelle" value="1 à 9" frame="box" />
                 <StatCard
                     variant="compact"
@@ -215,7 +215,7 @@ function ParticipantSelfRatingRoute() {
             {!canSubmit && (
                 <Alert severity="warning">
                     {!campaignActive
-                        ? "La campagne n'est pas active. L'auto-évaluation sera disponible une fois la campagne lancée par l'administrateur."
+                        ? "La campagne n'est pas active. L'Regard sur soi sera disponible une fois la campagne lancée par l'administrateur."
                         : "Cette étape n'est pas encore accessible. Vérifiez l'état de votre parcours."}
                 </Alert>
             )}
@@ -246,7 +246,7 @@ function ParticipantSelfRatingRoute() {
                                     block={block}
                                     scores={scores}
                                     onScoreChange={handleScoreChange}
-                                    chipLabel="Auto-évaluation"
+                                    chipLabel="Regard sur soi"
                                 />
                             ))}
                         </Stack>
@@ -269,7 +269,7 @@ function ParticipantSelfRatingRoute() {
                                 {submitMutation.isPending
                                     ? 'Enregistrement…'
                                     : allFilled
-                                      ? "Valider l'auto-évaluation"
+                                      ? "Valider l'Regard sur soi"
                                       : `Enregistrer (${filledCount}/${totalItems})`}
                             </Button>
                         </Stack>

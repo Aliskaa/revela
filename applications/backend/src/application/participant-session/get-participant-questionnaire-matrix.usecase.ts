@@ -47,6 +47,8 @@ const latestBySubmittedAt = (records: ResponseRecord[]): ResponseRecord | null =
 const byKind = (records: ResponseRecord[], kind: SubmissionKind): ResponseRecord[] =>
     records.filter(r => r.submissionKind === kind);
 
+export type PeerColumnPerspective = 'given' | 'received';
+
 export class GetParticipantQuestionnaireMatrixUseCase {
     public constructor(
         private readonly ports: {
@@ -67,6 +69,16 @@ export class GetParticipantQuestionnaireMatrixUseCase {
         qid: string;
         campaignId?: number;
         coachId?: number;
+        /**
+         * `given` : colonnes = feedbacks émis par le sujet vers ses pairs (saisie feedback).
+         * `received` : colonnes = feedbacks reçus par le sujet (résultats, vue coach/admin).
+         */
+        peerColumnPerspective?: PeerColumnPerspective;
+        /**
+         * Uniquement avec `received` : masquer noms / IDs pairs côté participant (P14/P16).
+         * Toujours `false` sur l'API admin (y compris super-admin).
+         */
+        anonymizeReceivedPeerLabels?: boolean;
     }): Promise<ParticipantQuestionnaireMatrix> {
         if (params.coachId !== undefined) {
             const allowed = await this.ports.participants.findByIdEnriched(params.participantId, {
@@ -95,17 +107,55 @@ export class GetParticipantQuestionnaireMatrixUseCase {
         const selfRecord = latestBySubmittedAt(byKind(responses, 'self_rating'));
         const scientificRecord = latestBySubmittedAt(byKind(responses, 'element_humain'));
 
-        const peerCandidates = byKind(responses, 'peer_rating');
+        const perspective = params.peerColumnPerspective ?? 'given';
+        const peerCandidatesAll = byKind(responses, 'peer_rating');
+        const peerCandidates =
+            perspective === 'given'
+                ? peerCandidatesAll.filter(r => r.subjectParticipantId === participant.id)
+                : peerCandidatesAll.filter(r => r.ratedParticipantId === participant.id);
         peerCandidates.sort((a, b) => (b.submittedAt?.getTime() ?? 0) - (a.submittedAt?.getTime() ?? 0));
         const peerRecords = peerCandidates.slice(0, 5).reverse();
 
-        const peer_columns: ParticipantQuestionnaireMatrixPeerColumn[] = peerRecords.map(r => {
-            const rawName = r.name.trim() || `Pair #${String(r.id)}`;
+        const anonymizeReceivedPeers = perspective === 'received' && (params.anonymizeReceivedPeerLabels ?? false);
+
+        const raterDisplayNames = new Map<number, string>();
+        if (perspective === 'received' && !anonymizeReceivedPeers && peerRecords.length > 0) {
+            const raterIds = [
+                ...new Set(
+                    peerRecords
+                        .map(r => r.subjectParticipantId)
+                        .filter((id): id is number => id !== null && id !== undefined)
+                ),
+            ];
+            for (const id of raterIds) {
+                const p = await this.ports.participants.findById(id);
+                if (p) {
+                    raterDisplayNames.set(id, `${p.firstName} ${p.lastName}`.trim());
+                }
+            }
+        }
+
+        const peer_columns: ParticipantQuestionnaireMatrixPeerColumn[] = peerRecords.map((r, index) => {
+            if (perspective === 'given') {
+                const rawName = r.name.trim() || `Pair #${String(r.id)}`;
+                return {
+                    response_id: r.id,
+                    label: displayPeerRatingStoredLabel(rawName),
+                    rater_participant_id: r.raterParticipantId,
+                    rated_participant_id: r.ratedParticipantId ?? parsePeerRatingTargetParticipantId(rawName),
+                };
+            }
+            const raterId = r.subjectParticipantId;
+            const label = anonymizeReceivedPeers
+                ? `Pair #${String(index + 1)}`
+                : (raterId !== null && raterId !== undefined
+                      ? (raterDisplayNames.get(raterId) ?? r.name.trim())
+                      : r.name.trim()) || `Pair #${String(index + 1)}`;
             return {
                 response_id: r.id,
-                label: displayPeerRatingStoredLabel(rawName),
-                rater_participant_id: r.raterParticipantId,
-                rated_participant_id: r.ratedParticipantId ?? parsePeerRatingTargetParticipantId(rawName),
+                label,
+                rater_participant_id: anonymizeReceivedPeers ? null : raterId,
+                rated_participant_id: anonymizeReceivedPeers ? null : r.ratedParticipantId,
             };
         });
 

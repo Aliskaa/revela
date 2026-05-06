@@ -208,7 +208,7 @@ export function ParticipantDashboardRoute() {
                                 Bonjour {participantFirstName}
                             </Typography>
                             <Typography variant="body1" color="text.secondary" sx={{ mt: 0.8, lineHeight: 1.7 }}>
-                                Voici un aperçu rapide de vos campagnes et de leur avancement.
+                                Voici un aperçu rapide de vos parcours et de leur avancement.
                             </Typography>
                         </Box>
                         <Button
@@ -219,7 +219,7 @@ export function ParticipantDashboardRoute() {
                             endIcon={<ArrowRight size={14} />}
                             sx={{ borderRadius: 3 }}
                         >
-                            Voir mes campagnes
+                            Voir mes parcours
                         </Button>
                     </Stack>
                 </CardContent>
@@ -238,11 +238,11 @@ export function ParticipantDashboardRoute() {
             >
                 <SummaryCard
                     icon={Layers3}
-                    label="Mes campagnes"
+                    label="Mes parcours"
                     value={String(total)}
                     helper="rattachées à votre compte"
                 />
-                <SummaryCard icon={Gauge} label="En cours" value={String(active)} helper="campagnes actives" />
+                <SummaryCard icon={Gauge} label="En cours" value={String(active)} helper="parcours actifs" />
                 <SummaryCard
                     icon={Hourglass}
                     label="À confirmer"
@@ -261,10 +261,10 @@ export function ParticipantDashboardRoute() {
                 <Card variant="outlined">
                     <CardContent sx={{ p: 3 }}>
                         <Typography variant="h6" fontWeight={800} color="text.primary">
-                            Aucune campagne pour le moment
+                            Aucun parcours pour le moment
                         </Typography>
                         <Typography variant="body2" color="text.secondary" sx={{ mt: 0.6, lineHeight: 1.7 }}>
-                            Les campagnes apparaissent ici dès qu'un coach vous y invite.
+                            Les parcours apparaissent ici dès qu'un coach vous y invite.
                         </Typography>
                     </CardContent>
                 </Card>

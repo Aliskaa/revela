@@ -24,7 +24,7 @@ export const QuestionnaireMatrixDisplay = ({ matrix }: QuestionnaireMatrixDispla
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }}>
                     <Info size={18} className="text-secondary" color="#6b7280" />
                     <Typography variant="body2" color="text.secondary" fontWeight={500}>
-                        Auto-évaluation (Rép. #{matrix.self_response_id ?? '—'})
+                        Regard sur soi (Rép. #{matrix.self_response_id ?? '—'})
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
                         •

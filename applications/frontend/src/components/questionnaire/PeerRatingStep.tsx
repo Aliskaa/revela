@@ -263,7 +263,7 @@ export function PeerRatingStep({ qid, q, campaignId }: PeerRatingStepProps) {
             )}
 
             <AiPlaceholder title="Analyse croisée (aperçu)" fullWidth>
-                Lorsque plusieurs sources seront disponibles, une synthèse pourra mettre en regard votre auto-évaluation
+                Lorsque plusieurs sources seront disponibles, une synthèse pourra mettre en regard votre Regard sur soi
                 et les retours pairs (ex. écarts sur une dimension). Contenu indicatif - pas d&apos;appel IA branché
                 pour l&apos;instant.
             </AiPlaceholder>

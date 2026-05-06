@@ -1,7 +1,7 @@
 services:
   db:
     image: postgres:16
-    restart: unless-stopped
+    # restart: unless-stopped
     environment:
       POSTGRES_DB: questionnaire_platform
       POSTGRES_USER: postgres

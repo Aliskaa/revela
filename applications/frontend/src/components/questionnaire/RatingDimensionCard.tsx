@@ -14,7 +14,7 @@ export const RatingDimensionCard = ({
     block,
     scores,
     onScoreChange,
-    chipLabel = 'Auto-évaluation',
+    chipLabel = 'Regard sur soi',
     chipVariant = 'primary',
 }: RatingDimensionCardProps) => {
     const chipSx =

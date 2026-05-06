@@ -11,11 +11,13 @@ import type {
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 
+export type ParticipantMatrixPeersParam = 'given' | 'received';
+
 export const participantSessionKeys = {
     session: ['participant', 'session'] as const,
     matrixRoot: ['participant', 'matrix'] as const,
-    matrix: (qid: string, campaignId?: number | null) =>
-        [...participantSessionKeys.matrixRoot, campaignId ?? 'none', qid] as const,
+    matrix: (qid: string, campaignId?: number | null, peers: ParticipantMatrixPeersParam = 'given') =>
+        [...participantSessionKeys.matrixRoot, campaignId ?? 'none', qid, peers] as const,
     campaignPeersRoot: ['participant', 'campaign-peers'] as const,
     campaignPeers: (campaignId: number) => [...participantSessionKeys.campaignPeersRoot, campaignId] as const,
 };
@@ -27,18 +29,26 @@ export function useParticipantSession() {
     });
 }
 
-export function useParticipantSessionMatrix(enabled: boolean, qid: string, campaignId?: number | null) {
+export function useParticipantSessionMatrix(
+    enabled: boolean,
+    qid: string,
+    campaignId?: number | null,
+    peerPerspective: ParticipantMatrixPeersParam = 'given'
+) {
     const q = qid.trim().toUpperCase();
     const validCampaignId = typeof campaignId === 'number' && campaignId > 0 ? campaignId : null;
     return useQuery<ParticipantQuestionnaireMatrix>({
-        queryKey: participantSessionKeys.matrix(q, validCampaignId),
+        queryKey: participantSessionKeys.matrix(q, validCampaignId, peerPerspective),
         queryFn: () => {
             if (validCampaignId === null) {
                 return Promise.reject(new Error('campaignId requis pour charger la matrice'));
             }
             return participantApiClient
                 .get(`/participant/campaigns/${validCampaignId}/matrix`, {
-                    params: { qid: q },
+                    params: {
+                        qid: q,
+                        ...(peerPerspective === 'received' ? { peers: 'received' } : {}),
+                    },
                 })
                 .then(r => r.data);
         },

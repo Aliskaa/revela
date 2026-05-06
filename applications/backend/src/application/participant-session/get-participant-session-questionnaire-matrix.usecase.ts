@@ -21,7 +21,8 @@ export class GetParticipantSessionQuestionnaireMatrixUseCase {
     public async execute(
         participantId: number,
         qid?: string,
-        campaignId?: number
+        campaignId?: number,
+        peerColumnPerspective: 'given' | 'received' = 'given'
     ): Promise<ParticipantQuestionnaireMatrix> {
         const assignments = await this.ports.participants.listInviteAssignmentsForParticipant(participantId);
         if (assignments.length === 0) {
@@ -53,6 +54,8 @@ export class GetParticipantSessionQuestionnaireMatrixUseCase {
             participantId,
             qid: match.questionnaireId.toUpperCase(),
             campaignId: matchedCampaignId,
+            peerColumnPerspective,
+            anonymizeReceivedPeerLabels: peerColumnPerspective === 'received',
         });
     }
 }

@@ -275,10 +275,17 @@ export class ParticipantController {
     public async campaignMatrix(
         @CurrentParticipantId() participantId: number,
         @Param('campaignId', ParseIntPipe) campaignId: number,
-        @Query('qid') qid?: string
+        @Query('qid') qid?: string,
+        @Query('peers') peers?: string
     ) {
         const normalizedQid = ParticipantController.normalizeQid(qid);
-        return this.getParticipantSessionMatrix.execute(participantId, normalizedQid, campaignId);
+        const peerColumnPerspective = peers === 'received' ? 'received' : 'given';
+        return this.getParticipantSessionMatrix.execute(
+            participantId,
+            normalizedQid,
+            campaignId,
+            peerColumnPerspective
+        );
     }
 
     @Post('campaigns/:campaignId/confirm')

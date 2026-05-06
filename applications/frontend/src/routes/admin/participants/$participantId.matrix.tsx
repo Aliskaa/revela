@@ -55,7 +55,7 @@ function ParticipantMatrixPage() {
                         Matrice des scores
                     </Typography>
                     <Typography variant="body1" color="text.secondary">
-                        Participant #{participantId} — Comparaison détaillée entre l'auto-évaluation, les retours pairs
+                        Participant #{participantId} — Comparaison détaillée entre l'Regard sur soi, les retours pairs
                         et l'analyse scientifique.
                     </Typography>
                 </Box>

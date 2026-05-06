@@ -11,6 +11,8 @@ import {
     CircularProgress,
     Container,
     FormControlLabel,
+    List,
+    ListItem,
     Link as MuiLink,
     Paper,
     Stack,
@@ -200,9 +202,9 @@ function InvitePage() {
                     </Stack>
 
                     <Typography variant="body1" color="text.secondary" mb={3} lineHeight={1.6}>
-                        Vous avez été invité·e à rejoindre une campagne d'évaluation. Merci de confirmer votre
-                        participation avant de poursuivre. Vous pourrez répondre aux questionnaires lorsque la campagne
-                        sera activée par votre coach.
+                        Cet espace vous est proposé par le Cabinet AOR dans le cadre de votre parcours de formation
+                        manager. Il vous permet de réaliser un travail de conscience de soi en trois étapes : un regard sur
+                        vous-même, des feedbacks de vos pairs, et le questionnaire Élément Humain.
                     </Typography>
 
                     <Alert
@@ -211,16 +213,24 @@ function InvitePage() {
                         sx={{ mb: 3, borderRadius: 2, '& .MuiAlert-message': { lineHeight: 1.6 } }}
                     >
                         <Typography variant="body2" fontWeight={700} sx={{ mb: 0.5 }}>
-                            Traitement de vos données personnelles
+                            Vos données vous appartiennent.
                         </Typography>
                         <Typography variant="body2">
-                            Vos réponses sont confidentielles et ne sont accessibles qu'à vous-même et au coach mandaté.
-                            Elles ne sont jamais transmises à votre employeur sous forme nominative. Consultez notre{' '}
+                            Vos réponses sont strictement confidentielles et exclusivement destinées au formateur mandaté qui vous accompagne.
+                            <ul>
+                                <li>
+                                    Elles ne sont jamais transmises à votre employeur de manière nominative
+                                </li>
+                                <li>
+                                    Vous pouvez à tout moment demander leur consultation, leur modification ou leur suppression définitive.
+                                </li>
+                            </ul>
+                            Consultez notre{' '}
                             <MuiLink component={Link} to="/privacy" target="_blank" rel="noopener" underline="always">
                                 politique de confidentialité
                             </MuiLink>{' '}
-                            pour le détail des finalités, durées de conservation et de vos droits (accès, export,
-                            rectification, effacement).
+                            pour le détail des finalités, durée de conservation et de vos droits (accès, export, rectification, suppression).
+                            En cliquant sur « Je participe », vous confirmez avoir pris connaissance des modalités de traitement de vos données personnelles et consentez librement à votre participation.
                         </Typography>
                     </Alert>
 
@@ -234,8 +244,7 @@ function InvitePage() {
                         }
                         label={
                             <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.6 }}>
-                                J'ai pris connaissance de la politique de confidentialité et j'accepte le traitement de
-                                mes données personnelles dans le cadre de cette campagne d'évaluation.
+                                Je confirme ma participation à cette évaluation.
                             </Typography>
                         }
                         sx={{ alignItems: 'flex-start', mb: 3, mr: 0 }}
@@ -288,7 +297,7 @@ function InvitePage() {
                 await activateInvite.mutateAsync({ password });
                 // Après activation, le participant arrive systématiquement sur son dashboard
                 // (cf. P09 du suivi produit 2026-05-02). De là il peut démarrer son parcours
-                // (auto-évaluation, feedback pairs, test) selon l'état de ses campagnes.
+                // (Regard sur soi, feedback pairs, test) selon l'état de ses campagnes.
                 navigate({ to: '/', replace: true });
             } catch (err) {
                 const ax = err as { response?: { status?: number; data?: { error?: string } } };
@@ -461,12 +470,12 @@ function InvitePage() {
         step === 'series0'
             ? 10 + (currentQ / totalQuestions) * 40
             : step === 'series1'
-              ? 52 + (currentQ / totalQuestions) * 46
-              : step === 'transition'
-                ? 50
-                : step === 'submitting'
-                  ? 100
-                  : 5;
+                ? 52 + (currentQ / totalQuestions) * 46
+                : step === 'transition'
+                    ? 50
+                    : step === 'submitting'
+                        ? 100
+                        : 5;
 
     function handleAnswer(value: number) {
         const updated = [...activeSeries];
