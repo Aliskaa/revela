@@ -93,7 +93,7 @@ function ParticipantSelfRatingRoute() {
             <Card variant="outlined">
                 <CardContent sx={{ p: 3 }}>
                     <Typography variant="h6" fontWeight={700} color="text.primary">
-                        Chargement de l'Regard sur soi
+                        Chargement du Regard sur soi
                     </Typography>
                     <LinearProgress sx={{ mt: 2 }} />
                 </CardContent>
@@ -102,7 +102,7 @@ function ParticipantSelfRatingRoute() {
     }
 
     if (isError || !session) {
-        return <Alert severity="error">Impossible de charger l'Regard sur soi pour le moment.</Alert>;
+        return <Alert severity="error">Impossible de charger le Regard sur soi pour le moment.</Alert>;
     }
 
     if (activeAssignment?.progression?.self_rating_status === 'completed') {
@@ -215,7 +215,7 @@ function ParticipantSelfRatingRoute() {
             {!canSubmit && (
                 <Alert severity="warning">
                     {!campaignActive
-                        ? "La campagne n'est pas active. L'Regard sur soi sera disponible une fois la campagne lancée par l'administrateur."
+                        ? "La campagne n'est pas active. Le Regard sur soi sera disponible une fois la campagne lancée par l'administrateur."
                         : "Cette étape n'est pas encore accessible. Vérifiez l'état de votre parcours."}
                 </Alert>
             )}
@@ -269,7 +269,7 @@ function ParticipantSelfRatingRoute() {
                                 {submitMutation.isPending
                                     ? 'Enregistrement…'
                                     : allFilled
-                                      ? "Valider l'Regard sur soi"
+                                      ? "Valider le Regard sur soi"
                                       : `Enregistrer (${filledCount}/${totalItems})`}
                             </Button>
                         </Stack>
