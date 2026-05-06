@@ -8,7 +8,17 @@ import type { CompanyWithParticipantCountReadModel } from '@src/interfaces/compa
 import type {
     ParticipantAdminListItem,
     ParticipantCampaignAssignmentItem,
+    ParticipantTransparencyScoreSnapshot,
 } from '@src/interfaces/participants/IParticipantsRepository.port';
+
+export const transparencyScoreSnapshotToJson = (s: ParticipantTransparencyScoreSnapshot) => ({
+    campaign_id: s.campaignId,
+    participant_id: s.participantId,
+    value: s.value,
+    peer_count: s.peerCount,
+    activated_at: s.activatedAt.toISOString(),
+    activated_by_coach_id: s.activatedByCoachId,
+});
 
 export const participantToAdminJson = (p: ParticipantAdminListItem) => ({
     id: p.id,
@@ -66,7 +76,10 @@ export const coachToAdminJson = (c: Coach, opts?: { isAdmin?: boolean }) => ({
     isAdmin: opts?.isAdmin ?? false,
 });
 
-export const adminCoachDetailToJson = (detail: { coach: Coach; campaigns: Campaign[] }, opts?: { isAdmin?: boolean }) => ({
+export const adminCoachDetailToJson = (
+    detail: { coach: Coach; campaigns: Campaign[] },
+    opts?: { isAdmin?: boolean }
+) => ({
     coach: coachToAdminJson(detail.coach, opts),
     campaigns: detail.campaigns.map(campaignToAdminJson),
 });

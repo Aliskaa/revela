@@ -15,3 +15,4 @@ export * from './invite';
 export * from './matrix';
 export * from './participant-results-view';
 export * from './audit';
+export * from './transparency';

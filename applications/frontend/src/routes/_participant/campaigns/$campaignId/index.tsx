@@ -4,8 +4,10 @@ import {
     type CampaignStepRouteKind,
     buildCampaignSteps,
 } from '@/components/participant-dashboard/CampaignStepCard';
+import { CampaignTransparencyCard } from '@/components/participant-dashboard/CampaignTransparencyCard';
 import { CampaignWorkspaceHeader } from '@/components/participant-dashboard/CampaignWorkspaceHeader';
 import { useConfirmPeerFeedback, useParticipantSession } from '@/hooks/participantSession';
+import { useParticipantOwnTransparency } from '@/hooks/transparency';
 import { Alert, Box, Button, Card, CardContent, LinearProgress, Stack, Typography } from '@mui/material';
 import { Link, createFileRoute, useNavigate } from '@tanstack/react-router';
 import { ArrowLeft, MessageSquareQuote, Radar } from 'lucide-react';
@@ -19,6 +21,9 @@ function ParticipantCampaignWorkspaceRoute() {
     const { campaignId: campaignIdParam } = Route.useParams();
     const campaignId = Number(campaignIdParam);
     const { data: session, isLoading, isError } = useParticipantSession();
+    const { data: transparencyEnvelope } = useParticipantOwnTransparency(
+        Number.isFinite(campaignId) ? campaignId : null
+    );
     const navigate = useNavigate();
     const confirmPeerFeedback = useConfirmPeerFeedback();
 
@@ -184,6 +189,7 @@ function ParticipantCampaignWorkspaceRoute() {
                                     })
                                 }
                             />
+                            <CampaignTransparencyCard snapshot={transparencyEnvelope?.snapshot ?? null} />
                             <CampaignResultCard
                                 label="Retours du coach"
                                 subtitle="Consultation des retours du coach"

@@ -16,6 +16,7 @@ import { ListParticipantCampaignPeersUseCase } from '@src/application/participan
 import { ParticipantLoginUseCase } from '@src/application/participant-session/participant-login.usecase';
 import { GetParticipantOwnedResponseUseCase } from '@src/application/responses/get-participant-owned-response.usecase';
 import { SubmitParticipantQuestionnaireUseCase } from '@src/application/responses/submit-participant-questionnaire.usecase';
+import { GetOwnParticipantTransparencyScoreUseCase } from '@src/application/transparency/get-own-participant-transparency-score.usecase';
 import {
     CAMPAIGNS_REPOSITORY_PORT_SYMBOL,
     type ICampaignsReadPort,
@@ -35,6 +36,7 @@ import {
     type IParticipantsCampaignStateReaderPort,
     type IParticipantsIdentityReaderPort,
     type IParticipantsInviteAssignmentsReaderPort,
+    type IParticipantsTransparencyScorePort,
     PARTICIPANTS_REPOSITORY_PORT_SYMBOL,
 } from '@src/interfaces/participants/IParticipantsRepository.port';
 import {
@@ -53,6 +55,7 @@ import {
     CONFIRM_CAMPAIGN_PARTICIPATION_USE_CASE_SYMBOL,
     CONFIRM_PEER_FEEDBACK_USE_CASE_SYMBOL,
     EXPORT_PARTICIPANT_SELF_DATA_USE_CASE_SYMBOL,
+    GET_OWN_PARTICIPANT_TRANSPARENCY_SCORE_USE_CASE_SYMBOL,
     GET_PARTICIPANT_OWNED_RESPONSE_USE_CASE_SYMBOL,
     GET_PARTICIPANT_QUESTIONNAIRE_MATRIX_USE_CASE_SYMBOL,
     GET_PARTICIPANT_SESSION_QUESTIONNAIRE_MATRIX_USE_CASE_SYMBOL,
@@ -186,6 +189,12 @@ import {
             useFactory: (
                 participants: IParticipantsCampaignParticipationWriterPort & IParticipantsCampaignStateReaderPort
             ) => new ConfirmPeerFeedbackUseCase({ participants }),
+            inject: [PARTICIPANTS_REPOSITORY_PORT_SYMBOL],
+        },
+        {
+            provide: GET_OWN_PARTICIPANT_TRANSPARENCY_SCORE_USE_CASE_SYMBOL,
+            useFactory: (repo: IParticipantsInviteAssignmentsReaderPort & IParticipantsTransparencyScorePort) =>
+                new GetOwnParticipantTransparencyScoreUseCase({ participants: repo, transparency: repo }),
             inject: [PARTICIPANTS_REPOSITORY_PORT_SYMBOL],
         },
         {

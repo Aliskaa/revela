@@ -34,6 +34,7 @@ import type {
     ParticipantCampaignAssignmentItem,
     ParticipantInviteAssignment,
     ParticipantProgressRecord,
+    ParticipantTransparencyScoreSnapshot,
 } from '@src/interfaces/participants/IParticipantsRepository.port';
 import type { Paginated } from '@src/shared/pagination';
 
@@ -321,10 +322,7 @@ export class DrizzleParticipantsRepository implements IParticipantsRepositoryPor
         return progress ?? null;
     }
 
-    public async countPeerRatingsForCampaignSubject(
-        campaignId: number,
-        subjectParticipantId: number
-    ): Promise<number> {
+    public async countPeerRatingsForCampaignSubject(campaignId: number, subjectParticipantId: number): Promise<number> {
         const [row] = await this.db
             .select({ count: sql<number>`count(*)::int` })
             .from(questionnaireResponsesTable)
@@ -813,5 +811,78 @@ export class DrizzleParticipantsRepository implements IParticipantsRepositoryPor
                 inviteTokensRemoved: tokens.length,
             };
         });
+    }
+
+    public async findTransparencyScoreSnapshot(
+        campaignId: number,
+        participantId: number
+    ): Promise<ParticipantTransparencyScoreSnapshot | null> {
+        const [row] = await this.db
+            .select({
+                campaignId: participantProgressTable.campaignId,
+                participantId: participantProgressTable.participantId,
+                value: participantProgressTable.transparencyScoreValue,
+                peerCount: participantProgressTable.transparencyScorePeerCount,
+                activatedAt: participantProgressTable.transparencyScoreActivatedAt,
+                activatedByCoachId: participantProgressTable.transparencyScoreActivatedByCoachId,
+            })
+            .from(participantProgressTable)
+            .where(
+                and(
+                    eq(participantProgressTable.campaignId, campaignId),
+                    eq(participantProgressTable.participantId, participantId)
+                )
+            )
+            .limit(1);
+        if (!row || row.activatedAt === null || row.value === null || row.peerCount === null) {
+            return null;
+        }
+        return {
+            campaignId: row.campaignId,
+            participantId: row.participantId,
+            value: row.value,
+            peerCount: row.peerCount,
+            activatedAt: row.activatedAt,
+            activatedByCoachId: row.activatedByCoachId,
+        };
+    }
+
+    public async saveTransparencyScoreSnapshot(input: {
+        campaignId: number;
+        participantId: number;
+        value: number;
+        peerCount: number;
+        activatedByCoachId: number | null;
+    }): Promise<ParticipantTransparencyScoreSnapshot> {
+        const now = new Date();
+        await this.db
+            .insert(participantProgressTable)
+            .values({
+                campaignId: input.campaignId,
+                participantId: input.participantId,
+                transparencyScoreValue: input.value,
+                transparencyScorePeerCount: input.peerCount,
+                transparencyScoreActivatedAt: now,
+                transparencyScoreActivatedByCoachId: input.activatedByCoachId,
+                updatedAt: now,
+            })
+            .onConflictDoUpdate({
+                target: [participantProgressTable.campaignId, participantProgressTable.participantId],
+                set: {
+                    transparencyScoreValue: input.value,
+                    transparencyScorePeerCount: input.peerCount,
+                    transparencyScoreActivatedAt: now,
+                    transparencyScoreActivatedByCoachId: input.activatedByCoachId,
+                    updatedAt: now,
+                },
+            });
+        return {
+            campaignId: input.campaignId,
+            participantId: input.participantId,
+            value: input.value,
+            peerCount: input.peerCount,
+            activatedAt: now,
+            activatedByCoachId: input.activatedByCoachId,
+        };
     }
 }

@@ -6,6 +6,7 @@ import {
     Card,
     CardContent,
     IconButton,
+    Stack,
     Table,
     TableBody,
     TableCell,
@@ -22,6 +23,7 @@ import { SectionTitle } from '@/components/common/SectionTitle';
 import { ProgressChip } from '@/components/common/chips';
 import type { CampaignParticipantProgress } from '@aor/types';
 
+import { CampaignParticipantTransparencyButton } from './CampaignParticipantTransparencyButton';
 import { ParticipantTokensRow } from './ParticipantTokensRow';
 
 export type CampaignParticipantsTableProps = {
@@ -159,15 +161,27 @@ export function CampaignParticipantsTable({
                                             </TableCell>
                                             {matrixUrlPrefix ? (
                                                 <TableCell align="right" onClick={e => e.stopPropagation()}>
-                                                    <Button
-                                                        size="small"
-                                                        variant="outlined"
-                                                        startIcon={<LayoutPanelLeft size={14} />}
-                                                        href={`${matrixUrlPrefix}/${p.participantId}/matrix?qid=${questionnaireId ?? 'B'}`}
-                                                        sx={{ borderRadius: 99 }}
+                                                    <Stack
+                                                        direction="row"
+                                                        spacing={1}
+                                                        justifyContent="flex-end"
+                                                        flexWrap="wrap"
+                                                        useFlexGap
                                                     >
-                                                        Réponses
-                                                    </Button>
+                                                        <Button
+                                                            size="small"
+                                                            variant="outlined"
+                                                            startIcon={<LayoutPanelLeft size={14} />}
+                                                            href={`${matrixUrlPrefix}/${p.participantId}/matrix?qid=${questionnaireId ?? 'B'}`}
+                                                            sx={{ borderRadius: 99 }}
+                                                        >
+                                                            Réponses
+                                                        </Button>
+                                                        <CampaignParticipantTransparencyButton
+                                                            campaignId={campaignId}
+                                                            participantId={p.participantId}
+                                                        />
+                                                    </Stack>
                                                 </TableCell>
                                             ) : null}
                                         </TableRow>

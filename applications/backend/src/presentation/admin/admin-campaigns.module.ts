@@ -10,6 +10,13 @@ import { InviteCampaignParticipantsUseCase } from '@src/application/admin/campai
 import { ListAdminCampaignsUseCase } from '@src/application/admin/campaigns/list-admin-campaigns.usecase';
 import { ReassignAdminCampaignCoachUseCase } from '@src/application/admin/campaigns/reassign-admin-campaign-coach.usecase';
 import { UpdateAdminCampaignStatusUseCase } from '@src/application/admin/campaigns/update-admin-campaign-status.usecase';
+import { GetParticipantQuestionnaireMatrixUseCase } from '@src/application/participant-session/get-participant-questionnaire-matrix.usecase';
+import { ActivateParticipantTransparencyScoreUseCase } from '@src/application/transparency/activate-participant-transparency-score.usecase';
+import { GetParticipantTransparencyScoreUseCase } from '@src/application/transparency/get-participant-transparency-score.usecase';
+import {
+    ADMIN_AUTH_CONFIG_PORT_SYMBOL,
+    type IAdminAuthConfigPort,
+} from '@src/interfaces/admin/IAdminAuthConfig.port';
 import {
     CAMPAIGNS_REPOSITORY_PORT_SYMBOL,
     type ICampaignsReadPort,
@@ -28,20 +35,26 @@ import {
     type IParticipantsAdminReadPort,
     type IParticipantsCampaignParticipationWriterPort,
     type IParticipantsIdentityReaderPort,
+    type IParticipantsTransparencyScorePort,
     type IParticipantsWriterPort,
     PARTICIPANTS_REPOSITORY_PORT_SYMBOL,
 } from '@src/interfaces/participants/IParticipantsRepository.port';
 import {
     type IResponsesAdminListPort,
+    type IResponsesSubmissionReaderPort,
     RESPONSES_REPOSITORY_PORT_SYMBOL,
 } from '@src/interfaces/responses/IResponsesRepository.port';
 
+import { AuditModule } from '@src/presentation/audit/audit.module';
+import { GET_PARTICIPANT_QUESTIONNAIRE_MATRIX_USE_CASE_SYMBOL } from '@src/presentation/participant-session/participant.tokens';
 import { AdminCampaignsController } from './admin-campaigns.controller';
 import { AdminSharedModule } from './admin-shared.module';
 import {
+    ACTIVATE_PARTICIPANT_TRANSPARENCY_SCORE_USE_CASE_SYMBOL,
     ADD_PARTICIPANT_TO_CAMPAIGN_USE_CASE_SYMBOL,
     CREATE_ADMIN_CAMPAIGN_USE_CASE_SYMBOL,
     GET_ADMIN_CAMPAIGN_DETAIL_USE_CASE_SYMBOL,
+    GET_PARTICIPANT_TRANSPARENCY_SCORE_USE_CASE_SYMBOL,
     IMPORT_PARTICIPANTS_TO_CAMPAIGN_USE_CASE_SYMBOL,
     INVITE_CAMPAIGN_PARTICIPANTS_USE_CASE_SYMBOL,
     LIST_ADMIN_CAMPAIGNS_USE_CASE_SYMBOL,
@@ -50,7 +63,7 @@ import {
 } from './admin.tokens';
 
 @Module({
-    imports: [AdminSharedModule],
+    imports: [AdminSharedModule, AuditModule],
     controllers: [AdminCampaignsController],
     providers: [
         {
@@ -142,6 +155,44 @@ import {
                 PARTICIPANTS_REPOSITORY_PORT_SYMBOL,
                 INVITATIONS_REPOSITORY_PORT_SYMBOL,
             ],
+        },
+        {
+            provide: GET_PARTICIPANT_QUESTIONNAIRE_MATRIX_USE_CASE_SYMBOL,
+            useFactory: (
+                participants: IParticipantsIdentityReaderPort & IParticipantsAdminReadPort,
+                responses: IResponsesSubmissionReaderPort
+            ) => new GetParticipantQuestionnaireMatrixUseCase({ participants, responses }),
+            inject: [PARTICIPANTS_REPOSITORY_PORT_SYMBOL, RESPONSES_REPOSITORY_PORT_SYMBOL],
+        },
+        {
+            provide: ACTIVATE_PARTICIPANT_TRANSPARENCY_SCORE_USE_CASE_SYMBOL,
+            useFactory: (
+                campaigns: ICampaignsReadPort,
+                coaches: ICoachesReadPort,
+                authConfig: IAdminAuthConfigPort,
+                transparency: IParticipantsTransparencyScorePort,
+                getMatrix: GetParticipantQuestionnaireMatrixUseCase
+            ) =>
+                new ActivateParticipantTransparencyScoreUseCase({
+                    campaigns,
+                    coaches,
+                    authConfig,
+                    transparency,
+                    getMatrix,
+                }),
+            inject: [
+                CAMPAIGNS_REPOSITORY_PORT_SYMBOL,
+                COACHES_REPOSITORY_PORT_SYMBOL,
+                ADMIN_AUTH_CONFIG_PORT_SYMBOL,
+                PARTICIPANTS_REPOSITORY_PORT_SYMBOL,
+                GET_PARTICIPANT_QUESTIONNAIRE_MATRIX_USE_CASE_SYMBOL,
+            ],
+        },
+        {
+            provide: GET_PARTICIPANT_TRANSPARENCY_SCORE_USE_CASE_SYMBOL,
+            useFactory: (transparency: IParticipantsTransparencyScorePort) =>
+                new GetParticipantTransparencyScoreUseCase({ transparency }),
+            inject: [PARTICIPANTS_REPOSITORY_PORT_SYMBOL],
         },
     ],
     exports: [GET_ADMIN_CAMPAIGN_DETAIL_USE_CASE_SYMBOL],

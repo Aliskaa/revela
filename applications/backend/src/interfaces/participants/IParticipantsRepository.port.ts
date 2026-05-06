@@ -171,6 +171,33 @@ export interface IParticipantsMetricsPort {
     countAll(): Promise<number>;
 }
 
+/**
+ * Snapshot du score de transparence (P23) figé au moment où le coach/admin l'active manuellement
+ * pour un participant donné sur une campagne donnée. Nul tant que l'activation n'a pas eu lieu.
+ */
+export type ParticipantTransparencyScoreSnapshot = {
+    campaignId: number;
+    participantId: number;
+    value: number;
+    peerCount: number;
+    activatedAt: Date;
+    activatedByCoachId: number | null;
+};
+
+export interface IParticipantsTransparencyScorePort {
+    findTransparencyScoreSnapshot(
+        campaignId: number,
+        participantId: number
+    ): Promise<ParticipantTransparencyScoreSnapshot | null>;
+    saveTransparencyScoreSnapshot(input: {
+        campaignId: number;
+        participantId: number;
+        value: number;
+        peerCount: number;
+        activatedByCoachId: number | null;
+    }): Promise<ParticipantTransparencyScoreSnapshot>;
+}
+
 export interface IParticipantsRepositoryPort
     extends IParticipantsIdentityReaderPort,
         IParticipantsInviteAssignmentsReaderPort,
@@ -178,4 +205,5 @@ export interface IParticipantsRepositoryPort
         IParticipantsCampaignStateReaderPort,
         IParticipantsWriterPort,
         IParticipantsAdminReadPort,
-        IParticipantsMetricsPort {}
+        IParticipantsMetricsPort,
+        IParticipantsTransparencyScorePort {}

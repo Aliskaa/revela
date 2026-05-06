@@ -21,7 +21,24 @@
       "Bash(pnpm --filter @aor/frontend-app typecheck)",
       "Read(//c/Users/kevin/Documents/DataLoco/Nora/base/questionnaire-platform/applications/frontend/src/routes/_participant/test/**)",
       "Bash(git stash *)",
-      "Bash(git checkout *)"
+      "Bash(git checkout *)",
+      "Bash(docker cp *)",
+      "PowerShell(docker exec questionnaire-platform-db-1 psql -U postgres -d questionnaire_platform -c \"SELECT relname AS table, n_live_tup AS rows FROM pg_stat_user_tables WHERE schemaname='public' ORDER BY relname;\")",
+      "Bash(Get-ChildItem -Recurse -Directory -Depth 3 -Path \".\")",
+      "Bash(Select-Object -First 50)",
+      "Bash(Format-Table -Property FullName)",
+      "Bash(grep -E \"\\\\.\\(ts|tsx\\)$\")",
+      "Bash(pnpm --filter @aor/scoring test)",
+      "Bash(pnpm --filter @aor/scoring --filter @aor/drizzle build)",
+      "Bash(pnpm --filter @aor/scoring typecheck)",
+      "Bash(pnpm --filter @aor/scoring --filter @aor/types --filter @aor/drizzle --filter @aor/backend-api --filter @aor/frontend-app lint)",
+      "Bash(pnpm --filter @aor/types lint)",
+      "Bash(pnpm --filter @aor/scoring lint)",
+      "Bash(pnpm --filter @aor/scoring exec biome check --write src/transparency-score.ts src/transparency-score.test.ts src/index.ts)",
+      "Bash(pnpm --filter @aor/types exec biome check --write src/transparency.ts src/index.ts)",
+      "Bash(pnpm --filter @aor/backend-api exec biome check --write src/application/transparency/ src/presentation/admin/admin-campaigns.controller.ts src/presentation/admin/admin-campaigns.module.ts src/presentation/admin/admin.presenters.ts src/presentation/admin/admin.tokens.ts src/presentation/participant-session/participant.controller.ts src/presentation/participant-session/participant.module.ts src/presentation/participant-session/participant.tokens.ts src/interfaces/participants/IParticipantsRepository.port.ts src/infrastructure/database/repositories/drizzle-participants.repository.ts)",
+      "Bash(pnpm --filter @aor/scoring --filter @aor/types --filter @aor/drizzle build)",
+      "Bash(pnpm --filter @aor/backend-api --filter @aor/frontend-app typecheck)"
     ]
   }
 }

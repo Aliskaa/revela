@@ -1,4 +1,5 @@
-import { boolean, index, integer, pgEnum, pgTable, serial, timestamp, unique, varchar } from 'drizzle-orm/pg-core';
+import { sql } from 'drizzle-orm';
+import { boolean, check, index, integer, pgEnum, pgTable, serial, timestamp, unique, varchar } from 'drizzle-orm/pg-core';
 
 import { coachesTable } from './coach.schema';
 import { companiesTable } from './company.schema';
@@ -75,6 +76,13 @@ export const participantProgressTable = pgTable(
         peerFeedbackCompletedAt: timestamp('peer_feedback_completed_at', { withTimezone: true }),
         elementHumainCompletedAt: timestamp('element_humain_completed_at', { withTimezone: true }),
         resultsPublishedAt: timestamp('results_published_at', { withTimezone: true }),
+        transparencyScoreActivatedAt: timestamp('transparency_score_activated_at', { withTimezone: true }),
+        transparencyScoreActivatedByCoachId: integer('transparency_score_activated_by_coach_id').references(
+            () => coachesTable.id,
+            { onDelete: 'set null' }
+        ),
+        transparencyScoreValue: integer('transparency_score_value'),
+        transparencyScorePeerCount: integer('transparency_score_peer_count'),
         createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
         updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
     },
@@ -82,5 +90,9 @@ export const participantProgressTable = pgTable(
         unique('participant_progress_unique').on(table.campaignId, table.participantId),
         index('participant_progress_campaign_id_idx').on(table.campaignId),
         index('participant_progress_participant_id_idx').on(table.participantId),
+        check(
+            'participant_progress_transparency_score_value_range',
+            sql`${table.transparencyScoreValue} IS NULL OR (${table.transparencyScoreValue} >= 0 AND ${table.transparencyScoreValue} <= 100)`
+        ),
     ]
 );

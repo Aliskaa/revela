@@ -36,6 +36,7 @@ import type { ListParticipantCampaignPeersUseCase } from '@src/application/parti
 import type { ParticipantLoginUseCase } from '@src/application/participant-session/participant-login.usecase';
 import type { GetParticipantOwnedResponseUseCase } from '@src/application/responses/get-participant-owned-response.usecase';
 import type { SubmitParticipantQuestionnaireUseCase } from '@src/application/responses/submit-participant-questionnaire.usecase';
+import type { GetOwnParticipantTransparencyScoreUseCase } from '@src/application/transparency/get-own-participant-transparency-score.usecase';
 import {
     type IParticipantJwtSignerPort,
     PARTICIPANT_JWT_SIGNER_PORT_SYMBOL,
@@ -58,6 +59,7 @@ import {
     CONFIRM_CAMPAIGN_PARTICIPATION_USE_CASE_SYMBOL,
     CONFIRM_PEER_FEEDBACK_USE_CASE_SYMBOL,
     EXPORT_PARTICIPANT_SELF_DATA_USE_CASE_SYMBOL,
+    GET_OWN_PARTICIPANT_TRANSPARENCY_SCORE_USE_CASE_SYMBOL,
     GET_PARTICIPANT_OWNED_RESPONSE_USE_CASE_SYMBOL,
     GET_PARTICIPANT_SESSION_QUESTIONNAIRE_MATRIX_USE_CASE_SYMBOL,
     GET_PARTICIPANT_SESSION_USE_CASE_SYMBOL,
@@ -89,6 +91,8 @@ export class ParticipantController {
         private readonly confirmPeerFeedback: ConfirmPeerFeedbackUseCase,
         @Inject(EXPORT_PARTICIPANT_SELF_DATA_USE_CASE_SYMBOL)
         private readonly exportParticipantSelfData: ExportParticipantSelfDataUseCase,
+        @Inject(GET_OWN_PARTICIPANT_TRANSPARENCY_SCORE_USE_CASE_SYMBOL)
+        private readonly getOwnParticipantTransparencyScore: GetOwnParticipantTransparencyScoreUseCase,
         @Inject(REFRESH_TOKEN_MANAGER_SYMBOL)
         private readonly refreshTokens: RefreshTokenManagerUseCase,
         @Inject(PARTICIPANT_JWT_SIGNER_PORT_SYMBOL)
@@ -306,6 +310,33 @@ export class ParticipantController {
         @Param('campaignId', ParseIntPipe) campaignId: number
     ) {
         return this.listParticipantCampaignPeers.execute(participantId, campaignId);
+    }
+
+    /**
+     * Lecture du score de transparence (P23) du participant authentifié.
+     * Retourne `{ snapshot: null }` tant que le coach/admin n'a pas activé le calcul.
+     */
+    @Get('campaigns/:campaignId/transparency')
+    @UseGuards(ParticipantJwtAuthGuard)
+    @UseFilters(ParticipantSessionExceptionFilter)
+    public async campaignTransparency(
+        @CurrentParticipantId() participantId: number,
+        @Param('campaignId', ParseIntPipe) campaignId: number
+    ) {
+        const snapshot = await this.getOwnParticipantTransparencyScore.execute(participantId, campaignId);
+        if (!snapshot) {
+            return { snapshot: null };
+        }
+        return {
+            snapshot: {
+                campaign_id: snapshot.campaignId,
+                participant_id: snapshot.participantId,
+                value: snapshot.value,
+                peer_count: snapshot.peerCount,
+                activated_at: snapshot.activatedAt.toISOString(),
+                activated_by_coach_id: snapshot.activatedByCoachId,
+            },
+        };
     }
 
     @Post('campaigns/:campaignId/peer-feedback/confirm')

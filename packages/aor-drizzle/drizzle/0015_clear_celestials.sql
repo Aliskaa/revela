@@ -1,0 +1,6 @@
+ALTER TABLE "participant_progress" ADD COLUMN "transparency_score_activated_at" timestamp with time zone;--> statement-breakpoint
+ALTER TABLE "participant_progress" ADD COLUMN "transparency_score_activated_by_coach_id" integer;--> statement-breakpoint
+ALTER TABLE "participant_progress" ADD COLUMN "transparency_score_value" integer;--> statement-breakpoint
+ALTER TABLE "participant_progress" ADD COLUMN "transparency_score_peer_count" integer;--> statement-breakpoint
+ALTER TABLE "participant_progress" ADD CONSTRAINT "participant_progress_transparency_score_activated_by_coach_id_coaches_id_fk" FOREIGN KEY ("transparency_score_activated_by_coach_id") REFERENCES "public"."coaches"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "participant_progress" ADD CONSTRAINT "participant_progress_transparency_score_value_range" CHECK ("participant_progress"."transparency_score_value" IS NULL OR ("participant_progress"."transparency_score_value" >= 0 AND "participant_progress"."transparency_score_value" <= 100));

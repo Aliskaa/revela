@@ -11,7 +11,8 @@
       "Bash(npx vite *)",
       "Bash(grep -E \"\\\\.\\(ts|js\\)$\")",
       "Bash(pnpm lint *)",
-      "Bash(npx biome *)"
+      "Bash(npx biome *)",
+      "Bash(docker exec *)"
     ],
     "additionalDirectories": [
       "c:\\Users\\kevin\\Documents\\DataLoco\\Nora\\base\\questionnaire-platform\\applications\\frontend\\src\\components\\common"
