@@ -7,6 +7,7 @@ import { PassportModule } from '@nestjs/passport';
 import { ScryptPasswordAdapter } from '@aor/adapters';
 import { type IPasswordVerifierPort, PASSWORD_VERIFIER_PORT_SYMBOL } from '@aor/ports';
 import { ConfirmCampaignParticipationUseCase } from '@src/application/participant-session/confirm-campaign-participation.usecase';
+import { ConfirmPeerFeedbackUseCase } from '@src/application/participant-session/confirm-peer-feedback.usecase';
 import { ExportParticipantSelfDataUseCase } from '@src/application/participant-session/export-participant-self-data.usecase';
 import { GetParticipantQuestionnaireMatrixUseCase } from '@src/application/participant-session/get-participant-questionnaire-matrix.usecase';
 import { GetParticipantSessionQuestionnaireMatrixUseCase } from '@src/application/participant-session/get-participant-session-questionnaire-matrix.usecase';
@@ -50,6 +51,7 @@ import { ParticipantJwtAuthGuard } from './participant-jwt-auth.guard';
 import { ParticipantController } from './participant.controller';
 import {
     CONFIRM_CAMPAIGN_PARTICIPATION_USE_CASE_SYMBOL,
+    CONFIRM_PEER_FEEDBACK_USE_CASE_SYMBOL,
     EXPORT_PARTICIPANT_SELF_DATA_USE_CASE_SYMBOL,
     GET_PARTICIPANT_OWNED_RESPONSE_USE_CASE_SYMBOL,
     GET_PARTICIPANT_QUESTIONNAIRE_MATRIX_USE_CASE_SYMBOL,
@@ -177,6 +179,13 @@ import {
             useFactory: (
                 participants: IParticipantsCampaignParticipationWriterPort & IParticipantsCampaignStateReaderPort
             ) => new ConfirmCampaignParticipationUseCase({ participants }),
+            inject: [PARTICIPANTS_REPOSITORY_PORT_SYMBOL],
+        },
+        {
+            provide: CONFIRM_PEER_FEEDBACK_USE_CASE_SYMBOL,
+            useFactory: (
+                participants: IParticipantsCampaignParticipationWriterPort & IParticipantsCampaignStateReaderPort
+            ) => new ConfirmPeerFeedbackUseCase({ participants }),
             inject: [PARTICIPANTS_REPOSITORY_PORT_SYMBOL],
         },
         {

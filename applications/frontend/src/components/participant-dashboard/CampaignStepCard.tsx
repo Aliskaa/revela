@@ -1,7 +1,7 @@
 // Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
 
-import { Box, ButtonBase, Chip, Stack, Typography } from '@mui/material';
-import { ArrowRight, Brain, ClipboardList, Lock, Users } from 'lucide-react';
+import { Box, Button, ButtonBase, Chip, Stack, Typography } from '@mui/material';
+import { ArrowRight, BadgeCheck, Brain, ClipboardList, Lock, Users } from 'lucide-react';
 import type { ElementType } from 'react';
 
 import type { ParticipantSession } from '@aor/types';
@@ -80,11 +80,38 @@ export const buildCampaignSteps = (assignment?: ParticipantAssignment): Campaign
 export type CampaignStepCardProps = {
     step: CampaignStep;
     onNavigate: (routeKind: CampaignStepRouteKind) => void;
+    /**
+     * Nombre de feedbacks pairs déjà saisis. Utilisé uniquement quand `step.routeKind ===
+     * 'peer-feedback'` pour décider d'afficher le bouton « J'ai terminé mes feedbacks »
+     * (cf. P12/P13 : visible dès 1 feedback saisi).
+     */
+    peerRatingsCount?: number;
+    /**
+     * Callback déclenché par le bouton « J'ai terminé mes feedbacks » (étape peer-feedback).
+     * Si non fourni, le bouton n'est pas rendu même si `peerRatingsCount >= 1`.
+     */
+    onConfirmPeerFeedback?: () => void;
+    /** Désactive le bouton « J'ai terminé » pendant l'appel réseau. */
+    confirmingPeerFeedback?: boolean;
 };
 
-export function CampaignStepCard({ step, onNavigate }: CampaignStepCardProps) {
+export function CampaignStepCard({
+    step,
+    onNavigate,
+    peerRatingsCount = 0,
+    onConfirmPeerFeedback,
+    confirmingPeerFeedback = false,
+}: CampaignStepCardProps) {
     const Icon = step.icon;
-    const isClickable = step.state === 'current' && step.routeKind !== null;
+    const isPeerFeedbackStep = step.routeKind === 'peer-feedback';
+    const showPeerFeedbackConfirm =
+        isPeerFeedbackStep &&
+        step.state === 'current' &&
+        peerRatingsCount >= 1 &&
+        onConfirmPeerFeedback !== undefined;
+    // Quand on a 2 actions (continuer + confirmer), on n'utilise plus le ButtonBase global
+    // qui rend la card entièrement cliquable : ce serait ambigu avec des boutons à l'intérieur.
+    const isClickable = step.state === 'current' && step.routeKind !== null && !showPeerFeedbackConfirm;
     const chipLabel = step.state === 'completed' ? 'Terminé' : step.state === 'current' ? 'À faire' : 'Verrouillé';
     const chipSx =
         step.state === 'completed'
@@ -92,7 +119,7 @@ export function CampaignStepCard({ step, onNavigate }: CampaignStepCardProps) {
             : step.state === 'current'
               ? { bgcolor: 'tint.secondaryBg', color: 'tint.secondaryText' }
               : { bgcolor: 'tint.mutedBg', color: 'tint.mutedText' };
-    const cta = step.state === 'current' ? 'Commencer cette étape' : null;
+    const cta = step.state === 'current' && !showPeerFeedbackConfirm ? 'Commencer cette étape' : null;
 
     const content = (
         <Stack direction="row" spacing={1.5} alignItems="start" sx={{ width: '100%' }}>
@@ -141,6 +168,34 @@ export function CampaignStepCard({ step, onNavigate }: CampaignStepCardProps) {
                             {cta}
                         </Typography>
                         <ArrowRight size={14} />
+                    </Stack>
+                )}
+                {showPeerFeedbackConfirm && (
+                    <Stack
+                        direction={{ xs: 'column', sm: 'row' }}
+                        spacing={1}
+                        sx={{ mt: 1.5 }}
+                    >
+                        <Button
+                            variant="outlined"
+                            size="small"
+                            startIcon={<ArrowRight size={14} />}
+                            onClick={() => step.routeKind && onNavigate(step.routeKind)}
+                            sx={{ borderRadius: 3 }}
+                        >
+                            Continuer mes feedbacks
+                        </Button>
+                        <Button
+                            variant="contained"
+                            size="small"
+                            disableElevation
+                            startIcon={<BadgeCheck size={14} />}
+                            onClick={onConfirmPeerFeedback}
+                            disabled={confirmingPeerFeedback}
+                            sx={{ borderRadius: 3 }}
+                        >
+                            {confirmingPeerFeedback ? 'Confirmation…' : "J'ai terminé mes feedbacks"}
+                        </Button>
                     </Stack>
                 )}
                 {step.state === 'locked' && (

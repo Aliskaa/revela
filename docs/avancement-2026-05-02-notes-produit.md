@@ -19,8 +19,8 @@
 - [x] Rediriger vers le dashboard apres creation du compte participant
 - [x] Revenir au detail de campagne apres validation d'une etape du parcours
 - [ ] Ajouter un commentaire optionnel pour les pairs lors des feedbacks
-- [ ] Autoriser la poursuite du parcours feedback tant que moins de 5 pairs enregistres
-- [ ] Exiger une confirmation explicite de fin de feedback pairs avant suite parcours/test
+- [x] Autoriser la poursuite du parcours feedback tant que moins de 5 pairs enregistres
+- [x] Exiger une confirmation explicite de fin de feedback pairs avant suite parcours/test
 - [ ] Vue participant: afficher uniquement les scores de pairs anonymes
 - [ ] Tests 54x2: activer l'enregistrement automatique des reponses
 - [ ] "Comment mes pairs me voient": afficher `pair #1`, `pair #2`, etc.
@@ -48,8 +48,8 @@
 | P09 | Post-creation compte participant => dashboard | Fait | Suppression de la branche conditionnelle qui redirigeait vers `/self-rating` quand la campagne etait ouverte. Le participant atterrit systematiquement sur `/` (dashboard) apres activation, conformement a la regle produit |
 | P10 | Fin etape parcours => retour detail campagne | Fait | Auto-evaluation : redirection `/` -> `/campaigns/$campaignId` (avec fallback `/` si campaignId absent). Test : redirection `/campaigns/$campaignId/results` -> `/campaigns/$campaignId` (l'utilisateur clique ensuite pour les resultats). Peer-feedback non touche : la logique multi-pairs + confirmation finale est partie de P12/P13 |
 | P11 | Commentaire optionnel sur feedback pair | Pas encore fait | Ajouter champ optionnel |
-| P12 | Feedback pairs: continuer tant que < 5 enregistres | Pas encore fait | Regle de progression a confirmer |
-| P13 | Confirmation "j'ai termine les feedbacks" obligatoire | Pas encore fait | Etape de confirmation explicite |
+| P12 | Feedback pairs: continuer tant que < 5 enregistres | Fait | Repository : `peer_feedback_status` ne passe plus auto a `completed` au 1er feedback ; auto-complete uniquement au 5e (max). Element_humain debloque en consequence |
+| P13 | Confirmation "j'ai termine les feedbacks" obligatoire | Fait | Backend : nouveau use case `ConfirmPeerFeedbackUseCase` + endpoint `POST /participant/campaigns/:id/peer-feedback/confirm` (refus si 0 feedback ; idempotent). Repo : nouvelle methode `markPeerFeedbackCompletedForCampaignSubject` qui passe a `completed` + debloque element_humain. Session payload enrichi avec `peer_ratings_count`. Frontend : hook `useConfirmPeerFeedback`, bouton « J'ai terminé mes feedbacks » dans la page peer-feedback (sidebar pairs, visible >= 1 feedback) ET dans `CampaignStepCard` sur la fiche campagne (étape peer-feedback en `pending` avec count >= 1, double bouton « Continuer » + « J'ai terminé »). Type `ConfirmPeerFeedbackResponse` dans `@aor/types` |
 | P14 | Vue participant resultats: seulement scores pairs anonymes | Pas encore fait | Cacher les autres vues non necessaires |
 | P15 | Tests 54x2: autosave des reponses | Pas encore fait | Persistance intervallee + reprise session |
 | P16 | Affichage anonyme des pairs (`pair #1`, `pair #2`) | Pas encore fait | Pseudonymisation stable par campagne |

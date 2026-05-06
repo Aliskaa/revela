@@ -28,6 +28,7 @@ import {
     type RefreshTokenManagerUseCase,
 } from '@src/application/auth/refresh-token-manager.usecase';
 import type { ConfirmCampaignParticipationUseCase } from '@src/application/participant-session/confirm-campaign-participation.usecase';
+import type { ConfirmPeerFeedbackUseCase } from '@src/application/participant-session/confirm-peer-feedback.usecase';
 import type { ExportParticipantSelfDataUseCase } from '@src/application/participant-session/export-participant-self-data.usecase';
 import type { GetParticipantSessionQuestionnaireMatrixUseCase } from '@src/application/participant-session/get-participant-session-questionnaire-matrix.usecase';
 import type { GetParticipantSessionUseCase } from '@src/application/participant-session/get-participant-session.usecase';
@@ -55,6 +56,7 @@ import { ParticipantJwtAuthGuard } from './participant-jwt-auth.guard';
 import { ParticipantSessionExceptionFilter } from './participant-session-exception.filter';
 import {
     CONFIRM_CAMPAIGN_PARTICIPATION_USE_CASE_SYMBOL,
+    CONFIRM_PEER_FEEDBACK_USE_CASE_SYMBOL,
     EXPORT_PARTICIPANT_SELF_DATA_USE_CASE_SYMBOL,
     GET_PARTICIPANT_OWNED_RESPONSE_USE_CASE_SYMBOL,
     GET_PARTICIPANT_SESSION_QUESTIONNAIRE_MATRIX_USE_CASE_SYMBOL,
@@ -83,6 +85,8 @@ export class ParticipantController {
         private readonly listParticipantCampaignPeers: ListParticipantCampaignPeersUseCase,
         @Inject(CONFIRM_CAMPAIGN_PARTICIPATION_USE_CASE_SYMBOL)
         private readonly confirmCampaignParticipation: ConfirmCampaignParticipationUseCase,
+        @Inject(CONFIRM_PEER_FEEDBACK_USE_CASE_SYMBOL)
+        private readonly confirmPeerFeedback: ConfirmPeerFeedbackUseCase,
         @Inject(EXPORT_PARTICIPANT_SELF_DATA_USE_CASE_SYMBOL)
         private readonly exportParticipantSelfData: ExportParticipantSelfDataUseCase,
         @Inject(REFRESH_TOKEN_MANAGER_SYMBOL)
@@ -295,6 +299,16 @@ export class ParticipantController {
         @Param('campaignId', ParseIntPipe) campaignId: number
     ) {
         return this.listParticipantCampaignPeers.execute(participantId, campaignId);
+    }
+
+    @Post('campaigns/:campaignId/peer-feedback/confirm')
+    @UseGuards(ParticipantJwtAuthGuard)
+    @UseFilters(ResponsesExceptionFilter, ParticipantSessionExceptionFilter)
+    public async confirmCampaignPeerFeedback(
+        @CurrentParticipantId() participantId: number,
+        @Param('campaignId', ParseIntPipe) campaignId: number
+    ) {
+        return this.confirmPeerFeedback.execute(participantId, campaignId);
     }
 
     @Post('campaigns/:campaignId/questionnaires/:qid/submit')

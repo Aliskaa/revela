@@ -2,6 +2,7 @@ import { participantApiClient } from '@/api/participantClient';
 import { useToast } from '@/lib/toast';
 import type {
     CampaignPeerChoice,
+    ConfirmPeerFeedbackResponse,
     ParticipantQuestionnaireMatrix,
     ParticipantSelfDataExport,
     ParticipantSession,
@@ -76,6 +77,31 @@ export function useConfirmCampaignParticipation() {
         onError: err =>
             toast.error(
                 err instanceof Error && err.message ? err.message : t('toast.campaignParticipationConfirmFailed')
+            ),
+    });
+}
+
+/**
+ * Confirme la fin de l'étape feedback pairs pour le participant courant sur une campagne donnée.
+ * Cf. P12/P13 : visible dès qu'au moins 1 feedback a été saisi ; auto-complete au 5e feedback
+ * (côté backend).
+ */
+export function useConfirmPeerFeedback() {
+    const qc = useQueryClient();
+    const toast = useToast();
+    return useMutation<ConfirmPeerFeedbackResponse, Error, number>({
+        mutationFn: campaignId =>
+            participantApiClient.post(`/participant/campaigns/${campaignId}/peer-feedback/confirm`).then(r => r.data),
+        onSuccess: data => {
+            qc.invalidateQueries({ queryKey: participantSessionKeys.session });
+            qc.invalidateQueries({ queryKey: participantSessionKeys.matrixRoot });
+            if (!data.wasAlreadyCompleted) {
+                toast.success('Étape feedback pairs terminée.');
+            }
+        },
+        onError: err =>
+            toast.error(
+                err instanceof Error && err.message ? err.message : "Échec de la confirmation des feedbacks pairs."
             ),
     });
 }

@@ -197,6 +197,58 @@ export class DrizzleParticipantsRepository implements IParticipantsRepositoryPor
             });
     }
 
+    public async markPeerFeedbackCompletedForCampaignSubject(
+        campaignId: number,
+        participantId: number
+    ): Promise<{ wasAlreadyCompleted: boolean; unlockedElementHumain: boolean }> {
+        return this.db.transaction(async tx => {
+            const [progress] = await tx
+                .select({
+                    selfRatingStatus: participantProgressTable.selfRatingStatus,
+                    peerFeedbackStatus: participantProgressTable.peerFeedbackStatus,
+                    elementHumainStatus: participantProgressTable.elementHumainStatus,
+                })
+                .from(participantProgressTable)
+                .where(
+                    and(
+                        eq(participantProgressTable.campaignId, campaignId),
+                        eq(participantProgressTable.participantId, participantId)
+                    )
+                )
+                .limit(1);
+
+            if (progress?.peerFeedbackStatus === 'completed') {
+                return { wasAlreadyCompleted: true, unlockedElementHumain: false };
+            }
+
+            const [campaign] = await tx
+                .select({ allowTestWithoutManualInputs: campaignsTable.allowTestWithoutManualInputs })
+                .from(campaignsTable)
+                .where(eq(campaignsTable.id, campaignId))
+                .limit(1);
+            const canSkipManualInputs = campaign?.allowTestWithoutManualInputs === true;
+            const selfDone = progress?.selfRatingStatus === 'completed';
+            const elementHumainCurrentlyLocked = (progress?.elementHumainStatus ?? 'locked') === 'locked';
+            const shouldUnlockElementHumain = elementHumainCurrentlyLocked && (canSkipManualInputs || selfDone);
+
+            const now = new Date();
+            const patch = {
+                peerFeedbackStatus: 'completed' as const,
+                peerFeedbackCompletedAt: now,
+                updatedAt: now,
+                ...(shouldUnlockElementHumain ? { elementHumainStatus: 'pending' as const } : {}),
+            };
+            await tx
+                .insert(participantProgressTable)
+                .values({ campaignId, participantId, ...patch })
+                .onConflictDoUpdate({
+                    target: [participantProgressTable.campaignId, participantProgressTable.participantId],
+                    set: patch,
+                });
+            return { wasAlreadyCompleted: false, unlockedElementHumain: shouldUnlockElementHumain };
+        });
+    }
+
     public async listCampaignIdsWithConfirmedParticipation(participantId: number): Promise<number[]> {
         const rows = await this.db
             .select({ campaignId: campaignParticipantsTable.campaignId })
@@ -267,6 +319,23 @@ export class DrizzleParticipantsRepository implements IParticipantsRepositoryPor
             )
             .limit(1);
         return progress ?? null;
+    }
+
+    public async countPeerRatingsForCampaignSubject(
+        campaignId: number,
+        subjectParticipantId: number
+    ): Promise<number> {
+        const [row] = await this.db
+            .select({ count: sql<number>`count(*)::int` })
+            .from(questionnaireResponsesTable)
+            .where(
+                and(
+                    eq(questionnaireResponsesTable.campaignId, campaignId),
+                    eq(questionnaireResponsesTable.subjectParticipantId, subjectParticipantId),
+                    eq(questionnaireResponsesTable.submissionKind, 'peer_rating')
+                )
+            );
+        return row?.count ?? 0;
     }
 
     public async create(participant: Participant): Promise<Participant> {

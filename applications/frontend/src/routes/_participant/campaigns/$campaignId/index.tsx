@@ -5,7 +5,7 @@ import {
     buildCampaignSteps,
 } from '@/components/participant-dashboard/CampaignStepCard';
 import { CampaignWorkspaceHeader } from '@/components/participant-dashboard/CampaignWorkspaceHeader';
-import { useParticipantSession } from '@/hooks/participantSession';
+import { useConfirmPeerFeedback, useParticipantSession } from '@/hooks/participantSession';
 import { Alert, Box, Button, Card, CardContent, LinearProgress, Stack, Typography } from '@mui/material';
 import { Link, createFileRoute, useNavigate } from '@tanstack/react-router';
 import { ArrowLeft, MessageSquareQuote, Radar } from 'lucide-react';
@@ -20,6 +20,7 @@ function ParticipantCampaignWorkspaceRoute() {
     const campaignId = Number(campaignIdParam);
     const { data: session, isLoading, isError } = useParticipantSession();
     const navigate = useNavigate();
+    const confirmPeerFeedback = useConfirmPeerFeedback();
 
     const assignment = React.useMemo(() => {
         if (!session) return undefined;
@@ -27,6 +28,12 @@ function ParticipantCampaignWorkspaceRoute() {
     }, [session, campaignId]);
 
     const steps = React.useMemo(() => buildCampaignSteps(assignment), [assignment]);
+    const peerRatingsCount = assignment?.progression?.peer_ratings_count ?? 0;
+
+    const handleConfirmPeerFeedback = React.useCallback(() => {
+        if (!Number.isFinite(campaignId)) return;
+        confirmPeerFeedback.mutate(campaignId);
+    }, [campaignId, confirmPeerFeedback]);
 
     const resultsLocked = React.useMemo(() => {
         const progression = assignment?.progression;
@@ -139,7 +146,14 @@ function ParticipantCampaignWorkspaceRoute() {
                         </Typography>
                         <Stack spacing={1.4} sx={{ mt: 2 }}>
                             {steps.map(step => (
-                                <CampaignStepCard key={step.label} step={step} onNavigate={handleNavigate} />
+                                <CampaignStepCard
+                                    key={step.label}
+                                    step={step}
+                                    onNavigate={handleNavigate}
+                                    peerRatingsCount={peerRatingsCount}
+                                    onConfirmPeerFeedback={handleConfirmPeerFeedback}
+                                    confirmingPeerFeedback={confirmPeerFeedback.isPending}
+                                />
                             ))}
                         </Stack>
                     </CardContent>

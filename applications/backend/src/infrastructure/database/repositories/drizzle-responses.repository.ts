@@ -178,10 +178,35 @@ export class DrizzleResponsesRepository implements IResponsesRepositoryPort {
                     .limit(1);
                 const canSkipManualInputs = campaign?.allowTestWithoutManualInputs === true;
 
+                // Pour les peer_ratings : on compte les feedbacks pairs déjà saisis (y compris
+                // celui qu'on vient d'insérer) pour décider si l'étape passe à `completed`. La
+                // règle métier (cf. P12/P13) : `peer_feedback_status` ne passe à `completed` que
+                // lorsque le 5e feedback est saisi (auto). Avant 5, le participant doit confirmer
+                // explicitement via l'endpoint dédié — d'où le statut qui reste `pending` ici.
+                let peerCountAfterInsert: number | null = null;
+                if (snap.submissionKind === 'peer_rating') {
+                    const [row] = await tx
+                        .select({ count: sql<number>`count(*)::int` })
+                        .from(questionnaireResponsesTable)
+                        .where(
+                            and(
+                                eq(questionnaireResponsesTable.campaignId, snap.campaignId),
+                                eq(questionnaireResponsesTable.subjectParticipantId, snap.participantId),
+                                eq(questionnaireResponsesTable.submissionKind, 'peer_rating')
+                            )
+                        );
+                    peerCountAfterInsert = row?.count ?? 0;
+                }
+                const peerAutoCompleteThreshold = 5;
+                const peerLimitReached =
+                    peerCountAfterInsert !== null && peerCountAfterInsert >= peerAutoCompleteThreshold;
+
                 const selfDoneAfter =
                     snap.submissionKind === 'self_rating' ? true : existingProgress?.selfRatingStatus === 'completed';
                 const peerDoneAfter =
-                    snap.submissionKind === 'peer_rating' ? true : existingProgress?.peerFeedbackStatus === 'completed';
+                    snap.submissionKind === 'peer_rating'
+                        ? peerLimitReached
+                        : existingProgress?.peerFeedbackStatus === 'completed';
                 const unlockElementHumain =
                     (snap.submissionKind === 'self_rating' || snap.submissionKind === 'peer_rating') &&
                     (existingProgress?.elementHumainStatus ?? 'locked') === 'locked' &&
@@ -198,12 +223,14 @@ export class DrizzleResponsesRepository implements IResponsesRepositoryPort {
                               ...elementHumainUnlockPatch,
                           }
                         : snap.submissionKind === 'peer_rating'
-                          ? {
-                                peerFeedbackStatus: 'completed' as const,
-                                peerFeedbackCompletedAt: now,
-                                updatedAt: now,
-                                ...elementHumainUnlockPatch,
-                            }
+                          ? peerLimitReached
+                              ? {
+                                    peerFeedbackStatus: 'completed' as const,
+                                    peerFeedbackCompletedAt: now,
+                                    updatedAt: now,
+                                    ...elementHumainUnlockPatch,
+                                }
+                              : { updatedAt: now }
                           : {
                                 elementHumainStatus: 'completed' as const,
                                 elementHumainCompletedAt: now,

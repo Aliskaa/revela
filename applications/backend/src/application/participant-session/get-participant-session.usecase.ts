@@ -47,6 +47,13 @@ export class GetParticipantSessionUseCase {
                               assignment.campaignId,
                               participantId
                           );
+                const peerRatingsCount =
+                    assignment.campaignId === null || assignment.campaignId === undefined
+                        ? 0
+                        : await this.ports.participants.countPeerRatingsForCampaignSubject(
+                              assignment.campaignId,
+                              participantId
+                          );
                 let campaignStatus: CampaignStatus | null = null;
                 let campaignName: string | null = null;
                 let companyId: number | null = null;
@@ -94,6 +101,7 @@ export class GetParticipantSessionUseCase {
                               peer_feedback_status: normalizeStepStatus(progress.peerFeedbackStatus),
                               element_humain_status: normalizeStepStatus(progress.elementHumainStatus),
                               feedback_coach: null,
+                              peer_ratings_count: peerRatingsCount,
                           }
                         : null,
                 };

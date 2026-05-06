@@ -2,6 +2,7 @@ import { CampaignNotActiveBlock } from '@/components/participant-dashboard/Campa
 import { StepCompletedBanner } from '@/components/participant-dashboard/StepCompletedBanner';
 import { RatingDimensionCard } from '@/components/questionnaire/RatingDimensionCard';
 import {
+    useConfirmPeerFeedback,
     useParticipantCampaignPeers,
     useParticipantSession,
     useParticipantSessionMatrix,
@@ -23,8 +24,8 @@ import {
     Stack,
     Typography,
 } from '@mui/material';
-import { createFileRoute } from '@tanstack/react-router';
-import { CheckCircle2, CircleUserRound, Save, Sparkles, Users } from 'lucide-react';
+import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import { BadgeCheck, CheckCircle2, CircleUserRound, Save, Sparkles, Users } from 'lucide-react';
 import * as React from 'react';
 
 export const Route = createFileRoute('/_participant/peer-feedback')({
@@ -108,6 +109,7 @@ function PeerCard({
 
 function ParticipantPeerFeedbackRoute() {
     const { data: session, isLoading: sessionLoading, isError } = useParticipantSession();
+    const navigate = useNavigate();
 
     const { assignment: activeAssignment } = useSelectedAssignment(session);
     const qid = activeAssignment?.questionnaire_id ?? '';
@@ -116,6 +118,7 @@ function ParticipantPeerFeedbackRoute() {
     const { data: matrix, isLoading: matrixLoading } = useParticipantSessionMatrix(qid.length > 0, qid, campaignId);
     const { data: availablePeers = [] } = useParticipantCampaignPeers(campaignId ?? null);
     const submitMutation = useSubmitParticipantQuestionnaire(qid.toUpperCase(), campaignId);
+    const confirmMutation = useConfirmPeerFeedback();
 
     const [selectedPeer, setSelectedPeer] = React.useState<CampaignPeerChoice | null>(null);
     const [scores, setScores] = React.useState<Record<string, number | null>>({});
@@ -174,6 +177,24 @@ function ParticipantPeerFeedbackRoute() {
         setSuccessOpen(true);
         setSelectedPeer(null);
         setScores({});
+
+        // Auto-complete au 5e feedback (cf. P12/P13) → cohérent avec P10 : on redirige
+        // sur la fiche campagne pour matérialiser la fin de l'étape.
+        if (campaignId !== undefined && ratedCount + 1 >= MAX_PEERS) {
+            setTimeout(() => {
+                navigate({ to: '/campaigns/$campaignId', params: { campaignId: String(campaignId) } });
+            }, 1500);
+        }
+    };
+
+    const handleConfirmDone = async () => {
+        if (campaignId === undefined) return;
+        try {
+            await confirmMutation.mutateAsync(campaignId);
+            navigate({ to: '/campaigns/$campaignId', params: { campaignId: String(campaignId) } });
+        } catch {
+            // Toast émis par le hook ; on garde l'utilisateur sur la page.
+        }
     };
 
     if (isLoading) {
@@ -324,8 +345,36 @@ function ParticipantPeerFeedbackRoute() {
 
                         {!canRateMore && (
                             <Alert severity="info" sx={{ mt: 2 }}>
-                                Vous avez atteint le maximum de {MAX_PEERS} pairs évalués.
+                                Vous avez atteint le maximum de {MAX_PEERS} pairs évalués. L'étape se termine
+                                automatiquement.
                             </Alert>
+                        )}
+
+                        {ratedCount >= 1 && canRateMore && (
+                            <Box sx={{ mt: 2 }}>
+                                <Button
+                                    variant="contained"
+                                    color="primary"
+                                    fullWidth
+                                    disableElevation
+                                    startIcon={<BadgeCheck size={16} />}
+                                    onClick={handleConfirmDone}
+                                    disabled={!canInteract || confirmMutation.isPending}
+                                    sx={{ borderRadius: 3 }}
+                                >
+                                    {confirmMutation.isPending
+                                        ? 'Confirmation…'
+                                        : "J'ai terminé mes feedbacks"}
+                                </Button>
+                                <Typography
+                                    variant="caption"
+                                    color="text.secondary"
+                                    sx={{ display: 'block', mt: 0.8, lineHeight: 1.5 }}
+                                >
+                                    Vous pouvez confirmer la fin de cette étape dès maintenant ou continuer (jusqu'à{' '}
+                                    {MAX_PEERS} pairs).
+                                </Typography>
+                            </Box>
                         )}
                     </CardContent>
                 </Card>

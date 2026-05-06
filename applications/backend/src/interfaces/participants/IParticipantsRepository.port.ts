@@ -101,6 +101,17 @@ export interface IParticipantsInviteAssignmentsReaderPort {
 export interface IParticipantsCampaignParticipationWriterPort {
     ensureCampaignParticipantInvited(campaignId: number, participantId: number): Promise<void>;
     confirmCampaignParticipantParticipation(campaignId: number, participantId: number): Promise<void>;
+    /**
+     * Marque l'étape feedback pairs comme terminée pour ce participant sur cette campagne, et
+     * débloque l'étape `element_humain` si les pré-requis sont remplis (self_rating terminé OU
+     * la campagne autorise le saut des inputs manuels).
+     * Idempotent : si l'étape est déjà `completed`, retourne `wasAlreadyCompleted: true` sans
+     * modification. Cf. P12/P13 du suivi produit 2026-05-02.
+     */
+    markPeerFeedbackCompletedForCampaignSubject(
+        campaignId: number,
+        participantId: number
+    ): Promise<{ wasAlreadyCompleted: boolean; unlockedElementHumain: boolean }>;
 }
 
 export interface IParticipantsCampaignStateReaderPort {
@@ -116,6 +127,12 @@ export interface IParticipantsCampaignStateReaderPort {
         campaignId: number,
         exceptParticipantId: number
     ): Promise<CampaignPeerChoiceItemDto[]>;
+    /**
+     * Compte le nombre de feedbacks pairs déjà saisis par ce participant (en tant que `subject`)
+     * pour cette campagne. Utilisé pour piloter l'affichage du bouton « J'ai terminé » et
+     * vérifier la règle métier (au moins 1 feedback requis pour confirmer ; auto-complete au 5e).
+     */
+    countPeerRatingsForCampaignSubject(campaignId: number, subjectParticipantId: number): Promise<number>;
 }
 
 export interface IParticipantsWriterPort {

@@ -51,6 +51,12 @@ const participantSessionProgressionSchema = z.object({
     peer_feedback_status: progressStatusSchema,
     element_humain_status: progressStatusSchema,
     feedback_coach: z.string().nullable(),
+    /**
+     * Nombre de feedbacks pairs déjà saisis par le participant pour cette campagne.
+     * Utilisé pour piloter l'affichage du bouton « J'ai terminé mes feedbacks » et
+     * vérifier la règle métier (au moins 1 pour confirmer ; auto-complete au 5e).
+     */
+    peer_ratings_count: z.number().int().min(0).default(0),
 });
 
 const participantSessionAssignmentSchema = z.object({
@@ -88,3 +94,16 @@ export const updateParticipantProfileBodySchema = z.object({
     function_level: participantFunctionLevelSchema.nullable().optional(),
 });
 export type UpdateParticipantProfileBody = z.infer<typeof updateParticipantProfileBodySchema>;
+
+/**
+ * Réponse de l'endpoint `POST /participant/campaigns/:campaignId/peer-feedback/confirm`
+ * (cf. P12/P13 du suivi produit). Le statut peer_feedback passe à `completed` côté backend ;
+ * `unlockedElementHumain` indique si l'étape suivante (test) a été débloquée par cette
+ * confirmation.
+ */
+export const confirmPeerFeedbackResponseSchema = z.object({
+    confirmed: z.literal(true),
+    wasAlreadyCompleted: z.boolean(),
+    unlockedElementHumain: z.boolean(),
+});
+export type ConfirmPeerFeedbackResponse = z.infer<typeof confirmPeerFeedbackResponseSchema>;
