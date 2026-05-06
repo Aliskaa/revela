@@ -69,15 +69,15 @@
 | P11 | Commentaire optionnel sur feedback pair | Pas encore fait | Ajouter champ optionnel |
 | P12 | Feedback pairs: continuer tant que < 5 enregistres | Pas encore fait | Regle de progression a confirmer — a rapprocher du PDF (suppression du deverrouillage automatique au premier pair saisi) |
 | P13 | Confirmation "j'ai termine les feedbacks" obligatoire | Pas encore fait | Etape de confirmation explicite avant questionnaire Element B |
-| P14 | Vue participant resultats: seulement scores pairs anonymes | A valider en recette | Implémentation: colonnes « pairs » = feedbacks **reçus** (`peers=received`), pas les scores donnés aux pairs. **À tester** — section **Notes à tester** ci-dessous. |
+| P14 | Vue participant resultats: seulement scores pairs anonymes | Fait | Implémentation: colonnes « pairs » = feedbacks **reçus** (`peers=received`), pas les scores donnés aux pairs. **À tester** — section **Notes à tester** ci-dessous. |
 | P15 | Tests 54x2: autosave des reponses | Pas encore fait | Persistance intervallee + reprise session ; aligne avec enregistrement auto « regard sur soi » et Element B (PDF) |
-| P16 | Affichage anonyme des pairs (`pair #1`, `pair #2`) | A valider en recette | Libellés `Pair #1`… côté participant sur la vue résultats ; pas d’IDs pairs dans le JSON. **À tester** — section **Notes à tester** ci-dessous. |
+| P16 | Affichage anonyme des pairs (`pair #1`, `pair #2`) | Fait | Libellés `Pair #1`… côté participant sur la vue résultats ; pas d’IDs pairs dans le JSON. **À tester** — section **Notes à tester** ci-dessous. |
 | P17 | Limite commentaires feedback a 150 caracteres | Pas encore fait | Validation UI + backend |
 | P18 | Tableau synthese: survol commentaires + label ecart sauf 0 | Pas encore fait | Definir table d'interpretation des ecarts |
 | P19 | Coach/admin: pas d'anonymat | Pas encore fait | Visibilite nominative selon role |
 | P20 | Coach/admin: vue globale campagne (matrice test + ecarts) | Pas encore fait | Vue double entree participants x resultats |
 | P21 | Coach/admin: dates campagnes dans detail participants | Pas encore fait | Colonnes date debut/fin/maj |
-| P22 | Niveau 1 resultats: scores | Pas encore fait | Base existante a verifier |
+| P22 | Niveau 1 resultats: scores | Fait | Base existante a verifier |
 | P23 | Niveau 2: score transparence avec bouton activation coach | Pas encore fait | Workflow d'activation + audit |
 | P24 | Niveau 3: analyse IA supervisee par coach | Pas encore fait | Bouton lancement + edition + validation ; diffusion participant apres approbation |
 | P25 | Journaliser IA utilisee (modele + prompt) | Pas encore fait | Trace indispensable pour audit/explicabilite |
