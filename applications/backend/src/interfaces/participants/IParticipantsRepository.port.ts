@@ -33,6 +33,12 @@ export type ListParticipantsParams = {
      * attribuée à ce coach. Utilisé pour le scope=coach des endpoints admin (cf. ADR-008).
      */
     coachId?: number;
+    /**
+     * Recherche texte tolérante. Match insensible à la casse sur `firstName`, `lastName`
+     * ou `email` (ILIKE Postgres). Trimmé et ignoré si vide côté repository — le contrôleur
+     * normalise déjà la valeur, mais on reste défensif ici.
+     */
+    search?: string;
     page: number;
     perPage: number;
 };

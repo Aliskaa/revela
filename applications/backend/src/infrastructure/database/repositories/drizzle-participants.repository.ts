@@ -10,10 +10,12 @@ import {
     companiesTable,
     desc,
     eq,
+    ilike,
     inArray,
     inviteTokensTable,
     isNotNull,
     ne,
+    or,
     participantProgressTable,
     participantsTable,
     questionnaireResponsesTable,
@@ -411,6 +413,18 @@ export class DrizzleParticipantsRepository implements IParticipantsRepositoryPor
                     .from(campaignParticipantsTable)
                     .where(inArray(campaignParticipantsTable.campaignId, coachCampaignIds));
                 filters.push(inArray(participantsTable.id, participantIdsInCoachCampaigns));
+            }
+        }
+        const searchTerm = params.search?.trim();
+        if (searchTerm) {
+            const pattern = `%${searchTerm}%`;
+            const searchFilter = or(
+                ilike(participantsTable.firstName, pattern),
+                ilike(participantsTable.lastName, pattern),
+                ilike(participantsTable.email, pattern)
+            );
+            if (searchFilter !== undefined) {
+                filters.push(searchFilter);
             }
         }
         const whereClause = filters.length > 0 ? and(...filters) : undefined;

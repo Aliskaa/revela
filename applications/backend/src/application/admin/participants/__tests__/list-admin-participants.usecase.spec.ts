@@ -49,3 +49,23 @@ test('list participants does not pass coachId when scope=super-admin', async () 
     expect(calls).toHaveLength(1);
     expect(calls[0].coachId).toBeUndefined();
 });
+
+test('list participants forwards search verbatim (le contrôleur normalise)', async () => {
+    const { port, calls } = buildStub();
+    const useCase = new ListAdminParticipantsUseCase({ participants: port });
+
+    await useCase.execute({ page: 1, perPage: 10, search: 'Dupont' });
+
+    expect(calls).toHaveLength(1);
+    expect(calls[0].search).toBe('Dupont');
+});
+
+test('list participants does not pass search when omitted', async () => {
+    const { port, calls } = buildStub();
+    const useCase = new ListAdminParticipantsUseCase({ participants: port });
+
+    await useCase.execute({ page: 1, perPage: 10 });
+
+    expect(calls).toHaveLength(1);
+    expect(calls[0].search).toBeUndefined();
+});

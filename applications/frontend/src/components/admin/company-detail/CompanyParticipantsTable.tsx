@@ -11,6 +11,7 @@ import {
     TableCell,
     TableHead,
     TableRow,
+    TextField,
     Typography,
 } from '@mui/material';
 import { Trash2, UserPlus } from 'lucide-react';
@@ -47,6 +48,12 @@ export type CompanyParticipantsTableProps = {
      * qu'il a ajoutés unitairement (cf. PDF AOR §coach delete).
      */
     currentCoachId: number | null;
+    /**
+     * Texte courant de la barre de recherche (saisie brute, non debouncée). La valeur
+     * effectivement envoyée au backend est gérée par le parent (cf. CompanyDetailPage).
+     */
+    search: string;
+    onSearchChange: (next: string) => void;
 };
 
 export function CompanyParticipantsTable({
@@ -63,6 +70,8 @@ export function CompanyParticipantsTable({
     onDeleteClick,
     showCsvImport = true,
     currentCoachId,
+    search,
+    onSearchChange,
 }: CompanyParticipantsTableProps) {
     const [addDrawerOpen, setAddDrawerOpen] = React.useState(false);
     const addParticipant = useAddParticipantToCompany();
@@ -110,7 +119,19 @@ export function CompanyParticipantsTable({
                     sx={{ mb: 1 }}
                 >
                     <SectionTitle title="Collaborateurs" subtitle={`Les participants rattachés à ${companyName}.`} />
-                    <Stack direction="row" spacing={1.2} alignItems="center" sx={{ flexShrink: 0 }}>
+                    <Stack
+                        direction={{ xs: 'column', sm: 'row' }}
+                        spacing={1.2}
+                        alignItems={{ xs: 'stretch', sm: 'center' }}
+                        sx={{ flexShrink: 0, width: { xs: '100%', sm: 'auto' } }}
+                    >
+                        <TextField
+                            size="small"
+                            placeholder="Rechercher un collaborateur…"
+                            value={search}
+                            onChange={e => onSearchChange(e.target.value)}
+                            sx={{ minWidth: { xs: '100%', sm: 260 } }}
+                        />
                         <Button
                             variant="contained"
                             disableElevation
@@ -195,7 +216,14 @@ export function CompanyParticipantsTable({
                                 ))
                             )}
                             {!loading && participants.length === 0 && (
-                                <EmptyTableRow colSpan={4} message="Aucun collaborateur rattaché à cette entreprise." />
+                                <EmptyTableRow
+                                    colSpan={4}
+                                    message={
+                                        search.trim().length > 0
+                                            ? `Aucun collaborateur ne correspond à « ${search.trim()} ».`
+                                            : 'Aucun collaborateur rattaché à cette entreprise.'
+                                    }
+                                />
                             )}
                         </TableBody>
                     </Table>

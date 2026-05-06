@@ -101,12 +101,23 @@ export class AdminParticipantsController {
         return Math.min(safe, 200);
     }
 
+    private static normalizeSearch(raw?: string): string | undefined {
+        const trimmed = (raw ?? '').trim();
+        if (trimmed.length === 0) {
+            return undefined;
+        }
+        // Limite défensive : aucun usage légitime au-delà ; protège la requête SQL
+        // d'un pattern ILIKE pathologique.
+        return trimmed.slice(0, 100);
+    }
+
     @Get('participants')
     public async listParticipants(
         @Req() req: { user: JwtValidatedUser },
         @Query('page') pageRaw: string,
         @Query('per_page') perPageRaw: string,
-        @Query('company_id') companyIdRaw: string
+        @Query('company_id') companyIdRaw: string,
+        @Query('q') qRaw: string
     ) {
         const coachId = req.user.scope === 'coach' ? req.user.coachId : undefined;
         const result = await this.listAdminParticipants.execute({
@@ -114,6 +125,7 @@ export class AdminParticipantsController {
             perPage: AdminParticipantsController.normalizePerPage(perPageRaw),
             companyId: AdminParticipantsController.normalizePositiveInt(companyIdRaw),
             coachId,
+            search: AdminParticipantsController.normalizeSearch(qRaw),
         });
         return {
             ...result,

@@ -18,7 +18,7 @@
 | Section | ✅ | 🟡 | ❌ | ⏭️ V2 |
 |---|---|---|---|---|
 | 2. Renommage sémantique global | 6 | 0 | 0 | — |
-| 3. Configuration & Administration | 7 | 0 | 1 | — |
+| 3. Configuration & Administration | 8 | 0 | 0 | — |
 | 4. Invitation & RGPD | 4 | 1 | 0 | 1 |
 | 5. Regard sur soi | 1 | 0 | 1 | — |
 | 6. Feedback des pairs | 3 | 0 | 2 | — |
@@ -27,14 +27,14 @@
 | 9. Vue de synthèse Admin/Coach | 0 | 1 | 2 | 1 |
 | 10. IA & retour formateur/coach | 0 | 0 | 4 | — |
 | 11. Hébergement & domaine | 0 | 0 | 1 | 1 |
-| **Total court terme** | **24** | **3** | **17** | **4** |
+| **Total court terme** | **25** | **3** | **16** | **4** |
 
 Le gros de la **gouvernance et du parcours participant** est en place. Les chantiers restants sont concentrés sur :
 1. La **vue résultats participant** (filtres, tooltips, libellés d'écarts, allègement du tableau).
 2. La **vue de synthèse Admin/Coach** (matrice globale + mise en lumière manuelle).
 3. L'**IA & retour coach** (chantier complet, en attente du choix modèle / prompt côté Laurent).
 4. Les **autosaves** (regard sur soi + Élément B).
-5. La **notification cloche** + **recherche participant** côté entreprise.
+5. La **notification cloche** côté entreprise (la recherche participant est livrée — cf. section 3).
 6. L'**hébergement** sous `revela.cabinet-aor.fr`.
 
 ---
@@ -64,7 +64,7 @@ Le gros de la **gouvernance et du parcours participant** est en place. Les chant
 | ✅ | Coach | Retirer « créer une entreprise » côté coach | Fait | `POST /admin/companies` + `DELETE` rejettent coach ; UI cachée dans `CompaniesListPage` / `CompanyDetailPage` (cf. P07) |
 | ✅ | Coach | Coach ne peut pas supprimer un participant (sauf ceux qu'il a ajoutés unitairement) | Fait | Colonne `participants.created_by_coach_id` ajoutée (migration `0016_strong_lucky_pierre.sql`, FK `coaches.id`, `ON DELETE SET NULL`) ; renseignée à la création par `AddParticipantToCompanyUseCase` et `AddParticipantToCampaignUseCase` (= `coachId` de l'acteur, `null` côté admin). `EraseParticipantRgpdUseCase` exige désormais `participant.createdByCoachId === coachId` en scope coach (404 sinon). Tentative de ré-ajout d'un participant existant non possédé → erreur métier « Ce participant existe déjà et ne peut pas être modifié. » (mutation silencieuse supprimée). UI : bouton « Supprimer » de `CompanyParticipantsTable` masqué via prop `currentCoachId` quand `created_by_coach_id` ne matche pas. Admin reste illimité |
 | ✅ | Admin / Coach | Ajout d'un utilisateur unitairement (en plus du CSV) | Fait | 2 endpoints : `POST /admin/campaigns/:id/participants` (avec auto-invitation) et `POST /admin/companies/:id/participants` ; drawer `AddParticipantToCampaignDrawerForm` (cf. P08) |
-| ❌ | Admin | Barre de recherche participant dans la vue entreprise | Pas fait | Pas d'input search trouvé dans `CompanyParticipantsTable` ; règle métier rappelée par PDF : statut « Actif » dès que l'invitation est acceptée (`joined_at` non nul) |
+| ✅ | Admin | Barre de recherche participant dans la vue entreprise | Fait | Backend : query `q` ajoutée à `GET /admin/participants` (ILIKE prénom/nom/email, scope coach/admin préservé via cumul `and(...)`). UI : `TextField` debouncé 300 ms dans `CompanyParticipantsTable` (`search`/`onSearchChange`), reset page via `usePageResetEffect`, message vide adapté. Règle métier rappelée par PDF : statut « Actif » dès que l'invitation est acceptée (`joined_at` non nul) |
 | ✅ | Admin | Conserver l'écran « questionnaires » pour extensions futures | Fait | `routes/admin/questionnaires.tsx` toujours présent et fonctionnel |
 | ❌ | Admin / Coach | Notification cloche en fin d'étape / fin de parcours | Pas fait | Aucun composant `Bell`/notification dans le frontend ; chantier complet (UI + persistance + déclencheurs backend) |
 
@@ -208,7 +208,7 @@ Le gros de la **gouvernance et du parcours participant** est en place. Les chant
 
 **Bloc 5 — Périphérie (parallélisable)**
 14. Notification cloche fin d'étape / fin de parcours.
-15. Barre de recherche participant vue entreprise.
+15. ~~Barre de recherche participant vue entreprise.~~ ✅ Fait (2026-05-06) — query `q` côté API + `TextField` debouncé 300 ms dans `CompanyParticipantsTable`.
 16. ~~Vérification garde « coach ne peut pas supprimer un participant ».~~ ✅ Fait (2026-05-06) — règle implémentée : coach ne supprime que les participants qu'il a ajoutés lui-même (cf. ligne section 3).
 17. Configuration sous-domaine `revela.cabinet-aor.fr`.
 
@@ -235,3 +235,8 @@ Le gros de la **gouvernance et du parcours participant** est en place. Les chant
    - Tentative d'ajout unitaire (drawer entreprise/campagne) d'un email existant déjà rattaché à un autre coach ou à l'admin → erreur 400 « Ce participant existe déjà et ne peut pas être modifié. » (au lieu d'une réassociation silencieuse).
    - Bouton « Supprimer » caché sur les lignes dont `created_by_coach_id` ne matche pas le coach connecté. Admin voit toujours le bouton.
    - `DELETE /admin/participants/:id` côté coach → 404 si le coach n'est pas propriétaire (4 cas : participant créé par admin, par autre coach, ou n'appartenant pas à une de ses entreprises).
+7. **Recherche participant fiche entreprise** (2026-05-06) :
+   - Saisir un fragment de prénom, nom **ou** e-mail (ex. « lar ») dans la barre → après ~300 ms, seuls les participants matchant apparaissent ; total et pagination s'ajustent (page revient à 1).
+   - Vider le champ → liste complète revient sans flicker (cache React Query séparé via queryKey enrichie).
+   - En scope coach (`/coach/companies/:id`) : la recherche reste cantonnée aux participants déjà visibles sans la barre — aucune fuite de participants hors périmètre coach (filtre `coachId` cumulé via `and(...)` dans `listWithCompany`).
+   - DevTools réseau : une seule requête `GET /admin/participants?...&q=...` par saisie stabilisée (debounce OK) ; paramètre `q` absent quand le champ est vide.

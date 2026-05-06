@@ -53,13 +53,20 @@ export function CompanyDetailPage({ scope, companyId }: CompanyDetailPageProps) 
     const { data: companies = [], isLoading: companiesLoading } = useCompanies();
     const [page, setPage] = React.useState(0);
     const [rowsPerPage, setRowsPerPage] = React.useState(10);
+    const [search, setSearch] = React.useState('');
+    const [debouncedSearch, setDebouncedSearch] = React.useState('');
+    React.useEffect(() => {
+        const id = window.setTimeout(() => setDebouncedSearch(search.trim()), 300);
+        return () => window.clearTimeout(id);
+    }, [search]);
     const { data: participantsData, isLoading: participantsLoading } = useParticipants(
         page + 1,
         companyId,
-        rowsPerPage
+        rowsPerPage,
+        debouncedSearch
     );
 
-    usePageResetEffect(setPage, [rowsPerPage]);
+    usePageResetEffect(setPage, [rowsPerPage, debouncedSearch]);
 
     const [deleteCompanyOpen, setDeleteCompanyOpen] = React.useState(false);
     const [deleteParticipantTarget, setDeleteParticipantTarget] = React.useState<Participant | null>(null);
@@ -156,6 +163,8 @@ export function CompanyDetailPage({ scope, companyId }: CompanyDetailPageProps) 
                     onDeleteClick={setDeleteParticipantTarget}
                     showCsvImport={isAdmin}
                     currentCoachId={currentCoachId}
+                    search={search}
+                    onSearchChange={setSearch}
                 />
 
                 {isAdmin && <CompanyDangerZone onDeleteClick={() => setDeleteCompanyOpen(true)} />}

@@ -11,6 +11,7 @@ export class ListAdminParticipantsUseCase {
         perPage: number;
         companyId?: number;
         coachId?: number;
+        search?: string;
     }): Promise<{
         items: ParticipantAdminListItem[];
         total: number;
@@ -23,6 +24,7 @@ export class ListAdminParticipantsUseCase {
             perPage: params.perPage,
             companyId: params.companyId,
             coachId: params.coachId,
+            search: params.search,
         });
         return {
             items: result.items,
