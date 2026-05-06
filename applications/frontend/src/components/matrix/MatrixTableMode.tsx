@@ -1,5 +1,17 @@
 import type { ParticipantQuestionnaireMatrix, ParticipantQuestionnaireMatrixRow } from '@aor/types';
-import { Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from '@mui/material';
+import {
+    Paper,
+    Stack,
+    Table,
+    TableBody,
+    TableCell,
+    TableContainer,
+    TableHead,
+    TableRow,
+    Tooltip,
+    Typography,
+} from '@mui/material';
+import { MessageSquareText } from 'lucide-react';
 import { Fragment } from 'react';
 
 import { type PairBlock, absDiff, buildDimensionBlocks } from './pairBuilder';
@@ -26,15 +38,36 @@ export function MatrixTableMode({ matrix }: MatrixTableModeProps) {
             >
                 {row.self ?? '—'}
             </TableCell>
-            {row.peers.map((v, i) => (
-                <TableCell
-                    key={`${row.score_key}-${matrix.peer_columns[i]?.response_id ?? i}`}
-                    align="center"
-                    sx={{ fontWeight: 500, color: 'text.secondary' }}
-                >
-                    {v ?? '—'}
-                </TableCell>
-            ))}
+            {row.peers.map((v, i) => {
+                const comment = row.peer_comments[i] ?? null;
+                const cellContent =
+                    comment !== null ? (
+                        <Tooltip
+                            title={
+                                <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
+                                    {comment}
+                                </Typography>
+                            }
+                            arrow
+                        >
+                            <Stack direction="row" spacing={0.6} alignItems="center" justifyContent="center">
+                                <span>{v ?? '—'}</span>
+                                <MessageSquareText size={12} />
+                            </Stack>
+                        </Tooltip>
+                    ) : (
+                        <span>{v ?? '—'}</span>
+                    );
+                return (
+                    <TableCell
+                        key={`${row.score_key}-${matrix.peer_columns[i]?.response_id ?? i}`}
+                        align="center"
+                        sx={{ fontWeight: 500, color: 'text.secondary' }}
+                    >
+                        {cellContent}
+                    </TableCell>
+                );
+            })}
             <TableCell align="center" sx={{ fontWeight: 700, color: '#10b981', bgcolor: 'rgba(16, 185, 129, 0.02)' }}>
                 {row.scientific ?? '—'}
             </TableCell>

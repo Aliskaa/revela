@@ -33,7 +33,7 @@ const attachScoresAndHydrate = async (db: DrizzleDb, rows: QuestionnaireResponse
     const byResponse = new Map<number, ResponseScore[]>();
     for (const row of scoreRows) {
         const list = byResponse.get(row.responseId) ?? [];
-        list.push({ scoreKey: row.scoreKey, value: row.value });
+        list.push({ scoreKey: row.scoreKey, value: row.value, comment: row.comment ?? null });
         byResponse.set(row.responseId, list);
     }
     return rows.map(row =>
@@ -262,7 +262,9 @@ export class DrizzleResponsesRepository implements IResponsesRepositoryPort {
                           .values(
                               snap.scores.map(score => ({
                                   responseId: inserted.id,
-                                  ...score,
+                                  scoreKey: score.scoreKey,
+                                  value: score.value,
+                                  comment: score.comment ?? null,
                               }))
                           )
                           .returning();
@@ -288,7 +290,11 @@ export class DrizzleResponsesRepository implements IResponsesRepositoryPort {
                 email: inserted.email,
                 organisation: inserted.organisation,
                 submittedAt: inserted.submittedAt,
-                scores: insertedScores.map(s => ({ scoreKey: s.scoreKey, value: s.value })),
+                scores: insertedScores.map(s => ({
+                    scoreKey: s.scoreKey,
+                    value: s.value,
+                    comment: s.comment ?? null,
+                })),
             });
         });
     }

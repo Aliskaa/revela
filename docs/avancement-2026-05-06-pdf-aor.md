@@ -21,16 +21,16 @@
 | 3. Configuration & Administration | 8 | 0 | 0 | — |
 | 4. Invitation & RGPD | 5 | 0 | 0 | 1 |
 | 5. Regard sur soi | 1 | 0 | 0 | 1 |
-| 6. Feedback des pairs | 4 | 0 | 1 | — |
+| 6. Feedback des pairs | 5 | 0 | 0 | — |
 | 7. Questionnaire Élément B | 1 | 1 | 1 | — |
-| 8. Résultats Participant | 4 | 0 | 3 | 1 |
+| 8. Résultats Participant | 5 | 0 | 2 | 1 |
 | 9. Vue de synthèse Admin/Coach | 1 | 0 | 2 | 1 |
 | 10. IA & retour formateur/coach | 0 | 0 | 4 | — |
 | 11. Hébergement & domaine | 0 | 0 | 1 | 1 |
-| **Total court terme** | **30** | **1** | **12** | **5** |
+| **Total court terme** | **32** | **1** | **10** | **5** |
 
 Le gros de la **gouvernance et du parcours participant** est en place. Les chantiers restants sont concentrés sur :
-1. La **vue résultats participant** : restent les **tooltips commentaires pairs** (dépend de la saisie en base, section 6) et les **libellés d'interprétation des écarts** (texte attendu de Nora). Filtres « pairs me voient » et retrait colonnes « je vois les autres » : faits (2026-05-06).
+1. La **vue résultats participant** : restent les **libellés d'interprétation des écarts** (texte attendu de Nora). Filtres « pairs me voient », retrait colonnes « je vois les autres » et **tooltips commentaires pairs** : faits (2026-05-06).
 2. La **vue de synthèse Admin/Coach** (matrice globale + mise en lumière manuelle). Dates parcours : faites.
 3. L'**IA & retour coach** (chantier complet, en attente du choix modèle / prompt côté Laurent).
 4. L'**autosave Élément B** (54×2 réponses — questionnaire long). Pas d'autosave sur le regard sur soi (décision 2026-05-06 : trop court pour le justifier).
@@ -95,7 +95,7 @@ Le gros de la **gouvernance et du parcours participant** est en place. Les chant
 
 | Statut | Profil | Item PDF | État | Preuve / reste à faire |
 |---|---|---|---|---|
-| ❌ | Participant | Commentaire optionnel par pair, max 150 caractères | Pas fait | Aucun champ commentaire dans `routes/_participant/peer-feedback.tsx`. Aucune table/colonne `peer_comment` côté backend. Chantier : schéma DB + UI + validation `maxLength=150` (cf. P11, P17) |
+| ✅ | Participant | Commentaire optionnel **par note** (par item du questionnaire), max 150 caractères | Fait (2026-05-06) | Décision design (Nora) : commentaire **par note** plutôt que global, pour justifier chaque réponse. Migration `0017_amusing_bedlam.sql` (colonne `scores.comment varchar(150)` nullable). Backend : `submitParticipantPeerRatingBodySchema.comments` optionnel + use case `submit-participant-questionnaire.usecase.ts:197-217` (trim, rejet des commentaires orphelins, garde-fou serveur 150 chars, vide → `null`). UI : bouton `+` discret par item dans `RatingDimensionCard` → ouvre un `TextField` multiline (compteur `n/150`, bouton `−` pour replier+effacer). `peer-feedback.tsx` n'envoie que les commentaires non vides, validés côté serveur. Asymétrie : non disponible pour le regard sur soi (décision Nora — section 6 PDF, peer-only) |
 | ✅ | Participant | Confirmation explicite « j'ai terminé mes feedbacks » avant Élément B (suppression du déverrouillage automatique au 1ᵉʳ pair) | Fait | Use case `ConfirmPeerFeedbackUseCase` + endpoint `POST /participant/campaigns/:id/peer-feedback/confirm` ; bouton « J'ai terminé mes feedbacks » dans peer-feedback page et `CampaignStepCard` (cf. P12, P13) |
 | ✅ | Participant | Anonymisation des pairs côté participant : `Pair 1`, `Pair 2`, … | Fait | Libellés `Pair #1`, `Pair #2`… côté participant ; pas d'IDs dans le JSON (cf. P16) |
 | ✅ | Admin / Coach | Pas d'anonymat côté admin/coach : noms complets affichés | Fait (vérifié 2026-05-06) | Asymétrie pilotée par le flag `anonymizeReceivedPeerLabels` du use case `get-participant-questionnaire-matrix.usecase.ts:119, 149-153` : `admin-participants.controller.ts:205` passe `false` (admin/coach voient `firstName lastName`), `get-participant-session-questionnaire-matrix.usecase.ts:58` passe `true` côté participant (libellés `Pair #N` + `rater_participant_id` masqué). Aucun leak constaté |
@@ -122,7 +122,7 @@ Le gros de la **gouvernance et du parcours participant** est en place. Les chant
 |---|---|---|---|
 | ✅ | Affichage des scores (regard sur soi, feedbacks pairs anonymisés, Élément B) | Fait | `_participant/campaigns/$campaignId/results.tsx` ; matrice via `QuestionnaireMatrixDisplay` (cf. P22) |
 | ✅ | Filtres dans la vue résultats : « comment mes pairs me voient » | Fait (2026-05-06) | Perspective `'received'` codée en dur dans `routes/_participant/campaigns/$campaignId/results.tsx:36` (paramètre `peers=received` envoyé à l'API). Pas de toggle UI nécessaire : seul le point de vue « mes pairs me voient » est rendu sur cette page (le point de vue inverse vit côté `peer-feedback.tsx` pour la saisie). Item 3.7 du plan satisfait par construction |
-| ❌ | Affichage des commentaires pairs au survol (tooltip) | Pas fait | Bloqué par section 6 (commentaires pas en base) |
+| ✅ | Affichage des commentaires pairs au survol (tooltip) | Fait (2026-05-06) | Débloqué par la livraison section 6. Matrix DTO étendu : nouveau champ `peer_comments: (string \| null)[]` aligné par index sur `peers` (`packages/aor-common/types/src/matrix.ts`). Use case `get-participant-questionnaire-matrix.usecase.ts` peuple les commentaires (trim, vide → `null`) — identique côté participant et admin/coach (ce dernier hérite via délégation). UI : `MatrixTableMode.tsx` affiche une icône `MessageSquareText` + `Tooltip` MUI sur chaque cellule pair commentée ; `MatrixChartMode.tsx` fait pareil dans `MiniBar`. Couvre la vue résultats participant ET la vue détail admin/coach |
 | ❌ | Libellés d'interprétation des écarts (phrases préprogrammées, sauf écart 0) | Pas fait | Texte fourni par Nora (cf. photo des tests papiers) — table d'interprétation à intégrer |
 | ✅ | Retirer les colonnes « comment je vois les autres » (allègement) | Fait (2026-05-06) | Conséquence directe du filtre `'received'` ci-dessus : `QuestionnaireMatrixDisplay` ne reçoit que les colonnes pairs « reçues ». Aucune colonne « comment je vois les autres » n'est rendue sur la page résultats participant. Item 3.8 du plan satisfait |
 | ❌ | Conserver les colonnes intermédiaires (écarts / équivalences) | À vérifier | Comportement actuel à confirmer après l'allègement ci-dessus |
@@ -193,14 +193,14 @@ Le gros de la **gouvernance et du parcours participant** est en place. Les chant
 
 **Bloc 2 — Parcours participant manquants (2-3 j)**
 4. Autosave Élément B uniquement (section 7) — décision 2026-05-06 : **pas d'autosave sur le regard sur soi** (questionnaire court, soumission manuelle suffit).
-5. Commentaire optionnel pair, max 150 caractères (section 6) — schéma DB + UI + validation.
+5. ~~Commentaire optionnel pair, max 150 caractères (section 6) — schéma DB + UI + validation.~~ ✅ Fait (2026-05-06) — décision design : commentaire **par note** (pas global). Migration `0017_amusing_bedlam.sql` + Zod + use case + UI bouton `+` dans `RatingDimensionCard`. Garde-fou serveur 150 chars + rejet commentaires orphelins.
 6. Paragraphe descriptif Élément B (texte Nora attendu).
 
 **Bloc 3 — Vue résultats participant (2 j)**
 7. ~~Filtres « comment mes pairs me voient ».~~ ✅ Fait (2026-05-06) — perspective `'received'` codée en dur dans `results.tsx:36`, pas de toggle UI nécessaire.
 8. ~~Retrait colonnes « comment je vois les autres ».~~ ✅ Fait (2026-05-06) — conséquence directe du filtre `'received'`.
 9. Libellés d'interprétation des écarts (table fournie par Nora).
-10. Tooltips commentaires pairs (dépend du bloc 2).
+10. ~~Tooltips commentaires pairs (dépend du bloc 2).~~ ✅ Fait (2026-05-06) — `peer_comments` ajouté au DTO matrix, icône `MessageSquareText` + `Tooltip` MUI dans `MatrixTableMode` et `MatrixChartMode` (couvre participant ET admin/coach).
 
 **Bloc 4 — Vue synthèse coach/admin (2 j)**
 11. Matrice globale Élément B par parcours.
@@ -241,3 +241,12 @@ Le gros de la **gouvernance et du parcours participant** est en place. Les chant
    - Vider le champ → liste complète revient sans flicker (cache React Query séparé via queryKey enrichie).
    - En scope coach (`/coach/companies/:id`) : la recherche reste cantonnée aux participants déjà visibles sans la barre — aucune fuite de participants hors périmètre coach (filtre `coachId` cumulé via `and(...)` dans `listWithCompany`).
    - DevTools réseau : une seule requête `GET /admin/participants?...&q=...` par saisie stabilisée (debounce OK) ; paramètre `q` absent quand le champ est vide.
+8. **Commentaires pairs (saisie + tooltip)** (2026-05-06) :
+   - Migration `0017_amusing_bedlam.sql` appliquée (`pnpm --filter @aor/drizzle db:migrate`).
+   - Saisie : sur `/peer-feedback`, sélectionner un pair, noter un item, cliquer le bouton `+` discret → un `TextField` multiline s'ouvre, compteur `n/150`. Saisie > 150 chars bloquée par le `slotProps.htmlInput.maxLength`. Bouton `−` referme et efface. Soumission : seuls les commentaires non vides partent.
+   - Backend rejette (400) un commentaire dont la clé n'est pas dans `scores` (commentaire orphelin) — sécurité contre les payloads forgés.
+   - Backend rejette (400) un commentaire > 150 chars (Zod en première barrière, garde-fou use case en deuxième).
+   - Persistance : commentaire trimé en base. Vide ou whitespace seul → stocké en `null`, pas en chaîne vide.
+   - Tooltip : sur `/campaigns/:id/results`, survoler la cellule pair commentée → icône `MessageSquareText` + tooltip avec le texte. En mode chart (`MiniBar`) idem. Cellules sans commentaire : aucune icône (pas de bruit visuel).
+   - Asymétrie attendue : pas de bouton commentaire dans `/self-rating` (le `RatingDimensionCard` ne reçoit pas les props `comments`/`onCommentChange` côté regard sur soi).
+   - Vue admin/coach `/admin/participants/:id/matrix` et `/coach/participants/:id/matrix` : tooltips visibles aussi (DTO matrix unifié).

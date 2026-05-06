@@ -14,6 +14,11 @@ export const matrixRowSchema = z.object({
     label: z.string(),
     self: z.number().nullable(),
     peers: z.array(z.number().nullable()),
+    /**
+     * Commentaire optionnel saisi par chaque pair (max 150 caractères) — aligné par index sur `peers`.
+     * Toujours présent quand `peers` l'est, même si tous les commentaires sont `null`.
+     */
+    peer_comments: z.array(z.string().nullable()),
     scientific: z.number().nullable(),
 });
 export type ParticipantQuestionnaireMatrixRow = z.infer<typeof matrixRowSchema>;

@@ -1,5 +1,6 @@
 import type { ParticipantQuestionnaireMatrix, ParticipantQuestionnaireMatrixRow } from '@aor/types';
-import { Box, Chip, LinearProgress, Paper, Stack, Typography } from '@mui/material';
+import { Box, Chip, LinearProgress, Paper, Stack, Tooltip, Typography } from '@mui/material';
+import { MessageSquareText } from 'lucide-react';
 
 import { type DimensionBlock, absDiff, buildDimensionBlocks } from './pairBuilder';
 
@@ -17,8 +18,30 @@ function MiniBar(props: {
     value: number | null;
     max: number;
     color?: string;
+    comment?: string | null;
 }) {
-    const { label, value, max, color = '#1515B0' } = props;
+    const { label, value, max, color = '#1515B0', comment } = props;
+    const valueRow = (
+        <Stack direction="row" spacing={0.6} alignItems="center" sx={{ mt: 0.5, mb: 1 }}>
+            <Typography variant="h6" fontWeight={800} sx={{ color }}>
+                {value ?? '—'}
+            </Typography>
+            {comment ? (
+                <Tooltip
+                    title={
+                        <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
+                            {comment}
+                        </Typography>
+                    }
+                    arrow
+                >
+                    <Box component="span" sx={{ display: 'inline-flex', color, opacity: 0.7, cursor: 'help' }}>
+                        <MessageSquareText size={14} />
+                    </Box>
+                </Tooltip>
+            ) : null}
+        </Stack>
+    );
     return (
         <Box
             sx={{
@@ -42,9 +65,7 @@ function MiniBar(props: {
             >
                 {label}
             </Typography>
-            <Typography variant="h6" fontWeight={800} sx={{ color, mt: 0.5, mb: 1 }} display="block">
-                {value ?? '—'}
-            </Typography>
+            {valueRow}
             <LinearProgress
                 variant="determinate"
                 value={pct(value, max)}
@@ -100,6 +121,7 @@ function RowBars({ matrix, row }: { matrix: ParticipantQuestionnaireMatrix; row:
                         value={v}
                         max={matrix.likert_max}
                         color="#83D8F5"
+                        comment={row.peer_comments[i] ?? null}
                     />
                 ))}
                 <MiniBar

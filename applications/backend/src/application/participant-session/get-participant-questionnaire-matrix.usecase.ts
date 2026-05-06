@@ -33,6 +33,20 @@ const scoresToMap = (record: ResponseRecord | null): Map<number, number> => {
     return map;
 };
 
+const commentsToMap = (record: ResponseRecord | null): Map<number, string> => {
+    const map = new Map<number, string>();
+    if (!record) {
+        return map;
+    }
+    for (const s of record.scores) {
+        const c = s.comment?.trim();
+        if (c && c.length > 0) {
+            map.set(s.scoreKey, c);
+        }
+    }
+    return map;
+};
+
 const latestBySubmittedAt = (records: ResponseRecord[]): ResponseRecord | null => {
     if (records.length === 0) {
         return null;
@@ -167,12 +181,14 @@ export class GetParticipantQuestionnaireMatrixUseCase {
         const selfMap = scoresToMap(selfRecord);
         const scientificMap = scoresToMap(scientificRecord);
         const peerMaps = peerRecords.map(r => scoresToMap(r));
+        const peerCommentMaps = peerRecords.map(r => commentsToMap(r));
 
         const rows: ParticipantQuestionnaireMatrixRow[] = scoreKeys.map(score_key => ({
             score_key,
             label: catalog.short_labels[String(score_key)] ?? String(score_key),
             self: selfMap.get(score_key) ?? null,
             peers: peerMaps.map(m => m.get(score_key) ?? null),
+            peer_comments: peerCommentMaps.map(m => m.get(score_key) ?? null),
             scientific: scientificMap.get(score_key) ?? null,
         }));
 

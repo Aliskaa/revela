@@ -26,9 +26,9 @@ describe('buildDimensionsFromMatrix', () => {
     test("groupe les rows par dimension dans l'ordre déclaré", () => {
         const matrix = baseMatrix({
             rows: [
-                { score_key: 1, label: 'Inclusion E', self: 4, peers: [], scientific: null },
-                { score_key: 2, label: 'Inclusion W', self: 3, peers: [], scientific: null },
-                { score_key: 3, label: 'Contrôle E', self: 5, peers: [], scientific: null },
+                { score_key: 1, label: 'Inclusion E', self: 4, peers: [], peer_comments: [], scientific: null },
+                { score_key: 2, label: 'Inclusion W', self: 3, peers: [], peer_comments: [], scientific: null },
+                { score_key: 3, label: 'Contrôle E', self: 5, peers: [], peer_comments: [], scientific: null },
             ],
             result_dims: [
                 { name: 'Inclusion', scores: [1, 2] },
@@ -55,7 +55,7 @@ describe('buildDimensionsFromMatrix', () => {
 
     test('ignore les scoreKeys non trouvés dans rows', () => {
         const matrix = baseMatrix({
-            rows: [{ score_key: 1, label: 'Existant', self: null, peers: [], scientific: null }],
+            rows: [{ score_key: 1, label: 'Existant', self: null, peers: [], peer_comments: [], scientific: null }],
             result_dims: [{ name: 'Dim', scores: [1, 99] }],
         });
 

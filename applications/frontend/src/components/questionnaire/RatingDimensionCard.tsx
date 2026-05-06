@@ -1,6 +1,10 @@
 import type { DimensionBlock } from '@/hooks/useBuildDimensions';
-import { Box, Card, CardContent, Chip, Stack, Typography } from '@mui/material';
+import { Box, Card, CardContent, Chip, IconButton, Stack, TextField, Tooltip, Typography } from '@mui/material';
+import { Minus, Plus } from 'lucide-react';
+import * as React from 'react';
 import { RatingScale } from './RatingScale';
+
+const MAX_COMMENT_LENGTH = 150;
 
 type RatingDimensionCardProps = {
     block: DimensionBlock;
@@ -8,6 +12,13 @@ type RatingDimensionCardProps = {
     onScoreChange: (scoreKey: string, value: number) => void;
     chipLabel?: string;
     chipVariant?: 'primary' | 'secondary';
+    /**
+     * Optionnel : commentaires saisis par scoreKey (peer_rating uniquement).
+     * Quand `comments` ET `onCommentChange` sont fournis, un bouton « + » apparaît
+     * sous chaque note pour ouvrir un champ texte limité à 150 caractères.
+     */
+    comments?: Record<string, string>;
+    onCommentChange?: (scoreKey: string, value: string) => void;
 };
 
 export const RatingDimensionCard = ({
@@ -16,7 +27,12 @@ export const RatingDimensionCard = ({
     onScoreChange,
     chipLabel = 'Regard sur soi',
     chipVariant = 'primary',
+    comments,
+    onCommentChange,
 }: RatingDimensionCardProps) => {
+    const commentsEnabled = comments !== undefined && onCommentChange !== undefined;
+    const [openComments, setOpenComments] = React.useState<Record<string, boolean>>({});
+
     const chipSx =
         chipVariant === 'primary'
             ? { borderRadius: 99, bgcolor: 'tint.primaryBg', color: 'primary.main' }
@@ -35,6 +51,10 @@ export const RatingDimensionCard = ({
                     <Stack spacing={1.5}>
                         {block.items.map(item => {
                             const key = String(item.scoreKey);
+                            const commentValue = comments?.[key] ?? '';
+                            // Le champ reste ouvert tant qu'un commentaire non vide est saisi
+                            // (sécurité contre une fermeture accidentelle qui viderait le texte).
+                            const isOpen = commentsEnabled && (openComments[key] === true || commentValue.length > 0);
                             return (
                                 <Box
                                     key={key}
@@ -71,6 +91,86 @@ export const RatingDimensionCard = ({
                                                 if (v !== null) onScoreChange(key, v);
                                             }}
                                         />
+                                        {commentsEnabled && (
+                                            <Stack spacing={1}>
+                                                {!isOpen ? (
+                                                    <Box>
+                                                        <Tooltip title="Ajouter un commentaire (optionnel, 150 caractères max)">
+                                                            <span>
+                                                                <IconButton
+                                                                    size="small"
+                                                                    onClick={() =>
+                                                                        setOpenComments(prev => ({
+                                                                            ...prev,
+                                                                            [key]: true,
+                                                                        }))
+                                                                    }
+                                                                    sx={{
+                                                                        border: '1px dashed',
+                                                                        borderColor: 'border',
+                                                                        borderRadius: 2,
+                                                                        color: 'text.secondary',
+                                                                        '&:hover': {
+                                                                            borderColor: 'primary.main',
+                                                                            color: 'primary.main',
+                                                                            bgcolor: 'tint.primaryBg',
+                                                                        },
+                                                                    }}
+                                                                    aria-label={`Ajouter un commentaire pour ${item.label}`}
+                                                                >
+                                                                    <Plus size={14} />
+                                                                </IconButton>
+                                                            </span>
+                                                        </Tooltip>
+                                                    </Box>
+                                                ) : (
+                                                    <Stack spacing={0.6}>
+                                                        <TextField
+                                                            value={commentValue}
+                                                            onChange={e => {
+                                                                const next = e.target.value.slice(
+                                                                    0,
+                                                                    MAX_COMMENT_LENGTH
+                                                                );
+                                                                onCommentChange?.(key, next);
+                                                            }}
+                                                            placeholder="Justifiez cette note (optionnel)"
+                                                            multiline
+                                                            minRows={2}
+                                                            maxRows={4}
+                                                            slotProps={{
+                                                                htmlInput: { maxLength: MAX_COMMENT_LENGTH },
+                                                            }}
+                                                            size="small"
+                                                            fullWidth
+                                                        />
+                                                        <Stack
+                                                            direction="row"
+                                                            justifyContent="space-between"
+                                                            alignItems="center"
+                                                        >
+                                                            <Typography variant="caption" color="text.secondary">
+                                                                {commentValue.length} / {MAX_COMMENT_LENGTH}
+                                                            </Typography>
+                                                            <IconButton
+                                                                size="small"
+                                                                onClick={() => {
+                                                                    onCommentChange?.(key, '');
+                                                                    setOpenComments(prev => ({
+                                                                        ...prev,
+                                                                        [key]: false,
+                                                                    }));
+                                                                }}
+                                                                aria-label={`Retirer le commentaire pour ${item.label}`}
+                                                                sx={{ color: 'text.secondary' }}
+                                                            >
+                                                                <Minus size={14} />
+                                                            </IconButton>
+                                                        </Stack>
+                                                    </Stack>
+                                                )}
+                                            </Stack>
+                                        )}
                                     </Stack>
                                 </Box>
                             );

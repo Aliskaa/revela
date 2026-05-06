@@ -9,6 +9,7 @@ export type { SubmissionKind };
 export type ResponseScore = {
     scoreKey: number;
     value: number;
+    comment?: string | null;
 };
 
 /**

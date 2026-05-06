@@ -58,7 +58,11 @@
       "Bash(pnpm --filter @aor/backend-api exec biome check --diagnostic-level=error src/interfaces/participants/IParticipantsRepository.port.ts src/infrastructure/database/repositories/drizzle-participants.repository.ts src/application/admin/participants/list-admin-participants.usecase.ts src/presentation/admin/admin-participants.controller.ts \"src/application/admin/participants/__tests__/list-admin-participants.usecase.spec.ts\")",
       "Bash(pnpm --filter @aor/frontend-app exec biome check --diagnostic-level=error src/hooks/admin.ts src/components/admin/company-detail/CompanyParticipantsTable.tsx src/components/scoped/CompanyDetailPage.tsx)",
       "Bash(pnpm --filter @aor/backend-api exec biome check src/main.ts)",
-      "Bash(git mv *)"
+      "Bash(git mv *)",
+      "Bash(pnpm --filter @aor/backend-api test -- --run submit-participant-questionnaire)",
+      "Bash(node -e \"const q=require\\('./packages/aor-common/questionnaires/dist/index.js'\\); const e=q.getQuestionnaireEntry\\('B'\\); console.log\\(Object.keys\\(e.short_labels\\).length, Object.keys\\(e.short_labels\\)\\);\")",
+      "Bash(pnpm --filter @aor/frontend-app test -- --run useBuildDimensions)",
+      "Bash(echo \"EXIT=$?\")"
     ]
   }
 }

@@ -194,9 +194,31 @@ export class SubmitParticipantQuestionnaireUseCase {
             if (errLikert) {
                 throw new ResponsesValidationError(errLikert);
             }
+            const rawComments = payload.comments ?? {};
+            const normalizedComments = new Map<number, string>();
+            for (const [rawKey, rawValue] of Object.entries(rawComments)) {
+                const numKey = Number(rawKey);
+                if (!Number.isFinite(numKey)) {
+                    throw new ResponsesValidationError('Clé de commentaire invalide.');
+                }
+                if (!(rawKey in payload.scores)) {
+                    throw new ResponsesValidationError(
+                        'Un commentaire ne peut être attaché qu’à une note saisie.'
+                    );
+                }
+                const trimmed = rawValue.trim();
+                if (trimmed.length === 0) {
+                    continue;
+                }
+                if (trimmed.length > 150) {
+                    throw new ResponsesValidationError('Un commentaire ne peut excéder 150 caractères.');
+                }
+                normalizedComments.set(numKey, trimmed);
+            }
             const scoresRows = Object.entries(payload.scores).map(([scoreKey, value]) => ({
                 scoreKey: Number(scoreKey),
                 value,
+                comment: normalizedComments.get(Number(scoreKey)) ?? null,
             }));
             const record = await this.ports.responses.create(
                 Response.create({

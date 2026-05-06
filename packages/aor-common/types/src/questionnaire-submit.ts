@@ -22,6 +22,12 @@ export const submitInviteQuestionnaireBodySchema = z.object({
 
 const likertScoresRecordSchema = z.record(z.string(), z.int().min(0).max(9));
 
+/**
+ * Commentaires optionnels par scoreKey (peer_rating uniquement, max 150 caractères).
+ * Une chaîne vide ou whitespace est traitée côté backend comme l'absence de commentaire.
+ */
+const peerCommentsRecordSchema = z.record(z.string(), z.string().max(150));
+
 export const submitParticipantSelfRatingBodySchema = z.object({
     kind: z.literal('self_rating'),
     scores: likertScoresRecordSchema,
@@ -32,6 +38,7 @@ export const submitParticipantPeerRatingBodySchema = z.object({
     peer_label: z.string().trim().min(1).max(120),
     rated_participant_id: z.number().int().positive().optional(),
     scores: likertScoresRecordSchema,
+    comments: peerCommentsRecordSchema.optional(),
 });
 
 /**

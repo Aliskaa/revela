@@ -122,6 +122,7 @@ function ParticipantPeerFeedbackRoute() {
 
     const [selectedPeer, setSelectedPeer] = React.useState<CampaignPeerChoice | null>(null);
     const [scores, setScores] = React.useState<Record<string, number | null>>({});
+    const [comments, setComments] = React.useState<Record<string, string>>({});
     const [successOpen, setSuccessOpen] = React.useState(false);
 
     const isLoading = sessionLoading || matrixLoading;
@@ -157,9 +158,14 @@ function ParticipantPeerFeedbackRoute() {
         setScores(prev => ({ ...prev, [key]: value }));
     };
 
+    const handleCommentChange = (key: string, value: string) => {
+        setComments(prev => ({ ...prev, [key]: value }));
+    };
+
     const handleSelectPeer = (peer: CampaignPeerChoice) => {
         setSelectedPeer(peer);
         setScores({});
+        setComments({});
     };
 
     const handleSubmit = async () => {
@@ -168,15 +174,26 @@ function ParticipantPeerFeedbackRoute() {
         for (const [k, v] of Object.entries(scores)) {
             if (v !== null) payload[k] = v;
         }
+        // Ne joindre que les commentaires non vides ET attachés à une note saisie
+        // (le backend rejette tout commentaire orphelin avec une 400).
+        const commentsPayload: Record<string, string> = {};
+        for (const [k, v] of Object.entries(comments)) {
+            const trimmed = v.trim();
+            if (trimmed.length > 0 && k in payload) {
+                commentsPayload[k] = trimmed;
+            }
+        }
         await submitMutation.mutateAsync({
             kind: 'peer_rating',
             peer_label: selectedPeer.full_name,
             rated_participant_id: selectedPeer.participant_id,
             scores: payload,
+            ...(Object.keys(commentsPayload).length > 0 ? { comments: commentsPayload } : {}),
         });
         setSuccessOpen(true);
         setSelectedPeer(null);
         setScores({});
+        setComments({});
 
         // Auto-complete au 5e feedback (cf. P12/P13) → cohérent avec P10 : on redirige
         // sur la fiche campagne pour matérialiser la fin de l'étape.
@@ -418,6 +435,8 @@ function ParticipantPeerFeedbackRoute() {
                                         onScoreChange={handleScoreChange}
                                         chipLabel="Pair"
                                         chipVariant="secondary"
+                                        comments={comments}
+                                        onCommentChange={handleCommentChange}
                                     />
                                 ))}
                             </Stack>
@@ -448,6 +467,7 @@ function ParticipantPeerFeedbackRoute() {
                                     onClick={() => {
                                         setSelectedPeer(null);
                                         setScores({});
+                                        setComments({});
                                     }}
                                     sx={{ borderRadius: 3 }}
                                 >
