@@ -189,7 +189,15 @@ function ParticipantCampaignWorkspaceRoute() {
                                     })
                                 }
                             />
-                            <CampaignTransparencyCard snapshot={transparencyEnvelope?.snapshot ?? null} />
+                            <CampaignTransparencyCard
+                                snapshot={transparencyEnvelope?.snapshot ?? null}
+                                onClick={() =>
+                                    navigate({
+                                        to: '/campaigns/$campaignId/transparency',
+                                        params: { campaignId: String(campaignId) },
+                                    })
+                                }
+                            />
                             <CampaignResultCard
                                 label="Retours du coach"
                                 subtitle="Consultation des retours du coach"

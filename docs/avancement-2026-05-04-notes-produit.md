@@ -32,7 +32,7 @@
 - [ ] Vue coach/admin: ajouter une matrice globale campagne (test + ecarts)
 - [ ] Vue coach/admin: ajouter les dates de campagne dans le detail participants
 - [ ] Resultats niveau 1: scores
-- [ ] Resultats niveau 2: score de transparence active par bouton coach
+- [x] Resultats niveau 2: score de transparence active par bouton coach
 - [ ] Resultats niveau 3: retours coach via analyse IA supervisee et validable
 - [ ] Tracer le choix IA (modele + prompt) pour la transmission
 
@@ -78,7 +78,7 @@
 | P20 | Coach/admin: vue globale campagne (matrice test + ecarts) | Pas encore fait | Vue double entree participants x resultats |
 | P21 | Coach/admin: dates campagnes dans detail participants | Pas encore fait | Colonnes date debut/fin/maj |
 | P22 | Niveau 1 resultats: scores | Fait | Base existante a verifier |
-| P23 | Niveau 2: score transparence avec bouton activation coach | Pas encore fait | Workflow d'activation + audit |
+| P23 | Niveau 2: score transparence avec bouton activation coach | Fait | **Calcul** : `@aor/scoring/computeTransparencyScore` ; table F→P partagée dans `@aor/types` (`TRANSPARENCY_F_TO_P_TABLE` = max(F, 9−F)) ; formule `clamp(100 − ⌊100 × Σécart / (Σ P × peerCount)⌋, 0, 100)` ; 9 tests `tsx --test` dont golden case du livret (Σécart=87, ΣP=71, 3 pairs → 60). **DB** : migration `0015_clear_celestials.sql` ajoute 4 colonnes à `participant_progress` (value, peer_count, activated_at, activated_by_coach_id) + FK coaches + CHECK 0..100 ; snapshot figé à l'activation. **Backend** : 3 use cases (`Activate`, `Get` admin, `GetOwn` participant) ; endpoints `POST /admin/campaigns/:id/participants/:pid/transparency/activate`, `GET /admin/...transparency`, `GET /participant/campaigns/:id/transparency` ; super-admin résolu vers ligne sentinelle Admin (P05) ; audit log `admin.transparency.activate`. **Frontend** : carte `CampaignTransparencyCard` insérée entre Résultats et Retours du coach (verrouillée tant que non activé, score affiché en gros à droite + CTA « Voir les résultats »), page détail `/campaigns/$id/transparency` avec tableau dynamique (F, Pair #1..N, Écart #1..N, P) + table de conversion F→P + paragraphe « Étape III. Transparence » du livret + encadré Q/R/Score, bouton coach/admin par participant dans `CampaignParticipantsTable` (« Lancer le calcul » / « Repère X% — recalculer ») |
 | P24 | Niveau 3: analyse IA supervisee par coach | Pas encore fait | Bouton lancement + edition + validation ; diffusion participant apres approbation |
 | P25 | Journaliser IA utilisee (modele + prompt) | Pas encore fait | Trace indispensable pour audit/explicabilite |
 
@@ -101,6 +101,16 @@
 - Les items **P01, P02, P05, P06, P07, P08, P09, P10** sont **faits**.
 - **P14 / P16** : implémentés dans le code ; statut **à valider en recette** (tests manuels ci-dessous).
 - Le reste des **P03** et **P11–P25** (hors P14/P16) est **pas encore fait** ; la checklist complementaire ci-dessus prolonge le PDF sans modifier les ID historiques.
+
+### Etat au 2026-05-06
+
+- **P23** (score de transparence) : **fait**. Activation manuelle par coach/admin, snapshot figé en base, page détail participant avec tableau dynamique + table de conversion + paragraphe livret. Voir détails dans la ligne P23 du tableau ci-dessus.
+- Recette à mener avant clôture P23 :
+  1. Appliquer la migration `pnpm --filter @aor/drizzle db:migrate` (ajoute 4 colonnes à `participant_progress` + FK + CHECK).
+  2. Vérifier qu'un participant avec ≥1 feedback pair reçu **et** une réponse Élément Humain peut bien faire calculer son score (sinon erreur 400 attendue).
+  3. Vérifier qu'un coach scope=coach ne voit/n'active que les participants de ses propres campagnes (filtrage via `ensureCampaignAccess`).
+  4. Vérifier que le re-calcul (re-clic du bouton coach) écrase bien le snapshot précédent.
+  5. Vérifier l'audit log `admin.transparency.activate` dans `audit_events` (champ `payload` doit contenir `campaign_id`, `value`, `peer_count`).
 
 ## Notes à tester
 

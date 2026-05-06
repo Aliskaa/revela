@@ -38,7 +38,13 @@
       "Bash(pnpm --filter @aor/types exec biome check --write src/transparency.ts src/index.ts)",
       "Bash(pnpm --filter @aor/backend-api exec biome check --write src/application/transparency/ src/presentation/admin/admin-campaigns.controller.ts src/presentation/admin/admin-campaigns.module.ts src/presentation/admin/admin.presenters.ts src/presentation/admin/admin.tokens.ts src/presentation/participant-session/participant.controller.ts src/presentation/participant-session/participant.module.ts src/presentation/participant-session/participant.tokens.ts src/interfaces/participants/IParticipantsRepository.port.ts src/infrastructure/database/repositories/drizzle-participants.repository.ts)",
       "Bash(pnpm --filter @aor/scoring --filter @aor/types --filter @aor/drizzle build)",
-      "Bash(pnpm --filter @aor/backend-api --filter @aor/frontend-app typecheck)"
+      "Bash(pnpm --filter @aor/backend-api --filter @aor/frontend-app typecheck)",
+      "Bash(ls \"c:/Users/kevin/Documents/DataLoco/Nora/base/questionnaire-platform/applications/frontend/src/routes/_participant/campaigns/\\\\$campaignId\")",
+      "Read(//c/Users/kevin/Documents/DataLoco/Nora/base/questionnaire-platform/applications/frontend/src/routes/_participant/campaigns/$campaignId/**)",
+      "Bash(pnpm --filter @aor/scoring build)",
+      "Bash(pnpm --filter @aor/frontend-app --filter @aor/backend-api typecheck)",
+      "Bash(grep -n \"F_TO_P\\\\|transparencyConvertFToP\\\\|TRANSPARENCY_F_TO_P\" \"c:/Users/kevin/Documents/DataLoco/Nora/base/questionnaire-platform/applications/frontend/src/routes/_participant/campaigns/\\\\$campaignId/transparency.tsx\")",
+      "Bash(pnpm --filter @aor/scoring --filter @aor/frontend-app --filter @aor/backend-api typecheck)"
     ]
   }
 }

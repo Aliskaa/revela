@@ -1,7 +1,6 @@
-// Table de conversion F -> P (livret participant, Étape III « Transparence »).
-// P[F] = 9 - F. P représente le poids pédagogique attribué à chaque ligne dans
-// le dénominateur du score de transparence.
-const F_TO_P = [9, 8, 7, 6, 5, 4, 3, 2, 1, 0] as const;
+// Table de conversion F -> P du livret participant (Étape III « Transparence »).
+// Source de vérité unique dans `@aor/types` : partagée backend (calcul) + frontend (affichage).
+import { TRANSPARENCY_F_TO_P } from '@aor/types';
 
 export type TransparencyMatrixRow = {
     readonly scientific: number | null;
@@ -58,7 +57,7 @@ export const computeTransparencyScore = (params: {
             continue;
         }
         const f = row.scientific;
-        const p = F_TO_P[f];
+        const p = TRANSPARENCY_F_TO_P[f];
         if (p === undefined) {
             continue;
         }

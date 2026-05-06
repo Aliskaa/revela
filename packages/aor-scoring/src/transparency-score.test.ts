@@ -96,22 +96,31 @@ test("cellule pair null ignorée (peer n'a pas répondu cette ligne)", () => {
     assert.equal(result.totalEcart, 0);
 });
 
-test('score clampé dans [0,100] même si écart > poids max', () => {
-    // F=5 → P=4 ; 1 pair vote 0 → écart=5, dénominateur=4. Ratio brut > 100 → clamp à 0.
-    const rows = [{ scientific: 5, peers: [0] }];
+test('désaccord maximal pair=opposé(F) → score 0', () => {
+    // F=0 → P=9 ; 1 pair vote 9 → écart=9 = P. Ratio = 100 → score 0.
+    const rows = [{ scientific: 0, peers: [9] }];
     const result = computeTransparencyScore({ rows, peerCount: 1 });
     assert.ok(result);
     assert.equal(result.score, 0);
 });
 
-test('table de conversion F→P : F=0 → P=9, F=9 → P=0', () => {
+test('table de conversion F→P : extrémités', () => {
+    // P = max(F, 9-F) — écart max théorique. F=0 → P=9, F=9 → P=9, F=4 → P=5, F=5 → P=5.
     const result0 = computeTransparencyScore({ rows: [{ scientific: 0, peers: [0] }], peerCount: 1 });
     assert.ok(result0);
     assert.equal(result0.rows[0]?.p, 9);
 
     const result9 = computeTransparencyScore({ rows: [{ scientific: 9, peers: [9] }], peerCount: 1 });
-    // F=9 → P=0 ; Σ P = 0 → null
-    assert.equal(result9, null);
+    assert.ok(result9);
+    assert.equal(result9.rows[0]?.p, 9);
+
+    const result4 = computeTransparencyScore({ rows: [{ scientific: 4, peers: [4] }], peerCount: 1 });
+    assert.ok(result4);
+    assert.equal(result4.rows[0]?.p, 5);
+
+    const result5 = computeTransparencyScore({ rows: [{ scientific: 5, peers: [5] }], peerCount: 1 });
+    assert.ok(result5);
+    assert.equal(result5.rows[0]?.p, 5);
 });
 
 test('plusieurs pairs : Σécart agrégé sur toutes les cellules', () => {
