@@ -1,6 +1,6 @@
-import { Box, Button, Card, CardContent, Chip, Stack, Typography } from '@mui/material';
-import { Link, createFileRoute } from '@tanstack/react-router';
-import { ArrowRight, Brain, CheckCircle2, CircleDot, ClipboardList, Hash, Heart, Sparkles, Users } from 'lucide-react';
+import { Box, Card, CardContent, Chip, Stack, Typography } from '@mui/material';
+import { createFileRoute } from '@tanstack/react-router';
+import { Brain, CircleDot, ClipboardList, Hash, Heart, Sparkles, Users } from 'lucide-react';
 import type * as React from 'react';
 
 export const Route = createFileRoute('/_participant/test/')({
@@ -101,49 +101,6 @@ function InfoPill({ icon: Icon, label, value }: { icon: React.ElementType; label
                 </Box>
             </Stack>
         </Box>
-    );
-}
-
-function TestChecklist() {
-    return (
-        <Card
-            variant="outlined"
-            sx={{ borderRadius: 6, borderColor: 'border', boxShadow: '0 6px 18px rgba(15,23,42,0.04)' }}
-        >
-            <CardContent sx={{ p: 2.5 }}>
-                <SectionTitle title="Avant de commencer" subtitle="Quelques rappels utiles pour un parcours fluide." />
-                <Stack spacing={1.4} sx={{ mt: 2 }}>
-                    <ChecklistItem text="Répondre sérieusement et sans aller trop vite." />
-                    <ChecklistItem text="Le test suit le questionnaire assigné par la campagne." />
-                    <ChecklistItem text="Le parcours contient deux séries de 54 questions." />
-                    <ChecklistItem text="La restitution viendra après la consolidation des résultats." />
-                </Stack>
-            </CardContent>
-        </Card>
-    );
-}
-
-function ChecklistItem({ text }: { text: string }) {
-    return (
-        <Stack direction="row" spacing={1.2} alignItems="start">
-            <Box
-                sx={{
-                    width: 34,
-                    height: 34,
-                    borderRadius: 3,
-                    bgcolor: 'tint.primaryBg',
-                    color: 'primary.main',
-                    display: 'grid',
-                    placeItems: 'center',
-                    flex: 'none',
-                }}
-            >
-                <CheckCircle2 size={15} />
-            </Box>
-            <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.7, pt: 0.2 }}>
-                {text}
-            </Typography>
-        </Stack>
     );
 }
 
@@ -310,55 +267,6 @@ function ParticipantTestIndexRoute() {
                             <Typography variant="body2" color="text.secondary" sx={{ mt: 1.5, lineHeight: 1.8 }}>
                                 Chaque questionnaire B, F ou S contient deux séries de 54 questions. L’utilisateur ne
                                 choisit pas ici le questionnaire : il est imposé par la campagne et son invitation.
-                            </Typography>
-                        </CardContent>
-                    </Card>
-                </Stack>
-
-                <Stack spacing={2.5}>
-                    <TestChecklist />
-
-                    <Card
-                        variant="outlined"
-                        sx={{ borderRadius: 6, borderColor: 'border', boxShadow: '0 6px 18px rgba(15,23,42,0.04)' }}
-                    >
-                        <CardContent sx={{ p: 2.5 }}>
-                            <SectionTitle title="Actions" subtitle="Passer au questionnaire ou revenir au parcours." />
-                            <Stack spacing={1.2} sx={{ mt: 2 }}>
-                                <Link
-                                    to="/test/$questionnaireCode"
-                                    params={{ questionnaireCode: campaignQuestionnaireCode }}
-                                    style={{ textDecoration: 'none' }}
-                                >
-                                    <Button
-                                        variant="contained"
-                                        disableElevation
-                                        startIcon={<ArrowRight size={16} />}
-                                        sx={{ borderRadius: 3, bgcolor: 'primary.main' }}
-                                    >
-                                        Commencer le test
-                                    </Button>
-                                </Link>
-                                <Button variant="outlined" sx={{ borderRadius: 3 }}>
-                                    Retour au parcours
-                                </Button>
-                            </Stack>
-                        </CardContent>
-                    </Card>
-
-                    <Card
-                        variant="outlined"
-                        sx={{ borderRadius: 6, borderColor: 'border', boxShadow: '0 6px 18px rgba(15,23,42,0.04)' }}
-                    >
-                        <CardContent sx={{ p: 2.5 }}>
-                            <SectionTitle
-                                title="Rappel métier"
-                                subtitle="La page est un point d’entrée, pas le questionnaire complet."
-                            />
-                            <Typography variant="body2" color="text.secondary" sx={{ mt: 1.5, lineHeight: 1.8 }}>
-                                L’Regard sur soi et les pairs utilisent les short labels notés de 1 à 9. Ici, on
-                                bascule sur le test Élément Humain assigné par la campagne, sans option de sélection
-                                manuelle.
                             </Typography>
                         </CardContent>
                     </Card>

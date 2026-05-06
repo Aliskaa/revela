@@ -44,7 +44,8 @@
       "Bash(pnpm --filter @aor/scoring build)",
       "Bash(pnpm --filter @aor/frontend-app --filter @aor/backend-api typecheck)",
       "Bash(grep -n \"F_TO_P\\\\|transparencyConvertFToP\\\\|TRANSPARENCY_F_TO_P\" \"c:/Users/kevin/Documents/DataLoco/Nora/base/questionnaire-platform/applications/frontend/src/routes/_participant/campaigns/\\\\$campaignId/transparency.tsx\")",
-      "Bash(pnpm --filter @aor/scoring --filter @aor/frontend-app --filter @aor/backend-api typecheck)"
+      "Bash(pnpm --filter @aor/scoring --filter @aor/frontend-app --filter @aor/backend-api typecheck)",
+      "Bash(grep -E '\\\\.\\(tsx|ts\\)$')"
     ]
   }
 }
