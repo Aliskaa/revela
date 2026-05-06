@@ -17,7 +17,7 @@
 
 | Section | ✅ | 🟡 | ❌ | ⏭️ V2 |
 |---|---|---|---|---|
-| 2. Renommage sémantique global | 4 | 2 | 0 | — |
+| 2. Renommage sémantique global | 6 | 0 | 0 | — |
 | 3. Configuration & Administration | 6 | 0 | 2 | — |
 | 4. Invitation & RGPD | 4 | 1 | 0 | 1 |
 | 5. Regard sur soi | 1 | 0 | 1 | — |
@@ -27,16 +27,15 @@
 | 9. Vue de synthèse Admin/Coach | 0 | 1 | 2 | 1 |
 | 10. IA & retour formateur/coach | 0 | 0 | 4 | — |
 | 11. Hébergement & domaine | 0 | 0 | 1 | 1 |
-| **Total court terme** | **21** | **5** | **18** | **4** |
+| **Total court terme** | **23** | **3** | **18** | **4** |
 
 Le gros de la **gouvernance et du parcours participant** est en place. Les chantiers restants sont concentrés sur :
-1. La **finalisation du renommage** (résidus « Auto-éval », libellé « campagne d'évaluation » sur l'invite).
-2. La **vue résultats participant** (filtres, tooltips, libellés d'écarts, allègement du tableau).
-3. La **vue de synthèse Admin/Coach** (matrice globale + mise en lumière manuelle).
-4. L'**IA & retour coach** (chantier complet, en attente du choix modèle / prompt côté Laurent).
-5. Les **autosaves** (regard sur soi + Élément B).
-6. La **notification cloche** + **recherche participant** côté entreprise.
-7. L'**hébergement** sous `revela.cabinet-aor.fr`.
+1. La **vue résultats participant** (filtres, tooltips, libellés d'écarts, allègement du tableau).
+2. La **vue de synthèse Admin/Coach** (matrice globale + mise en lumière manuelle).
+3. L'**IA & retour coach** (chantier complet, en attente du choix modèle / prompt côté Laurent).
+4. Les **autosaves** (regard sur soi + Élément B).
+5. La **notification cloche** + **recherche participant** côté entreprise.
+6. L'**hébergement** sous `revela.cabinet-aor.fr`.
 
 ---
 
@@ -45,13 +44,13 @@ Le gros de la **gouvernance et du parcours participant** est en place. Les chant
 | Statut | Item PDF | État | Preuve / reste à faire |
 |---|---|---|---|
 | ✅ | « Auto-évaluation » → « Regard sur soi » (parcours participant) | Fait | `applications/frontend/src/routes/_participant/self-rating.tsx:69, 149` ; `_participant/campaigns/$campaignId/results.tsx:146, 150` (commits `1b10e9b`, `f96132a`) |
-| 🟡 | « Auto-évaluation » → « Regard sur soi » (résidus à nettoyer) | Partiel | 3 occurrences résiduelles à corriger : `_participant/campaigns/index.tsx:82` (« Completer l'auto-evaluation »), `_participant/campaigns/$campaignId/results.tsx:223` (« Auto-éval · … »), `components/admin/campaign-detail/CampaignParticipantsTable.tsx:81` (en-tête colonne « Auto-éval ») |
+| ✅ | « Auto-évaluation » → « Regard sur soi » (résidus nettoyés) | Fait | `_participant/campaigns/index.tsx:82` (« Completer le regard sur soi ») ; `_participant/campaigns/$campaignId/results.tsx:223` (« Regard sur soi · … ») ; `components/admin/campaign-detail/CampaignParticipantsTable.tsx:81` (en-tête colonne « Regard sur soi ») ; messages d'erreur backend `submit-participant-questionnaire.usecase.ts:112, 236` mis à jour |
 | ✅ | « Test scientifique » → « Test Élément B » | Fait | `_participant/campaigns/$campaignId/results.tsx:150`, `routes/privacy.tsx:76` |
 | ✅ | « Évaluation des pairs » → « Feedback des pairs » | Fait | `_participant/peer-feedback.tsx:257-259, 315-317` |
 | ✅ | « Score de transparence » → « Repère de transparence » | Fait | `_participant/campaigns/$campaignId/transparency.tsx:104, 174` ; carte `CampaignTransparencyCard` |
-| 🟡 | « Campagne d'évaluation » → « Parcours Élément Humain » (écran d'accueil & comms externes) | Partiel | Côté admin « Campagne » conservé OK. **À nettoyer** : libellé checkbox `routes/invite.$token.tsx:247` (« Je confirme ma participation à cette évaluation. ») et occurrences résiduelles dans les e-mails / notifications / exports PDF |
+| ✅ | « Campagne d'évaluation » → « Parcours Élément Humain » (écran d'accueil & comms externes) | Fait | Côté admin « Campagne » conservé. Écran d'invitation aligné : checkbox `routes/invite.$token.tsx:247` (« …à ce parcours »), bandeau de bienvenue `:562` (« votre Parcours Élément Humain »), bouton de lancement `:590` (« Commencer le parcours »). Aucun template e-mail/PDF présent dans le code (envoi auto reste V2) |
 
-**À ne pas oublier** (vigilance PDF) : notifications, e-mails de relance, exports PDF, intitulés des fichiers téléchargés, messages d'erreur — passer un coup de grep sur `évaluation` en-dehors du scope admin pour finir.
+**Vigilance résiduelle** : à reprendre dès que les premiers templates e-mails / notifications / exports PDF arriveront — aucun n'existe aujourd'hui dans le code. Les seules occurrences restantes de `évaluation` sont (i) du contenu RGPD juridique dans `routes/privacy.tsx` (à arbitrer avec le rename `/privacy` → `/confidentialité` du Bloc 1), (ii) le filtre admin « Évaluation analysée » de `ParticipantQuestionnaireMatrix.tsx` (scope admin, conservé), (iii) des commentaires de code internes (non visibles utilisateur).
 
 ---
 
@@ -187,8 +186,8 @@ Le gros de la **gouvernance et du parcours participant** est en place. Les chant
 ## Plan d'attaque proposé pour le sprint d'ici le 8 mai
 
 **Bloc 1 — Quick wins renommage / RGPD (1 j)**
-1. Nettoyage des 3 résidus « Auto-éval » (section 2).
-2. Libellé checkbox invite : « cette évaluation » → « ce parcours ».
+1. ~~Nettoyage des 3 résidus « Auto-éval » (section 2).~~ ✅ Fait (2026-05-06)
+2. ~~Libellé checkbox invite : « cette évaluation » → « ce parcours ».~~ ✅ Fait (2026-05-06, + écran d'accueil de l'invite)
 3. Décision et application : route `/privacy` ↔ `/confidentialité` (alias ou rename).
 
 **Bloc 2 — Parcours participant manquants (2-3 j)**

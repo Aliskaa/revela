@@ -109,7 +109,7 @@ export class SubmitParticipantQuestionnaireUseCase {
                 campaignId
             );
             if (existing.some(r => r.submissionKind === 'self_rating')) {
-                throw new ResponsesValidationError('Auto-evaluation deja soumise. Modification non autorisee.');
+                throw new ResponsesValidationError('Regard sur soi deja soumis. Modification non autorisee.');
             }
             const errLikert = validateLikertScoresRecord(questionnaire, payload.scores);
             if (errLikert) {
@@ -233,7 +233,7 @@ export class SubmitParticipantQuestionnaireUseCase {
             );
         if (!campaign.allowTestWithoutManualInputs && !manualInputsCompleted) {
             throw new ResponsesValidationError(
-                "Le test Element Humain sera disponible apres l'auto-evaluation et le feedback pair."
+                'Le test Element Humain sera disponible apres le regard sur soi et le feedback pair.'
             );
         }
         const errSeries = validateSubmissionSeries(questionnaire, series0, series1);

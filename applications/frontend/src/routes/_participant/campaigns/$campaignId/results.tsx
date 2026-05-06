@@ -220,7 +220,7 @@ function ParticipantResultsRoute() {
                                             Sources
                                         </Typography>
                                         <Typography variant="body2" fontWeight={700} color="text.primary">
-                                            Auto-éval · {peerCount} pair{peerCount !== 1 ? 's' : ''} · Test
+                                            Regard sur soi · {peerCount} pair{peerCount !== 1 ? 's' : ''} · Test
                                         </Typography>
                                     </Box>
                                 </CardContent>

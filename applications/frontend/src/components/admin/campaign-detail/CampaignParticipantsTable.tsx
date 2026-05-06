@@ -78,7 +78,7 @@ export function CampaignParticipantsTable({
                             <TableRow>
                                 <TableCell padding="checkbox" />
                                 <TableCell>Participant</TableCell>
-                                <TableCell>Auto-éval</TableCell>
+                                <TableCell>Regard sur soi</TableCell>
                                 <TableCell>Pairs</TableCell>
                                 <TableCell>Élément Humain</TableCell>
                                 <TableCell>Résultats</TableCell>

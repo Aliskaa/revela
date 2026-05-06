@@ -79,7 +79,7 @@ const nextActionFromAssignment = (assignment: ParticipantAssignment): string => 
         return assignment.allow_test_without_manual_inputs ? 'Passer le test Element Humain' : 'Demarrer le parcours';
     }
     if (progression.self_rating_status !== 'completed') {
-        return "Completer l'auto-evaluation";
+        return 'Completer le regard sur soi';
     }
     if (progression.peer_feedback_status !== 'completed') {
         return 'Finaliser le feedback des pairs';

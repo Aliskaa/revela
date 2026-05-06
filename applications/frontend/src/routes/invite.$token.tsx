@@ -244,7 +244,7 @@ function InvitePage() {
                         }
                         label={
                             <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.6 }}>
-                                Je confirme ma participation à cette évaluation.
+                                Je confirme ma participation à ce parcours.
                             </Typography>
                         }
                         sx={{ alignItems: 'flex-start', mb: 3, mr: 0 }}
@@ -559,7 +559,7 @@ function InvitePage() {
                         Bonjour, {invite.participant.name.split(' ')[0]}
                     </Typography>
                     <Typography variant="body1" color="text.secondary" mb={4}>
-                        Bienvenue dans votre espace d'évaluation.
+                        Bienvenue dans votre Parcours Élément Humain.
                     </Typography>
                     <Typography
                         variant="body1"
@@ -587,7 +587,7 @@ function InvitePage() {
                         }}
                         sx={aorBtnSx}
                     >
-                        Commencer l'évaluation
+                        Commencer le parcours
                     </Button>
                 </Paper>
             )}
