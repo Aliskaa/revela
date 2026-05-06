@@ -18,7 +18,7 @@ export function FooterLayout() {
                 <Stack direction="row" spacing={2} alignItems="center">
                     <MuiLink
                         component={Link}
-                        to="/privacy"
+                        to="/confidentiality"
                         underline="hover"
                         sx={{ fontSize: '0.75rem', fontWeight: 500, color: 'text.secondary' }}
                     >

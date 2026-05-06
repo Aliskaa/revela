@@ -57,7 +57,8 @@
       "Bash(pnpm --filter @aor/frontend-app lint)",
       "Bash(pnpm --filter @aor/backend-api exec biome check --diagnostic-level=error src/interfaces/participants/IParticipantsRepository.port.ts src/infrastructure/database/repositories/drizzle-participants.repository.ts src/application/admin/participants/list-admin-participants.usecase.ts src/presentation/admin/admin-participants.controller.ts \"src/application/admin/participants/__tests__/list-admin-participants.usecase.spec.ts\")",
       "Bash(pnpm --filter @aor/frontend-app exec biome check --diagnostic-level=error src/hooks/admin.ts src/components/admin/company-detail/CompanyParticipantsTable.tsx src/components/scoped/CompanyDetailPage.tsx)",
-      "Bash(pnpm --filter @aor/backend-api exec biome check src/main.ts)"
+      "Bash(pnpm --filter @aor/backend-api exec biome check src/main.ts)",
+      "Bash(git mv *)"
     ]
   }
 }

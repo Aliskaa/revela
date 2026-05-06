@@ -265,7 +265,7 @@ function ParticipantProfileRoute() {
                     <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.7, mb: 2 }}>
                         Pour le détail des finalités, durées de conservation et autres droits (rectification,
                         effacement), consultez la{' '}
-                        <MuiLink component={Link} to="/privacy" underline="always">
+                        <MuiLink component={Link} to="/confidentiality" underline="always">
                             politique de confidentialité
                         </MuiLink>
                         .

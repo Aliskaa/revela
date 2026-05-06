@@ -19,21 +19,21 @@
 |---|---|---|---|---|
 | 2. Renommage sémantique global | 6 | 0 | 0 | — |
 | 3. Configuration & Administration | 8 | 0 | 0 | — |
-| 4. Invitation & RGPD | 4 | 1 | 0 | 1 |
-| 5. Regard sur soi | 1 | 0 | 1 | — |
-| 6. Feedback des pairs | 3 | 0 | 2 | — |
+| 4. Invitation & RGPD | 5 | 0 | 0 | 1 |
+| 5. Regard sur soi | 1 | 0 | 0 | 1 |
+| 6. Feedback des pairs | 4 | 0 | 1 | — |
 | 7. Questionnaire Élément B | 1 | 1 | 1 | — |
-| 8. Résultats Participant | 2 | 0 | 5 | 1 |
-| 9. Vue de synthèse Admin/Coach | 0 | 1 | 2 | 1 |
+| 8. Résultats Participant | 4 | 0 | 3 | 1 |
+| 9. Vue de synthèse Admin/Coach | 1 | 0 | 2 | 1 |
 | 10. IA & retour formateur/coach | 0 | 0 | 4 | — |
 | 11. Hébergement & domaine | 0 | 0 | 1 | 1 |
-| **Total court terme** | **25** | **3** | **16** | **4** |
+| **Total court terme** | **30** | **1** | **12** | **5** |
 
 Le gros de la **gouvernance et du parcours participant** est en place. Les chantiers restants sont concentrés sur :
-1. La **vue résultats participant** (filtres, tooltips, libellés d'écarts, allègement du tableau).
-2. La **vue de synthèse Admin/Coach** (matrice globale + mise en lumière manuelle).
+1. La **vue résultats participant** : restent les **tooltips commentaires pairs** (dépend de la saisie en base, section 6) et les **libellés d'interprétation des écarts** (texte attendu de Nora). Filtres « pairs me voient » et retrait colonnes « je vois les autres » : faits (2026-05-06).
+2. La **vue de synthèse Admin/Coach** (matrice globale + mise en lumière manuelle). Dates parcours : faites.
 3. L'**IA & retour coach** (chantier complet, en attente du choix modèle / prompt côté Laurent).
-4. Les **autosaves** (regard sur soi + Élément B).
+4. L'**autosave Élément B** (54×2 réponses — questionnaire long). Pas d'autosave sur le regard sur soi (décision 2026-05-06 : trop court pour le justifier).
 5. La **notification cloche** côté entreprise (la recherche participant est livrée — cf. section 3).
 6. L'**hébergement** sous `revela.cabinet-aor.fr`.
 
@@ -50,7 +50,7 @@ Le gros de la **gouvernance et du parcours participant** est en place. Les chant
 | ✅ | « Score de transparence » → « Repère de transparence » | Fait | `_participant/campaigns/$campaignId/transparency.tsx:104, 174` ; carte `CampaignTransparencyCard` |
 | ✅ | « Campagne d'évaluation » → « Parcours Élément Humain » (écran d'accueil & comms externes) | Fait | Côté admin « Campagne » conservé. Écran d'invitation aligné : checkbox `routes/invite.$token.tsx:247` (« …à ce parcours »), bandeau de bienvenue `:562` (« votre Parcours Élément Humain »), bouton de lancement `:590` (« Commencer le parcours »). Aucun template e-mail/PDF présent dans le code (envoi auto reste V2) |
 
-**Vigilance résiduelle** : à reprendre dès que les premiers templates e-mails / notifications / exports PDF arriveront — aucun n'existe aujourd'hui dans le code. Les seules occurrences restantes de `évaluation` sont (i) du contenu RGPD juridique dans `routes/privacy.tsx` (à arbitrer avec le rename `/privacy` → `/confidentialité` du Bloc 1), (ii) le filtre admin « Évaluation analysée » de `ParticipantQuestionnaireMatrix.tsx` (scope admin, conservé), (iii) des commentaires de code internes (non visibles utilisateur).
+**Vigilance résiduelle** : à reprendre dès que les premiers templates e-mails / notifications / exports PDF arriveront — aucun n'existe aujourd'hui dans le code. Les seules occurrences restantes de `évaluation` sont (i) du contenu RGPD juridique dans `routes/confidentiality.tsx` (à relire au prochain audit RGPD), (ii) le filtre admin « Évaluation analysée » de `ParticipantQuestionnaireMatrix.tsx` (scope admin, conservé), (iii) des commentaires de code internes (non visibles utilisateur).
 
 ---
 
@@ -75,7 +75,7 @@ Le gros de la **gouvernance et du parcours participant** est en place. Les chant
 | Statut | Profil | Item PDF | État | Preuve / reste à faire |
 |---|---|---|---|---|
 | ✅ | Participant | Texte de consentement RGPD sur l'écran d'accueil (Annexe A) | Fait | `routes/invite.$token.tsx:140-145, 220-251` : Alert RGPD + checkbox + bouton désactivé tant que non coché |
-| 🟡 | Participant | Page dédiée `/confidentialité` accessible depuis le bandeau | Partiel | Page existante : `routes/privacy.tsx` (299 lignes, contenu Annexe B). **Choix à valider** : route actuelle `/privacy` — le PDF demande `/confidentialité`. Soit on renomme, soit on ajoute un alias route FR |
+| ✅ | Participant | Page dédiée `/confidentiality` accessible depuis le bandeau | Fait (2026-05-06) | Route renommée `/privacy` → `/confidentiality` (file-based routing TanStack : `applications/frontend/src/routes/confidentiality.tsx`, `routeTree.gen.ts` régénéré). Liens mis à jour dans `routes/invite.$token.tsx:229`, `routes/_participant/profile.tsx:268`, `components/layout/FooterLayout.tsx:21`. Choix `/confidentiality` (anglais sans accent) plutôt que `/confidentialité` pour éviter les pièges d'encodage URL ; libellé visible reste « Politique de confidentialité » |
 | ✅ | Participant | Renommer « campagne d'évaluation » → « Parcours Élément Humain » sur l'écran d'accueil | Partiel→Fait sur la page principale | Texte introductif conforme. **Reste** : libellé checkbox `invite.$token.tsx:247` mentionne encore « cette évaluation » |
 | ✅ | Participant | Après création du compte → redirection directe vers le dashboard | Fait | Branche conditionnelle vers `/self-rating` supprimée — atterrissage systématique sur `/` (cf. P09) |
 | ⏭️ | Admin | Envoi automatique des liens d'invitation | V2 | Traitement manuel acceptable car parcours ≤ 10 personnes |
@@ -87,7 +87,7 @@ Le gros de la **gouvernance et du parcours participant** est en place. Les chant
 | Statut | Profil | Item PDF | État | Preuve / reste à faire |
 |---|---|---|---|---|
 | ✅ | Participant | Après validation d'une étape → retour au détail du parcours (et non au dashboard) | Fait | Auto-évaluation : redirection `/` → `/campaigns/$campaignId` (cf. P10). Test Élément B : redirection `/campaigns/$campaignId/results` → `/campaigns/$campaignId` |
-| ❌ | Participant | Enregistrement automatique des réponses à chaque clic « Suivant » | Pas fait | Aucun `autosave`/`debounce` dans `self-rating.tsx`. La soumission reste manuelle via `handleSubmit`. Chantier sécurité anti-déconnexion (cf. P15) |
+| ⏭️ | Participant | Enregistrement automatique des réponses à chaque clic « Suivant » | Hors scope court terme (2026-05-06) | Décision : **pas d'autosave sur le regard sur soi** (court — 9 questions, soumission manuelle suffisante). L'autosave reste retenu uniquement pour l'Élément B (54×2 réponses, cf. section 7). Aucun `autosave`/`debounce` dans `self-rating.tsx` — comportement conservé tel quel |
 
 ---
 
@@ -98,7 +98,7 @@ Le gros de la **gouvernance et du parcours participant** est en place. Les chant
 | ❌ | Participant | Commentaire optionnel par pair, max 150 caractères | Pas fait | Aucun champ commentaire dans `routes/_participant/peer-feedback.tsx`. Aucune table/colonne `peer_comment` côté backend. Chantier : schéma DB + UI + validation `maxLength=150` (cf. P11, P17) |
 | ✅ | Participant | Confirmation explicite « j'ai terminé mes feedbacks » avant Élément B (suppression du déverrouillage automatique au 1ᵉʳ pair) | Fait | Use case `ConfirmPeerFeedbackUseCase` + endpoint `POST /participant/campaigns/:id/peer-feedback/confirm` ; bouton « J'ai terminé mes feedbacks » dans peer-feedback page et `CampaignStepCard` (cf. P12, P13) |
 | ✅ | Participant | Anonymisation des pairs côté participant : `Pair 1`, `Pair 2`, … | Fait | Libellés `Pair #1`, `Pair #2`… côté participant ; pas d'IDs dans le JSON (cf. P16) |
-| ❌ | Admin / Coach | Pas d'anonymat côté admin/coach : noms complets affichés | À vérifier | Vue admin/coach matrice doit afficher noms — recette à mener pour confirmer que l'anonymisation côté participant n'a pas leaké côté admin |
+| ✅ | Admin / Coach | Pas d'anonymat côté admin/coach : noms complets affichés | Fait (vérifié 2026-05-06) | Asymétrie pilotée par le flag `anonymizeReceivedPeerLabels` du use case `get-participant-questionnaire-matrix.usecase.ts:119, 149-153` : `admin-participants.controller.ts:205` passe `false` (admin/coach voient `firstName lastName`), `get-participant-session-questionnaire-matrix.usecase.ts:58` passe `true` côté participant (libellés `Pair #N` + `rater_participant_id` masqué). Aucun leak constaté |
 
 ---
 
@@ -121,10 +121,10 @@ Le gros de la **gouvernance et du parcours participant** est en place. Les chant
 | Statut | Item PDF | État | Preuve / reste à faire |
 |---|---|---|---|
 | ✅ | Affichage des scores (regard sur soi, feedbacks pairs anonymisés, Élément B) | Fait | `_participant/campaigns/$campaignId/results.tsx` ; matrice via `QuestionnaireMatrixDisplay` (cf. P22) |
-| ❌ | Filtres dans la vue résultats : « comment mes pairs me voient » | Pas fait | Pas de toggle filtre dans `results.tsx` |
+| ✅ | Filtres dans la vue résultats : « comment mes pairs me voient » | Fait (2026-05-06) | Perspective `'received'` codée en dur dans `routes/_participant/campaigns/$campaignId/results.tsx:36` (paramètre `peers=received` envoyé à l'API). Pas de toggle UI nécessaire : seul le point de vue « mes pairs me voient » est rendu sur cette page (le point de vue inverse vit côté `peer-feedback.tsx` pour la saisie). Item 3.7 du plan satisfait par construction |
 | ❌ | Affichage des commentaires pairs au survol (tooltip) | Pas fait | Bloqué par section 6 (commentaires pas en base) |
 | ❌ | Libellés d'interprétation des écarts (phrases préprogrammées, sauf écart 0) | Pas fait | Texte fourni par Nora (cf. photo des tests papiers) — table d'interprétation à intégrer |
-| ❌ | Retirer les colonnes « comment je vois les autres » (allègement) | Pas fait | À retirer du tableau résultats participant |
+| ✅ | Retirer les colonnes « comment je vois les autres » (allègement) | Fait (2026-05-06) | Conséquence directe du filtre `'received'` ci-dessus : `QuestionnaireMatrixDisplay` ne reçoit que les colonnes pairs « reçues ». Aucune colonne « comment je vois les autres » n'est rendue sur la page résultats participant. Item 3.8 du plan satisfait |
 | ❌ | Conserver les colonnes intermédiaires (écarts / équivalences) | À vérifier | Comportement actuel à confirmer après l'allègement ci-dessus |
 
 ### Niveau 2 — Repère de transparence
@@ -149,7 +149,7 @@ Le gros de la **gouvernance et du parcours participant** est en place. Les chant
 | ❌ | Admin / Coach | Vue globale parcours : tableau de synthèse « Élément B uniquement » (colonnes = participants, lignes = questions/dimensions, écarts) | Pas fait | Aucun composant `CampaignMatrix`/`SynthesisMatrix` détecté côté admin. Chantier complet (cf. P20) |
 | ⏭️ | Admin / Coach | Code couleur des écarts dans la vue de synthèse | V2 | Nora doit redéfinir les seuils — différé |
 | ❌ | Coach | Mise en lumière manuelle de certaines cases du tableau de synthèse | Pas fait | Dépend de la vue globale ci-dessus |
-| 🟡 | Admin / Coach | Dates du parcours dans la vue détail participant | Partiel | Colonne « Rejoint le » ajoutée dans `ParticipantDetailView.tsx` (commit `9c82197`). **Reste** : dates de début/fin/MAJ du parcours lui-même (cf. P21) |
+| ✅ | Admin / Coach | Dates du parcours dans la vue détail participant | Fait (2026-05-06) | Colonne « Rejoint le » dans `ParticipantDetailView.tsx:345, 382` (commit `9c82197`). Décision 2026-05-06 : la date de jonction du participant suffit pour le besoin admin/coach — pas d'ajout des dates start/end/updated du parcours lui-même (info déjà accessible via le détail de la campagne) |
 
 ---
 
@@ -176,6 +176,7 @@ Le gros de la **gouvernance et du parcours participant** est en place. Les chant
 ## Section 12 — V2 (hors scope court terme, pour mémoire)
 
 - ⏭️ Envoi automatique des invitations par e-mail (étape 1).
+- ⏭️ Autosave du regard sur soi (étape 2) — décision 2026-05-06, jugé non nécessaire (questionnaire court).
 - ⏭️ Export PDF participant — Élément B + écarts (étape 5).
 - ⏭️ Code couleur des écarts dans la vue de synthèse Admin/Coach (étape 6).
 - ⏭️ E-mails personnalisés sur sous-domaine (section 11).
@@ -188,23 +189,23 @@ Le gros de la **gouvernance et du parcours participant** est en place. Les chant
 **Bloc 1 — Quick wins renommage / RGPD (1 j)**
 1. ~~Nettoyage des 3 résidus « Auto-éval » (section 2).~~ ✅ Fait (2026-05-06)
 2. ~~Libellé checkbox invite : « cette évaluation » → « ce parcours ».~~ ✅ Fait (2026-05-06, + écran d'accueil de l'invite)
-3. Décision et application : route `/privacy` ↔ `/confidentialité` (alias ou rename).
+3. ~~Décision et application : route `/privacy` ↔ `/confidentialité` (alias ou rename).~~ ✅ Fait (2026-05-06) — rename `/privacy` → `/confidentiality` (anglais sans accent pour éviter les pièges d'encodage URL ; libellé visible reste « Politique de confidentialité »). Liens mis à jour dans invite, profile et footer ; `routeTree.gen.ts` régénéré.
 
 **Bloc 2 — Parcours participant manquants (2-3 j)**
-4. Autosave regard sur soi + Élément B (sections 5 & 7).
+4. Autosave Élément B uniquement (section 7) — décision 2026-05-06 : **pas d'autosave sur le regard sur soi** (questionnaire court, soumission manuelle suffit).
 5. Commentaire optionnel pair, max 150 caractères (section 6) — schéma DB + UI + validation.
 6. Paragraphe descriptif Élément B (texte Nora attendu).
 
 **Bloc 3 — Vue résultats participant (2 j)**
-7. Filtres « comment mes pairs me voient ».
-8. Retrait colonnes « comment je vois les autres ».
+7. ~~Filtres « comment mes pairs me voient ».~~ ✅ Fait (2026-05-06) — perspective `'received'` codée en dur dans `results.tsx:36`, pas de toggle UI nécessaire.
+8. ~~Retrait colonnes « comment je vois les autres ».~~ ✅ Fait (2026-05-06) — conséquence directe du filtre `'received'`.
 9. Libellés d'interprétation des écarts (table fournie par Nora).
 10. Tooltips commentaires pairs (dépend du bloc 2).
 
 **Bloc 4 — Vue synthèse coach/admin (2 j)**
 11. Matrice globale Élément B par parcours.
 12. Mise en lumière manuelle de cases.
-13. Dates parcours dans détail participant.
+13. ~~Dates parcours dans détail participant.~~ ✅ Fait (2026-05-06) — décision : la colonne « Rejoint le » de `ParticipantDetailView.tsx` suffit pour le besoin admin/coach (dates start/end/updated accessibles via le détail de la campagne).
 
 **Bloc 5 — Périphérie (parallélisable)**
 14. Notification cloche fin d'étape / fin de parcours.

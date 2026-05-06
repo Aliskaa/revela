@@ -4,7 +4,7 @@ import { Box, Container, Divider, Link as MuiLink, Stack, Typography } from '@mu
 import { Link, createFileRoute } from '@tanstack/react-router';
 import { ArrowLeft, ShieldCheck } from 'lucide-react';
 
-export const Route = createFileRoute('/privacy')({
+export const Route = createFileRoute('/confidentiality')({
     component: PrivacyPolicyPage,
 });
 
@@ -45,7 +45,7 @@ function PrivacyPolicyPage() {
                     <Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 1 }}>
                         <ShieldCheck size={28} color="rgb(15,24,152)" />
                         <Typography variant="h4" fontWeight={800} color="text.primary" sx={{ letterSpacing: -0.4 }}>
-                            Politique de confidentialité
+                            Politique de confidentialité — Parcours Élément Humain
                         </Typography>
                     </Stack>
                     <Typography variant="body2" color="text.secondary">
@@ -55,27 +55,21 @@ function PrivacyPolicyPage() {
 
                 <Divider />
 
-                <Section title="1. Identité du responsable de traitement">
+                <Section title="1. Qui est responsable du traitement de vos données ?">
                     <Paragraph>
-                        Le présent service Révéla est édité par <strong>{'{{RAISON_SOCIALE}}'}</strong>, société
-                        immatriculée au RCS sous le numéro <strong>{'{{SIRET}}'}</strong>, dont le siège social est
-                        situé <strong>{'{{ADRESSE_SIEGE}}'}</strong>.
-                    </Paragraph>
-                    <Paragraph>
-                        Délégué à la protection des données (DPO) : <strong>{'{{NOM_DPO}}'}</strong> —{' '}
-                        <MuiLink href="mailto:{{EMAIL_DPO}}">{'{{EMAIL_DPO}}'}</MuiLink>.
+                        Le responsable du traitement est le Cabinet AOR, représenté par Nora Mansouri, joignable à l'adresse {' '}
+                        <MuiLink href="mailto:nora.mansouri@cabinet-aor.fr">nora.mansouri@cabinet-aor.fr</MuiLink> {' '}
+                        pour toute question relative à vos données personnelles.
                     </Paragraph>
                 </Section>
 
                 <Section title="2. Finalités du traitement">
                     <Paragraph>
-                        Les données collectées via la plateforme Révéla sont traitées exclusivement aux fins suivantes :
-                    </Paragraph>
+                        Les données collectées via la plateforme Élément Humain sont traitées exclusivement aux fins suivantes :</Paragraph>
                     <ul>
                         <li>
-                            Permettre la passation des questionnaires d'évaluation comportementale (Regard sur soi,
-                            feedback de pairs, élément humain) dans le cadre d'une mission de coaching ou de bilan
-                            mandatée par votre employeur.
+                            Permettre la passation des questionnaires d'évaluation comportementale (Regard sur soi, feedback de pairs, élément humain)
+                            dans le cadre d'une mission de coaching ou de bilan mandatée par votre employeur.
                         </li>
                         <li>
                             Calculer et restituer vos résultats individuels (profil comportemental, scores

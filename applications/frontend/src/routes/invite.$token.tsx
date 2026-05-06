@@ -226,7 +226,7 @@ function InvitePage() {
                                 </li>
                             </ul>
                             Consultez notre{' '}
-                            <MuiLink component={Link} to="/privacy" target="_blank" rel="noopener" underline="always">
+                            <MuiLink component={Link} to="/confidentiality" target="_blank" rel="noopener" underline="always">
                                 politique de confidentialité
                             </MuiLink>{' '}
                             pour le détail des finalités, durée de conservation et de vos droits (accès, export, rectification, suppression).
