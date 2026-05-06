@@ -188,7 +188,8 @@ export class AdminCampaignsController {
         @UploadedFile() file: Express.Multer.File | undefined
     ) {
         await this.ensureCampaignAccess(campaignId, req.user);
-        return this.importParticipantsToCampaign.execute(campaignId, file?.buffer);
+        const coachId = req.user.scope === 'coach' ? req.user.coachId : undefined;
+        return this.importParticipantsToCampaign.execute(campaignId, file?.buffer, { coachId });
     }
 
     @Post('campaigns/:campaignId/participants')
@@ -209,7 +210,8 @@ export class AdminCampaignsController {
         // Ouvert à l'admin et au coach (le coach est restreint à ses campagnes via
         // `ensureCampaignAccess`). Cf. P08 du suivi produit 2026-05-02.
         await this.ensureCampaignAccess(campaignId, req.user);
-        return this.addParticipantToCampaign.execute(campaignId, body);
+        const coachId = req.user.scope === 'coach' ? req.user.coachId : undefined;
+        return this.addParticipantToCampaign.execute(campaignId, body, { coachId });
     }
 
     /**

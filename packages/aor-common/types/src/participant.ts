@@ -16,6 +16,12 @@ export const participantSchema = z.object({
     service: z.string().nullable(),
     function_level: participantFunctionLevelSchema.nullable(),
     created_at: z.string().nullable(),
+    /**
+     * Coach ayant créé ce participant via un ajout unitaire (drawer fiche entreprise ou
+     * fiche campagne). `null` quand créé par admin (CSV). Sert au contrôle d'accès suppression
+     * côté coach (cf. PDF AOR §coach delete).
+     */
+    created_by_coach_id: z.number().int().nullable(),
     invite_status: z.record(z.string(), z.string()),
     response_count: z.number().int(),
 });

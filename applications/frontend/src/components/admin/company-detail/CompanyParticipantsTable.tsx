@@ -40,6 +40,13 @@ export type CompanyParticipantsTableProps = {
     onDeleteClick: (participant: Participant) => void;
     /** Si `true`, affiche les contrôles d'import CSV (réservés à l'admin, cf. P08). */
     showCsvImport?: boolean;
+    /**
+     * `null` en scope admin (suppression toujours autorisée). En scope coach, le `coachId`
+     * du coach connecté : la colonne « Supprimer » n'apparaît que sur les lignes dont
+     * `created_by_coach_id` correspond — un coach ne peut effacer que les participants
+     * qu'il a ajoutés unitairement (cf. PDF AOR §coach delete).
+     */
+    currentCoachId: number | null;
 };
 
 export function CompanyParticipantsTable({
@@ -55,9 +62,12 @@ export function CompanyParticipantsTable({
     participantPathPrefix,
     onDeleteClick,
     showCsvImport = true,
+    currentCoachId,
 }: CompanyParticipantsTableProps) {
     const [addDrawerOpen, setAddDrawerOpen] = React.useState(false);
     const addParticipant = useAddParticipantToCompany();
+    const canDelete = (p: Participant) =>
+        currentCoachId === null || p.created_by_coach_id === currentCoachId;
 
     return (
         <Card variant="outlined">
@@ -170,14 +180,16 @@ export function CompanyParticipantsTable({
                                             </Typography>
                                         </TableCell>
                                         <TableCell align="right">
-                                            <Button
-                                                size="small"
-                                                color="error"
-                                                startIcon={<Trash2 size={14} />}
-                                                onClick={() => onDeleteClick(p)}
-                                            >
-                                                Supprimer
-                                            </Button>
+                                            {canDelete(p) && (
+                                                <Button
+                                                    size="small"
+                                                    color="error"
+                                                    startIcon={<Trash2 size={14} />}
+                                                    onClick={() => onDeleteClick(p)}
+                                                >
+                                                    Supprimer
+                                                </Button>
+                                            )}
                                         </TableCell>
                                     </TableRow>
                                 ))

@@ -30,6 +30,7 @@ const participant = Participant.hydrate({
     functionLevel: null,
     passwordHash: 'hash',
     createdAt: new Date(),
+    createdByCoachId: null,
 });
 
 const scientificPayload = {

@@ -32,6 +32,7 @@ export const participantToAdminJson = (p: ParticipantAdminListItem) => ({
     service: p.service,
     function_level: p.functionLevel,
     created_at: p.createdAt ? p.createdAt.toISOString() : null,
+    created_by_coach_id: p.createdByCoachId,
     invite_status: p.inviteStatus,
     response_count: p.responseCount,
 });

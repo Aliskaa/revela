@@ -42,6 +42,11 @@ export type AddParticipantToCompanyResult = {
  *
  * Contrôle d'accès : si `coachId` est fourni, on exige que ce coach ait au moins une
  * campagne attribuée dans cette entreprise (sinon il n'aurait pas dû arriver sur la fiche).
+ *
+ * Ownership : à la **création**, on persiste `createdByCoachId = coachId` (null en scope admin)
+ * pour permettre la suppression unitaire ultérieure (cf. PDF AOR §coach delete). Si l'email
+ * existe déjà et que le propriétaire est différent (admin ou autre coach), on **rejette** la
+ * mutation au lieu de la modifier silencieusement — le coach n'a pas l'ownership.
  */
 export class AddParticipantToCompanyUseCase {
     public constructor(
@@ -90,14 +95,35 @@ export class AddParticipantToCompanyUseCase {
         let created = false;
         if (!participant) {
             participant = await this.ports.participants.create(
-                Participant.create({ firstName, lastName, email, companyId: company.id })
+                Participant.create({
+                    firstName,
+                    lastName,
+                    email,
+                    companyId: company.id,
+                    createdByCoachId: access.coachId ?? null,
+                })
             );
             created = true;
-        } else if (participant.companyId !== company.id) {
-            const reassigned = participant.setCompanyId(company.id);
-            const saved = await this.ports.participants.save(reassigned);
-            if (saved) {
-                participant = saved;
+        } else {
+            // Participant existant : un coach ne peut le réassocier ou modifier son profil que
+            // s'il en est lui-même propriétaire (créé via son propre ajout unitaire). Sinon,
+            // on rejette pour éviter une mutation silencieuse d'un participant créé par admin
+            // ou un autre coach (cf. PDF AOR §coach delete).
+            const isCoachScope = access.coachId !== undefined;
+            const ownsParticipant =
+                isCoachScope && participant.createdByCoachId === access.coachId;
+            if (isCoachScope && !ownsParticipant) {
+                throw new AdminValidationError(
+                    'Ce participant existe déjà et ne peut pas être modifié.'
+                );
+            }
+
+            if (participant.companyId !== company.id) {
+                const reassigned = participant.setCompanyId(company.id);
+                const saved = await this.ports.participants.save(reassigned);
+                if (saved) {
+                    participant = saved;
+                }
             }
         }
 

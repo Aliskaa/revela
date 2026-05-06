@@ -46,8 +46,12 @@ export type AddParticipantToCampaignResult = {
  * controller (`ensureCampaignAccess`).
  *
  * Comportement aligné sur l'import CSV existant :
- * - Si l'email existe déjà : on réassigne le participant à l'entreprise de la campagne (silently)
- * - Si l'email est nouveau : création, profil rempli, association à la campagne, invitation émise
+ * - Si l'email existe déjà ET que le coach n'en est pas propriétaire (admin ou autre coach) :
+ *   on **rejette** la mutation (ownership protégé pour la suppression unitaire).
+ * - Si l'email existe déjà ET que l'admin agit OU que le coach en est propriétaire :
+ *   on réassigne à l'entreprise de la campagne et on rafraîchit le profil.
+ * - Si l'email est nouveau : création (avec `createdByCoachId = coachId`), profil rempli,
+ *   association à la campagne, invitation émise.
  */
 export class AddParticipantToCampaignUseCase {
     public constructor(
@@ -63,7 +67,8 @@ export class AddParticipantToCampaignUseCase {
 
     public async execute(
         campaignId: number,
-        input: AddParticipantToCampaignInput
+        input: AddParticipantToCampaignInput,
+        access: { coachId?: number } = {}
     ): Promise<AddParticipantToCampaignResult> {
         const campaign = await this.ports.campaigns.findById(campaignId);
         if (!campaign) {
@@ -98,14 +103,30 @@ export class AddParticipantToCampaignUseCase {
         let created = false;
         if (!participant) {
             participant = await this.ports.participants.create(
-                Participant.create({ firstName, lastName, email, companyId: company.id })
+                Participant.create({
+                    firstName,
+                    lastName,
+                    email,
+                    companyId: company.id,
+                    createdByCoachId: access.coachId ?? null,
+                })
             );
             created = true;
-        } else if (participant.companyId !== company.id) {
-            const reassigned = participant.setCompanyId(company.id);
-            const saved = await this.ports.participants.save(reassigned);
-            if (saved) {
-                participant = saved;
+        } else {
+            const isCoachScope = access.coachId !== undefined;
+            const ownsParticipant =
+                isCoachScope && participant.createdByCoachId === access.coachId;
+            if (isCoachScope && !ownsParticipant) {
+                throw new AdminValidationError(
+                    'Ce participant existe déjà et ne peut pas être modifié.'
+                );
+            }
+            if (participant.companyId !== company.id) {
+                const reassigned = participant.setCompanyId(company.id);
+                const saved = await this.ports.participants.save(reassigned);
+                if (saved) {
+                    participant = saved;
+                }
             }
         }
 

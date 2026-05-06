@@ -46,7 +46,13 @@ export class Participant {
         public readonly service: string | null,
         public readonly functionLevel: ParticipantFunctionLevel | null,
         passwordHash: string | null,
-        public readonly createdAt: Date | null
+        public readonly createdAt: Date | null,
+        /**
+         * Coach à l'origine de la création unitaire de ce participant. `null` quand créé par
+         * admin (CSV ou bootstrap). Immuable une fois posé : la propriété ne se transfère pas
+         * lors d'un `setCompanyId` ou `updateProfile`.
+         */
+        public readonly createdByCoachId: number | null
     ) {
         this.#passwordHash = passwordHash;
         Object.freeze(this);
@@ -57,6 +63,7 @@ export class Participant {
         firstName: string;
         lastName: string;
         email: string;
+        createdByCoachId?: number | null;
     }): Participant {
         const firstName = normalizeName(props.firstName);
         if (firstName.length === 0) {
@@ -81,7 +88,8 @@ export class Participant {
             null,
             null,
             null,
-            null
+            null,
+            props.createdByCoachId ?? null
         );
     }
 
@@ -97,6 +105,7 @@ export class Participant {
         functionLevel: ParticipantFunctionLevel | null;
         passwordHash: string | null;
         createdAt: Date | null;
+        createdByCoachId: number | null;
     }): Participant {
         return new Participant(
             props.id,
@@ -109,7 +118,8 @@ export class Participant {
             props.service,
             props.functionLevel,
             props.passwordHash,
-            props.createdAt
+            props.createdAt,
+            props.createdByCoachId
         );
     }
 
@@ -128,7 +138,8 @@ export class Participant {
             this.service,
             this.functionLevel,
             this.#passwordHash,
-            this.createdAt
+            this.createdAt,
+            this.createdByCoachId
         );
     }
 
@@ -148,7 +159,8 @@ export class Participant {
             patch.service !== undefined ? patch.service : this.service,
             patch.functionLevel !== undefined ? patch.functionLevel : this.functionLevel,
             this.#passwordHash,
-            this.createdAt
+            this.createdAt,
+            this.createdByCoachId
         );
     }
 
@@ -167,7 +179,8 @@ export class Participant {
             this.service,
             this.functionLevel,
             hash,
-            this.createdAt
+            this.createdAt,
+            this.createdByCoachId
         );
     }
 
@@ -207,6 +220,7 @@ export class Participant {
         functionLevel: ParticipantFunctionLevel | null;
         passwordHash: string | null;
         createdAt: Date | null;
+        createdByCoachId: number | null;
     } {
         return {
             id: this.id,
@@ -220,6 +234,7 @@ export class Participant {
             functionLevel: this.functionLevel,
             passwordHash: this.#passwordHash,
             createdAt: this.createdAt,
+            createdByCoachId: this.createdByCoachId,
         };
     }
 }

@@ -50,6 +50,7 @@ type ParticipantRow = {
     functionLevel: ParticipantFunctionLevel | null;
     passwordHash: string | null;
     createdAt: Date | null;
+    createdByCoachId: number | null;
 };
 
 const hydrateParticipant = (row: ParticipantRow): Participant =>
@@ -65,6 +66,7 @@ const hydrateParticipant = (row: ParticipantRow): Participant =>
         functionLevel: row.functionLevel,
         passwordHash: row.passwordHash,
         createdAt: row.createdAt,
+        createdByCoachId: row.createdByCoachId,
     });
 
 @Injectable()
@@ -350,6 +352,7 @@ export class DrizzleParticipantsRepository implements IParticipantsRepositoryPor
                 service: snap.service,
                 functionLevel: snap.functionLevel,
                 passwordHash: snap.passwordHash,
+                createdByCoachId: snap.createdByCoachId,
             })
             .returning();
         return hydrateParticipant(row);
@@ -386,17 +389,29 @@ export class DrizzleParticipantsRepository implements IParticipantsRepositoryPor
             filters.push(eq(participantsTable.companyId, params.companyId));
         }
         if (params.coachId !== undefined) {
-            // Restreint aux participants ayant rejoint au moins une campagne attribuée à ce coach.
-            // Sous-select : participant_id IN (campaign_participants WHERE campaign_id IN (campaigns WHERE coach_id=?))
-            const coachCampaignIds = this.db
-                .select({ id: campaignsTable.id })
-                .from(campaignsTable)
-                .where(eq(campaignsTable.coachId, params.coachId));
-            const participantIdsInCoachCampaigns = this.db
-                .select({ id: campaignParticipantsTable.participantId })
-                .from(campaignParticipantsTable)
-                .where(inArray(campaignParticipantsTable.campaignId, coachCampaignIds));
-            filters.push(inArray(participantsTable.id, participantIdsInCoachCampaigns));
+            if (params.companyId !== undefined) {
+                // Vue scopée à une entreprise (ex. fiche entreprise, gestion participants d'une
+                // campagne) : le coach voit tous les collaborateurs de l'entreprise dès lors qu'il
+                // a au moins une campagne dans cette entreprise. Évite les imports en double et
+                // aligne la liste sur le compteur global "Collaborateurs" de la fiche entreprise.
+                const coachCompanyIds = this.db
+                    .select({ id: campaignsTable.companyId })
+                    .from(campaignsTable)
+                    .where(eq(campaignsTable.coachId, params.coachId));
+                filters.push(inArray(participantsTable.companyId, coachCompanyIds));
+            } else {
+                // Vue globale "mes participants" (dashboard coach) : restreint aux participants
+                // ayant rejoint au moins une campagne attribuée à ce coach.
+                const coachCampaignIds = this.db
+                    .select({ id: campaignsTable.id })
+                    .from(campaignsTable)
+                    .where(eq(campaignsTable.coachId, params.coachId));
+                const participantIdsInCoachCampaigns = this.db
+                    .select({ id: campaignParticipantsTable.participantId })
+                    .from(campaignParticipantsTable)
+                    .where(inArray(campaignParticipantsTable.campaignId, coachCampaignIds));
+                filters.push(inArray(participantsTable.id, participantIdsInCoachCampaigns));
+            }
         }
         const whereClause = filters.length > 0 ? and(...filters) : undefined;
 
@@ -434,6 +449,7 @@ export class DrizzleParticipantsRepository implements IParticipantsRepositoryPor
             service: row.participant.service,
             functionLevel: row.participant.functionLevel,
             createdAt: row.participant.createdAt,
+            createdByCoachId: row.participant.createdByCoachId,
             company:
                 row.companyId !== null && row.companyName !== null
                     ? { id: row.companyId, name: row.companyName }
@@ -562,13 +578,22 @@ export class DrizzleParticipantsRepository implements IParticipantsRepositoryPor
         }
 
         if (params.coachId !== undefined) {
-            // Le coach ne voit que les participants ayant au moins une campagne attribuée à lui
-            // (invitation ou jointure confirmée). Cf. ADR-008 §scope=coach.
+            // Le coach a accès à un participant dès lors qu'il a au moins une campagne dans
+            // l'entreprise du participant — pas seulement si le participant figure dans une
+            // de ses campagnes. Aligne la fiche détail sur la liste de la fiche entreprise.
+            // Cf. ADR-008 §scope=coach.
+            if (row.participant.companyId === null) {
+                return null;
+            }
             const [accessRow] = await this.db
                 .select({ id: campaignsTable.id })
                 .from(campaignsTable)
-                .innerJoin(campaignParticipantsTable, eq(campaignParticipantsTable.campaignId, campaignsTable.id))
-                .where(and(eq(campaignsTable.coachId, params.coachId), eq(campaignParticipantsTable.participantId, id)))
+                .where(
+                    and(
+                        eq(campaignsTable.coachId, params.coachId),
+                        eq(campaignsTable.companyId, row.participant.companyId)
+                    )
+                )
                 .limit(1);
             if (!accessRow) {
                 return null;
@@ -586,6 +611,7 @@ export class DrizzleParticipantsRepository implements IParticipantsRepositoryPor
             service: row.participant.service,
             functionLevel: row.participant.functionLevel,
             createdAt: row.participant.createdAt,
+            createdByCoachId: row.participant.createdByCoachId,
             company:
                 row.companyId !== null && row.companyName !== null
                     ? { id: row.companyId, name: row.companyName }

@@ -13,6 +13,7 @@ import { StatCard } from '@/components/common/cards';
 import { KpiGrid, PageHeroCard } from '@/components/common/layout';
 import { useCompanies, useParticipants } from '@/hooks/admin';
 import { usePageResetEffect } from '@/lib/usePageResetEffect';
+import { useAuthStore } from '@/stores/authStore';
 import type { Participant } from '@aor/types';
 
 export type CompanyDetailScope = 'admin' | 'coach';
@@ -46,6 +47,8 @@ export function CompanyDetailPage({ scope, companyId }: CompanyDetailPageProps) 
     const cfg = SCOPE_CFG[scope];
     const isAdmin = scope === 'admin';
     const navigate = useNavigate();
+    const adminMe = useAuthStore(s => s.adminMe);
+    const currentCoachId = isAdmin ? null : (adminMe?.coachId ?? null);
 
     const { data: companies = [], isLoading: companiesLoading } = useCompanies();
     const [page, setPage] = React.useState(0);
@@ -152,6 +155,7 @@ export function CompanyDetailPage({ scope, companyId }: CompanyDetailPageProps) 
                     participantPathPrefix={cfg.participantPathPrefix}
                     onDeleteClick={setDeleteParticipantTarget}
                     showCsvImport={isAdmin}
+                    currentCoachId={currentCoachId}
                 />
 
                 {isAdmin && <CompanyDangerZone onDeleteClick={() => setDeleteCompanyOpen(true)} />}

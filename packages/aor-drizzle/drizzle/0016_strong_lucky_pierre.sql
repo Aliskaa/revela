@@ -1,0 +1,3 @@
+ALTER TABLE "participants" ADD COLUMN "created_by_coach_id" integer;--> statement-breakpoint
+ALTER TABLE "participants" ADD CONSTRAINT "participants_created_by_coach_id_coaches_id_fk" FOREIGN KEY ("created_by_coach_id") REFERENCES "public"."coaches"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+CREATE INDEX "participants_created_by_coach_idx" ON "participants" USING btree ("created_by_coach_id");

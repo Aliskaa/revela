@@ -44,6 +44,7 @@ test('participant login returns access token when credentials match', async () =
                 functionLevel: null,
                 passwordHash: hashed,
                 createdAt: new Date(),
+                createdByCoachId: null,
             })
         ),
         jwtSigner: stubSigner,
@@ -79,6 +80,7 @@ test('participant login rejects when password hash not set', async () => {
                 functionLevel: null,
                 passwordHash: null,
                 createdAt: new Date(),
+                createdByCoachId: null,
             })
         ),
         jwtSigner: stubSigner,
@@ -103,6 +105,7 @@ test('participant login rejects wrong password', async () => {
                 functionLevel: null,
                 passwordHash: hashed,
                 createdAt: new Date(),
+                createdByCoachId: null,
             })
         ),
         jwtSigner: stubSigner,

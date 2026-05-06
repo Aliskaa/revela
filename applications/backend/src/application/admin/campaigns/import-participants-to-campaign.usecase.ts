@@ -30,7 +30,7 @@ export class ImportParticipantsToCampaignUseCase {
         }
     ) {}
 
-    public async execute(campaignId: number, buffer: Buffer | undefined) {
+    public async execute(campaignId: number, buffer: Buffer | undefined, access: { coachId?: number } = {}) {
         if (!buffer) {
             throw new AdminCsvFileRequiredError();
         }
@@ -53,6 +53,8 @@ export class ImportParticipantsToCampaignUseCase {
         let invited = 0;
         const errors: string[] = [];
 
+        const isCoachScope = access.coachId !== undefined;
+
         for (let i = 0; i < rows.length; i++) {
             const row = rows[i];
             const line = i + 2;
@@ -72,10 +74,19 @@ export class ImportParticipantsToCampaignUseCase {
                             lastName,
                             email,
                             companyId: company.id,
+                            createdByCoachId: access.coachId ?? null,
                         })
                     );
                     created += 1;
                 } else {
+                    const ownsParticipant =
+                        isCoachScope && participant.createdByCoachId === access.coachId;
+                    if (isCoachScope && !ownsParticipant) {
+                        errors.push(
+                            `Ligne ${String(line)} : ce participant existe déjà et ne peut pas être modifié.`
+                        );
+                        continue;
+                    }
                     const reassigned = participant.setCompanyId(company.id);
                     const saved = await this.ports.participants.save(reassigned);
                     if (saved) {

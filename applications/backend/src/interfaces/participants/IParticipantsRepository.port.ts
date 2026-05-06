@@ -49,6 +49,11 @@ export type ParticipantAdminListItem = {
     service: string | null;
     functionLevel: ParticipantFunctionLevel | null;
     createdAt: Date | null;
+    /**
+     * Coach ayant créé ce participant via un ajout unitaire. `null` quand créé par admin.
+     * Sert au contrôle d'accès suppression côté coach (cf. PDF AOR §coach delete).
+     */
+    createdByCoachId: number | null;
     company: { id: number; name: string } | null;
     readonly inviteStatus: Record<string, string>;
     readonly responseCount: number;

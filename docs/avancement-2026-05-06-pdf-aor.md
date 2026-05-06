@@ -18,7 +18,7 @@
 | Section | ✅ | 🟡 | ❌ | ⏭️ V2 |
 |---|---|---|---|---|
 | 2. Renommage sémantique global | 6 | 0 | 0 | — |
-| 3. Configuration & Administration | 6 | 0 | 2 | — |
+| 3. Configuration & Administration | 7 | 0 | 1 | — |
 | 4. Invitation & RGPD | 4 | 1 | 0 | 1 |
 | 5. Regard sur soi | 1 | 0 | 1 | — |
 | 6. Feedback des pairs | 3 | 0 | 2 | — |
@@ -27,7 +27,7 @@
 | 9. Vue de synthèse Admin/Coach | 0 | 1 | 2 | 1 |
 | 10. IA & retour formateur/coach | 0 | 0 | 4 | — |
 | 11. Hébergement & domaine | 0 | 0 | 1 | 1 |
-| **Total court terme** | **23** | **3** | **18** | **4** |
+| **Total court terme** | **24** | **3** | **17** | **4** |
 
 Le gros de la **gouvernance et du parcours participant** est en place. Les chantiers restants sont concentrés sur :
 1. La **vue résultats participant** (filtres, tooltips, libellés d'écarts, allègement du tableau).
@@ -62,7 +62,7 @@ Le gros de la **gouvernance et du parcours participant** est en place. Les chant
 | ✅ | Admin | Suppression d'un coach → réaffectation auto à l'admin | Fait | Ligne sentinelle « Admin » bootstrappée (`EnsureAdminCoachService`) + `reassignAllByCoach` (cf. P05) |
 | ✅ | Coach | Retirer « créer / supprimer un parcours » côté coach | Fait | `POST /admin/campaigns` rejette `scope === 'coach'` (401) ; UI cachée dans `CampaignsListPage` (cf. P06) |
 | ✅ | Coach | Retirer « créer une entreprise » côté coach | Fait | `POST /admin/companies` + `DELETE` rejettent coach ; UI cachée dans `CompaniesListPage` / `CompanyDetailPage` (cf. P07) |
-| ❌ | Coach | Coach ne peut pas supprimer un participant | À vérifier | Le PDF distingue clairement « ni supprimer une entreprise, ni supprimer un participant ». Audit guard backend à mener sur les endpoints participant (DELETE) |
+| ✅ | Coach | Coach ne peut pas supprimer un participant (sauf ceux qu'il a ajoutés unitairement) | Fait | Colonne `participants.created_by_coach_id` ajoutée (migration `0016_strong_lucky_pierre.sql`, FK `coaches.id`, `ON DELETE SET NULL`) ; renseignée à la création par `AddParticipantToCompanyUseCase` et `AddParticipantToCampaignUseCase` (= `coachId` de l'acteur, `null` côté admin). `EraseParticipantRgpdUseCase` exige désormais `participant.createdByCoachId === coachId` en scope coach (404 sinon). Tentative de ré-ajout d'un participant existant non possédé → erreur métier « Ce participant existe déjà et ne peut pas être modifié. » (mutation silencieuse supprimée). UI : bouton « Supprimer » de `CompanyParticipantsTable` masqué via prop `currentCoachId` quand `created_by_coach_id` ne matche pas. Admin reste illimité |
 | ✅ | Admin / Coach | Ajout d'un utilisateur unitairement (en plus du CSV) | Fait | 2 endpoints : `POST /admin/campaigns/:id/participants` (avec auto-invitation) et `POST /admin/companies/:id/participants` ; drawer `AddParticipantToCampaignDrawerForm` (cf. P08) |
 | ❌ | Admin | Barre de recherche participant dans la vue entreprise | Pas fait | Pas d'input search trouvé dans `CompanyParticipantsTable` ; règle métier rappelée par PDF : statut « Actif » dès que l'invitation est acceptée (`joined_at` non nul) |
 | ✅ | Admin | Conserver l'écran « questionnaires » pour extensions futures | Fait | `routes/admin/questionnaires.tsx` toujours présent et fonctionnel |
@@ -209,7 +209,7 @@ Le gros de la **gouvernance et du parcours participant** est en place. Les chant
 **Bloc 5 — Périphérie (parallélisable)**
 14. Notification cloche fin d'étape / fin de parcours.
 15. Barre de recherche participant vue entreprise.
-16. Vérification garde « coach ne peut pas supprimer un participant ».
+16. ~~Vérification garde « coach ne peut pas supprimer un participant ».~~ ✅ Fait (2026-05-06) — règle implémentée : coach ne supprime que les participants qu'il a ajoutés lui-même (cf. ligne section 3).
 17. Configuration sous-domaine `revela.cabinet-aor.fr`.
 
 **Bloc 6 — IA (à cadrer)**
@@ -229,3 +229,9 @@ Le gros de la **gouvernance et du parcours participant** est en place. Les chant
    - Coach scope=coach ne voit/n'active que les participants de ses propres campagnes (filtrage `ensureCampaignAccess`).
    - Re-clic du bouton coach écrase bien le snapshot précédent.
    - Audit log `admin.transparency.activate` présent dans `audit_events` (payload contient `campaign_id`, `value`, `peer_count`).
+6. **Périmètre coach sur fiche entreprise** (2026-05-06) :
+   - Migration `0016_strong_lucky_pierre.sql` appliquée (`pnpm --filter @aor/drizzle db:migrate`).
+   - En scope coach, la fiche entreprise affiche **tous** les participants de l'entreprise (alignement avec le compteur global), plus uniquement ceux inscrits à une de ses campagnes — évite les imports en double. Le dashboard `/coach` (« mes participants ») reste filtré sur les participations de campagne.
+   - Tentative d'ajout unitaire (drawer entreprise/campagne) d'un email existant déjà rattaché à un autre coach ou à l'admin → erreur 400 « Ce participant existe déjà et ne peut pas être modifié. » (au lieu d'une réassociation silencieuse).
+   - Bouton « Supprimer » caché sur les lignes dont `created_by_coach_id` ne matche pas le coach connecté. Admin voit toujours le bouton.
+   - `DELETE /admin/participants/:id` côté coach → 404 si le coach n'est pas propriétaire (4 cas : participant créé par admin, par autre coach, ou n'appartenant pas à une de ses entreprises).

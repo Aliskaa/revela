@@ -63,6 +63,7 @@ test('activate invite sets password, consumes invite, returns jwt', async () => 
                       functionLevel: null,
                       passwordHash: null,
                       createdAt: new Date(),
+                      createdByCoachId: null,
                   })
                 : null,
     } as unknown as IParticipantsRepositoryPort;
@@ -125,6 +126,7 @@ test('activate invite rejects when participant already has password', async () =
                 functionLevel: null,
                 passwordHash: hashPassword('existing'),
                 createdAt: new Date(),
+                createdByCoachId: null,
             }),
     } as unknown as IParticipantsRepositoryPort;
 
