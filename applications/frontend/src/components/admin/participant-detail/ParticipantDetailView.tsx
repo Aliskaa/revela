@@ -342,6 +342,7 @@ export function ParticipantDetailView({ participantId, scopePrefix }: Participan
                                         <TableCell></TableCell>
                                         <TableCell>Campagne</TableCell>
                                         <TableCell>Entreprise</TableCell>
+                                        <TableCell>Rejoint le</TableCell>
                                         <TableCell />
                                     </TableRow>
                                 </TableHead>
@@ -378,6 +379,7 @@ export function ParticipantDetailView({ participantId, scopePrefix }: Participan
                                                     </Link>
                                                 </TableCell>
                                                 <TableCell>{c.company_name ?? '–'}</TableCell>
+                                                <TableCell>{c.joined_at ? new Date(c.joined_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' }) : '–'}</TableCell>
                                                 <TableCell align="right">
                                                     <Button
                                                         size="small"

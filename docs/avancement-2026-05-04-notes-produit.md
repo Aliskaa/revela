@@ -21,8 +21,8 @@
 - [x] Rediriger vers le dashboard apres creation du compte participant
 - [x] Revenir au detail de campagne apres validation d'une etape du parcours
 - [ ] Ajouter un commentaire optionnel pour les pairs lors des feedbacks
-- [ ] Autoriser la poursuite du parcours feedback tant que moins de 5 pairs enregistres
-- [ ] Exiger une confirmation explicite de fin de feedback pairs avant suite parcours/test
+- [x] Autoriser la poursuite du parcours feedback tant que moins de 5 pairs enregistres
+- [x] Exiger une confirmation explicite de fin de feedback pairs avant suite parcours/test
 - [ ] Vue participant: afficher uniquement les scores de pairs anonymes (impl. — **à valider** : section *Notes à tester*)
 - [ ] Tests 54x2: activer l'enregistrement automatique des reponses
 - [ ] "Comment mes pairs me voient": afficher `pair #1`, `pair #2`, etc. (impl. — **à valider** : section *Notes à tester*)
@@ -31,7 +31,7 @@
 - [ ] Vue coach/admin: pas d'anonymat
 - [ ] Vue coach/admin: ajouter une matrice globale campagne (test + ecarts)
 - [ ] Vue coach/admin: ajouter les dates de campagne dans le detail participants
-- [ ] Resultats niveau 1: scores
+- [x] Resultats niveau 1: scores
 - [x] Resultats niveau 2: score de transparence active par bouton coach
 - [ ] Resultats niveau 3: retours coach via analyse IA supervisee et validable
 - [ ] Tracer le choix IA (modele + prompt) pour la transmission
@@ -67,8 +67,8 @@
 | P09 | Post-creation compte participant => dashboard | Fait | Suppression de la branche conditionnelle qui redirigeait vers `/self-rating` quand la campagne etait ouverte. Le participant atterrit systematiquement sur `/` (dashboard) apres activation, conformement a la regle produit |
 | P10 | Fin etape parcours => retour detail campagne | Fait | Auto-evaluation : redirection `/` -> `/campaigns/$campaignId` (avec fallback `/` si campaignId absent). Test : redirection `/campaigns/$campaignId/results` -> `/campaigns/$campaignId` (l'utilisateur clique ensuite pour les resultats). Peer-feedback non touche : la logique multi-pairs + confirmation finale est partie de P12/P13 |
 | P11 | Commentaire optionnel sur feedback pair | Pas encore fait | Ajouter champ optionnel |
-| P12 | Feedback pairs: continuer tant que < 5 enregistres | Pas encore fait | Regle de progression a confirmer — a rapprocher du PDF (suppression du deverrouillage automatique au premier pair saisi) |
-| P13 | Confirmation "j'ai termine les feedbacks" obligatoire | Pas encore fait | Etape de confirmation explicite avant questionnaire Element B |
+| P12 | Feedback pairs: continuer tant que < 5 enregistres | Fait | Repository : `peer_feedback_status` ne passe plus auto a `completed` au 1er feedback ; auto-complete uniquement au 5e (max). Element_humain debloque en consequence (cf. notes 2026-05-02). Suppression du deverrouillage automatique au premier pair saisi conforme PDF |
+| P13 | Confirmation "j'ai termine les feedbacks" obligatoire | Fait | Backend : nouveau use case `ConfirmPeerFeedbackUseCase` + endpoint `POST /participant/campaigns/:id/peer-feedback/confirm` (refus si 0 feedback ; idempotent). Repo : nouvelle methode `markPeerFeedbackCompletedForCampaignSubject` qui passe a `completed` + debloque element_humain. Session payload enrichi avec `peer_ratings_count`. Frontend : hook `useConfirmPeerFeedback`, bouton « J'ai terminé mes feedbacks » dans la page peer-feedback (sidebar pairs, visible >= 1 feedback) ET dans `CampaignStepCard` sur la fiche campagne (étape peer-feedback en `pending` avec count >= 1, double bouton « Continuer » + « J'ai terminé »). Type `ConfirmPeerFeedbackResponse` dans `@aor/types` |
 | P14 | Vue participant resultats: seulement scores pairs anonymes | Fait | Implémentation: colonnes « pairs » = feedbacks **reçus** (`peers=received`), pas les scores donnés aux pairs. **À tester** — section **Notes à tester** ci-dessous. |
 | P15 | Tests 54x2: autosave des reponses | Pas encore fait | Persistance intervallee + reprise session ; aligne avec enregistrement auto « regard sur soi » et Element B (PDF) |
 | P16 | Affichage anonyme des pairs (`pair #1`, `pair #2`) | Fait | Libellés `Pair #1`… côté participant sur la vue résultats ; pas d’IDs pairs dans le JSON. **À tester** — section **Notes à tester** ci-dessous. |
@@ -98,9 +98,9 @@
 
 ### Etat au 2026-05-04
 
-- Les items **P01, P02, P05, P06, P07, P08, P09, P10** sont **faits**.
+- Les items **P01, P02, P05, P06, P07, P08, P09, P10, P12, P13** sont **faits** (P12/P13 reportés du 2026-05-02 — la regression dans cette note a été corrigée).
 - **P14 / P16** : implémentés dans le code ; statut **à valider en recette** (tests manuels ci-dessous).
-- Le reste des **P03** et **P11–P25** (hors P14/P16) est **pas encore fait** ; la checklist complementaire ci-dessus prolonge le PDF sans modifier les ID historiques.
+- Le reste des **P03** et **P11, P14–P25** (hors P14/P16) est **pas encore fait** ; la checklist complementaire ci-dessus prolonge le PDF sans modifier les ID historiques.
 
 ### Etat au 2026-05-06
 
