@@ -333,12 +333,14 @@ export function ScopedAppShell({
                 onLogout={handleLogout}
                 avatarInitial={avatarInitial}
             />
-            {topBanner}
             <Box sx={{ display: 'flex', minHeight: '100vh' }}>
                 <Sidebar {...brand} nav={nav} pathname={location.pathname} onLogout={handleLogout} />
-                <Box component="main" sx={{ flex: 1, px: { xs: 2, sm: 3, lg: 4 }, py: { xs: 2, sm: 3, lg: 4 } }}>
-                    {desktopTopBar}
-                    {children}
+                <Box sx={{ flex: 1 }}>
+                    {topBanner}
+                    <Box component="main" sx={{ flex: 1, px: { xs: 2, sm: 3, lg: 4 }, py: { xs: 2, sm: 3, lg: 4 } }}>
+                        {desktopTopBar}
+                        {children}
+                    </Box>
                 </Box>
             </Box>
         </Box>
