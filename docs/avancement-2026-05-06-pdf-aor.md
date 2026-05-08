@@ -23,14 +23,14 @@
 | 5. Regard sur soi | 1 | 0 | 0 | 1 |
 | 6. Feedback des pairs | 5 | 0 | 0 | — |
 | 7. Questionnaire Élément B | 3 | 0 | 0 | — |
-| 8. Résultats Participant | 5 | 0 | 2 | 1 |
+| 8. Résultats Participant | 7 | 0 | 0 | 1 |
 | 9. Vue de synthèse Admin/Coach | 1 | 0 | 2 | 1 |
 | 10. IA & retour formateur/coach | 0 | 0 | 4 | — |
 | 11. Hébergement & domaine | 0 | 0 | 1 | 1 |
-| **Total court terme** | **34** | **0** | **9** | **5** |
+| **Total court terme** | **36** | **0** | **7** | **5** |
 
 Le gros de la **gouvernance et du parcours participant** est en place. Les chantiers restants sont concentrés sur :
-1. La **vue résultats participant** : restent les **libellés d'interprétation des écarts** (texte attendu de Nora). Filtres « pairs me voient », retrait colonnes « je vois les autres » et **tooltips commentaires pairs** : faits (2026-05-06).
+1. La **vue résultats participant** : ✅ entièrement bouclée (2026-05-08). Libellés d'interprétation des écarts, conservation des colonnes intermédiaires, filtres « pairs me voient », retrait colonnes « je vois les autres », tooltips commentaires pairs — tous faits. Reste l'export PDF participant en V2.
 2. La **vue de synthèse Admin/Coach** (matrice globale + mise en lumière manuelle). Dates parcours : faites.
 3. L'**IA & retour coach** (chantier complet, en attente du choix modèle / prompt côté Laurent).
 4. ~~L'**autosave Élément B** (54×2 réponses — questionnaire long).~~ ✅ Fait (2026-05-08, brouillon serveur dédié + hydratation au reload). Pas d'autosave sur le regard sur soi (décision 2026-05-06 : trop court pour le justifier).
@@ -123,9 +123,9 @@ Le gros de la **gouvernance et du parcours participant** est en place. Les chant
 | ✅ | Affichage des scores (regard sur soi, feedbacks pairs anonymisés, Élément B) | Fait | `_participant/campaigns/$campaignId/results.tsx` ; matrice via `QuestionnaireMatrixDisplay` (cf. P22) |
 | ✅ | Filtres dans la vue résultats : « comment mes pairs me voient » | Fait (2026-05-06) | Perspective `'received'` codée en dur dans `routes/_participant/campaigns/$campaignId/results.tsx:36` (paramètre `peers=received` envoyé à l'API). Pas de toggle UI nécessaire : seul le point de vue « mes pairs me voient » est rendu sur cette page (le point de vue inverse vit côté `peer-feedback.tsx` pour la saisie). Item 3.7 du plan satisfait par construction |
 | ✅ | Affichage des commentaires pairs au survol (tooltip) | Fait (2026-05-06) | Débloqué par la livraison section 6. Matrix DTO étendu : nouveau champ `peer_comments: (string \| null)[]` aligné par index sur `peers` (`packages/aor-common/types/src/matrix.ts`). Use case `get-participant-questionnaire-matrix.usecase.ts` peuple les commentaires (trim, vide → `null`) — identique côté participant et admin/coach (ce dernier hérite via délégation). UI : `MatrixTableMode.tsx` affiche une icône `MessageSquareText` + `Tooltip` MUI sur chaque cellule pair commentée ; `MatrixChartMode.tsx` fait pareil dans `MiniBar`. Couvre la vue résultats participant ET la vue détail admin/coach |
-| ❌ | Libellés d'interprétation des écarts (phrases préprogrammées, sauf écart 0) | Pas fait | Texte fourni par Nora (cf. photo des tests papiers) — table d'interprétation à intégrer |
+| ✅ | Libellés d'interprétation des écarts (phrases préprogrammées, sauf écart 0) | Fait (2026-05-08) | Phrases déjà présentes dans le catalogue (`packages/aor-questionnaires/src/catalog.json`, champs `result_dims[].diff_pairs[].if_e_gt`/`if_w_gt`) — exposées via `ParticipantQuestionnaireMatrix.result_dims`. `pairBuilder.ts` propage `ifEGt`/`ifWGt` à chaque `PairBlock`. Affichage par colonne (self, chaque pair, scientifique) : direction calculée indépendamment (`eRow.x > wRow.x` → `ifEGt`, l'inverse → `ifWGt`, égal ou null → **rien** = règle PDF « sauf écart 0 »). Implémenté dans `MatrixTableMode.tsx` (sous chaque cellule d'écart, italique) et `MatrixChartMode.tsx` (sous chaque `GapPill` via nouveau wrapper `GapBlock`). Checkbox « Afficher les interprétations » dans `QuestionnaireMatrixDisplay.tsx` (cochée par défaut), propagée aux deux modes via prop `showInterpretations` |
 | ✅ | Retirer les colonnes « comment je vois les autres » (allègement) | Fait (2026-05-06) | Conséquence directe du filtre `'received'` ci-dessus : `QuestionnaireMatrixDisplay` ne reçoit que les colonnes pairs « reçues ». Aucune colonne « comment je vois les autres » n'est rendue sur la page résultats participant. Item 3.8 du plan satisfait |
-| ❌ | Conserver les colonnes intermédiaires (écarts / équivalences) | À vérifier | Comportement actuel à confirmer après l'allègement ci-dessus |
+| ✅ | Conserver les colonnes intermédiaires (écarts / équivalences) | Fait (2026-05-08) | Vérifié après l'allègement « pairs me voient » : les lignes/colonnes d'écart restent rendues. Mode **Tableau** → ligne `Écart` par paire `(e, w)` dans `MatrixTableMode.tsx` (`renderGapRow`, valeur absolue par colonne self/pair/scientifique + phrase d'interprétation). Mode **Graphique** → bloc `GapPanel` par paire avec pills `Auto` / `Pair #N` / `Scientifique` dans `MatrixChartMode.tsx`. Les paires sont construites par `buildDimensionBlocks` à partir de `result_dims[].diff_pairs` (ou fallback `scores` consécutifs) — comportement inchangé par l'allègement |
 
 ### Niveau 2 — Repère de transparence
 
@@ -199,7 +199,7 @@ Le gros de la **gouvernance et du parcours participant** est en place. Les chant
 **Bloc 3 — Vue résultats participant (2 j)**
 7. ~~Filtres « comment mes pairs me voient ».~~ ✅ Fait (2026-05-06) — perspective `'received'` codée en dur dans `results.tsx:36`, pas de toggle UI nécessaire.
 8. ~~Retrait colonnes « comment je vois les autres ».~~ ✅ Fait (2026-05-06) — conséquence directe du filtre `'received'`.
-9. Libellés d'interprétation des écarts (table fournie par Nora).
+9. ~~Libellés d'interprétation des écarts (table fournie par Nora).~~ ✅ Fait (2026-05-08) — phrases déjà dans le catalogue (`diff_pairs.if_e_gt`/`if_w_gt`), affichées par colonne sous chaque écart (self, chaque pair, scientifique) en mode Tableau (`MatrixTableMode`) et Graphique (`MatrixChartMode`). Checkbox « Afficher les interprétations » dans `QuestionnaireMatrixDisplay` (cochée par défaut). Règle « sauf écart 0 » implicite : aucune phrase quand les deux valeurs sont égales ou null.
 10. ~~Tooltips commentaires pairs (dépend du bloc 2).~~ ✅ Fait (2026-05-06) — `peer_comments` ajouté au DTO matrix, icône `MessageSquareText` + `Tooltip` MUI dans `MatrixTableMode` et `MatrixChartMode` (couvre participant ET admin/coach).
 
 **Bloc 4 — Vue synthèse coach/admin (2 j)**
@@ -219,6 +219,14 @@ Le gros de la **gouvernance et du parcours participant** est en place. Les chant
 ---
 
 ## Notes de recette à mener (carry-over de l'avancement précédent)
+
+9. **Libellés d'interprétation des écarts** (2026-05-08) :
+   - Sur `/campaigns/:id/results`, vue Élément Humain (Comportement / Valeurs), mode **Tableau** : pour chaque ligne « Écart » d'une paire « je suis / je veux », vérifier que sous chaque cellule numérique (self, chaque pair, scientifique) une phrase italique apparaît, **différente** selon la direction de l'écart de la colonne (ex. `eRow.self > wRow.self` → phrase `if_e_gt`, sinon `if_w_gt`).
+   - Cas où les deux valeurs sont **égales** (écart 0) ou l'une est `null` → **aucune** phrase n'est rendue (règle PDF « sauf écart 0 »).
+   - Vue **Graphique** : sous chaque pill d'écart (Auto / Pair #N / Scientifique), même phrase, même règle de direction. Largeur du bloc bornée par `maxWidth: 240` pour ne pas casser la mise en page.
+   - **Checkbox « Afficher les interprétations »** dans la barre d'actions (à gauche du toggle Tableau/Graphique) : cochée par défaut. La décocher → toutes les phrases disparaissent dans les deux modes (les valeurs numériques d'écart restent). La recocher → réapparaissent.
+   - Asymétrie attendue : un questionnaire **sans** `diff_pairs` (paires construites par fallback sur `scores`) → pas de phrase, pas d'erreur. Vérifier sur Élément Humain Valeurs (mêmes structures que Comportement, cf. catalog) et sur tout questionnaire futur sans cette table.
+   - Vue admin/coach `/admin/participants/:id/matrix` et `/coach/participants/:id/matrix` : mêmes phrases visibles (DTO matrix unifié, composant partagé).
 
 8. **Autosave brouillon Élément B** (2026-05-08) :
    - Migration `0018_early_mimic.sql` appliquée (`pnpm --filter @aor/drizzle db:migrate`).

@@ -18,9 +18,10 @@ import { type PairBlock, absDiff, buildDimensionBlocks } from './pairBuilder';
 
 type MatrixTableModeProps = {
     matrix: ParticipantQuestionnaireMatrix;
+    showInterpretations?: boolean;
 };
 
-export function MatrixTableMode({ matrix }: MatrixTableModeProps) {
+export function MatrixTableMode({ matrix, showInterpretations = true }: MatrixTableModeProps) {
     const peerHeaders = matrix.peer_columns.map(c => c.label);
     const blocks = buildDimensionBlocks(matrix);
     const totalCols = 2 + peerHeaders.length + 1;
@@ -79,12 +80,39 @@ export function MatrixTableMode({ matrix }: MatrixTableModeProps) {
         const sciGap = absDiff(pair.eRow.scientific, pair.wRow.scientific);
         const peerGaps = pair.eRow.peers.map((e, i) => absDiff(e, pair.wRow.peers[i] ?? null));
         const fmt = (v: number | null) => (v === null ? '—' : v);
+        const pickGapLabel = (a: number | null, b: number | null): string | null => {
+            if (a === null || b === null || !pair.ifEGt || !pair.ifWGt) return null;
+            if (a > b) return pair.ifEGt;
+            if (b > a) return pair.ifWGt;
+            return null;
+        };
+        const renderGapCell = (
+            value: number | null,
+            label: string | null,
+            sx: Record<string, unknown>,
+            key: string
+        ) => (
+            <TableCell key={key} align="center" sx={{ verticalAlign: 'top', ...sx }}>
+                <Stack spacing={0.5} alignItems="center">
+                    <span>{fmt(value)}</span>
+                    {showInterpretations && label !== null && (
+                        <Typography
+                            variant="caption"
+                            color="text.primary"
+                            sx={{ fontStyle: 'italic', fontWeight: 400, lineHeight: 1.35 }}
+                        >
+                            {label}
+                        </Typography>
+                    )}
+                </Stack>
+            </TableCell>
+        );
         return (
             <TableRow
                 key={`gap-${pair.eRow.score_key}-${pair.wRow.score_key}`}
                 sx={{ bgcolor: 'rgba(15,23,42,0.025)' }}
             >
-                <TableCell sx={{ py: 1.2 }}>
+                <TableCell sx={{ py: 1.2, verticalAlign: 'top' }}>
                     <Typography
                         variant="caption"
                         fontWeight={800}
@@ -94,21 +122,26 @@ export function MatrixTableMode({ matrix }: MatrixTableModeProps) {
                         Écart
                     </Typography>
                 </TableCell>
-                <TableCell align="center" sx={{ fontWeight: 800, color: 'primary.main' }}>
-                    {fmt(selfGap)}
-                </TableCell>
-                {peerGaps.map((g, i) => (
-                    <TableCell
-                        key={`gap-${pair.eRow.score_key}-peer-${matrix.peer_columns[i]?.response_id ?? i}`}
-                        align="center"
-                        sx={{ fontWeight: 700, color: 'text.secondary' }}
-                    >
-                        {fmt(g)}
-                    </TableCell>
-                ))}
-                <TableCell align="center" sx={{ fontWeight: 800, color: '#10b981' }}>
-                    {fmt(sciGap)}
-                </TableCell>
+                {renderGapCell(
+                    selfGap,
+                    pickGapLabel(pair.eRow.self, pair.wRow.self),
+                    { fontWeight: 800, color: 'primary.main' },
+                    `gap-${pair.eRow.score_key}-self`
+                )}
+                {peerGaps.map((g, i) =>
+                    renderGapCell(
+                        g,
+                        pickGapLabel(pair.eRow.peers[i] ?? null, pair.wRow.peers[i] ?? null),
+                        { fontWeight: 700, color: 'text.secondary' },
+                        `gap-${pair.eRow.score_key}-peer-${matrix.peer_columns[i]?.response_id ?? i}`
+                    )
+                )}
+                {renderGapCell(
+                    sciGap,
+                    pickGapLabel(pair.eRow.scientific, pair.wRow.scientific),
+                    { fontWeight: 800, color: '#10b981' },
+                    `gap-${pair.eRow.score_key}-sci`
+                )}
             </TableRow>
         );
     };

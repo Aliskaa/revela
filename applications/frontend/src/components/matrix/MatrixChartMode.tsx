@@ -2,10 +2,11 @@ import type { ParticipantQuestionnaireMatrix, ParticipantQuestionnaireMatrixRow 
 import { Box, Chip, LinearProgress, Paper, Stack, Tooltip, Typography } from '@mui/material';
 import { MessageSquareText } from 'lucide-react';
 
-import { type DimensionBlock, absDiff, buildDimensionBlocks } from './pairBuilder';
+import { type DimensionBlock, type PairBlock, absDiff, buildDimensionBlocks } from './pairBuilder';
 
 type MatrixChartModeProps = {
     matrix: ParticipantQuestionnaireMatrix;
+    showInterpretations?: boolean;
 };
 
 function pct(value: number | null, max: number): number {
@@ -135,18 +136,54 @@ function RowBars({ matrix, row }: { matrix: ParticipantQuestionnaireMatrix; row:
     );
 }
 
+function GapBlock({
+    pillLabel,
+    gap,
+    color,
+    interpretation,
+    showInterpretations,
+}: {
+    pillLabel: string;
+    gap: number | null;
+    color: string;
+    interpretation: string | null;
+    showInterpretations: boolean;
+}) {
+    return (
+        <Stack spacing={0.6} alignItems="flex-start" sx={{ minWidth: 140, maxWidth: 240 }}>
+            <GapPill label={pillLabel} gap={gap} color={color} />
+            {showInterpretations && interpretation !== null && (
+                <Typography
+                    variant="caption"
+                    color="text.primary"
+                    sx={{ fontStyle: 'italic', lineHeight: 1.35 }}
+                >
+                    {interpretation}
+                </Typography>
+            )}
+        </Stack>
+    );
+}
+
 function GapPanel({
     matrix,
-    eRow,
-    wRow,
+    pair,
+    showInterpretations,
 }: {
     matrix: ParticipantQuestionnaireMatrix;
-    eRow: ParticipantQuestionnaireMatrixRow;
-    wRow: ParticipantQuestionnaireMatrixRow;
+    pair: PairBlock;
+    showInterpretations: boolean;
 }) {
+    const { eRow, wRow, ifEGt, ifWGt } = pair;
     const selfGap = absDiff(eRow.self, wRow.self);
     const sciGap = absDiff(eRow.scientific, wRow.scientific);
     const peerGaps = eRow.peers.map((e, i) => absDiff(e, wRow.peers[i] ?? null));
+    const pickGapLabel = (a: number | null, b: number | null): string | null => {
+        if (a === null || b === null || !ifEGt || !ifWGt) return null;
+        if (a > b) return ifEGt;
+        if (b > a) return ifWGt;
+        return null;
+    };
 
     return (
         <Box
@@ -167,23 +204,45 @@ function GapPanel({
             >
                 Écart |je suis − je veux|
             </Typography>
-            <Stack direction="row" flexWrap="wrap" gap={1} useFlexGap>
-                <GapPill label="Auto" gap={selfGap} color="#1515B0" />
+            <Stack direction="row" flexWrap="wrap" gap={1.4} useFlexGap alignItems="flex-start">
+                <GapBlock
+                    pillLabel="Auto"
+                    gap={selfGap}
+                    color="#1515B0"
+                    interpretation={pickGapLabel(eRow.self, wRow.self)}
+                    showInterpretations={showInterpretations}
+                />
                 {peerGaps.map((g, i) => (
-                    <GapPill
+                    <GapBlock
                         key={`gap-peer-${matrix.peer_columns[i]?.response_id ?? i}`}
-                        label={matrix.peer_columns[i]?.label ?? `Pair ${i + 1}`}
+                        pillLabel={matrix.peer_columns[i]?.label ?? `Pair ${i + 1}`}
                         gap={g}
                         color="#0EA5C9"
+                        interpretation={pickGapLabel(eRow.peers[i] ?? null, wRow.peers[i] ?? null)}
+                        showInterpretations={showInterpretations}
                     />
                 ))}
-                <GapPill label="Scientifique" gap={sciGap} color="#10b981" />
+                <GapBlock
+                    pillLabel="Scientifique"
+                    gap={sciGap}
+                    color="#10b981"
+                    interpretation={pickGapLabel(eRow.scientific, wRow.scientific)}
+                    showInterpretations={showInterpretations}
+                />
             </Stack>
         </Box>
     );
 }
 
-function DimensionCard({ matrix, block }: { matrix: ParticipantQuestionnaireMatrix; block: DimensionBlock }) {
+function DimensionCard({
+    matrix,
+    block,
+    showInterpretations,
+}: {
+    matrix: ParticipantQuestionnaireMatrix;
+    block: DimensionBlock;
+    showInterpretations: boolean;
+}) {
     return (
         <Paper variant="outlined" sx={{ borderRadius: 2.5, p: { xs: 2, sm: 3 } }}>
             {block.name.length > 0 && (
@@ -204,9 +263,9 @@ function DimensionCard({ matrix, block }: { matrix: ParticipantQuestionnaireMatr
             )}
 
             <Stack spacing={2.5}>
-                {block.pairs.map(({ eRow, wRow }) => (
+                {block.pairs.map(pair => (
                     <Box
-                        key={`pair-${eRow.score_key}-${wRow.score_key}`}
+                        key={`pair-${pair.eRow.score_key}-${pair.wRow.score_key}`}
                         sx={{
                             border: '1px solid',
                             borderColor: 'divider',
@@ -216,10 +275,10 @@ function DimensionCard({ matrix, block }: { matrix: ParticipantQuestionnaireMatr
                         }}
                     >
                         <Stack spacing={2}>
-                            <RowBars matrix={matrix} row={eRow} />
-                            <RowBars matrix={matrix} row={wRow} />
+                            <RowBars matrix={matrix} row={pair.eRow} />
+                            <RowBars matrix={matrix} row={pair.wRow} />
                         </Stack>
-                        <GapPanel matrix={matrix} eRow={eRow} wRow={wRow} />
+                        <GapPanel matrix={matrix} pair={pair} showInterpretations={showInterpretations} />
                     </Box>
                 ))}
 
@@ -242,12 +301,17 @@ function DimensionCard({ matrix, block }: { matrix: ParticipantQuestionnaireMatr
     );
 }
 
-export function MatrixChartMode({ matrix }: MatrixChartModeProps) {
+export function MatrixChartMode({ matrix, showInterpretations = true }: MatrixChartModeProps) {
     const blocks = buildDimensionBlocks(matrix);
     return (
         <Stack spacing={3}>
             {blocks.map(block => (
-                <DimensionCard key={block.name || 'noname'} matrix={matrix} block={block} />
+                <DimensionCard
+                    key={block.name || 'noname'}
+                    matrix={matrix}
+                    block={block}
+                    showInterpretations={showInterpretations}
+                />
             ))}
         </Stack>
     );

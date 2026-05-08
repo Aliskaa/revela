@@ -64,7 +64,10 @@
       "Bash(pnpm --filter @aor/frontend-app test -- --run useBuildDimensions)",
       "Bash(echo \"EXIT=$?\")",
       "Bash(mkdir -p applications/frontend/src/routes/admin/campaigns/\\\\$campaignId/participants applications/frontend/src/routes/coach/campaigns/\\\\$campaignId/participants)",
-      "Bash(rm applications/frontend/src/routes/admin/participants/\\\\$participantId.matrix.tsx applications/frontend/src/routes/coach/participants/\\\\$participantId.matrix.tsx)"
+      "Bash(rm applications/frontend/src/routes/admin/participants/\\\\$participantId.matrix.tsx applications/frontend/src/routes/coach/participants/\\\\$participantId.matrix.tsx)",
+      "Bash(echo \"exit=$?\")",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)"
     ],
     "additionalDirectories": [
       "C:\\Users\\kevin\\Documents\\DataLoco\\Nora\\base\\questionnaire-platform\\applications\\frontend\\src\\routes\\admin\\campaigns\\$campaignId",

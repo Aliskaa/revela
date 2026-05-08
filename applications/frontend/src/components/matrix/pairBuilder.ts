@@ -3,6 +3,8 @@ import type { ParticipantQuestionnaireMatrix, ParticipantQuestionnaireMatrixRow,
 export type PairBlock = {
     eRow: ParticipantQuestionnaireMatrixRow;
     wRow: ParticipantQuestionnaireMatrixRow;
+    ifEGt?: string;
+    ifWGt?: string;
 };
 
 export type DimensionBlock = {
@@ -27,7 +29,7 @@ const buildPairsFromDim = (
             const eRow = rowByKey.get(pair.e);
             const wRow = rowByKey.get(pair.w);
             if (eRow && wRow) {
-                pairs.push({ eRow, wRow });
+                pairs.push({ eRow, wRow, ifEGt: pair.if_e_gt, ifWGt: pair.if_w_gt });
                 consumed.add(pair.e);
                 consumed.add(pair.w);
             }
