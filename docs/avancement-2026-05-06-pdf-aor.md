@@ -22,18 +22,18 @@
 | 4. Invitation & RGPD | 5 | 0 | 0 | 1 |
 | 5. Regard sur soi | 1 | 0 | 0 | 1 |
 | 6. Feedback des pairs | 5 | 0 | 0 | — |
-| 7. Questionnaire Élément B | 2 | 0 | 1 | — |
+| 7. Questionnaire Élément B | 3 | 0 | 0 | — |
 | 8. Résultats Participant | 5 | 0 | 2 | 1 |
 | 9. Vue de synthèse Admin/Coach | 1 | 0 | 2 | 1 |
 | 10. IA & retour formateur/coach | 0 | 0 | 4 | — |
 | 11. Hébergement & domaine | 0 | 0 | 1 | 1 |
-| **Total court terme** | **33** | **0** | **10** | **5** |
+| **Total court terme** | **34** | **0** | **9** | **5** |
 
 Le gros de la **gouvernance et du parcours participant** est en place. Les chantiers restants sont concentrés sur :
 1. La **vue résultats participant** : restent les **libellés d'interprétation des écarts** (texte attendu de Nora). Filtres « pairs me voient », retrait colonnes « je vois les autres » et **tooltips commentaires pairs** : faits (2026-05-06).
 2. La **vue de synthèse Admin/Coach** (matrice globale + mise en lumière manuelle). Dates parcours : faites.
 3. L'**IA & retour coach** (chantier complet, en attente du choix modèle / prompt côté Laurent).
-4. L'**autosave Élément B** (54×2 réponses — questionnaire long). Pas d'autosave sur le regard sur soi (décision 2026-05-06 : trop court pour le justifier).
+4. ~~L'**autosave Élément B** (54×2 réponses — questionnaire long).~~ ✅ Fait (2026-05-08, brouillon serveur dédié + hydratation au reload). Pas d'autosave sur le regard sur soi (décision 2026-05-06 : trop court pour le justifier).
 5. La **notification cloche** côté entreprise (la recherche participant est livrée — cf. section 3).
 6. L'**hébergement** sous `revela.cabinet-aor.fr`.
 
@@ -108,7 +108,7 @@ Le gros de la **gouvernance et du parcours participant** est en place. Les chant
 |---|---|---|---|---|
 | ✅ | Participant | Simplifier la page : retirer bloc « résumé / dimensions » et éléments parasites | Fait (2026-05-08) | Décision : la page d'accueil intermédiaire `/test/` (ancien `routes/_participant/test/index.tsx`) est **supprimée**. Le clic sur la card « Test Élément Humain » depuis `/campaigns/:id` route directement vers `/test/$questionnaireCode` (première question). Navigation corrigée dans `routes/_participant/campaigns/$campaignId/index.tsx:55-74` (branche `routeKind === 'test'` qui résout `assignment.questionnaire_id`). `routeTree.gen.ts` régénéré par le plugin Vite TanStack — plus aucune référence à `ParticipantTestIndex`. Simplification ultime : on saute la page de présentation puisque le contexte (chip « Test Élément Humain », titre, description, StatCards Séries/Questions, card Dimensions) est déjà rendu sur la page de test elle-même |
 | ✅ | Participant | Paragraphe descriptif du questionnaire à insérer | Fait (2026-05-08) | Résolu par la suppression de la page intermédiaire (item ci-dessus). L'en-tête de `routes/_participant/test/$questionnaireCode.tsx:399-405` affiche déjà `detail.description` (description venant de la donnée questionnaire côté API). Si Nora veut affiner ce texte, il se met à jour côté contenu (seed/BDD du questionnaire) sans toucher au code |
-| ❌ | Participant | Enregistrement automatique des réponses entre les deux séries (54×2) | Pas fait | Idem section 5 — pas d'autosave. Chantier sécurité anti-déconnexion |
+| ✅ | Participant | Enregistrement automatique des réponses entre les deux séries (54×2) | Fait (2026-05-08) | Brouillon serveur dédié : table `element_b_drafts` (migration `0018_early_mimic.sql`, jsonb `series0`/`series1` + `last_saved_at`, clé unique `participant × campaign × questionnaire`). Backend : 2 endpoints `GET/PUT /participant/campaigns/:campaignId/questionnaires/:qid/draft` (zod `upsertElementBDraftBodySchema`, garde-fous : campagne active, participation jointe, pas déjà soumis). Use case `SubmitParticipantQuestionnaireUseCase` supprime le brouillon après création de la réponse `element_humain` (cleanup transactionnel logique). Frontend : hooks `useElementBDraft` + `useUpsertElementBDraft` (questionnaires.ts) avec invalidation queryKey sur submit final ; page `routes/_participant/test/$questionnaireCode.tsx` lift `seriesIndex`/`questionIndex` au parent + hydratation guardée `hydratedFromKeyRef` (évite le reset à chaque re-render). Autosave fire-and-forget à chaque transition `series N → N+1` (cf. décision Nora « à chaque fin de série »). Indicateur visuel `Save` chip pendant `upsertDraft.isPending` + 2 snackbars (« Brouillon enregistré » au save, « Brouillon repris » à l'hydratation). Échec réseau autosave silencieux : le participant continue en mémoire locale plutôt qu'être bloqué |
 
 ---
 
@@ -192,7 +192,7 @@ Le gros de la **gouvernance et du parcours participant** est en place. Les chant
 3. ~~Décision et application : route `/privacy` ↔ `/confidentialité` (alias ou rename).~~ ✅ Fait (2026-05-06) — rename `/privacy` → `/confidentiality` (anglais sans accent pour éviter les pièges d'encodage URL ; libellé visible reste « Politique de confidentialité »). Liens mis à jour dans invite, profile et footer ; `routeTree.gen.ts` régénéré.
 
 **Bloc 2 — Parcours participant manquants (2-3 j)**
-4. Autosave Élément B uniquement (section 7) — décision 2026-05-06 : **pas d'autosave sur le regard sur soi** (questionnaire court, soumission manuelle suffit).
+4. ~~Autosave Élément B uniquement (section 7).~~ ✅ Fait (2026-05-08) — décision 2026-05-06 : **pas d'autosave sur le regard sur soi** (questionnaire court, soumission manuelle suffit). Implémentation : table `element_b_drafts` (jsonb série 0 / série 1, migration `0018_early_mimic.sql`), endpoints `GET/PUT .../draft` côté backend, hooks `useElementBDraft`/`useUpsertElementBDraft` côté frontend, autosave fire-and-forget à chaque transition de série, hydratation au mount avec reprise position. Brouillon supprimé automatiquement à la soumission finale.
 5. ~~Commentaire optionnel pair, max 150 caractères (section 6) — schéma DB + UI + validation.~~ ✅ Fait (2026-05-06) — décision design : commentaire **par note** (pas global). Migration `0017_amusing_bedlam.sql` + Zod + use case + UI bouton `+` dans `RatingDimensionCard`. Garde-fou serveur 150 chars + rejet commentaires orphelins.
 6. ~~Paragraphe descriptif Élément B.~~ ✅ Fait (2026-05-08) — résolu par la suppression de la page d'accueil intermédiaire `/test/`. Le participant arrive directement sur la première question, dont l'en-tête affiche déjà `detail.description` venant de la donnée questionnaire (API). Mise à jour du texte = mise à jour côté contenu, pas côté code.
 
@@ -219,6 +219,15 @@ Le gros de la **gouvernance et du parcours participant** est en place. Les chant
 ---
 
 ## Notes de recette à mener (carry-over de l'avancement précédent)
+
+8. **Autosave brouillon Élément B** (2026-05-08) :
+   - Migration `0018_early_mimic.sql` appliquée (`pnpm --filter @aor/drizzle db:migrate`).
+   - Remplir 54 réponses série 0 puis cliquer **Suivant** sur Q54 → DevTools réseau : 1 requête `PUT /participant/campaigns/:id/questionnaires/B/draft` avec body `{ "series0": [54 ints] }`. Snackbar « Brouillon enregistré ». Chip `Save` visible pendant `isPending`.
+   - Recharger la page (F5) ou se reconnecter sur un autre navigateur → la page de test charge le brouillon (`GET .../draft`), hydrate les 54 réponses série 0 et atterrit directement sur **série 2 question 1**. Snackbar « Brouillon repris ».
+   - Soumission finale (clic « Terminer et envoyer ») → vérifier que `GET .../draft` répond `{ draft: null }` après. La query React Query est invalidée automatiquement (cf. `useSubmitParticipantQuestionnaire.onSuccess`).
+   - Cas erreur réseau autosave (couper le wifi, cliquer Suivant) : la mutation échoue silencieusement (pas de toast bloquant), le participant peut continuer en mémoire locale sans interruption. La saisie n'est sauvée qu'à la prochaine transition réseau-OK ou à la soumission finale.
+   - Garde-fous backend : tentative `PUT` après soumission finale → 400 « Test scientifique deja soumis ». Tentative `PUT` sans `joined_at` → 400 « confirmer votre participation ». Tentative `PUT` sur campagne `closed`/`archived` → 400. Body invalide (longueur ≠ 54, valeur > 5) → 400 zod.
+   - Asymétrie attendue : pas de brouillon serveur côté regard sur soi (décision Nora — section 5 PDF, questionnaire trop court).
 
 1. **P14 / P16 — Anonymisation pairs côté participant** : avec ≥ 1 pair ayant feedbacké le participant connecté, vérifier sur `/campaigns/:id/results` que les colonnes affichent `Pair #1`, `Pair #2`… (pas de prénoms) et que les valeurs correspondent aux notes **reçues** (pas données).
 2. **Vue admin/coach matrice** : colonnes pairs montrent les **noms** (pas d'anonymat) et **feedbacks reçus** par le participant consulté.

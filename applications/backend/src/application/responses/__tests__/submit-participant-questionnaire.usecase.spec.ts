@@ -10,6 +10,7 @@ import type {
     IParticipantsIdentityReaderPort,
     IParticipantsInviteAssignmentsReaderPort,
 } from '@src/interfaces/participants/IParticipantsRepository.port';
+import type { IElementBDraftsRepositoryPort } from '@src/interfaces/responses/IElementBDraftsRepository.port';
 import type {
     IResponsesSubmissionReaderPort,
     IResponsesWriterPort,
@@ -17,6 +18,14 @@ import type {
 import { expect, test } from 'vitest';
 
 import { SubmitParticipantQuestionnaireUseCase } from '../submit-participant-questionnaire.usecase';
+
+const elementBDrafts = {
+    findByKey: async () => null,
+    upsert: async () => {
+        throw new Error('not used in submit tests');
+    },
+    deleteByKey: async () => true,
+} as unknown as IElementBDraftsRepositoryPort;
 
 const participant = Participant.hydrate({
     id: 7,
@@ -104,6 +113,7 @@ test('scientific test is rejected until manual inputs are completed when campaig
         companies,
         campaigns: campaign(false),
         responses: responses(created),
+        elementBDrafts,
     });
 
     await expect(useCase.execute(participant.id, 'B', scientificPayload, 11)).rejects.toBeInstanceOf(
@@ -119,6 +129,7 @@ test('scientific test can be submitted before manual inputs when campaign allows
         companies,
         campaigns: campaign(true),
         responses: responses(created),
+        elementBDrafts,
     });
 
     const result = await useCase.execute(participant.id, 'B', scientificPayload, 11);
@@ -163,6 +174,7 @@ test('peer rating persists trimmed comments aligned with their score keys', asyn
         companies,
         campaigns: campaign(false),
         responses: responses(created),
+        elementBDrafts,
     });
 
     await useCase.execute(
@@ -190,6 +202,7 @@ test('peer rating rejects comments orphelins (clé sans note correspondante)', a
         companies,
         campaigns: campaign(false),
         responses: responses(created),
+        elementBDrafts,
     });
 
     await expect(
@@ -212,6 +225,7 @@ test('peer rating rejects comments > 150 caractères', async () => {
         companies,
         campaigns: campaign(false),
         responses: responses(created),
+        elementBDrafts,
     });
 
     const tooLong = 'a'.repeat(151);

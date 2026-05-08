@@ -14,8 +14,10 @@ import { GetParticipantSessionQuestionnaireMatrixUseCase } from '@src/applicatio
 import { GetParticipantSessionUseCase } from '@src/application/participant-session/get-participant-session.usecase';
 import { ListParticipantCampaignPeersUseCase } from '@src/application/participant-session/list-participant-campaign-peers.usecase';
 import { ParticipantLoginUseCase } from '@src/application/participant-session/participant-login.usecase';
+import { GetParticipantElementBDraftUseCase } from '@src/application/responses/get-participant-element-b-draft.usecase';
 import { GetParticipantOwnedResponseUseCase } from '@src/application/responses/get-participant-owned-response.usecase';
 import { SubmitParticipantQuestionnaireUseCase } from '@src/application/responses/submit-participant-questionnaire.usecase';
+import { UpsertParticipantElementBDraftUseCase } from '@src/application/responses/upsert-participant-element-b-draft.usecase';
 import { GetOwnParticipantTransparencyScoreUseCase } from '@src/application/transparency/get-own-participant-transparency-score.usecase';
 import {
     CAMPAIGNS_REPOSITORY_PORT_SYMBOL,
@@ -40,6 +42,10 @@ import {
     PARTICIPANTS_REPOSITORY_PORT_SYMBOL,
 } from '@src/interfaces/participants/IParticipantsRepository.port';
 import {
+    ELEMENT_B_DRAFTS_REPOSITORY_PORT_SYMBOL,
+    type IElementBDraftsRepositoryPort,
+} from '@src/interfaces/responses/IElementBDraftsRepository.port';
+import {
     type IResponsesRecordReaderPort,
     type IResponsesSubmissionReaderPort,
     type IResponsesWriterPort,
@@ -56,6 +62,7 @@ import {
     CONFIRM_PEER_FEEDBACK_USE_CASE_SYMBOL,
     EXPORT_PARTICIPANT_SELF_DATA_USE_CASE_SYMBOL,
     GET_OWN_PARTICIPANT_TRANSPARENCY_SCORE_USE_CASE_SYMBOL,
+    GET_PARTICIPANT_ELEMENT_B_DRAFT_USE_CASE_SYMBOL,
     GET_PARTICIPANT_OWNED_RESPONSE_USE_CASE_SYMBOL,
     GET_PARTICIPANT_QUESTIONNAIRE_MATRIX_USE_CASE_SYMBOL,
     GET_PARTICIPANT_SESSION_QUESTIONNAIRE_MATRIX_USE_CASE_SYMBOL,
@@ -63,6 +70,7 @@ import {
     LIST_PARTICIPANT_CAMPAIGN_PEERS_USE_CASE_SYMBOL,
     PARTICIPANT_LOGIN_USE_CASE_SYMBOL,
     SUBMIT_PARTICIPANT_QUESTIONNAIRE_USE_CASE_SYMBOL,
+    UPSERT_PARTICIPANT_ELEMENT_B_DRAFT_USE_CASE_SYMBOL,
 } from './participant.tokens';
 
 @Module({
@@ -154,13 +162,56 @@ import {
                     IParticipantsCampaignStateReaderPort,
                 companies: ICompaniesReadPort,
                 campaigns: ICampaignsReadPort,
-                responses: IResponsesWriterPort & IResponsesSubmissionReaderPort
-            ) => new SubmitParticipantQuestionnaireUseCase({ participants, companies, campaigns, responses }),
+                responses: IResponsesWriterPort & IResponsesSubmissionReaderPort,
+                elementBDrafts: IElementBDraftsRepositoryPort
+            ) =>
+                new SubmitParticipantQuestionnaireUseCase({
+                    participants,
+                    companies,
+                    campaigns,
+                    responses,
+                    elementBDrafts,
+                }),
             inject: [
                 PARTICIPANTS_REPOSITORY_PORT_SYMBOL,
                 COMPANIES_REPOSITORY_PORT_SYMBOL,
                 CAMPAIGNS_REPOSITORY_PORT_SYMBOL,
                 RESPONSES_REPOSITORY_PORT_SYMBOL,
+                ELEMENT_B_DRAFTS_REPOSITORY_PORT_SYMBOL,
+            ],
+        },
+        {
+            provide: GET_PARTICIPANT_ELEMENT_B_DRAFT_USE_CASE_SYMBOL,
+            useFactory: (
+                participants: IParticipantsIdentityReaderPort & IParticipantsCampaignStateReaderPort,
+                campaigns: ICampaignsReadPort,
+                drafts: IElementBDraftsRepositoryPort
+            ) => new GetParticipantElementBDraftUseCase({ participants, campaigns, drafts }),
+            inject: [
+                PARTICIPANTS_REPOSITORY_PORT_SYMBOL,
+                CAMPAIGNS_REPOSITORY_PORT_SYMBOL,
+                ELEMENT_B_DRAFTS_REPOSITORY_PORT_SYMBOL,
+            ],
+        },
+        {
+            provide: UPSERT_PARTICIPANT_ELEMENT_B_DRAFT_USE_CASE_SYMBOL,
+            useFactory: (
+                participants: IParticipantsIdentityReaderPort & IParticipantsCampaignStateReaderPort,
+                campaigns: ICampaignsReadPort,
+                responses: IResponsesSubmissionReaderPort,
+                drafts: IElementBDraftsRepositoryPort
+            ) =>
+                new UpsertParticipantElementBDraftUseCase({
+                    participants,
+                    campaigns,
+                    responses,
+                    drafts,
+                }),
+            inject: [
+                PARTICIPANTS_REPOSITORY_PORT_SYMBOL,
+                CAMPAIGNS_REPOSITORY_PORT_SYMBOL,
+                RESPONSES_REPOSITORY_PORT_SYMBOL,
+                ELEMENT_B_DRAFTS_REPOSITORY_PORT_SYMBOL,
             ],
         },
         {

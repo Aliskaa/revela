@@ -10,6 +10,7 @@ import {
     ParseIntPipe,
     Patch,
     Post,
+    Put,
     Query,
     Req,
     Res,
@@ -34,8 +35,10 @@ import type { GetParticipantSessionQuestionnaireMatrixUseCase } from '@src/appli
 import type { GetParticipantSessionUseCase } from '@src/application/participant-session/get-participant-session.usecase';
 import type { ListParticipantCampaignPeersUseCase } from '@src/application/participant-session/list-participant-campaign-peers.usecase';
 import type { ParticipantLoginUseCase } from '@src/application/participant-session/participant-login.usecase';
+import type { GetParticipantElementBDraftUseCase } from '@src/application/responses/get-participant-element-b-draft.usecase';
 import type { GetParticipantOwnedResponseUseCase } from '@src/application/responses/get-participant-owned-response.usecase';
 import type { SubmitParticipantQuestionnaireUseCase } from '@src/application/responses/submit-participant-questionnaire.usecase';
+import type { UpsertParticipantElementBDraftUseCase } from '@src/application/responses/upsert-participant-element-b-draft.usecase';
 import type { GetOwnParticipantTransparencyScoreUseCase } from '@src/application/transparency/get-own-participant-transparency-score.usecase';
 import {
     type IParticipantJwtSignerPort,
@@ -60,12 +63,14 @@ import {
     CONFIRM_PEER_FEEDBACK_USE_CASE_SYMBOL,
     EXPORT_PARTICIPANT_SELF_DATA_USE_CASE_SYMBOL,
     GET_OWN_PARTICIPANT_TRANSPARENCY_SCORE_USE_CASE_SYMBOL,
+    GET_PARTICIPANT_ELEMENT_B_DRAFT_USE_CASE_SYMBOL,
     GET_PARTICIPANT_OWNED_RESPONSE_USE_CASE_SYMBOL,
     GET_PARTICIPANT_SESSION_QUESTIONNAIRE_MATRIX_USE_CASE_SYMBOL,
     GET_PARTICIPANT_SESSION_USE_CASE_SYMBOL,
     LIST_PARTICIPANT_CAMPAIGN_PEERS_USE_CASE_SYMBOL,
     PARTICIPANT_LOGIN_USE_CASE_SYMBOL,
     SUBMIT_PARTICIPANT_QUESTIONNAIRE_USE_CASE_SYMBOL,
+    UPSERT_PARTICIPANT_ELEMENT_B_DRAFT_USE_CASE_SYMBOL,
 } from './participant.tokens';
 
 @ApiTags('participant')
@@ -93,6 +98,10 @@ export class ParticipantController {
         private readonly exportParticipantSelfData: ExportParticipantSelfDataUseCase,
         @Inject(GET_OWN_PARTICIPANT_TRANSPARENCY_SCORE_USE_CASE_SYMBOL)
         private readonly getOwnParticipantTransparencyScore: GetOwnParticipantTransparencyScoreUseCase,
+        @Inject(GET_PARTICIPANT_ELEMENT_B_DRAFT_USE_CASE_SYMBOL)
+        private readonly getParticipantElementBDraft: GetParticipantElementBDraftUseCase,
+        @Inject(UPSERT_PARTICIPANT_ELEMENT_B_DRAFT_USE_CASE_SYMBOL)
+        private readonly upsertParticipantElementBDraft: UpsertParticipantElementBDraftUseCase,
         @Inject(REFRESH_TOKEN_MANAGER_SYMBOL)
         private readonly refreshTokens: RefreshTokenManagerUseCase,
         @Inject(PARTICIPANT_JWT_SIGNER_PORT_SYMBOL)
@@ -359,6 +368,37 @@ export class ParticipantController {
         @Body() body: unknown
     ) {
         return this.submitParticipantQuestionnaire.execute(participantId, qid, body, campaignId);
+    }
+
+    /**
+     * Brouillon Élément Humain (autosave). Le frontend le PUT à la fin de la série 0
+     * (54 réponses) pour qu'une déconnexion entre la série 0 et la série 1 ne fasse
+     * pas tout perdre. Le brouillon est supprimé automatiquement après la soumission
+     * finale (`/questionnaires/:qid/submit`).
+     */
+    @Get('campaigns/:campaignId/questionnaires/:qid/draft')
+    @UseGuards(ParticipantJwtAuthGuard)
+    @UseFilters(ResponsesExceptionFilter, ParticipantSessionExceptionFilter)
+    public async getCampaignQuestionnaireDraft(
+        @CurrentParticipantId() participantId: number,
+        @Param('campaignId', ParseIntPipe) campaignId: number,
+        @Param('qid') qid: string
+    ) {
+        const draft = await this.getParticipantElementBDraft.execute(participantId, campaignId, qid);
+        return { draft };
+    }
+
+    @Put('campaigns/:campaignId/questionnaires/:qid/draft')
+    @UseGuards(ParticipantJwtAuthGuard)
+    @UseFilters(ResponsesExceptionFilter, ParticipantSessionExceptionFilter)
+    public async upsertCampaignQuestionnaireDraft(
+        @CurrentParticipantId() participantId: number,
+        @Param('campaignId', ParseIntPipe) campaignId: number,
+        @Param('qid') qid: string,
+        @Body() body: unknown
+    ) {
+        const draft = await this.upsertParticipantElementBDraft.execute(participantId, campaignId, qid, body);
+        return { draft };
     }
 
     @Get('responses/:responseId')

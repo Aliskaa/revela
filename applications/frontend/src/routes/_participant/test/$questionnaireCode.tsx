@@ -1,13 +1,17 @@
 import * as React from 'react';
 
-import { StatCard } from '@/components/common/cards';
 import { CampaignNotActiveBlock } from '@/components/participant-dashboard/CampaignNotActiveBlock';
 import { StepCompletedBanner } from '@/components/participant-dashboard/StepCompletedBanner';
 import { RatingScale } from '@/components/questionnaire/RatingScale';
 import { useParticipantSession } from '@/hooks/participantSession';
-import { useQuestionnaire, useSubmitParticipantQuestionnaire } from '@/hooks/questionnaires';
+import {
+    useElementBDraft,
+    useQuestionnaire,
+    useSubmitParticipantQuestionnaire,
+    useUpsertElementBDraft,
+} from '@/hooks/questionnaires';
 import { useSelectedAssignment } from '@/hooks/useSelectedAssignment';
-import type { Question } from '@aor/types';
+import type { ElementBDraft, Question } from '@aor/types';
 import {
     Alert,
     Box,
@@ -24,11 +28,9 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import {
     ArrowLeft,
     ArrowRight,
-    BadgeCheck,
-    CircleDot,
-    Hash,
     Heart,
     Loader2,
+    Save,
     Send,
     Sparkles,
     Users
@@ -75,7 +77,59 @@ function ErrorState() {
     );
 }
 
+type AnswersMap = Record<string, number | null>;
+
+/**
+ * Construit une clé `"series-question"` pour stocker une réponse dans la map.
+ * Choisi pour rester sérialisable et permettre une hydratation directe depuis
+ * un brouillon (`series0[i]` → clé `"0-i"`).
+ */
+const answerKey = (seriesIndex: number, questionIndex: number) =>
+    `${String(seriesIndex)}-${String(questionIndex)}`;
+
+/**
+ * Extrait toutes les réponses d'une série depuis la map. Retourne `null` si
+ * une réponse manque (incomplet → ne pas envoyer comme brouillon de série).
+ */
+const collectSeriesAnswers = (
+    answers: AnswersMap,
+    seriesIndex: number,
+    questionCount: number
+): number[] | null => {
+    const out: number[] = [];
+    for (let q = 0; q < questionCount; q++) {
+        const v = answers[answerKey(seriesIndex, q)];
+        if (v === null || v === undefined) return null;
+        out.push(v);
+    }
+    return out;
+};
+
+/**
+ * À partir d'un brouillon serveur, calcule la position de reprise :
+ *  - série 1 (questionIndex 0) si série 0 entièrement remplie
+ *  - sinon début (0, 0).
+ * On ne saute pas dans la série 1 même si elle est remplie : la reprise mid-série
+ * n'est pas un cas réel (on ne sauvegarde qu'en fin de série), et redémarrer série 1
+ * permet au participant de re-vérifier ses réponses si jamais il revient.
+ */
+const computeResumePosition = (
+    draft: ElementBDraft | null,
+    seriesCount: number,
+    questionCount: number
+): { seriesIndex: number; questionIndex: number } => {
+    if (!draft) return { seriesIndex: 0, questionIndex: 0 };
+    if (draft.series0?.length === questionCount && seriesCount > 1) {
+        return { seriesIndex: 1, questionIndex: 0 };
+    }
+    return { seriesIndex: 0, questionIndex: 0 };
+};
+
 function QuestionCard({
+    seriesIndex,
+    questionIndex,
+    onSeriesIndexChange,
+    onQuestionIndexChange,
     seriesLabels,
     questions,
     answers,
@@ -83,21 +137,24 @@ function QuestionCard({
     onSubmit,
     isSubmitting,
     submitError,
+    isAutosaving,
 }: {
+    seriesIndex: number;
+    questionIndex: number;
+    onSeriesIndexChange: (next: number) => void;
+    onQuestionIndexChange: (next: number) => void;
     seriesLabels: string[];
     questions: Question[][];
-    answers: Record<string, number | null>;
+    answers: AnswersMap;
     onAnswer: (key: string, value: number) => void;
     onSubmit: () => void;
     isSubmitting: boolean;
     submitError: boolean;
+    isAutosaving: boolean;
 }) {
     const seriesCount = questions.length;
     const questionCount = questions[0]?.length ?? 0;
     const totalQuestions = seriesCount * questionCount;
-
-    const [seriesIndex, setSeriesIndex] = React.useState(0);
-    const [questionIndex, setQuestionIndex] = React.useState(0);
 
     const currentQuestion = questions[seriesIndex]?.[questionIndex];
     const currentLabel = seriesLabels[seriesIndex] ?? `Série ${String(seriesIndex + 1)}`;
@@ -106,7 +163,7 @@ function QuestionCard({
     const prevDisabled = seriesIndex === 0 && questionIndex === 0;
     const isLastQuestion = seriesIndex === seriesCount - 1 && questionIndex === questionCount - 1;
 
-    const currentKey = `${String(seriesIndex)}-${String(questionIndex)}`;
+    const currentKey = answerKey(seriesIndex, questionIndex);
     const currentAnswer = answers[currentKey] ?? null;
 
     const answeredCount = Object.values(answers).filter(v => v !== null).length;
@@ -114,23 +171,23 @@ function QuestionCard({
 
     const goNext = () => {
         if (questionIndex < questionCount - 1) {
-            setQuestionIndex(v => v + 1);
+            onQuestionIndexChange(questionIndex + 1);
             return;
         }
         if (seriesIndex < seriesCount - 1) {
-            setSeriesIndex(v => v + 1);
-            setQuestionIndex(0);
+            onSeriesIndexChange(seriesIndex + 1);
+            onQuestionIndexChange(0);
         }
     };
 
     const goPrev = () => {
         if (questionIndex > 0) {
-            setQuestionIndex(v => v - 1);
+            onQuestionIndexChange(questionIndex - 1);
             return;
         }
         if (seriesIndex > 0) {
-            setSeriesIndex(v => v - 1);
-            setQuestionIndex(questionCount - 1);
+            onSeriesIndexChange(seriesIndex - 1);
+            onQuestionIndexChange(questionCount - 1);
         }
     };
 
@@ -165,6 +222,19 @@ function QuestionCard({
                             </Typography>
                         </Box>
                         <Stack direction="row" spacing={1} alignItems="center">
+                            {isAutosaving && (
+                                <Chip
+                                    icon={<Save size={14} />}
+                                    label="Sauvegarde…"
+                                    size="small"
+                                    sx={{
+                                        borderRadius: 99,
+                                        bgcolor: 'tint.secondaryBg',
+                                        color: 'tint.secondaryText',
+                                        fontWeight: 700,
+                                    }}
+                                />
+                            )}
                             <Chip
                                 label={`${String(answeredCount)} / ${String(totalQuestions)}`}
                                 size="small"
@@ -296,23 +366,108 @@ function ParticipantTestSessionRoute() {
 
     const { data: detail, isLoading, isError } = useQuestionnaire(questionnaireCode, { enabled: !!questionnaireCode });
     const submitMutation = useSubmitParticipantQuestionnaire(questionnaireCode, campaignId);
+    const draftQuery = useElementBDraft(questionnaireCode, campaignId);
+    const upsertDraft = useUpsertElementBDraft(questionnaireCode, campaignId);
 
-    const [answers, setAnswers] = React.useState<Record<string, number | null>>({});
+    const [answers, setAnswers] = React.useState<AnswersMap>({});
+    const [seriesIndex, setSeriesIndex] = React.useState(0);
+    const [questionIndex, setQuestionIndex] = React.useState(0);
     const [successOpen, setSuccessOpen] = React.useState(false);
-
-    const handleAnswer = (key: string, value: number) => {
-        setAnswers(prev => ({ ...prev, [key]: value }));
-    };
+    const [draftSavedOpen, setDraftSavedOpen] = React.useState(false);
+    const [draftHydratedOpen, setDraftHydratedOpen] = React.useState(false);
+    /**
+     * `null` tant qu'on n'a pas hydraté depuis le brouillon (ou conclu qu'il n'y en
+     * avait pas). Évite que les hooks réécrivent la position du participant à chaque
+     * re-render. On stocke `last_saved_at` pour invalider en cas de changement
+     * (peu probable, mais correct).
+     */
+    const hydratedFromKeyRef = React.useRef<string | null>(null);
 
     const seriesCount = detail?.questions.series.length ?? 0;
     const questionCount = detail?.questions.series[0]?.length ?? 0;
     const totalQuestions = seriesCount * questionCount;
 
+    const handleAnswer = (key: string, value: number) => {
+        setAnswers(prev => ({ ...prev, [key]: value }));
+    };
+
+    /**
+     * Hydratation : applique le brouillon serveur dans le state local **une seule fois**
+     * par identité de brouillon. Sans cette garde, chaque re-render réinitialiserait
+     * la progression du participant (et écraserait les réponses qu'il vient de saisir).
+     */
+    React.useEffect(() => {
+        if (!detail) return;
+        if (draftQuery.isLoading) return;
+        const draft = draftQuery.data ?? null;
+        const hydrationKey = draft ? `draft:${draft.last_saved_at}` : 'no-draft';
+        if (hydratedFromKeyRef.current === hydrationKey) return;
+        hydratedFromKeyRef.current = hydrationKey;
+
+        if (!draft) return;
+
+        const next: AnswersMap = {};
+        if (draft.series0) {
+            draft.series0.forEach((v, i) => {
+                next[answerKey(0, i)] = v;
+            });
+        }
+        if (draft.series1) {
+            draft.series1.forEach((v, i) => {
+                next[answerKey(1, i)] = v;
+            });
+        }
+        setAnswers(prev => ({ ...next, ...prev }));
+        const resume = computeResumePosition(draft, seriesCount, questionCount);
+        setSeriesIndex(resume.seriesIndex);
+        setQuestionIndex(resume.questionIndex);
+        setDraftHydratedOpen(true);
+    }, [detail, draftQuery.data, draftQuery.isLoading, seriesCount, questionCount]);
+
+    /**
+     * Sauvegarde le brouillon de la série qui vient d'être complétée.
+     * - Appelée uniquement par `handleSeriesIndexChange` quand on quitte vers l'avant.
+     * - Si la série n'est pas intégralement remplie, on ne fait rien (cas attendu : la
+     *   navigation vers la série suivante est de toute façon refusée par la garde
+     *   `nextDisabled` côté QuestionCard, mais on durcit ici).
+     * - Erreurs réseau silencieuses : pas d'alerte bloquante (on ne veut pas casser
+     *   l'expérience utilisateur si l'autosave échoue, juste ne pas afficher le
+     *   "brouillon enregistré").
+     */
+    const persistSeriesAsDraft = React.useCallback(
+        async (completedSeriesIndex: number) => {
+            if (typeof campaignId !== 'number') return;
+            if (completedSeriesIndex !== 0 && completedSeriesIndex !== 1) return;
+            const seriesAnswers = collectSeriesAnswers(answers, completedSeriesIndex, questionCount);
+            if (!seriesAnswers) return;
+            try {
+                await upsertDraft.mutateAsync(
+                    completedSeriesIndex === 0
+                        ? { series0: seriesAnswers }
+                        : { series1: seriesAnswers }
+                );
+                setDraftSavedOpen(true);
+            } catch {
+                // Échec silencieux côté UI ; le participant peut continuer en mémoire locale.
+            }
+        },
+        [answers, campaignId, questionCount, upsertDraft]
+    );
+
+    const handleSeriesIndexChange = (next: number) => {
+        // Avance de série N à N+1 → autosave de la série N qui vient d'être complétée.
+        // Sur retour arrière, pas d'autosave (la série N+1 n'est pas censée être complète).
+        if (next > seriesIndex) {
+            void persistSeriesAsDraft(seriesIndex);
+        }
+        setSeriesIndex(next);
+    };
+
     const handleDevFill = () => {
         const filled: Record<string, number> = {};
         for (let s = 0; s < seriesCount; s++) {
             for (let q = 0; q < questionCount; q++) {
-                filled[`${String(s)}-${String(q)}`] = Math.floor(Math.random() * (ANSWER_MAX + 1));
+                filled[answerKey(s, q)] = Math.floor(Math.random() * (ANSWER_MAX + 1));
             }
         }
         setAnswers(filled);
@@ -321,24 +476,12 @@ function ParticipantTestSessionRoute() {
     const handleSubmit = async () => {
         if (!detail) return;
 
-        const series0: number[] = [];
-        const series1: number[] = [];
+        const series0 = collectSeriesAnswers(answers, 0, questionCount);
+        if (!series0) return;
+        const series1 = seriesCount > 1 ? collectSeriesAnswers(answers, 1, questionCount) : [];
+        if (seriesCount > 1 && !series1) return;
 
-        for (let q = 0; q < questionCount; q++) {
-            const v0 = answers[`0-${String(q)}`];
-            if (v0 === null || v0 === undefined) return;
-            series0.push(v0);
-        }
-
-        if (seriesCount > 1) {
-            for (let q = 0; q < questionCount; q++) {
-                const v1 = answers[`1-${String(q)}`];
-                if (v1 === null || v1 === undefined) return;
-                series1.push(v1);
-            }
-        }
-
-        await submitMutation.mutateAsync({ series0, series1 });
+        await submitMutation.mutateAsync({ series0, series1: series1 ?? [] });
         setSuccessOpen(true);
         setTimeout(() => {
             // Après validation d'une étape du parcours, retour systématique sur la fiche
@@ -451,6 +594,10 @@ function ParticipantTestSessionRoute() {
                     </Alert>
                 )}
                 <QuestionCard
+                    seriesIndex={seriesIndex}
+                    questionIndex={questionIndex}
+                    onSeriesIndexChange={handleSeriesIndexChange}
+                    onQuestionIndexChange={setQuestionIndex}
                     seriesLabels={effectiveSeriesLabels}
                     questions={detail.questions.series}
                     answers={answers}
@@ -458,6 +605,7 @@ function ParticipantTestSessionRoute() {
                     onSubmit={handleSubmit}
                     isSubmitting={submitMutation.isPending}
                     submitError={submitMutation.isError}
+                    isAutosaving={upsertDraft.isPending}
                 />
             </Stack>
 
@@ -467,6 +615,20 @@ function ParticipantTestSessionRoute() {
                 onClose={() => setSuccessOpen(false)}
                 anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
                 message="Test soumis avec succès ! Redirection vers vos résultats…"
+            />
+            <Snackbar
+                open={draftSavedOpen}
+                autoHideDuration={2500}
+                onClose={() => setDraftSavedOpen(false)}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+                message="Brouillon enregistré — vous pouvez reprendre plus tard si besoin."
+            />
+            <Snackbar
+                open={draftHydratedOpen}
+                autoHideDuration={4000}
+                onClose={() => setDraftHydratedOpen(false)}
+                anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+                message="Brouillon repris — vos réponses précédentes ont été restaurées."
             />
         </Stack>
     );

@@ -1,4 +1,5 @@
 export * from './admin-auth';
+export * from './element-b-draft';
 export * from './questionnaire-submit';
 export * from './scoring';
 export * from './api-common';

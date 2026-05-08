@@ -15,6 +15,7 @@ import type {
     IParticipantsIdentityReaderPort,
     IParticipantsInviteAssignmentsReaderPort,
 } from '@src/interfaces/participants/IParticipantsRepository.port';
+import type { IElementBDraftsRepositoryPort } from '@src/interfaces/responses/IElementBDraftsRepository.port';
 import type {
     IResponsesSubmissionReaderPort,
     IResponsesWriterPort,
@@ -31,6 +32,7 @@ export class SubmitParticipantQuestionnaireUseCase {
             readonly companies: ICompaniesReadPort;
             readonly campaigns: ICampaignsReadPort;
             readonly responses: IResponsesWriterPort & IResponsesSubmissionReaderPort;
+            readonly elementBDrafts: IElementBDraftsRepositoryPort;
         }
     ) {}
 
@@ -283,6 +285,10 @@ export class SubmitParticipantQuestionnaireUseCase {
                 scores: scoresRows,
             })
         );
+
+        // Soumission finale réussie → on nettoie le brouillon d'autosave (il devient
+        // sans objet puisque la réponse définitive est désormais persistée).
+        await this.ports.elementBDrafts.deleteByKey(participant.id, campaignId, qid);
 
         const scoresOut: Record<string, number> = {};
         for (const [k, v] of Object.entries(scoresMap)) {

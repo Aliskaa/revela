@@ -7,6 +7,7 @@ import { DatabaseLifecycle } from '@src/infrastructure/database/database.lifecyc
 import { DrizzleCampaignsRepository } from '@src/infrastructure/database/repositories/drizzle-campaigns.repository';
 import { DrizzleCoachesRepository } from '@src/infrastructure/database/repositories/drizzle-coaches.repository';
 import { DrizzleCompaniesRepository } from '@src/infrastructure/database/repositories/drizzle-companies.repository';
+import { DrizzleElementBDraftsRepository } from '@src/infrastructure/database/repositories/drizzle-element-b-drafts.repository';
 import { DrizzleInvitationsRepository } from '@src/infrastructure/database/repositories/drizzle-invitations.repository';
 import { DrizzleInviteActivationRepository } from '@src/infrastructure/database/repositories/drizzle-invite-activation.repository';
 import { DrizzleParticipantsRepository } from '@src/infrastructure/database/repositories/drizzle-participants.repository';
@@ -17,6 +18,7 @@ import { COMPANIES_REPOSITORY_PORT_SYMBOL } from '@src/interfaces/companies/ICom
 import { INVITATIONS_REPOSITORY_PORT_SYMBOL } from '@src/interfaces/invitations/IInvitationsRepository.port';
 import { INVITE_ACTIVATION_WRITE_PORT_SYMBOL } from '@src/interfaces/invitations/IInviteActivationWrite.port';
 import { PARTICIPANTS_REPOSITORY_PORT_SYMBOL } from '@src/interfaces/participants/IParticipantsRepository.port';
+import { ELEMENT_B_DRAFTS_REPOSITORY_PORT_SYMBOL } from '@src/interfaces/responses/IElementBDraftsRepository.port';
 import { RESPONSES_REPOSITORY_PORT_SYMBOL } from '@src/interfaces/responses/IResponsesRepository.port';
 
 @Global()
@@ -36,6 +38,7 @@ import { RESPONSES_REPOSITORY_PORT_SYMBOL } from '@src/interfaces/responses/IRes
         DrizzleInviteActivationRepository,
         DrizzleParticipantsRepository,
         DrizzleResponsesRepository,
+        DrizzleElementBDraftsRepository,
         {
             provide: COMPANIES_REPOSITORY_PORT_SYMBOL,
             useExisting: DrizzleCompaniesRepository,
@@ -64,6 +67,10 @@ import { RESPONSES_REPOSITORY_PORT_SYMBOL } from '@src/interfaces/responses/IRes
             provide: RESPONSES_REPOSITORY_PORT_SYMBOL,
             useExisting: DrizzleResponsesRepository,
         },
+        {
+            provide: ELEMENT_B_DRAFTS_REPOSITORY_PORT_SYMBOL,
+            useExisting: DrizzleElementBDraftsRepository,
+        },
     ],
     exports: [
         DRIZZLE_DB_SYMBOL,
@@ -75,6 +82,7 @@ import { RESPONSES_REPOSITORY_PORT_SYMBOL } from '@src/interfaces/responses/IRes
         INVITE_ACTIVATION_WRITE_PORT_SYMBOL,
         PARTICIPANTS_REPOSITORY_PORT_SYMBOL,
         RESPONSES_REPOSITORY_PORT_SYMBOL,
+        ELEMENT_B_DRAFTS_REPOSITORY_PORT_SYMBOL,
         DrizzleCompaniesRepository,
         DrizzleCampaignsRepository,
         DrizzleCoachesRepository,
@@ -82,6 +90,7 @@ import { RESPONSES_REPOSITORY_PORT_SYMBOL } from '@src/interfaces/responses/IRes
         DrizzleInviteActivationRepository,
         DrizzleParticipantsRepository,
         DrizzleResponsesRepository,
+        DrizzleElementBDraftsRepository,
     ],
 })
 export class DatabaseModule {}
