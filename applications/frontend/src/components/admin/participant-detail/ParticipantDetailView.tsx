@@ -385,7 +385,7 @@ export function ParticipantDetailView({ participantId, scopePrefix }: Participan
                                                         size="small"
                                                         variant="outlined"
                                                         startIcon={<LayoutPanelLeft size={14} />}
-                                                        href={`${scopePrefix}/participants/${participantId}/matrix?qid=B`}
+                                                        href={`${scopePrefix}/campaigns/${c.campaign_id}/participants/${participantId}/matrix`}
                                                         sx={{ borderRadius: 99 }}
                                                     >
                                                         Matrice

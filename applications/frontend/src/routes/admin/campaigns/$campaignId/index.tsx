@@ -4,11 +4,11 @@ import { createFileRoute } from '@tanstack/react-router';
 
 import { CampaignDetailPage } from '@/components/scoped/CampaignDetailPage';
 
-export const Route = createFileRoute('/coach/campaigns/$campaignId')({
-    component: CoachCampaignDetailRoute,
+export const Route = createFileRoute('/admin/campaigns/$campaignId/')({
+    component: AdminCampaignDetailRoute,
 });
 
-function CoachCampaignDetailRoute() {
+function AdminCampaignDetailRoute() {
     const { campaignId } = Route.useParams();
-    return <CampaignDetailPage scope="coach" campaignId={Number(campaignId)} />;
+    return <CampaignDetailPage scope="admin" campaignId={Number(campaignId)} />;
 }

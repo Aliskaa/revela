@@ -30,13 +30,17 @@ export type CampaignParticipantsTableProps = {
     campaignId: number;
     participants: CampaignParticipantProgress[];
     /**
-     * Préfixe d'URL pour l'accès à la matrix des réponses d'un participant. Permet de
-     * dispatcher vers `/admin/participants/$id/matrix` ou `/coach/participants/$id/matrix`
-     * selon l'espace de consommation. Si non fourni, le bouton « Voir les réponses » est masqué.
+     * Préfixe d'URL pour la fiche participant (e.g. `/admin/participants` ou
+     * `/coach/participants`). Si non fourni, les liens vers la fiche et la matrix
+     * sont masqués.
+     */
+    participantUrlPrefix?: string;
+    /**
+     * Préfixe d'URL pour la matrix scopée à la campagne (e.g. `/admin/campaigns` ou
+     * `/coach/campaigns`). L'URL finale est
+     * `${prefix}/${campaignId}/participants/${participantId}/matrix`.
      */
     matrixUrlPrefix?: string;
-    /** Questionnaire de la campagne — passé en query param `qid` à la matrix. */
-    questionnaireId?: string | null;
 };
 
 const COL_SPAN = 7;
@@ -44,8 +48,8 @@ const COL_SPAN = 7;
 export function CampaignParticipantsTable({
     campaignId,
     participants,
+    participantUrlPrefix,
     matrixUrlPrefix,
-    questionnaireId,
 }: CampaignParticipantsTableProps) {
     const [expandedParticipant, setExpandedParticipant] = React.useState<number | null>(null);
     const [page, setPage] = React.useState(0);
@@ -82,7 +86,7 @@ export function CampaignParticipantsTable({
                                 <TableCell>Pairs</TableCell>
                                 <TableCell>Élément Humain</TableCell>
                                 <TableCell>Résultats</TableCell>
-                                {matrixUrlPrefix ? <TableCell /> : null}
+                                {participantUrlPrefix && matrixUrlPrefix ? <TableCell /> : null}
                             </TableRow>
                         </TableHead>
                         <TableBody>
@@ -125,9 +129,9 @@ export function CampaignParticipantsTable({
                                                 </IconButton>
                                             </TableCell>
                                             <TableCell onClick={e => e.stopPropagation()}>
-                                                {matrixUrlPrefix ? (
+                                                {participantUrlPrefix ? (
                                                     <Link
-                                                        to={`${matrixUrlPrefix}/${p.participantId}`}
+                                                        to={`${participantUrlPrefix}/${p.participantId}`}
                                                         style={{ color: 'inherit', textDecoration: 'none' }}
                                                     >
                                                         <Typography
@@ -159,7 +163,7 @@ export function CampaignParticipantsTable({
                                             <TableCell>
                                                 <ProgressChip status={p.resultsStatus} />
                                             </TableCell>
-                                            {matrixUrlPrefix ? (
+                                            {participantUrlPrefix && matrixUrlPrefix ? (
                                                 <TableCell align="right" onClick={e => e.stopPropagation()}>
                                                     <Stack
                                                         direction="row"
@@ -172,7 +176,7 @@ export function CampaignParticipantsTable({
                                                             size="small"
                                                             variant="outlined"
                                                             startIcon={<LayoutPanelLeft size={14} />}
-                                                            href={`${matrixUrlPrefix}/${p.participantId}/matrix?qid=${questionnaireId ?? 'B'}`}
+                                                            href={`${matrixUrlPrefix}/${campaignId}/participants/${p.participantId}/matrix`}
                                                             sx={{ borderRadius: 99 }}
                                                         >
                                                             Réponses

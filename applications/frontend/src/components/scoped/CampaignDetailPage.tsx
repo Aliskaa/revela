@@ -30,6 +30,7 @@ const SCOPE_CFG: Record<
         backLabel: string;
         subtitle: string;
         notFound: string;
+        participantUrlPrefix: string;
         matrixUrlPrefix: string;
     }
 > = {
@@ -39,14 +40,16 @@ const SCOPE_CFG: Record<
         subtitle:
             'Cockpit opérationnel de la campagne : questionnaire assigné, participants, invitations, réponses et pilotage.',
         notFound: 'Campagne introuvable.',
-        matrixUrlPrefix: '/admin/participants',
+        participantUrlPrefix: '/admin/participants',
+        matrixUrlPrefix: '/admin/campaigns',
     },
     coach: {
         backTo: '/coach/campaigns',
         backLabel: 'Retour à mes campagnes',
         subtitle: 'Cockpit opérationnel : questionnaire assigné, participants, invitations, réponses et pilotage.',
         notFound: 'Campagne introuvable ou hors de votre périmètre.',
-        matrixUrlPrefix: '/coach/participants',
+        participantUrlPrefix: '/coach/participants',
+        matrixUrlPrefix: '/coach/campaigns',
     },
 };
 
@@ -158,8 +161,8 @@ export function CampaignDetailPage({ scope, campaignId }: CampaignDetailPageProp
                     <CampaignParticipantsTable
                         campaignId={campaign.id}
                         participants={participants}
+                        participantUrlPrefix={cfg.participantUrlPrefix}
                         matrixUrlPrefix={cfg.matrixUrlPrefix}
-                        questionnaireId={campaign.questionnaireId}
                     />
                 </Stack>
 

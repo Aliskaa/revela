@@ -1,0 +1,93 @@
+// Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
+
+import { QuestionnaireMatrixDisplay } from '@/components/matrix/QuestionnaireMatrixDisplay';
+import { useAdminCampaign, useParticipantQuestionnaireMatrix } from '@/hooks/admin';
+import { Alert, Box, Button, Card, CircularProgress, Stack, Typography } from '@mui/material';
+import { createFileRoute, useRouter } from '@tanstack/react-router';
+import { ArrowLeft, LayoutPanelLeft } from 'lucide-react';
+
+export const Route = createFileRoute('/admin/campaigns/$campaignId/participants/$participantId/matrix')({
+    component: AdminCampaignParticipantMatrixPage,
+});
+
+function AdminCampaignParticipantMatrixPage() {
+    const { campaignId: campaignIdParam, participantId } = Route.useParams();
+    const router = useRouter();
+    const campaignId = Number(campaignIdParam);
+    const participantIdNum = Number(participantId);
+
+    const { data: campaignDetail, isLoading: campaignLoading } = useAdminCampaign(campaignId);
+    const qid = campaignDetail?.campaign.questionnaireId ?? '';
+
+    const {
+        data: matrix,
+        isLoading: matrixLoading,
+        error,
+    } = useParticipantQuestionnaireMatrix(participantIdNum, qid);
+
+    const isLoading = campaignLoading || (qid.length > 0 && matrixLoading);
+
+    return (
+        <Box sx={{ p: { xs: 2, sm: 3, md: 4 } }}>
+            <Button
+                onClick={() => router.history.back()}
+                startIcon={<ArrowLeft size={18} />}
+                sx={{
+                    mb: 3,
+                    fontWeight: 600,
+                    color: 'text.secondary',
+                    '&:hover': { bgcolor: 'transparent', color: 'primary.main' },
+                }}
+                disableRipple
+            >
+                Retour
+            </Button>
+
+            <Stack
+                direction={{ xs: 'column', sm: 'row' }}
+                alignItems={{ xs: 'flex-start', sm: 'center' }}
+                justifyContent="space-between"
+                mb={4}
+            >
+                <Box>
+                    <Typography
+                        variant="h4"
+                        fontWeight={800}
+                        sx={{ color: 'primary.main', mb: 0.5, display: 'flex', alignItems: 'center', gap: 1.5 }}
+                    >
+                        <LayoutPanelLeft size={28} />
+                        Matrice des scores
+                    </Typography>
+                    <Typography variant="body1" color="text.secondary">
+                        Participant #{participantId} — Campagne #{campaignIdParam} — Comparaison détaillée entre le
+                        Regard sur soi, les retours pairs et l'analyse scientifique.
+                    </Typography>
+                </Box>
+            </Stack>
+
+            {isLoading ? (
+                <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+                    <CircularProgress size={40} thickness={4} />
+                </Box>
+            ) : !campaignDetail ? (
+                <Alert severity="error" sx={{ borderRadius: 2 }}>
+                    Campagne introuvable.
+                </Alert>
+            ) : qid.length === 0 ? (
+                <Alert severity="warning" sx={{ borderRadius: 2 }}>
+                    Cette campagne n'a pas de questionnaire associé.
+                </Alert>
+            ) : error || !matrix ? (
+                <Alert severity="error" sx={{ borderRadius: 2 }}>
+                    Impossible de charger les données de la matrice pour ce participant.
+                </Alert>
+            ) : (
+                <Card variant="outlined" sx={{ borderRadius: 2.5, overflow: 'visible' }}>
+                    <Box sx={{ p: { xs: 2, sm: 3 } }}>
+                        <QuestionnaireMatrixDisplay matrix={matrix} />
+                    </Box>
+                </Card>
+            )}
+        </Box>
+    );
+}
