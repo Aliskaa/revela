@@ -23,6 +23,7 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import type { AddParticipantToCampaignUseCase } from '@src/application/admin/campaigns/add-participant-to-campaign.usecase';
 import type { CreateAdminCampaignUseCase } from '@src/application/admin/campaigns/create-admin-campaign.usecase';
 import type { GetAdminCampaignDetailUseCase } from '@src/application/admin/campaigns/get-admin-campaign-detail.usecase';
+import type { GetAdminCampaignSynthesisMatrixUseCase } from '@src/application/admin/campaigns/get-admin-campaign-synthesis-matrix.usecase';
 import type { ImportParticipantsToCampaignUseCase } from '@src/application/admin/campaigns/import-participants-to-campaign.usecase';
 import type { InviteCampaignParticipantsUseCase } from '@src/application/admin/campaigns/invite-campaign-participants.usecase';
 import type { ListAdminCampaignsUseCase } from '@src/application/admin/campaigns/list-admin-campaigns.usecase';
@@ -45,6 +46,7 @@ import {
     ADD_PARTICIPANT_TO_CAMPAIGN_USE_CASE_SYMBOL,
     CREATE_ADMIN_CAMPAIGN_USE_CASE_SYMBOL,
     GET_ADMIN_CAMPAIGN_DETAIL_USE_CASE_SYMBOL,
+    GET_ADMIN_CAMPAIGN_SYNTHESIS_MATRIX_USE_CASE_SYMBOL,
     GET_PARTICIPANT_TRANSPARENCY_SCORE_USE_CASE_SYMBOL,
     IMPORT_PARTICIPANTS_TO_CAMPAIGN_USE_CASE_SYMBOL,
     INVITE_CAMPAIGN_PARTICIPANTS_USE_CASE_SYMBOL,
@@ -68,6 +70,8 @@ export class AdminCampaignsController {
         private readonly reassignAdminCampaignCoach: ReassignAdminCampaignCoachUseCase,
         @Inject(GET_ADMIN_CAMPAIGN_DETAIL_USE_CASE_SYMBOL)
         private readonly getAdminCampaignDetail: GetAdminCampaignDetailUseCase,
+        @Inject(GET_ADMIN_CAMPAIGN_SYNTHESIS_MATRIX_USE_CASE_SYMBOL)
+        private readonly getAdminCampaignSynthesisMatrix: GetAdminCampaignSynthesisMatrixUseCase,
         @Inject(INVITE_CAMPAIGN_PARTICIPANTS_USE_CASE_SYMBOL)
         private readonly inviteCampaignParticipants: InviteCampaignParticipantsUseCase,
         @Inject(IMPORT_PARTICIPANTS_TO_CAMPAIGN_USE_CASE_SYMBOL)
@@ -106,6 +110,20 @@ export class AdminCampaignsController {
     ) {
         const coachId = req.user.scope === 'coach' ? req.user.coachId : undefined;
         return this.getAdminCampaignDetail.execute(campaignId, { coachId });
+    }
+
+    /**
+     * Vue de synthèse Élément B (test scientifique) au niveau d'une campagne.
+     * Cf. PDF AOR section 9 — colonnes = participants, lignes = score_keys + écarts.
+     * Renvoie `null` si la campagne est hors périmètre du coach (200, payload vide).
+     */
+    @Get('campaigns/:campaignId/synthesis-matrix')
+    public async getCampaignSynthesisMatrix(
+        @Param('campaignId', ParseIntPipe) campaignId: number,
+        @Req() req: { user: JwtValidatedUser }
+    ) {
+        const coachId = req.user.scope === 'coach' ? req.user.coachId : undefined;
+        return this.getAdminCampaignSynthesisMatrix.execute({ campaignId, coachId });
     }
 
     @Patch('campaigns/:campaignId/coach')

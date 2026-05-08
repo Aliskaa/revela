@@ -8,6 +8,7 @@ import { CampaignManageParticipants } from '@/components/admin/campaign-detail/C
 import { CampaignParticipantsTable } from '@/components/admin/campaign-detail/CampaignParticipantsTable';
 import { CampaignStatusActions } from '@/components/admin/campaign-detail/CampaignStatusActions';
 import { CampaignSummaryCard } from '@/components/admin/campaign-detail/CampaignSummaryCard';
+import { CampaignSynthesisCard } from '@/components/admin/campaign-detail/CampaignSynthesisCard';
 import { StatCard } from '@/components/common/cards';
 import { KpiGrid, PageHeroCard } from '@/components/common/layout';
 import { useAdminCampaign, useCoaches, useCompanies } from '@/hooks/admin';
@@ -167,6 +168,7 @@ export function CampaignDetailPage({ scope, campaignId }: CampaignDetailPageProp
                 </Stack>
 
                 <Stack spacing={3}>
+                    <CampaignSynthesisCard campaignId={campaign.id} scope={scope} />
                     <CampaignStatusActions campaign={campaign} participantsCount={participants.length} />
                     <CampaignManageParticipants
                         campaign={campaign}

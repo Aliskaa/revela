@@ -10,6 +10,7 @@ import type {
     AdminLoginResponse,
     AdminResponse,
     CampaignStatus,
+    CampaignSynthesisMatrix,
     Coach,
     Company,
     CreateInviteResult,
@@ -41,6 +42,7 @@ export const adminKeys = {
     coach: (id: number) => ['admin', 'coaches', id] as const,
     campaigns: ['admin', 'campaigns'] as const,
     campaign: (campaignId: number) => ['admin', 'campaigns', campaignId] as const,
+    campaignSynthesis: (campaignId: number) => ['admin', 'campaigns', campaignId, 'synthesis-matrix'] as const,
 };
 
 export function useAdminLogin() {
@@ -386,6 +388,15 @@ export function useAdminCampaign(campaignId: number) {
     return useQuery<AdminCampaignDetail | null>({
         queryKey: adminKeys.campaign(campaignId),
         queryFn: () => apiClient.get(`/admin/campaigns/${campaignId}`).then(r => r.data),
+        enabled: campaignId > 0,
+        refetchOnMount: 'always',
+    });
+}
+
+export function useAdminCampaignSynthesis(campaignId: number) {
+    return useQuery<CampaignSynthesisMatrix | null>({
+        queryKey: adminKeys.campaignSynthesis(campaignId),
+        queryFn: () => apiClient.get(`/admin/campaigns/${campaignId}/synthesis-matrix`).then(r => r.data),
         enabled: campaignId > 0,
         refetchOnMount: 'always',
     });

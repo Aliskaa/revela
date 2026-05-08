@@ -5,6 +5,7 @@ import { Module } from '@nestjs/common';
 import { AddParticipantToCampaignUseCase } from '@src/application/admin/campaigns/add-participant-to-campaign.usecase';
 import { CreateAdminCampaignUseCase } from '@src/application/admin/campaigns/create-admin-campaign.usecase';
 import { GetAdminCampaignDetailUseCase } from '@src/application/admin/campaigns/get-admin-campaign-detail.usecase';
+import { GetAdminCampaignSynthesisMatrixUseCase } from '@src/application/admin/campaigns/get-admin-campaign-synthesis-matrix.usecase';
 import { ImportParticipantsToCampaignUseCase } from '@src/application/admin/campaigns/import-participants-to-campaign.usecase';
 import { InviteCampaignParticipantsUseCase } from '@src/application/admin/campaigns/invite-campaign-participants.usecase';
 import { ListAdminCampaignsUseCase } from '@src/application/admin/campaigns/list-admin-campaigns.usecase';
@@ -13,10 +14,7 @@ import { UpdateAdminCampaignStatusUseCase } from '@src/application/admin/campaig
 import { GetParticipantQuestionnaireMatrixUseCase } from '@src/application/participant-session/get-participant-questionnaire-matrix.usecase';
 import { ActivateParticipantTransparencyScoreUseCase } from '@src/application/transparency/activate-participant-transparency-score.usecase';
 import { GetParticipantTransparencyScoreUseCase } from '@src/application/transparency/get-participant-transparency-score.usecase';
-import {
-    ADMIN_AUTH_CONFIG_PORT_SYMBOL,
-    type IAdminAuthConfigPort,
-} from '@src/interfaces/admin/IAdminAuthConfig.port';
+import { ADMIN_AUTH_CONFIG_PORT_SYMBOL, type IAdminAuthConfigPort } from '@src/interfaces/admin/IAdminAuthConfig.port';
 import {
     CAMPAIGNS_REPOSITORY_PORT_SYMBOL,
     type ICampaignsReadPort,
@@ -54,6 +52,7 @@ import {
     ADD_PARTICIPANT_TO_CAMPAIGN_USE_CASE_SYMBOL,
     CREATE_ADMIN_CAMPAIGN_USE_CASE_SYMBOL,
     GET_ADMIN_CAMPAIGN_DETAIL_USE_CASE_SYMBOL,
+    GET_ADMIN_CAMPAIGN_SYNTHESIS_MATRIX_USE_CASE_SYMBOL,
     GET_PARTICIPANT_TRANSPARENCY_SCORE_USE_CASE_SYMBOL,
     IMPORT_PARTICIPANTS_TO_CAMPAIGN_USE_CASE_SYMBOL,
     INVITE_CAMPAIGN_PARTICIPANTS_USE_CASE_SYMBOL,
@@ -103,6 +102,19 @@ import {
                 participants: IParticipantsAdminReadPort,
                 responses: IResponsesAdminListPort
             ) => new GetAdminCampaignDetailUseCase({ campaigns, participants, responses }),
+            inject: [
+                CAMPAIGNS_REPOSITORY_PORT_SYMBOL,
+                PARTICIPANTS_REPOSITORY_PORT_SYMBOL,
+                RESPONSES_REPOSITORY_PORT_SYMBOL,
+            ],
+        },
+        {
+            provide: GET_ADMIN_CAMPAIGN_SYNTHESIS_MATRIX_USE_CASE_SYMBOL,
+            useFactory: (
+                campaigns: ICampaignsReadPort,
+                participants: IParticipantsAdminReadPort,
+                responses: IResponsesSubmissionReaderPort
+            ) => new GetAdminCampaignSynthesisMatrixUseCase({ campaigns, participants, responses }),
             inject: [
                 CAMPAIGNS_REPOSITORY_PORT_SYMBOL,
                 PARTICIPANTS_REPOSITORY_PORT_SYMBOL,

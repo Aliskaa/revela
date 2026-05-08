@@ -67,7 +67,8 @@
       "Bash(rm applications/frontend/src/routes/admin/participants/\\\\$participantId.matrix.tsx applications/frontend/src/routes/coach/participants/\\\\$participantId.matrix.tsx)",
       "Bash(echo \"exit=$?\")",
       "Bash(git add *)",
-      "Bash(git commit -m ' *)"
+      "Bash(git commit -m ' *)",
+      "Bash(node -e \"const c=require\\('./packages/aor-questionnaires/src/catalog.json'\\); console.log\\('Keys:',Object.keys\\(c\\)\\); for \\(const k of Object.keys\\(c\\)\\) { console.log\\('---',k,'---'\\); console.log\\('id:',c[k].id,'title:',c[k].title\\); console.log\\('result_dims:',JSON.stringify\\(c[k].result_dims\\).slice\\(0,500\\)\\); }\")"
     ],
     "additionalDirectories": [
       "C:\\Users\\kevin\\Documents\\DataLoco\\Nora\\base\\questionnaire-platform\\applications\\frontend\\src\\routes\\admin\\campaigns\\$campaignId",

@@ -14,6 +14,7 @@ export * from './participant';
 export * from './participant-export';
 export * from './invite';
 export * from './matrix';
+export * from './campaign-synthesis';
 export * from './participant-results-view';
 export * from './audit';
 export * from './transparency';

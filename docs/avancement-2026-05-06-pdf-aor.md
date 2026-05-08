@@ -24,14 +24,14 @@
 | 6. Feedback des pairs | 5 | 0 | 0 | — |
 | 7. Questionnaire Élément B | 3 | 0 | 0 | — |
 | 8. Résultats Participant | 7 | 0 | 0 | 1 |
-| 9. Vue de synthèse Admin/Coach | 1 | 0 | 2 | 1 |
+| 9. Vue de synthèse Admin/Coach | 3 | 0 | 0 | 1 |
 | 10. IA & retour formateur/coach | 0 | 0 | 4 | — |
 | 11. Hébergement & domaine | 0 | 0 | 1 | 1 |
-| **Total court terme** | **36** | **0** | **7** | **5** |
+| **Total court terme** | **38** | **0** | **5** | **5** |
 
 Le gros de la **gouvernance et du parcours participant** est en place. Les chantiers restants sont concentrés sur :
 1. La **vue résultats participant** : ✅ entièrement bouclée (2026-05-08). Libellés d'interprétation des écarts, conservation des colonnes intermédiaires, filtres « pairs me voient », retrait colonnes « je vois les autres », tooltips commentaires pairs — tous faits. Reste l'export PDF participant en V2.
-2. La **vue de synthèse Admin/Coach** (matrice globale + mise en lumière manuelle). Dates parcours : faites.
+2. La **vue de synthèse Admin/Coach** : ✅ entièrement bouclée (2026-05-08). Matrice globale Élément B livrée + accès via `CampaignSynthesisCard` côté détail campagne + mise en évidence des cases à fort écart (couvre l'item 9.3 par traitement automatique). Reste seulement le dégradé fin de couleurs (9.2, V2 — Nora doit valider les seuils intermédiaires).
 3. L'**IA & retour coach** (chantier complet, en attente du choix modèle / prompt côté Laurent).
 4. ~~L'**autosave Élément B** (54×2 réponses — questionnaire long).~~ ✅ Fait (2026-05-08, brouillon serveur dédié + hydratation au reload). Pas d'autosave sur le regard sur soi (décision 2026-05-06 : trop court pour le justifier).
 5. La **notification cloche** côté entreprise (la recherche participant est livrée — cf. section 3).
@@ -146,9 +146,10 @@ Le gros de la **gouvernance et du parcours participant** est en place. Les chant
 
 | Statut | Profil | Item PDF | État | Preuve / reste à faire |
 |---|---|---|---|---|
-| ❌ | Admin / Coach | Vue globale parcours : tableau de synthèse « Élément B uniquement » (colonnes = participants, lignes = questions/dimensions, écarts) | Pas fait | Aucun composant `CampaignMatrix`/`SynthesisMatrix` détecté côté admin. Chantier complet (cf. P20) |
-| ⏭️ | Admin / Coach | Code couleur des écarts dans la vue de synthèse | V2 | Nora doit redéfinir les seuils — différé |
-| ❌ | Coach | Mise en lumière manuelle de certaines cases du tableau de synthèse | Pas fait | Dépend de la vue globale ci-dessus |
+| ✅ | Admin / Coach | Vue globale parcours : tableau de synthèse « Élément B uniquement » (colonnes = participants, lignes = questions/dimensions, écarts) | Fait (2026-05-08) | Nouvelle route dédiée `/admin/campaigns/:id/synthese` (et variante `/coach/campaigns/:id/synthese`), accessible via la **carte `CampaignSynthesisCard`** (`applications/frontend/src/components/admin/campaign-detail/CampaignSynthesisCard.tsx`) placée dans `CampaignDetailPage.tsx` colonne droite, juste au-dessus de `CampaignStatusActions`. Même structure que `CampaignStatusActions` (Card + SectionTitle + bouton). Backend : type `CampaignSynthesisMatrix` ajouté dans `@aor/types` (`packages/aor-common/types/src/campaign-synthesis.ts`), use case `GetAdminCampaignSynthesisMatrixUseCase` (`applications/backend/src/application/admin/campaigns/get-admin-campaign-synthesis-matrix.usecase.ts`) qui agrège pour chaque participant de la campagne sa réponse `element_humain` (filtrage scope=coach via `campaigns.findById({coachId})` → `null` hors périmètre). Endpoint `GET /admin/campaigns/:id/synthesis-matrix` (`admin-campaigns.controller.ts:111-123`). Catalogue Élément B (qid `B`) par défaut — payload renvoie 3 dimensions (Inclusion / Contrôle / Affection-Ouverture), 4 lignes de scores + 2 lignes d'écart par dim. Frontend : composant `CampaignSynthesisMatrix.tsx` (mêmes conventions visuelles que `MatrixTableMode` — colonne « Question / Écart » fixe, en-tête participants en gras, écarts **intercalés** sous chaque paire (e, w) dans l'ordre du catalogue). Hook `useAdminCampaignSynthesis` dans `hooks/admin.ts`. Tests use case : `__tests__/get-admin-campaign-synthesis-matrix.usecase.spec.ts` (3 cas — null hors scope, agrégation correcte des paires, propagation `coachId`) |
+| ✅ | Admin / Coach | Code couleur des écarts dans la vue de synthèse — alerte binaire | Fait (2026-05-08) | Décision Nora : seuil **strict > 4** pour marquer un écart comme « alerte ». Drapeau `warning: boolean` calculé côté backend (`get-admin-campaign-synthesis-matrix.usecase.ts:21` constante `GAP_WARNING_THRESHOLD`) sur chaque cellule d'écart, exposé dans le DTO `CampaignSynthesisGapCell`. Frontend : cellule encadrée rouge (border 2px `rgb(220,38,38)`) quand `warning=true`, vert (`rgb(4,120,87)`) sinon — cf. `CampaignSynthesisMatrix.tsx` `GapCellView`. Chip « Écart > 4 = alerte » dans l'en-tête du tableau pour expliciter la convention. Le **dégradé fin** (multi-paliers) reste V2 — cf. ligne ci-dessous |
+| ⏭️ | Admin / Coach | Code couleur multi-paliers (dégradé) des écarts | V2 | Nora doit redéfinir les seuils intermédiaires — différé. La version livrée est binaire (alerte / OK), pilotée par une seule constante backend qu'on pourra remplacer par une échelle quand les seuils seront fixés |
+| ✅ | Coach | Mise en lumière manuelle de certaines cases du tableau de synthèse | Fait (2026-05-08) | Décision Nora 2026-05-08 : la mise en lumière est **automatique** (et non manuelle) — toute cellule d'écart avec `warning=true` (gap strict > 4) est encadrée en rouge dans `CampaignSynthesisMatrix.tsx`. Cela couvre l'intention pédagogique du PDF (« attirer l'œil du coach sur les cases à discuter ») sans imposer une étape supplémentaire de saisie au coach. Si une mise en lumière vraiment **manuelle** (clic coach + persistance) devient nécessaire plus tard, ajouter une table `campaign_synthesis_highlights (campaign_id, score_key, participant_id, coach_id)` + endpoint POST/DELETE + UI toggle sur cellule |
 | ✅ | Admin / Coach | Dates du parcours dans la vue détail participant | Fait (2026-05-06) | Colonne « Rejoint le » dans `ParticipantDetailView.tsx:345, 382` (commit `9c82197`). Décision 2026-05-06 : la date de jonction du participant suffit pour le besoin admin/coach — pas d'ajout des dates start/end/updated du parcours lui-même (info déjà accessible via le détail de la campagne) |
 
 ---
@@ -203,8 +204,8 @@ Le gros de la **gouvernance et du parcours participant** est en place. Les chant
 10. ~~Tooltips commentaires pairs (dépend du bloc 2).~~ ✅ Fait (2026-05-06) — `peer_comments` ajouté au DTO matrix, icône `MessageSquareText` + `Tooltip` MUI dans `MatrixTableMode` et `MatrixChartMode` (couvre participant ET admin/coach).
 
 **Bloc 4 — Vue synthèse coach/admin (2 j)**
-11. Matrice globale Élément B par parcours.
-12. Mise en lumière manuelle de cases.
+11. ~~Matrice globale Élément B par parcours.~~ ✅ Fait (2026-05-08) — endpoint `GET /admin/campaigns/:id/synthesis-matrix` + page dédiée `/admin/campaigns/:id/synthese` (variante coach), accès via `CampaignSynthesisCard` placée au-dessus de `CampaignStatusActions` dans `CampaignDetailPage`. Backend agrège les réponses `element_humain` de tous les participants ; frontend reproduit l'esprit de `MatrixTableMode` (écarts intercalés sous chaque paire e/w). Code couleur binaire (warning > 4) inclus.
+12. ~~Mise en lumière manuelle de cases.~~ ✅ Fait (2026-05-08) — décision Nora : automatique plutôt que manuelle. Toute cellule d'écart > 4 est encadrée en rouge dans `CampaignSynthesisMatrix.tsx` (`GapCellView`). Couvre l'intention pédagogique du PDF sans imposer d'action coach supplémentaire.
 13. ~~Dates parcours dans détail participant.~~ ✅ Fait (2026-05-06) — décision : la colonne « Rejoint le » de `ParticipantDetailView.tsx` suffit pour le besoin admin/coach (dates start/end/updated accessibles via le détail de la campagne).
 
 **Bloc 5 — Périphérie (parallélisable)**
@@ -219,6 +220,18 @@ Le gros de la **gouvernance et du parcours participant** est en place. Les chant
 ---
 
 ## Notes de recette à mener (carry-over de l'avancement précédent)
+
+10. **Synthèse Élément B par campagne** (2026-05-08) :
+   - Sur `/admin/campaigns/:id`, vérifier la présence de la **carte `CampaignSynthesisCard`** au-dessus de la card « Statut de la campagne » (colonne droite) — titre « Synthèse Élément B », sous-titre, et bouton CTA « Voir la synthèse Élément B ». Cliquer → atterrissage sur `/admin/campaigns/:id/synthese`. Idem côté coach (`/coach/campaigns/:id` → `/coach/campaigns/:id/synthese`).
+   - Page synthèse : en-tête `PageHeroCard` avec titre = nom de campagne, eyebrow « Synthèse Élément B », bouton « Retour à la campagne ». Card matrice en dessous avec :
+     - Chips `n / N ont répondu` (compte les participants ayant `hasResponse=true`) et `Écart > 4 = alerte` (rouge léger).
+     - En-tête tableau : 1ʳᵉ colonne « Question / Écart » (240–320 px) + 1 colonne par participant (nom complet en gras, e-mail en tooltip).
+     - Pour chaque dimension du catalogue (Inclusion / Contrôle / Affection-Ouverture sur Élément B) : ligne d'en-tête de dim en violet, puis pour chaque paire (e, w) : `eRow` (label issu de `short_labels`), `wRow`, **ligne d'écart juste en-dessous** (label « Écart (e − w) »).
+   - Cellules d'écart : valeur en vert quand `warning=false`, encadré rouge gras quand `warning=true` (gap > 4). Cellule `–` grisée quand le participant n'a pas répondu.
+   - Asymétrie scope coach : seules les campagnes de son périmètre sont accessibles. Tentative `/coach/campaigns/:id/synthese` sur une campagne d'un autre coach → page « Campagne introuvable ou hors de votre périmètre ».
+   - Cas vide : campagne sans participants → carte « Aucun participant rattaché ». Campagne avec participants mais 0 Élément B soumis → matrice rendue avec toutes les cellules à `–` + Alert info « Aucun participant n'a encore terminé le test scientifique ».
+   - DevTools réseau : 1 seule requête `GET /admin/campaigns/:id/synthesis-matrix` à l'arrivée sur la page (cache React Query queryKey `['admin','campaigns',id,'synthesis-matrix']`).
+   - Régression sur `CampaignDetailPage` : la card « Statut de la campagne » et la card « Inviter des participants » sont toujours présentes et fonctionnelles ; le nouveau bouton ne casse pas la mise en page de la colonne droite.
 
 9. **Libellés d'interprétation des écarts** (2026-05-08) :
    - Sur `/campaigns/:id/results`, vue Élément Humain (Comportement / Valeurs), mode **Tableau** : pour chaque ligne « Écart » d'une paire « je suis / je veux », vérifier que sous chaque cellule numérique (self, chaque pair, scientifique) une phrase italique apparaît, **différente** selon la direction de l'écart de la colonne (ex. `eRow.self > wRow.self` → phrase `if_e_gt`, sinon `if_w_gt`).
