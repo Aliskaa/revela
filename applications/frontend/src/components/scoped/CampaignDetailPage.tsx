@@ -33,6 +33,7 @@ const SCOPE_CFG: Record<
         notFound: string;
         participantUrlPrefix: string;
         matrixUrlPrefix: string;
+        transparencyUrlPrefix: string;
     }
 > = {
     admin: {
@@ -43,6 +44,7 @@ const SCOPE_CFG: Record<
         notFound: 'Campagne introuvable.',
         participantUrlPrefix: '/admin/participants',
         matrixUrlPrefix: '/admin/campaigns',
+        transparencyUrlPrefix: '/admin/campaigns',
     },
     coach: {
         backTo: '/coach/campaigns',
@@ -51,6 +53,7 @@ const SCOPE_CFG: Record<
         notFound: 'Campagne introuvable ou hors de votre périmètre.',
         participantUrlPrefix: '/coach/participants',
         matrixUrlPrefix: '/coach/campaigns',
+        transparencyUrlPrefix: '/coach/campaigns',
     },
 };
 
@@ -164,6 +167,7 @@ export function CampaignDetailPage({ scope, campaignId }: CampaignDetailPageProp
                         participants={participants}
                         participantUrlPrefix={cfg.participantUrlPrefix}
                         matrixUrlPrefix={cfg.matrixUrlPrefix}
+                        transparencyUrlPrefix={cfg.transparencyUrlPrefix}
                     />
                 </Stack>
 

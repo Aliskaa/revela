@@ -41,6 +41,12 @@ export type CampaignParticipantsTableProps = {
      * `${prefix}/${campaignId}/participants/${participantId}/matrix`.
      */
     matrixUrlPrefix?: string;
+    /**
+     * Préfixe d'URL pour la matrice de transparence scopée à la campagne (e.g.
+     * `/admin/campaigns` ou `/coach/campaigns`). L'URL finale est
+     * `${prefix}/${campaignId}/participants/${participantId}/transparency`.
+     */
+    transparencyUrlPrefix?: string;
 };
 
 const COL_SPAN = 7;
@@ -50,6 +56,7 @@ export function CampaignParticipantsTable({
     participants,
     participantUrlPrefix,
     matrixUrlPrefix,
+    transparencyUrlPrefix,
 }: CampaignParticipantsTableProps) {
     const [expandedParticipant, setExpandedParticipant] = React.useState<number | null>(null);
     const [page, setPage] = React.useState(0);
@@ -181,10 +188,13 @@ export function CampaignParticipantsTable({
                                                         >
                                                             Réponses
                                                         </Button>
-                                                        <CampaignParticipantTransparencyButton
-                                                            campaignId={campaignId}
-                                                            participantId={p.participantId}
-                                                        />
+                                                        {transparencyUrlPrefix ? (
+                                                            <CampaignParticipantTransparencyButton
+                                                                campaignId={campaignId}
+                                                                participantId={p.participantId}
+                                                                transparencyUrlPrefix={transparencyUrlPrefix}
+                                                            />
+                                                        ) : null}
                                                     </Stack>
                                                 </TableCell>
                                             ) : null}
