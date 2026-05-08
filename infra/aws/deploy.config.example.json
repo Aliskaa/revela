@@ -26,7 +26,7 @@
     "_AlbListenerRulePriority_help": "Numero libre entre les regles existantes (defaut 100)",
     "AlbListenerRulePriority": 100,
 
-    "DomainName": "revela.aor-cabinet.fr",
+    "DomainName": "revela.cabinet-aor.fr",
 
     "_AdminUsername_help": "Login super-admin (optionnel, defaut 'admin')",
     "AdminUsername": "admin"

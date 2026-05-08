@@ -18,7 +18,7 @@ WORKDIR /workspace
 
 # Manifests du workspace : tout ce qui pilote `pnpm install` sans les sources.
 # COPY --parents preserve la structure relative (Dockerfile 1.7+).
-COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json tsconfig.json ./
 COPY --parents applications/backend/package.json ./
 COPY --parents applications/frontend/package.json ./
 COPY --parents packages/*/package.json ./

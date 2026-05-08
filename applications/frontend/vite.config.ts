@@ -21,6 +21,16 @@ export default defineConfig(({ mode }) => {
         optimizeDeps: {
             include: ['@aor/types'],
         },
+        build: {
+            // En mode build, optimizeDeps ne s'applique pas — c'est Rollup qui bundle.
+            // tsc compile `export * from './transparency'` en `__exportStar()` côté CJS,
+            // que Rollup n'arrive pas à analyser statiquement. `transformMixedEsModules`
+            // active le bon mode du plugin commonjs pour résoudre les exports nommés.
+            commonjsOptions: {
+                transformMixedEsModules: true,
+                include: [/node_modules/, /packages\/aor-common\/types/],
+            },
+        },
         server: {
             port: 5173,
             proxy: {

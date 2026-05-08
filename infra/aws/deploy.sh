@@ -234,7 +234,7 @@ if ! $STACK_EXISTS; then
         if [[ -n "$rr_name" ]]; then
             echo
             printf "${C_YELLOW}===================================================================${C_RESET}\n"
-            printf "${C_YELLOW}  ACTION REQUISE — Pose ce CNAME sur o2switch (zone aor-cabinet.fr)${C_RESET}\n"
+            printf "${C_YELLOW}  ACTION REQUISE — Pose ce CNAME sur o2switch (zone cabinet-aor.fr)${C_RESET}\n"
             printf "${C_YELLOW}===================================================================${C_RESET}\n"
             echo  "  Type   : $rr_type"
             echo  "  Name   : $rr_name"
@@ -348,7 +348,7 @@ echo
 echo "Etapes restantes a faire manuellement :"
 echo
 echo "  1. CNAME final sur o2switch (si pas deja fait) :"
-echo "     revela.aor-cabinet.fr  CNAME  <DNS de ton ALB existant>"
+echo "     revela.cabinet-aor.fr  CNAME  <DNS de ton ALB existant>"
 echo "     (Console EC2 > Load Balancers > marketdash > DNS name)"
 echo
 echo "  2. Recuperer le mot de passe super-admin :"

@@ -2,7 +2,7 @@ AWSTemplateFormatVersion: '2010-09-09'
 Description: >
   Revela — backend + frontend (Docker sur EC2) + RDS Postgres,
   branches sur l'ALB existant via une regle host-header
-  (revela.aor-cabinet.fr). DNS reste chez o2switch (CNAME a poser
+  (revela.cabinet-aor.fr). DNS reste chez o2switch (CNAME a poser
   manuellement vers le DNS de l'ALB).
 
 # ─────────────────────────────────────────────────────────────────────
@@ -38,7 +38,7 @@ Parameters:
   # -- Domaine --
   DomainName:
     Type: String
-    Default: revela.aor-cabinet.fr
+    Default: revela.cabinet-aor.fr
     Description: FQDN servi (cert ACM + condition host-header)
 
   # -- Images applicatives --
@@ -76,8 +76,11 @@ Parameters:
 
   DBEngineVersion:
     Type: String
-    Default: '16.4'
-    Description: Version Postgres RDS (verifier la dispo dans la region)
+    Default: '16.13'
+    Description: >
+      Version Postgres RDS. Verifier la dispo via :
+      aws rds describe-db-engine-versions --engine postgres --region eu-west-3
+      --query "DBEngineVersions[?starts_with(EngineVersion,'16.')].EngineVersion" --output text
 
   # -- EC2 --
   Ec2InstanceType:
@@ -254,7 +257,7 @@ Resources:
     DeletionPolicy: Retain
     UpdateReplacePolicy: Retain
     Properties:
-      DBInstanceIdentifier: !Sub "${AWS::StackName}-pg"
+      DBInstanceIdentifier: !Sub "${AWS::StackName}"
       Engine: postgres
       EngineVersion: !Ref DBEngineVersion
       DBInstanceClass: db.t4g.micro
@@ -374,7 +377,11 @@ Resources:
           DB_NAME=${DBName}
           DB_USER=$DB_USER
           DB_PASSWORD=$DB_PASS
-          DATABASE_URL=postgres://$DB_USER:$DB_PASS@${RdsInstance.Endpoint.Address}:${RdsInstance.Endpoint.Port}/${DBName}
+          # ?sslmode=no-verify : RDS impose SSL via pg_hba.conf, on chiffre sans
+          # verifier la CA AWS (eviter de bundle le cert dans l'image). Pour
+          # passer en strict : telecharger global-bundle.pem et utiliser
+          # sslmode=verify-full + ssl.ca dans le code.
+          DATABASE_URL=postgres://$DB_USER:$DB_PASS@${RdsInstance.Endpoint.Address}:${RdsInstance.Endpoint.Port}/${DBName}?sslmode=no-verify
 
           JWT_SECRET=$JWT_SECRET
           ADMIN_USERNAME=${AdminUsername}
@@ -503,5 +510,5 @@ Outputs:
   DnsCnameToCreateOnO2switch:
     Description: >
       Une fois le stack cree, recupere le DNS de ton ALB (Console EC2 > Load Balancers >
-      DNS name) et pose un CNAME "revela" → <ALB-DNS> dans la zone aor-cabinet.fr chez o2switch.
+      DNS name) et pose un CNAME "revela" → <ALB-DNS> dans la zone cabinet-aor.fr chez o2switch.
     Value: 'CNAME revela → <DNS de ton ALB existant>'
