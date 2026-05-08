@@ -1,5 +1,6 @@
 // Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
 
+import { LoadingCard } from '@/components/common/LoadingCard';
 import { useParticipantSession, useParticipantSessionMatrix } from '@/hooks/participantSession';
 import { useParticipantOwnTransparency } from '@/hooks/transparency';
 import { TRANSPARENCY_F_TO_P_TABLE, transparencyConvertFToP } from '@aor/types';
@@ -10,7 +11,6 @@ import {
     Card,
     CardContent,
     Divider,
-    LinearProgress,
     Stack,
     Table,
     TableBody,
@@ -97,16 +97,7 @@ function ParticipantTransparencyRoute() {
     const isLoading = sessionLoading || envelopeLoading || matrixLoading;
 
     if (isLoading) {
-        return (
-            <Card variant="outlined">
-                <CardContent sx={{ p: 3 }}>
-                    <Typography variant="h6" fontWeight={700}>
-                        Chargement du repère de transparence
-                    </Typography>
-                    <LinearProgress sx={{ mt: 2 }} />
-                </CardContent>
-            </Card>
-        );
+        return <LoadingCard title="Chargement du repère de transparence" />;
     }
 
     if (!assignment) {
@@ -114,7 +105,11 @@ function ParticipantTransparencyRoute() {
             <Stack spacing={2}>
                 <Alert severity="warning">Aucune campagne trouvée pour cet identifiant.</Alert>
                 <Link to="/campaigns/$campaignId" params={{ campaignId: String(campaignId) }}>
-                    <Button startIcon={<ArrowLeft size={16} />} variant="outlined" sx={{ borderRadius: 3, alignSelf: 'flex-start' }}>
+                    <Button
+                        startIcon={<ArrowLeft size={16} />}
+                        variant="outlined"
+                        sx={{ borderRadius: 3, alignSelf: 'flex-start' }}
+                    >
                         Retour à la campagne
                     </Button>
                 </Link>
@@ -126,11 +121,15 @@ function ParticipantTransparencyRoute() {
         return (
             <Stack spacing={2}>
                 <Alert severity="info">
-                    Le repère de transparence n'a pas encore été activé par votre coach. Vous pourrez consulter le détail
-                    une fois le calcul lancé.
+                    Le repère de transparence n'a pas encore été activé par votre coach. Vous pourrez consulter le
+                    détail une fois le calcul lancé.
                 </Alert>
                 <Link to="/campaigns/$campaignId" params={{ campaignId: String(campaignId) }}>
-                    <Button startIcon={<ArrowLeft size={16} />} variant="outlined" sx={{ borderRadius: 3, alignSelf: 'flex-start' }}>
+                    <Button
+                        startIcon={<ArrowLeft size={16} />}
+                        variant="outlined"
+                        sx={{ borderRadius: 3, alignSelf: 'flex-start' }}
+                    >
                         Retour à la campagne
                     </Button>
                 </Link>
@@ -141,7 +140,11 @@ function ParticipantTransparencyRoute() {
     return (
         <Stack spacing={3}>
             <Link to="/campaigns/$campaignId" params={{ campaignId: String(campaignId) }}>
-                <Button startIcon={<ArrowLeft size={16} />} variant="outlined" sx={{ borderRadius: 3, alignSelf: 'flex-start' }}>
+                <Button
+                    startIcon={<ArrowLeft size={16} />}
+                    variant="outlined"
+                    sx={{ borderRadius: 3, alignSelf: 'flex-start' }}
+                >
                     Retour à la campagne
                 </Button>
             </Link>
@@ -248,7 +251,10 @@ function ParticipantTransparencyRoute() {
                                             </TableCell>
                                             {row.peers.map((peer, i) => (
                                                 // biome-ignore lint/suspicious/noArrayIndexKey: colonnes pair, pas de réorganisation possible.
-                                                <TableCell key={`p-${String(row.score_key)}-${String(i)}`} align="center">
+                                                <TableCell
+                                                    key={`p-${String(row.score_key)}-${String(i)}`}
+                                                    align="center"
+                                                >
                                                     {peer ?? '—'}
                                                 </TableCell>
                                             ))}
@@ -262,7 +268,10 @@ function ParticipantTransparencyRoute() {
                                                     {ecart ?? '—'}
                                                 </TableCell>
                                             ))}
-                                            <TableCell align="center" sx={{ bgcolor: 'tint.primaryBg', fontWeight: 700 }}>
+                                            <TableCell
+                                                align="center"
+                                                sx={{ bgcolor: 'tint.primaryBg', fontWeight: 700 }}
+                                            >
                                                 {row.p ?? '—'}
                                             </TableCell>
                                         </TableRow>
@@ -327,9 +336,7 @@ function ParticipantTransparencyRoute() {
                                 <TableBody>
                                     {TRANSPARENCY_F_TO_P_TABLE.map(([f, p]) => (
                                         <TableRow key={f}>
-                                            <TableCell align="center">
-                                                {f}
-                                            </TableCell>
+                                            <TableCell align="center">{f}</TableCell>
                                             <TableCell align="center" sx={{ fontWeight: 600 }}>
                                                 {p}
                                             </TableCell>

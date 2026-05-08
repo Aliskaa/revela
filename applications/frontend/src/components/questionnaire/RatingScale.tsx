@@ -6,9 +6,14 @@ type RatingScaleProps = {
     max?: number;
     min?: number;
     size?: 'small' | 'medium';
+    /**
+     * Étiquette accessible décrivant l'item noté (sera lue par les lecteurs d'écran avant la valeur).
+     * Ex. `"Comportement exprimé"` → annoncera `"Comportement exprimé : 5 sur 9"`.
+     */
+    ariaLabel?: string;
 };
 
-export const RatingScale = ({ value, onChange, max = 9, min = 1, size = 'small' }: RatingScaleProps) => (
+export const RatingScale = ({ value, onChange, max = 9, min = 1, size = 'small', ariaLabel }: RatingScaleProps) => (
     <ToggleButtonGroup
         value={value}
         exclusive
@@ -16,12 +21,14 @@ export const RatingScale = ({ value, onChange, max = 9, min = 1, size = 'small' 
         onChange={(_e, next) => {
             if (next !== null) onChange(next);
         }}
+        aria-label={ariaLabel}
         sx={{ flexWrap: 'wrap', gap: 0.75 }}
     >
         {Array.from({ length: max - min + 1 }, (_, i) => min + i).map(score => (
             <ToggleButton
                 key={`rating-${score}`}
                 value={score}
+                aria-label={ariaLabel ? `${ariaLabel} : ${score} sur ${max}` : `${score} sur ${max}`}
                 sx={{
                     minWidth: 38,
                     height: 38,

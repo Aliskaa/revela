@@ -1,3 +1,4 @@
+import { LoadingCard } from '@/components/common/LoadingCard';
 import { CampaignResultCard } from '@/components/participant-dashboard/CampaignResultCard';
 import {
     CampaignStepCard,
@@ -8,7 +9,7 @@ import { CampaignTransparencyCard } from '@/components/participant-dashboard/Cam
 import { CampaignWorkspaceHeader } from '@/components/participant-dashboard/CampaignWorkspaceHeader';
 import { useConfirmPeerFeedback, useParticipantSession } from '@/hooks/participantSession';
 import { useParticipantOwnTransparency } from '@/hooks/transparency';
-import { Alert, Box, Button, Card, CardContent, LinearProgress, Stack, Typography } from '@mui/material';
+import { Alert, Box, Button, Card, CardContent, Stack, Typography } from '@mui/material';
 import { Link, createFileRoute, useNavigate } from '@tanstack/react-router';
 import { ArrowLeft, MessageSquareQuote, Radar } from 'lucide-react';
 import * as React from 'react';
@@ -77,16 +78,7 @@ function ParticipantCampaignWorkspaceRoute() {
     );
 
     if (isLoading) {
-        return (
-            <Card variant="outlined">
-                <CardContent sx={{ p: 3 }}>
-                    <Typography variant="h6" fontWeight={700} color="text.primary">
-                        Chargement de la campagne
-                    </Typography>
-                    <LinearProgress sx={{ mt: 2 }} />
-                </CardContent>
-            </Card>
-        );
+        return <LoadingCard title="Chargement de la campagne" />;
     }
 
     if (isError || !session) {

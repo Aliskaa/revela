@@ -8,7 +8,6 @@ import {
     CardContent,
     CircularProgress,
     Divider,
-    LinearProgress,
     Stack,
     Table,
     TableBody,
@@ -22,6 +21,7 @@ import { Link } from '@tanstack/react-router';
 import { ArrowLeft, ScanEye } from 'lucide-react';
 import * as React from 'react';
 
+import { LoadingCard } from '@/components/common/LoadingCard';
 import { useAdminCampaign, useParticipant, useParticipantQuestionnaireMatrix } from '@/hooks/admin';
 import {
     useActivateCampaignParticipantTransparency,
@@ -130,11 +130,7 @@ export function CampaignParticipantTransparencyPage({
 
     const backButton = (
         <Link to={cfg.backTo} params={{ campaignId: String(campaignId) }}>
-            <Button
-                variant="outlined"
-                startIcon={<ArrowLeft size={16} />}
-                sx={{ alignSelf: 'flex-start' }}
-            >
+            <Button variant="outlined" startIcon={<ArrowLeft size={16} />} sx={{ alignSelf: 'flex-start' }}>
                 {cfg.backLabel}
             </Button>
         </Link>
@@ -143,16 +139,7 @@ export function CampaignParticipantTransparencyPage({
     const isLoading = campaignLoading || envelopeLoading || (qid.length > 0 && matrixLoading);
 
     if (isLoading) {
-        return (
-            <Card variant="outlined">
-                <CardContent sx={{ p: 3 }}>
-                    <Typography variant="h6" fontWeight={700}>
-                        Chargement du repère de transparence
-                    </Typography>
-                    <LinearProgress sx={{ mt: 2 }} />
-                </CardContent>
-            </Card>
-        );
+        return <LoadingCard title="Chargement du repère de transparence" />;
     }
 
     if (!campaignDetail) {

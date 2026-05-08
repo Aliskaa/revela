@@ -1,3 +1,4 @@
+import { LoadingCard } from '@/components/common/LoadingCard';
 import { CampaignNotActiveBlock } from '@/components/participant-dashboard/CampaignNotActiveBlock';
 import { StepCompletedBanner } from '@/components/participant-dashboard/StepCompletedBanner';
 import { RatingDimensionCard } from '@/components/questionnaire/RatingDimensionCard';
@@ -10,20 +11,9 @@ import {
 import { useSubmitParticipantQuestionnaire } from '@/hooks/questionnaires';
 import { useBuildDimensions } from '@/hooks/useBuildDimensions';
 import { useSelectedAssignment } from '@/hooks/useSelectedAssignment';
+import { useToast } from '@/lib/toast';
 import type { CampaignPeerChoice } from '@aor/types';
-import {
-    Alert,
-    Box,
-    Button,
-    Card,
-    CardContent,
-    Chip,
-    Divider,
-    LinearProgress,
-    Snackbar,
-    Stack,
-    Typography,
-} from '@mui/material';
+import { Alert, Box, Button, Card, CardContent, Chip, Divider, Stack, Typography } from '@mui/material';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { BadgeCheck, CheckCircle2, CircleUserRound, Save, Sparkles, Users } from 'lucide-react';
 import * as React from 'react';
@@ -60,9 +50,7 @@ function PeerCard({
                 bgcolor: selected ? 'tint.primaryHover' : '#fff',
                 opacity: alreadyRated ? 0.7 : 1,
                 transition: 'all 0.15s ease',
-                ...(!alreadyRated
-                    ? { '&:hover': { borderColor: 'primary.main', bgcolor: 'tint.primaryGhost' } }
-                    : {}),
+                ...(!alreadyRated ? { '&:hover': { borderColor: 'primary.main', bgcolor: 'tint.primaryGhost' } } : {}),
             }}
         >
             <Box
@@ -110,6 +98,7 @@ function PeerCard({
 function ParticipantPeerFeedbackRoute() {
     const { data: session, isLoading: sessionLoading, isError } = useParticipantSession();
     const navigate = useNavigate();
+    const toast = useToast();
 
     const { assignment: activeAssignment } = useSelectedAssignment(session);
     const qid = activeAssignment?.questionnaire_id ?? '';
@@ -123,7 +112,6 @@ function ParticipantPeerFeedbackRoute() {
     const [selectedPeer, setSelectedPeer] = React.useState<CampaignPeerChoice | null>(null);
     const [scores, setScores] = React.useState<Record<string, number | null>>({});
     const [comments, setComments] = React.useState<Record<string, string>>({});
-    const [successOpen, setSuccessOpen] = React.useState(false);
 
     const isLoading = sessionLoading || matrixLoading;
     const campaignActive = activeAssignment?.campaign_status === 'active';
@@ -183,14 +171,19 @@ function ParticipantPeerFeedbackRoute() {
                 commentsPayload[k] = trimmed;
             }
         }
-        await submitMutation.mutateAsync({
-            kind: 'peer_rating',
-            peer_label: selectedPeer.full_name,
-            rated_participant_id: selectedPeer.participant_id,
-            scores: payload,
-            ...(Object.keys(commentsPayload).length > 0 ? { comments: commentsPayload } : {}),
-        });
-        setSuccessOpen(true);
+        try {
+            await submitMutation.mutateAsync({
+                kind: 'peer_rating',
+                peer_label: selectedPeer.full_name,
+                rated_participant_id: selectedPeer.participant_id,
+                scores: payload,
+                ...(Object.keys(commentsPayload).length > 0 ? { comments: commentsPayload } : {}),
+            });
+        } catch {
+            toast.error("Erreur lors de l'enregistrement. Réessayez.");
+            return;
+        }
+        toast.success('Feedback enregistré');
         setSelectedPeer(null);
         setScores({});
         setComments({});
@@ -215,16 +208,7 @@ function ParticipantPeerFeedbackRoute() {
     };
 
     if (isLoading) {
-        return (
-            <Card variant="outlined">
-                <CardContent sx={{ p: 3 }}>
-                    <Typography variant="h6" fontWeight={700} color="text.primary">
-                        Chargement du feedback des pairs
-                    </Typography>
-                    <LinearProgress sx={{ mt: 2 }} />
-                </CardContent>
-            </Card>
-        );
+        return <LoadingCard title="Chargement du feedback des pairs" />;
     }
 
     if (isError || !session) {
@@ -246,13 +230,6 @@ function ParticipantPeerFeedbackRoute() {
 
     return (
         <Stack spacing={3}>
-            <Snackbar
-                open={successOpen}
-                autoHideDuration={3000}
-                onClose={() => setSuccessOpen(false)}
-                message="Feedback enregistré"
-            />
-
             {!canInteract && (
                 <Alert severity="warning">
                     {!campaignActive
@@ -378,9 +355,7 @@ function ParticipantPeerFeedbackRoute() {
                                     onClick={handleConfirmDone}
                                     disabled={!canInteract || confirmMutation.isPending}
                                 >
-                                    {confirmMutation.isPending
-                                        ? 'Confirmation…'
-                                        : "J'ai terminé mes feedbacks"}
+                                    {confirmMutation.isPending ? 'Confirmation…' : "J'ai terminé mes feedbacks"}
                                 </Button>
                                 <Typography
                                     variant="caption"
@@ -439,12 +414,6 @@ function ParticipantPeerFeedbackRoute() {
                                     />
                                 ))}
                             </Stack>
-
-                            {submitMutation.isError && (
-                                <Alert severity="error" sx={{ mt: 2 }}>
-                                    Erreur lors de l'enregistrement. Réessayez.
-                                </Alert>
-                            )}
 
                             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.2} sx={{ mt: 3 }}>
                                 <Button

@@ -2,12 +2,13 @@
 
 import * as React from 'react';
 
+import { LoadingCard } from '@/components/common/LoadingCard';
 import { QuestionnaireMatrixDisplay } from '@/components/matrix/QuestionnaireMatrixDisplay';
 import { useParticipantSession, useParticipantSessionMatrix } from '@/hooks/participantSession';
 import { exportResultsPdf } from '@/lib/exportResultsPdf';
 import { buildDimensions } from '@/lib/results/buildDimensions';
 import { useToast } from '@/lib/toast';
-import { Alert, Box, Button, Card, CardContent, Chip, LinearProgress, Stack, Tooltip, Typography } from '@mui/material';
+import { Alert, Box, Button, Card, CardContent, Chip, Stack, Tooltip, Typography } from '@mui/material';
 import { Link, createFileRoute } from '@tanstack/react-router';
 import { ArrowLeft, Download, HelpCircle, Radar, Users } from 'lucide-react';
 
@@ -75,17 +76,7 @@ function ParticipantResultsRoute() {
     };
 
     if (isLoading) {
-        return (
-            // biome-ignore lint/a11y/useSemanticElements: `Card` est un `<div>` MUI ; on ajoute `role=`status`` pour annoncer le chargement aux lecteurs d'écran.
-            <Card variant="outlined" role="status" aria-live="polite" aria-busy="true">
-                <CardContent sx={{ p: 3 }}>
-                    <Typography variant="h6" fontWeight={700} color="text.primary">
-                        Chargement des résultats
-                    </Typography>
-                    <LinearProgress sx={{ mt: 2 }} aria-label="Chargement des résultats" />
-                </CardContent>
-            </Card>
-        );
+        return <LoadingCard title="Chargement des résultats" />;
     }
 
     if (sessionError || !session) {

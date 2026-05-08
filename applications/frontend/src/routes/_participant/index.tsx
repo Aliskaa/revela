@@ -2,9 +2,11 @@
 
 import { Alert, Box, Button, Card, CardContent, Chip, LinearProgress, Stack, Typography } from '@mui/material';
 import { Link, createFileRoute } from '@tanstack/react-router';
-import { ArrowRight, CheckCircle2, Gauge, Hourglass, Layers3 } from 'lucide-react';
+import { ArrowRight, CheckCircle2, Gauge, Hourglass, Layers3, Sparkles } from 'lucide-react';
 import type * as React from 'react';
 
+import { EmptyState } from '@/components/common/EmptyState';
+import { LoadingCard } from '@/components/common/LoadingCard';
 import { useParticipantSession } from '@/hooks/participantSession';
 import type { ParticipantSession } from '@aor/types';
 
@@ -163,17 +165,7 @@ export function ParticipantDashboardRoute() {
     const { data: session, isLoading, isError } = useParticipantSession();
 
     if (isLoading) {
-        return (
-            // biome-ignore lint/a11y/useSemanticElements: `Card` est un `<div>` MUI ; on ajoute `role="status"` pour annoncer le chargement aux lecteurs d'écran.
-            <Card variant="outlined" role="status" aria-live="polite" aria-busy="true">
-                <CardContent sx={{ p: 3 }}>
-                    <Typography variant="h6" fontWeight={700} color="text.primary">
-                        Chargement de votre espace
-                    </Typography>
-                    <LinearProgress sx={{ mt: 2 }} aria-label="Chargement en cours" />
-                </CardContent>
-            </Card>
-        );
+        return <LoadingCard title="Chargement de votre espace" ariaLabel="Chargement en cours" />;
     }
 
     if (isError || !session) {
@@ -258,16 +250,11 @@ export function ParticipantDashboardRoute() {
             </Box>
 
             {total === 0 ? (
-                <Card variant="outlined">
-                    <CardContent sx={{ p: 3 }}>
-                        <Typography variant="h6" color="text.primary">
-                            Aucun parcours pour le moment
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.6, lineHeight: 1.7 }}>
-                            Les parcours apparaissent ici dès qu'un coach vous y invite.
-                        </Typography>
-                    </CardContent>
-                </Card>
+                <EmptyState
+                    icon={Sparkles}
+                    title="Aucun parcours pour le moment"
+                    description="Les parcours apparaissent ici dès qu'un coach vous y invite."
+                />
             ) : (
                 <Stack spacing={1.4}>
                     {assignments.map(a => (

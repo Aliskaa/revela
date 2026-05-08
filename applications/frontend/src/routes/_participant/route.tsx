@@ -1,7 +1,6 @@
 import { FooterLayout } from '@/components/layout/FooterLayout';
 import { ScopedAppShell, type ScopedNavItem } from '@/components/layout/ScopedAppShell';
 import { parseAdminJwtClaims, userAdmin, userParticipant } from '@/lib/auth';
-import { Box, Typography } from '@mui/material';
 import { Outlet, createFileRoute, redirect, useNavigate } from '@tanstack/react-router';
 import { ClipboardList, Gauge, Sparkles, UserRound } from 'lucide-react';
 
@@ -39,19 +38,6 @@ const participantNav: ScopedNavItem[] = [
     { label: 'Mon profil', to: '/profile', icon: UserRound },
 ];
 
-function ParticipantDesktopTopBar() {
-    return (
-        <Box sx={{ display: { xs: 'none', lg: 'block' }, mb: 3 }}>
-            <Typography variant="h5" color="text.primary">
-                Espace participant
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-                Suivi de campagne, progression et restitution
-            </Typography>
-        </Box>
-    );
-}
-
 function ParticipantRouteLayout() {
     const navigate = useNavigate();
 
@@ -68,7 +54,6 @@ function ParticipantRouteLayout() {
             avatarInitial="P"
             nav={participantNav}
             onLogout={handleLogout}
-            desktopTopBar={<ParticipantDesktopTopBar />}
             footer={<FooterLayout />}
         >
             <Outlet />

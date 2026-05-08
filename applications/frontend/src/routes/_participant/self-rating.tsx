@@ -1,3 +1,4 @@
+import { LoadingCard } from '@/components/common/LoadingCard';
 import { StatCard } from '@/components/common/cards';
 import { CampaignNotActiveBlock } from '@/components/participant-dashboard/CampaignNotActiveBlock';
 import { StepCompletedBanner } from '@/components/participant-dashboard/StepCompletedBanner';
@@ -6,20 +7,9 @@ import { useParticipantSession, useParticipantSessionMatrix } from '@/hooks/part
 import { useSubmitParticipantQuestionnaire } from '@/hooks/questionnaires';
 import { useBuildDimensions } from '@/hooks/useBuildDimensions';
 import { useSelectedAssignment } from '@/hooks/useSelectedAssignment';
+import { useToast } from '@/lib/toast';
 import type { ParticipantQuestionnaireMatrix } from '@aor/types';
-import {
-    Alert,
-    Box,
-    Button,
-    Card,
-    CardContent,
-    Chip,
-    Divider,
-    LinearProgress,
-    Snackbar,
-    Stack,
-    Typography,
-} from '@mui/material';
+import { Alert, Box, Button, Card, CardContent, Chip, Divider, LinearProgress, Stack, Typography } from '@mui/material';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { BadgeCheck, CheckCircle2, ClipboardList, Hash, Save, Sparkles, Users } from 'lucide-react';
 import * as React from 'react';
@@ -38,6 +28,7 @@ const initScoresFromMatrix = (matrix: ParticipantQuestionnaireMatrix): Record<st
 
 function ParticipantSelfRatingRoute() {
     const navigate = useNavigate();
+    const toast = useToast();
     const { data: session, isLoading: sessionLoading, isError } = useParticipantSession();
 
     const { assignment: activeAssignment } = useSelectedAssignment(session);
@@ -49,7 +40,6 @@ function ParticipantSelfRatingRoute() {
 
     const [scores, setScores] = React.useState<Record<string, number | null>>({});
     const [initialized, setInitialized] = React.useState(false);
-    const [successOpen, setSuccessOpen] = React.useState(false);
 
     React.useEffect(() => {
         if (matrix && !initialized) {
@@ -65,8 +55,7 @@ function ParticipantSelfRatingRoute() {
         activeAssignment?.progression?.self_rating_status === 'completed' ||
         !activeAssignment?.progression;
     const canSubmit = campaignActive && stepAvailable;
-    const questionnaireTitle =
-        matrix?.questionnaire_title ?? activeAssignment?.questionnaire_title ?? 'Regard sur soi';
+    const questionnaireTitle = matrix?.questionnaire_title ?? activeAssignment?.questionnaire_title ?? 'Regard sur soi';
     const questionnaireCode = matrix?.questionnaire_id ?? qid;
 
     const dimensions = useBuildDimensions(matrix);
@@ -84,21 +73,24 @@ function ParticipantSelfRatingRoute() {
         for (const [k, v] of Object.entries(scores)) {
             if (v !== null) payload[k] = v;
         }
-        await submitMutation.mutateAsync({ kind: 'self_rating', scores: payload });
-        setSuccessOpen(true);
+        try {
+            await submitMutation.mutateAsync({ kind: 'self_rating', scores: payload });
+        } catch {
+            toast.error("Erreur lors de l'enregistrement. Réessayez.");
+            return;
+        }
+        toast.success('Regard sur soi enregistrée');
+        // Après validation d'une étape du parcours, retour systématique sur la fiche
+        // de la campagne concernée (cf. P10 du suivi produit 2026-05-02).
+        if (campaignId !== undefined) {
+            navigate({ to: '/campaigns/$campaignId', params: { campaignId: String(campaignId) } });
+        } else {
+            navigate({ to: '/' });
+        }
     };
 
     if (isLoading) {
-        return (
-            <Card variant="outlined">
-                <CardContent sx={{ p: 3 }}>
-                    <Typography variant="h6" fontWeight={700} color="text.primary">
-                        Chargement du Regard sur soi
-                    </Typography>
-                    <LinearProgress sx={{ mt: 2 }} />
-                </CardContent>
-            </Card>
-        );
+        return <LoadingCard title="Chargement du Regard sur soi" />;
     }
 
     if (isError || !session) {
@@ -118,23 +110,71 @@ function ParticipantSelfRatingRoute() {
         return <CampaignNotActiveBlock campaignId={activeAssignment.campaign_id} />;
     }
 
+    const progressPct = totalItems > 0 ? Math.round((filledCount / totalItems) * 100) : 0;
+    const submitButton = (
+        <Button
+            variant="contained"
+            disableElevation
+            startIcon={allFilled ? <CheckCircle2 size={16} /> : <Save size={16} />}
+            onClick={handleSubmit}
+            disabled={!canSubmit || filledCount === 0 || submitMutation.isPending}
+            sx={{ borderRadius: 3 }}
+        >
+            {submitMutation.isPending
+                ? 'Enregistrement…'
+                : allFilled
+                  ? 'Valider le Regard sur soi'
+                  : `Enregistrer (${filledCount}/${totalItems})`}
+        </Button>
+    );
+
     return (
-        <Stack spacing={3}>
-            <Snackbar
-                open={successOpen}
-                autoHideDuration={3000}
-                onClose={() => {
-                    setSuccessOpen(false);
-                    // Après validation d'une étape du parcours, retour systématique sur la fiche
-                    // de la campagne concernée (cf. P10 du suivi produit 2026-05-02).
-                    if (campaignId !== undefined) {
-                        navigate({ to: '/campaigns/$campaignId', params: { campaignId: String(campaignId) } });
-                    } else {
-                        navigate({ to: '/' });
-                    }
-                }}
-                message="Regard sur soi enregistrée"
-            />
+        <Stack spacing={3} sx={{ pb: { xs: 12, md: 0 } }}>
+            {/*
+                Bandeau de progression sticky : visible uniquement sur mobile (xs/sm) une fois la
+                première note saisie. Permet au participant de garder une vue sur sa progression
+                en scrollant les dimensions sans avoir à remonter.
+                `top: 68px` correspond à la hauteur du `MobileTopBar` (Toolbar minHeight 68).
+            */}
+            {totalItems > 0 && (
+                <Box
+                    sx={{
+                        display: { xs: 'block', md: 'none' },
+                        position: 'sticky',
+                        top: 68,
+                        zIndex: 5,
+                        mx: -2,
+                        mt: -2,
+                        px: 2,
+                        py: 1.2,
+                        bgcolor: 'rgba(255,255,255,0.92)',
+                        backdropFilter: 'blur(10px)',
+                        borderBottom: '1px solid',
+                        borderBottomColor: 'border',
+                    }}
+                >
+                    <Stack direction="row" alignItems="center" spacing={1.5}>
+                        <Typography variant="caption" fontWeight={700} color="text.primary">
+                            {filledCount} / {totalItems}
+                        </Typography>
+                        <LinearProgress
+                            variant="determinate"
+                            value={progressPct}
+                            aria-label="Progression du Regard sur soi"
+                            sx={{
+                                flex: 1,
+                                height: 6,
+                                borderRadius: 99,
+                                bgcolor: 'tint.subtleBg',
+                                '& .MuiLinearProgress-bar': { bgcolor: 'primary.main' },
+                            }}
+                        />
+                        <Typography variant="caption" color="text.secondary">
+                            {progressPct}%
+                        </Typography>
+                    </Stack>
+                </Box>
+            )}
 
             <Card variant="outlined">
                 <CardContent sx={{ p: { xs: 2.5, md: 3 } }}>
@@ -251,30 +291,41 @@ function ParticipantSelfRatingRoute() {
                             ))}
                         </Stack>
 
-                        {submitMutation.isError && (
-                            <Alert severity="error" sx={{ mt: 2 }}>
-                                Erreur lors de l'enregistrement. Réessayez.
-                            </Alert>
-                        )}
-
-                        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.2} sx={{ mt: 3 }}>
-                            <Button
-                                variant="contained"
-                                disableElevation
-                                startIcon={allFilled ? <CheckCircle2 size={16} /> : <Save size={16} />}
-                                onClick={handleSubmit}
-                                disabled={!canSubmit || filledCount === 0 || submitMutation.isPending}
-                                sx={{ borderRadius: 3 }}
-                            >
-                                {submitMutation.isPending
-                                    ? 'Enregistrement…'
-                                    : allFilled
-                                      ? "Valider le Regard sur soi"
-                                      : `Enregistrer (${filledCount}/${totalItems})`}
-                            </Button>
+                        <Stack
+                            direction={{ xs: 'column', sm: 'row' }}
+                            spacing={1.2}
+                            sx={{ mt: 3, display: { xs: 'none', md: 'flex' } }}
+                        >
+                            {submitButton}
                         </Stack>
                     </CardContent>
                 </Card>
+            )}
+
+            {/*
+                Footer sticky mobile : reproduit le bouton de soumission en bas d'écran pour
+                éviter le scroll-to-bottom à chaque dimension complétée. `position: fixed` (et non
+                sticky) garantit la visibilité même quand on est au milieu de la liste.
+            */}
+            {dimensions.length > 0 && (
+                <Box
+                    sx={{
+                        display: { xs: 'block', md: 'none' },
+                        position: 'fixed',
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        zIndex: 6,
+                        bgcolor: 'rgba(255,255,255,0.96)',
+                        backdropFilter: 'blur(10px)',
+                        borderTop: '1px solid',
+                        borderTopColor: 'border',
+                        px: 2,
+                        py: 1.5,
+                    }}
+                >
+                    <Box sx={{ '& > button': { width: '100%' } }}>{submitButton}</Box>
+                </Box>
             )}
         </Stack>
     );

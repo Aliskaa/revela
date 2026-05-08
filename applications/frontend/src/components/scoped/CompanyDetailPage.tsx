@@ -1,6 +1,6 @@
 // Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
 
-import { Button, Card, CardContent, Skeleton, Snackbar, Stack, Typography } from '@mui/material';
+import { Button, Card, CardContent, Skeleton, Stack, Typography } from '@mui/material';
 import { Link, useNavigate } from '@tanstack/react-router';
 import { Building2, Mail, Users } from 'lucide-react';
 import * as React from 'react';
@@ -12,6 +12,7 @@ import { DeleteCompanyParticipantDialog } from '@/components/admin/company-detai
 import { StatCard } from '@/components/common/cards';
 import { KpiGrid, PageHeroCard } from '@/components/common/layout';
 import { useCompanies, useParticipants } from '@/hooks/admin';
+import { useToast } from '@/lib/toast';
 import { usePageResetEffect } from '@/lib/usePageResetEffect';
 import { useAuthStore } from '@/stores/authStore';
 import type { Participant } from '@aor/types';
@@ -70,7 +71,7 @@ export function CompanyDetailPage({ scope, companyId }: CompanyDetailPageProps) 
 
     const [deleteCompanyOpen, setDeleteCompanyOpen] = React.useState(false);
     const [deleteParticipantTarget, setDeleteParticipantTarget] = React.useState<Participant | null>(null);
-    const [snack, setSnack] = React.useState<string | null>(null);
+    const toast = useToast();
 
     const company = companies.find(c => c.id === companyId);
     const participants = participantsData?.items ?? [];
@@ -104,8 +105,6 @@ export function CompanyDetailPage({ scope, companyId }: CompanyDetailPageProps) 
 
     return (
         <Stack spacing={3}>
-            <Snackbar open={!!snack} autoHideDuration={4000} onClose={() => setSnack(null)} message={snack} />
-
             {isAdmin && (
                 <DeleteCompanyDialog
                     open={deleteCompanyOpen}
@@ -118,7 +117,7 @@ export function CompanyDetailPage({ scope, companyId }: CompanyDetailPageProps) 
             <DeleteCompanyParticipantDialog
                 participant={deleteParticipantTarget}
                 onClose={() => setDeleteParticipantTarget(null)}
-                onDeleted={setSnack}
+                onDeleted={message => toast.success(message)}
             />
 
             <PageHeroCard

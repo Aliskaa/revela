@@ -1,6 +1,7 @@
+import { LoadingCard } from '@/components/common/LoadingCard';
 import { useParticipantSession } from '@/hooks/participantSession';
 import type { ParticipantSession } from '@aor/types';
-import { Alert, Box, Button, Card, CardContent, Chip, LinearProgress, Stack, Typography } from '@mui/material';
+import { Alert, Box, Button, Card, CardContent, Chip, Stack, Typography } from '@mui/material';
 import { Link, createFileRoute } from '@tanstack/react-router';
 import { ArrowLeft, Sparkles, UserRound, Users } from 'lucide-react';
 import * as React from 'react';
@@ -82,16 +83,7 @@ function ParticipantCoachRoute() {
     const coachView = coachFromAssignment(assignment);
 
     if (isLoading) {
-        return (
-            <Card variant="outlined">
-                <CardContent sx={{ p: 3 }}>
-                    <Typography variant="h6" fontWeight={800} color="text.primary">
-                        Chargement de votre coach
-                    </Typography>
-                    <LinearProgress sx={{ mt: 2 }} />
-                </CardContent>
-            </Card>
-        );
+        return <LoadingCard title="Chargement de votre coach" />;
     }
 
     if (isError || !session) {

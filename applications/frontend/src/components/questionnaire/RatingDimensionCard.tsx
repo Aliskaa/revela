@@ -90,6 +90,7 @@ export const RatingDimensionCard = ({
                                             onChange={v => {
                                                 if (v !== null) onScoreChange(key, v);
                                             }}
+                                            ariaLabel={item.label}
                                         />
                                         {commentsEnabled && (
                                             <Stack spacing={1}>

@@ -1,3 +1,5 @@
+import { EmptyState } from '@/components/common/EmptyState';
+import { LoadingCard } from '@/components/common/LoadingCard';
 import { SectionTitle } from '@/components/common/SectionTitle';
 import { StatCard } from '@/components/common/cards';
 import { useConfirmCampaignParticipation, useParticipantSession } from '@/hooks/participantSession';
@@ -12,7 +14,6 @@ import {
     Chip,
     Divider,
     InputAdornment,
-    LinearProgress,
     Stack,
     TextField,
     Typography,
@@ -334,34 +335,12 @@ function Row({ icon: Icon, label, value }: { icon: React.ElementType; label: str
 
 function EmptyCampaignsState() {
     return (
-        <Card variant="outlined">
-            <CardContent sx={{ p: 3 }}>
-                <Stack spacing={2} alignItems="start">
-                    <Box
-                        sx={{
-                            width: 48,
-                            height: 48,
-                            borderRadius: 3,
-                            bgcolor: 'tint.secondaryBg',
-                            color: 'tint.secondaryText',
-                            display: 'grid',
-                            placeItems: 'center',
-                        }}
-                    >
-                        <Lock size={18} />
-                    </Box>
-                    <Box>
-                        <Typography variant="h6" fontWeight={800} color="text.primary">
-                            Aucune campagne disponible pour le moment
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.6, lineHeight: 1.7 }}>
-                            Les campagnes apparaissent ici dès qu’elles sont créées et que ton accès est rattaché par
-                            l’administrateur.
-                        </Typography>
-                    </Box>
-                </Stack>
-            </CardContent>
-        </Card>
+        <EmptyState
+            icon={Lock}
+            variant="secondary"
+            title="Aucune campagne disponible pour le moment"
+            description="Les campagnes apparaissent ici dès qu’elles sont créées et que ton accès est rattaché par l’administrateur."
+        />
     );
 }
 
@@ -383,17 +362,10 @@ function ParticipantCampaignsRoute() {
     const statsView = statsFromAssignments(assignments);
     if (isLoading) {
         return (
-            <Card variant="outlined">
-                <CardContent sx={{ p: 3 }}>
-                    <Typography variant="h6" fontWeight={800} color="text.primary">
-                        Chargement de vos campagnes
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ mt: 1, mb: 2 }}>
-                        Recuperation des campagnes rattachees a votre espace participant.
-                    </Typography>
-                    <LinearProgress />
-                </CardContent>
-            </Card>
+            <LoadingCard
+                title="Chargement de vos campagnes"
+                description="Récupération des campagnes rattachées à votre espace participant."
+            />
         );
     }
 

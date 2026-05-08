@@ -11,30 +11,11 @@ import {
     useUpsertElementBDraft,
 } from '@/hooks/questionnaires';
 import { useSelectedAssignment } from '@/hooks/useSelectedAssignment';
+import { useToast } from '@/lib/toast';
 import type { ElementBDraft, Question } from '@aor/types';
-import {
-    Alert,
-    Box,
-    Button,
-    Card,
-    CardContent,
-    Chip,
-    LinearProgress,
-    Snackbar,
-    Stack,
-    Typography
-} from '@mui/material';
+import { Alert, Box, Button, Card, CardContent, Chip, LinearProgress, Stack, Typography } from '@mui/material';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import {
-    ArrowLeft,
-    ArrowRight,
-    Heart,
-    Loader2,
-    Save,
-    Send,
-    Sparkles,
-    Users
-} from 'lucide-react';
+import { ArrowLeft, ArrowRight, Heart, Loader2, Save, Send, Sparkles, Users } from 'lucide-react';
 
 export const Route = createFileRoute('/_participant/test/$questionnaireCode')({
     component: ParticipantTestSessionRoute,
@@ -84,18 +65,13 @@ type AnswersMap = Record<string, number | null>;
  * Choisi pour rester sérialisable et permettre une hydratation directe depuis
  * un brouillon (`series0[i]` → clé `"0-i"`).
  */
-const answerKey = (seriesIndex: number, questionIndex: number) =>
-    `${String(seriesIndex)}-${String(questionIndex)}`;
+const answerKey = (seriesIndex: number, questionIndex: number) => `${String(seriesIndex)}-${String(questionIndex)}`;
 
 /**
  * Extrait toutes les réponses d'une série depuis la map. Retourne `null` si
  * une réponse manque (incomplet → ne pas envoyer comme brouillon de série).
  */
-const collectSeriesAnswers = (
-    answers: AnswersMap,
-    seriesIndex: number,
-    questionCount: number
-): number[] | null => {
+const collectSeriesAnswers = (answers: AnswersMap, seriesIndex: number, questionCount: number): number[] | null => {
     const out: number[] = [];
     for (let q = 0; q < questionCount; q++) {
         const v = answers[answerKey(seriesIndex, q)];
@@ -334,8 +310,8 @@ function QuestionCard({
                                 {isSubmitting
                                     ? 'Envoi en cours…'
                                     : allAnswered
-                                        ? 'Terminer et envoyer'
-                                        : `${String(answeredCount)} / ${String(totalQuestions)} réponses`}
+                                      ? 'Terminer et envoyer'
+                                      : `${String(answeredCount)} / ${String(totalQuestions)} réponses`}
                             </Button>
                         ) : (
                             <Button
@@ -357,6 +333,7 @@ function QuestionCard({
 
 function ParticipantTestSessionRoute() {
     const navigate = useNavigate();
+    const toast = useToast();
     const params = Route.useParams();
     const questionnaireCode = normalizeCode(params.questionnaireCode);
 
@@ -372,9 +349,6 @@ function ParticipantTestSessionRoute() {
     const [answers, setAnswers] = React.useState<AnswersMap>({});
     const [seriesIndex, setSeriesIndex] = React.useState(0);
     const [questionIndex, setQuestionIndex] = React.useState(0);
-    const [successOpen, setSuccessOpen] = React.useState(false);
-    const [draftSavedOpen, setDraftSavedOpen] = React.useState(false);
-    const [draftHydratedOpen, setDraftHydratedOpen] = React.useState(false);
     /**
      * `null` tant qu'on n'a pas hydraté depuis le brouillon (ou conclu qu'il n'y en
      * avait pas). Évite que les hooks réécrivent la position du participant à chaque
@@ -421,8 +395,8 @@ function ParticipantTestSessionRoute() {
         const resume = computeResumePosition(draft, seriesCount, questionCount);
         setSeriesIndex(resume.seriesIndex);
         setQuestionIndex(resume.questionIndex);
-        setDraftHydratedOpen(true);
-    }, [detail, draftQuery.data, draftQuery.isLoading, seriesCount, questionCount]);
+        toast.info('Brouillon repris — vos réponses précédentes ont été restaurées.');
+    }, [detail, draftQuery.data, draftQuery.isLoading, seriesCount, questionCount, toast]);
 
     /**
      * Sauvegarde le brouillon de la série qui vient d'être complétée.
@@ -442,16 +416,14 @@ function ParticipantTestSessionRoute() {
             if (!seriesAnswers) return;
             try {
                 await upsertDraft.mutateAsync(
-                    completedSeriesIndex === 0
-                        ? { series0: seriesAnswers }
-                        : { series1: seriesAnswers }
+                    completedSeriesIndex === 0 ? { series0: seriesAnswers } : { series1: seriesAnswers }
                 );
-                setDraftSavedOpen(true);
+                toast.success('Brouillon enregistré — vous pouvez reprendre plus tard si besoin.');
             } catch {
                 // Échec silencieux côté UI ; le participant peut continuer en mémoire locale.
             }
         },
-        [answers, campaignId, questionCount, upsertDraft]
+        [answers, campaignId, questionCount, upsertDraft, toast]
     );
 
     const handleSeriesIndexChange = (next: number) => {
@@ -482,7 +454,7 @@ function ParticipantTestSessionRoute() {
         if (seriesCount > 1 && !series1) return;
 
         await submitMutation.mutateAsync({ series0, series1: series1 ?? [] });
-        setSuccessOpen(true);
+        toast.success('Test soumis avec succès ! Redirection vers vos résultats…');
         setTimeout(() => {
             // Après validation d'une étape du parcours, retour systématique sur la fiche
             // de la campagne concernée (cf. P10 du suivi produit 2026-05-02). Le participant
@@ -608,28 +580,6 @@ function ParticipantTestSessionRoute() {
                     isAutosaving={upsertDraft.isPending}
                 />
             </Stack>
-
-            <Snackbar
-                open={successOpen}
-                autoHideDuration={3000}
-                onClose={() => setSuccessOpen(false)}
-                anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-                message="Test soumis avec succès ! Redirection vers vos résultats…"
-            />
-            <Snackbar
-                open={draftSavedOpen}
-                autoHideDuration={2500}
-                onClose={() => setDraftSavedOpen(false)}
-                anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-                message="Brouillon enregistré — vous pouvez reprendre plus tard si besoin."
-            />
-            <Snackbar
-                open={draftHydratedOpen}
-                autoHideDuration={4000}
-                onClose={() => setDraftHydratedOpen(false)}
-                anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-                message="Brouillon repris — vos réponses précédentes ont été restaurées."
-            />
         </Stack>
     );
 }

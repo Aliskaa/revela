@@ -1,3 +1,4 @@
+import { LoadingCard } from '@/components/common/LoadingCard';
 import { StatCard } from '@/components/common/cards';
 import {
     useFetchParticipantSelfDataExport,
@@ -16,7 +17,6 @@ import {
     Chip,
     FormControl,
     InputLabel,
-    LinearProgress,
     MenuItem,
     Link as MuiLink,
     Select,
@@ -71,17 +71,7 @@ function ParticipantProfileRoute() {
     }, [session, initialized]);
 
     if (isLoading) {
-        return (
-            // biome-ignore lint/a11y/useSemanticElements: `Card` est un `<div>` MUI ; on ajoute `role=`status`` (équivalent ARIA d`un live region) pour annoncer le chargement aux lecteurs d`écran.
-            <Card variant="outlined" role="status" aria-live="polite" aria-busy="true">
-                <CardContent sx={{ p: 3 }}>
-                    <Typography variant="h6" fontWeight={700} color="text.primary">
-                        Chargement du profil
-                    </Typography>
-                    <LinearProgress sx={{ mt: 2 }} aria-label="Chargement du profil" />
-                </CardContent>
-            </Card>
-        );
+        return <LoadingCard title="Chargement du profil" />;
     }
 
     if (isError || !session) {
@@ -225,12 +215,6 @@ function ParticipantProfileRoute() {
                             </Select>
                         </FormControl>
                     </Stack>
-
-                    {updateProfile.isError && (
-                        <Alert severity="error" sx={{ mt: 2 }}>
-                            Erreur lors de la mise à jour du profil.
-                        </Alert>
-                    )}
 
                     <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.2} sx={{ mt: 2.5 }}>
                         <Button

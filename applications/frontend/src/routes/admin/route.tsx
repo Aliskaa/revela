@@ -1,4 +1,3 @@
-import { Box, Typography } from '@mui/material';
 import { Outlet, createFileRoute, redirect, useLocation, useNavigate } from '@tanstack/react-router';
 import {
     Building2,
@@ -32,19 +31,6 @@ const adminNav: ScopedNavItem[] = [
     { label: 'Vue coach', to: '/coach', icon: Gauge },
 ];
 
-function AdminDesktopTopBar() {
-    return (
-        <Box sx={{ mb: 3 }}>
-            <Typography variant="h5" fontWeight={800} color="text.primary">
-                Vue d'ensemble
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-                Pilotage global des campagnes, participants et coachs.
-            </Typography>
-        </Box>
-    );
-}
-
 function AdminRoot() {
     const location = useLocation();
     const navigate = useNavigate();
@@ -65,7 +51,6 @@ function AdminRoot() {
             avatarInitial="A"
             nav={adminNav}
             onLogout={handleLogout}
-            desktopTopBar={<AdminDesktopTopBar />}
         >
             <Outlet />
         </ScopedAppShell>

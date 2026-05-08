@@ -43,8 +43,6 @@ export type ScopedAppShellProps = {
      * pour admin/coach, `userParticipant.removeToken()` + redirect login pour participant).
      */
     onLogout: () => void;
-    /** TopBar desktop optionnelle (titre + recherche globale, etc.). */
-    desktopTopBar?: React.ReactNode;
     /**
      * Bandeau optionnel en pleine largeur, posé au-dessus du contenu principal (et juste sous
      * la topbar mobile). Utilisé pour signaler un mode dégradé/spécial (ex. super-admin
@@ -78,7 +76,7 @@ function BrandMark({ brandIcon: Icon, brandLabel, brandEyebrow }: BrandMarkProps
                     color: '#fff',
                     display: 'grid',
                     placeItems: 'center',
-                    boxShadow: (theme) => theme.palette.shadow.brandHero,
+                    boxShadow: theme => theme.palette.shadow.brandHero,
                 }}
             >
                 <Icon size={18} />
@@ -139,7 +137,7 @@ function Sidebar({ nav, pathname, onLogout, ...brand }: SidebarProps) {
                                 px: 2,
                                 bgcolor: active ? 'primary.main' : 'transparent',
                                 color: active ? '#fff' : 'text.secondary',
-                                boxShadow: (theme) => (active ? theme.palette.shadow.brandActive : 'none'),
+                                boxShadow: theme => (active ? theme.palette.shadow.brandActive : 'none'),
                                 '&:hover': {
                                     bgcolor: active ? 'primary.dark' : 'tint.neutralHover',
                                 },
@@ -321,7 +319,6 @@ export function ScopedAppShell({
     avatarInitial,
     nav,
     onLogout,
-    desktopTopBar,
     topBanner,
     footer,
     children,
@@ -343,7 +340,6 @@ export function ScopedAppShell({
                 <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
                     {topBanner}
                     <Box component="main" sx={{ flex: 1, px: { xs: 2, sm: 3, lg: 4 }, py: { xs: 2, sm: 3, lg: 4 } }}>
-                        {desktopTopBar}
                         {children}
                     </Box>
                     {footer}
