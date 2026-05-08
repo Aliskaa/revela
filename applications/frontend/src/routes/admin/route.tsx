@@ -1,5 +1,5 @@
 import { Box, Typography } from '@mui/material';
-import { Outlet, createFileRoute, redirect, useLocation } from '@tanstack/react-router';
+import { Outlet, createFileRoute, redirect, useLocation, useNavigate } from '@tanstack/react-router';
 import {
     Building2,
     ClipboardList,
@@ -47,9 +47,15 @@ function AdminDesktopTopBar() {
 
 function AdminRoot() {
     const location = useLocation();
+    const navigate = useNavigate();
     const isLogin = location.pathname === '/admin/login';
 
     if (isLogin) return <Outlet />;
+
+    const handleLogout = () => {
+        userAdmin.removeToken();
+        navigate({ to: '/admin/login' });
+    };
 
     return (
         <ScopedAppShell
@@ -58,6 +64,7 @@ function AdminRoot() {
             brandEyebrow="Administration"
             avatarInitial="A"
             nav={adminNav}
+            onLogout={handleLogout}
             desktopTopBar={<AdminDesktopTopBar />}
         >
             <Outlet />

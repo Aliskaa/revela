@@ -84,26 +84,38 @@
 2. ✅ **Bleu unifié** : 16 occurrences de `rgb(21, 21, 176)` / `rgba(21, 21, 176, …)` migrées vers le primary du thème. Pour les `bgcolor` à opacité 0.08, utilisation du token `tint.primaryBg` (3 cas dans `routes/invite.$token.tsx`). Pour les autres opacités (0.02, 0.05, 0.06, 0.10, 0.15, 0.25), conservation de `rgba(15, 24, 152, X)` aligné sur le primary. Fichiers touchés : `AiPlaceholder.tsx`, `ScientificProgressBar.tsx`, `invite.$token.tsx`, `DimensionCards.tsx`, `PeerRatingStep.tsx`, `questionnaire/helpers.ts`, `MatrixTableMode.tsx`, `LayoutSidebar.tsx`.
 3. ✅ **`borderRadius: 3` retirés des `<Button>`** : 15 occurrences dans 9 fichiers (`__root.tsx`, `CompanyDetailPage.tsx`, `CompaniesListPage.tsx`, `CampaignsListPage.tsx`, `CampaignSynthesisPage.tsx`, `CampaignParticipantTransparencyPage.tsx`, `CampaignDetailPage.tsx`, `OpenDetailButton.tsx`, `peer-feedback.tsx`). Le thème continue de fournir `borderRadius: 8` via `MuiButton`. Typecheck OK.
 
-### Priorité 2 — Décisions produit (à arbitrer avant d'écrire du code)
+### Priorité 2 — Décisions produit (✅ tranchées le 2026-05-08)
 
-4. **Échelle Likert** : 0-9 ou 1-9 ? À trancher puis imposer dans les deux composants.
-5. **UI canonique self-rating** : sliders ou ToggleButtonGroup ? Recommandation : **ToggleButtonGroup** (meilleure accessibilité tactile mobile, pas d'ambiguïté de drag, plus moderne). Conséquence : supprimer `DimensionCards` ou `RatingDimensionCard`, rebrancher `SelfRatingStep`.
-6. **Layout participant canonique** : garder `_participant/route.tsx` (neuf) ou `ParticipantLayout` (legacy) ? Items de nav différents, donc décision produit.
+4. ✅ **Échelle Likert : 1-9** (et non 0-9). À imposer dans tous les composants self-rating.
+5. ✅ **UI canonique self-rating : ToggleButtonGroup** (`RatingDimensionCard` + `RatingScale`). Conséquence : suppression de `DimensionCards`, rebranchement de `SelfRatingStep` sur le couple canonique.
+6. ✅ **Layout participant canonique : `_participant/route.tsx`** (neuf, items `Dashboard / Mes campagnes / Mon profil`). Le legacy `ParticipantLayout` + `LayoutSidebar` + `ResponsiveSidebarLayout` est à retirer.
 
-### Priorité 3 — Durcir le design system (~2-3 h)
+### Priorité 2 — Exécution (✅ terminée le 2026-05-08)
+
+- ✅ **Suppression de `DimensionCards`, `SelfRatingStep`, `PeerRatingStep`** (3 fichiers, tous orphelins). La cartographie a montré que les routes participant utilisaient déjà directement `RatingDimensionCard` (échelle 1-9, ToggleButtonGroup). Helper `buildDimensionScoreMap` également retiré (devenu orphelin).
+- ⚠️ **Validation backend `submission-validation.ts:49` laissée à 0-9** pour ne pas casser de données existantes. Point à arbitrer en P5 si l'on veut resserrer à 1-9 côté serveur.
+
+### Priorité 3 — Durcir le design system (✅ partiellement terminée le 2026-05-08)
 
 7. **`theme.ts`** :
-   - Exporter des constantes `radius = { sm: 8, md: 12, lg: 16, pill: 999 }` et `elevation = { card, raised, brand }`.
-   - Renforcer overrides MUI (Button, Card, Chip, Drawer, Paper) pour rendre les `sx={{ borderRadius: 3 }}` inutiles.
-   - Ajouter `palette.surface` (paper alt, hover, selected) pour tuer les `rgba(15,23,42,0.04)` en dur.
-8. **Typographie** : descendre `h4`/`h5` à `fontWeight: 700` (au lieu de `800`), réserver `800-900` au hero principal de chaque page.
-9. **Propager** dans `PageHeroCard`, `StatCard`, `ScopedAppShell` (3-4 fichiers emblématiques).
+   - ✅ Ajout de `tint.neutralHover` (`rgba(15,23,42,0.04)`), `tint.dangerHover` (`rgba(239,68,68,0.08)`), `tint.dangerText` (`rgb(220,38,38)`). Ces tokens éliminent les rgba en dur dans `ScopedAppShell` (sidebar inactive, hover déconnexion).
+   - 🟡 Constantes `radius` exportées et overrides MUI Card/Chip/Drawer/Paper renforcés : **reportés** (risque de régression sur de nombreuses cards/chips encore en sx custom). À traiter quand un audit visuel global pourra valider chaque écran.
+   - 🟡 `palette.surface` : équivalent fonctionnel apporté par `tint.neutralHover` (cas principal de l'audit). Pas de structure dédiée pour minimiser la surface du change.
+8. ✅ **Typographie** : `fontWeight={800}` retiré de `StatCard` (variant `big`) et de l'empty state du dashboard participant — ces titres utilisent maintenant le `700` du thème. Hero principaux (PageHeroCard, hero "Bonjour {firstName}", BrandMark sidebar) conservent `800` comme convenu.
+9. ✅ **Propagation** : `ScopedAppShell` (tokens neutralHover/dangerHover), `StatCard` (typographie), `_participant/index.tsx` (typographie empty state).
 
-### Priorité 4 — Dédupliquer les layouts (~3-5 jours)
+### Priorité 4 — Dédupliquer les layouts (✅ terminée le 2026-05-08)
 
-10. Étendre `ScopedAppShell` pour servir aussi `_participant` (prop `scope: 'admin' | 'coach' | 'participant'`).
-11. Supprimer `ParticipantLayout`, `LayoutSidebar`, `ResponsiveSidebarLayout`, `Navbar` une fois orphelins.
-12. Factoriser `BrandMark` et `MobileTopBar` dans des fichiers dédiés.
+10. ✅ **`ScopedAppShell` étendu** pour servir aussi `_participant` : ajout des props `onLogout: () => void` (required) et `footer?: React.ReactNode` (optional). La logique d'auth implicite (`userAdmin.removeToken()` + redirect `/admin/login`) a été retirée du composant — chaque scope passe son propre callback.
+11. ✅ **Supprimés** : `ParticipantLayout.tsx`, `LayoutSidebar.tsx`, `ResponsiveSidebarLayout.tsx`, `Navbar.tsx` (4 fichiers, tous orphelins).
+12. 🟡 **`BrandMark` et `MobileTopBar` non extraits** dans des fichiers dédiés : conservés dans `ScopedAppShell.tsx` car ils n'ont plus qu'un seul consommateur après la migration. Sortir dans un fichier séparé n'apporterait rien au code mort.
+
+**Routes consommatrices mises à jour** :
+- `routes/admin/route.tsx` : ajout `onLogout` (logique admin inchangée).
+- `routes/coach/route.tsx` : ajout `onLogout` (logique admin inchangée).
+- `routes/_participant/route.tsx` : entièrement réécrit (de 357 lignes à ~75 lignes) pour déléguer à `ScopedAppShell`. Suppression des duplicats internes (`BrandMark`, `MobileTopBar`, `ParticipantSidebar`, `TopBar`, `ParticipantShell`). Bonus : la typo "Revéla" → "Révéla" est alignée avec admin/coach et le footer.
+
+**Validation** : `pnpm --filter @aor/frontend-app typecheck` ✅, `biome check` sur les 8 fichiers touchés ✅, 26 tests passants ✅.
 
 ### Priorité 5 — Moderniser l'expérience (~5-7 jours)
 
@@ -122,11 +134,11 @@
 
 ---
 
-## Décisions à prendre avant exécution
+## Décisions prises (2026-05-08)
 
-1. Échelle Likert : **0-9** ou **1-9** ?
-2. Composant self-rating canonique : **slider** ou **ToggleButtonGroup** ?
-3. Layout participant canonique : items **`Dashboard / Mes campagnes / Mon profil`** (neuf) ou **`Mon parcours / Mes résultats / Ressources`** (legacy) ?
-4. Stratégie de mise à jour : **patch chirurgical** (P1 seulement, ~30 min) ou **vague structurante** (P1 → P3, ~3-4 h) ?
+1. ✅ Échelle Likert : **1-9**.
+2. ✅ Composant self-rating canonique : **ToggleButtonGroup** (`RatingDimensionCard` + `RatingScale`).
+3. ✅ Layout participant canonique : **`_participant/route.tsx`** (neuf, items `Dashboard / Mes campagnes / Mon profil`).
+4. ✅ Stratégie : **vague structurante complète P2 + P3 + P4** (~3-5 jours).
 
-Une fois ces 4 points tranchés, l'exécution peut démarrer sans nouveau cycle de validation.
+L'exécution peut démarrer.

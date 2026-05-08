@@ -1,7 +1,7 @@
 // Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
 
 import { Box, Stack, Typography } from '@mui/material';
-import { Outlet, createFileRoute, redirect } from '@tanstack/react-router';
+import { Outlet, createFileRoute, redirect, useNavigate } from '@tanstack/react-router';
 import { ArrowLeft, Building2, ClipboardList, Gauge, ShieldAlert, UserRound } from 'lucide-react';
 
 import { ScopedAppShell, type ScopedNavItem } from '@/components/layout/ScopedAppShell';
@@ -44,8 +44,15 @@ function SuperAdminBanner() {
 }
 
 function CoachRouteLayout() {
+    const navigate = useNavigate();
     const claims = parseAdminJwtClaims();
     const isSuperAdmin = claims?.scope === 'super-admin';
+
+    const handleLogout = () => {
+        userAdmin.removeToken();
+        navigate({ to: '/admin/login' });
+    };
+
     return (
         <ScopedAppShell
             brandIcon={UserRound}
@@ -53,6 +60,7 @@ function CoachRouteLayout() {
             brandEyebrow={isSuperAdmin ? 'Vue coach (admin)' : 'Espace coach'}
             avatarInitial={isSuperAdmin ? 'A' : 'C'}
             nav={isSuperAdmin ? coachNavForSuperAdmin : coachNavBase}
+            onLogout={handleLogout}
             topBanner={isSuperAdmin ? <SuperAdminBanner /> : undefined}
         >
             <Outlet />

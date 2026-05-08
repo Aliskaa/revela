@@ -65,12 +65,7 @@ export function StatCard({
             {value}
         </Typography>
     ) : (
-        <Typography
-            variant="h4"
-            fontWeight={800}
-            color="text.primary"
-            sx={{ mt: 0.4, letterSpacing: -0.5, lineHeight: 1.05 }}
-        >
+        <Typography variant="h4" color="text.primary" sx={{ mt: 0.4, letterSpacing: -0.5, lineHeight: 1.05 }}>
             {value}
         </Typography>
     );

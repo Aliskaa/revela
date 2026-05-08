@@ -260,7 +260,7 @@ export function ParticipantDashboardRoute() {
             {total === 0 ? (
                 <Card variant="outlined">
                     <CardContent sx={{ p: 3 }}>
-                        <Typography variant="h6" fontWeight={800} color="text.primary">
+                        <Typography variant="h6" color="text.primary">
                             Aucun parcours pour le moment
                         </Typography>
                         <Typography variant="body2" color="text.secondary" sx={{ mt: 0.6, lineHeight: 1.7 }}>

@@ -16,11 +16,9 @@ import {
     Toolbar,
     Typography,
 } from '@mui/material';
-import { Link, useLocation, useNavigate } from '@tanstack/react-router';
+import { Link, useLocation } from '@tanstack/react-router';
 import { ChevronRight, LogOut, Menu, X } from 'lucide-react';
 import * as React from 'react';
-
-import { userAdmin } from '@/lib/auth';
 
 export type ScopedNavItem = {
     label: string;
@@ -34,11 +32,17 @@ export type ScopedAppShellProps = {
     /** Logo affiché dans la sidebar et le mobile topbar. */
     brandIcon: React.ElementType;
     brandLabel: string;
-    /** Sous-titre du logo (ex. "Administration", "Espace coach"). */
+    /** Sous-titre du logo (ex. "Administration", "Espace coach", "Espace participant"). */
     brandEyebrow: string;
     /** Initiale affichée dans l'avatar mobile. */
     avatarInitial: string;
     nav: ScopedNavItem[];
+    /**
+     * Callback déclenché par les boutons « Déconnexion » (sidebar desktop + drawer mobile).
+     * Chaque scope passe son propre comportement (`userAdmin.removeToken()` + redirect admin
+     * pour admin/coach, `userParticipant.removeToken()` + redirect login pour participant).
+     */
+    onLogout: () => void;
     /** TopBar desktop optionnelle (titre + recherche globale, etc.). */
     desktopTopBar?: React.ReactNode;
     /**
@@ -47,6 +51,11 @@ export type ScopedAppShellProps = {
      * consultant la vue coach).
      */
     topBanner?: React.ReactNode;
+    /**
+     * Footer optionnel rendu sous le contenu principal. Utilisé par l'espace participant
+     * pour afficher mentions légales et lien confidentialité (admin/coach n'en ont pas).
+     */
+    footer?: React.ReactNode;
     children: React.ReactNode;
 };
 
@@ -132,7 +141,7 @@ function Sidebar({ nav, pathname, onLogout, ...brand }: SidebarProps) {
                                 color: active ? '#fff' : 'text.secondary',
                                 boxShadow: (theme) => (active ? theme.palette.shadow.brandActive : 'none'),
                                 '&:hover': {
-                                    bgcolor: active ? 'rgb(10,18,130)' : 'rgba(15,23,42,0.04)',
+                                    bgcolor: active ? 'primary.dark' : 'tint.neutralHover',
                                 },
                             }}
                         >
@@ -154,7 +163,7 @@ function Sidebar({ nav, pathname, onLogout, ...brand }: SidebarProps) {
                         py: 1.35,
                         px: 2,
                         color: 'text.secondary',
-                        '&:hover': { bgcolor: 'rgba(239,68,68,0.08)', color: 'rgb(220,38,38)' },
+                        '&:hover': { bgcolor: 'tint.dangerHover', color: 'tint.dangerText' },
                     }}
                 >
                     Déconnexion
@@ -256,7 +265,7 @@ function MobileTopBar({ nav, pathname, onLogout, avatarInitial, ...brand }: Mobi
                                     mb: 0.5,
                                     bgcolor: active ? 'primary.main' : 'transparent',
                                     color: active ? '#fff' : 'text.secondary',
-                                    '&:hover': { bgcolor: active ? 'rgb(10,18,130)' : 'rgba(15,23,42,0.04)' },
+                                    '&:hover': { bgcolor: active ? 'primary.dark' : 'tint.neutralHover' },
                                 }}
                             >
                                 <ListItemIcon sx={{ minWidth: 36, color: 'inherit' }}>
@@ -282,7 +291,7 @@ function MobileTopBar({ nav, pathname, onLogout, avatarInitial, ...brand }: Mobi
                         sx={{
                             borderRadius: 3,
                             color: 'text.secondary',
-                            '&:hover': { bgcolor: 'rgba(239,68,68,0.08)', color: 'rgb(220,38,38)' },
+                            '&:hover': { bgcolor: 'tint.dangerHover', color: 'tint.dangerText' },
                         }}
                     >
                         <ListItemIcon sx={{ minWidth: 36, color: 'inherit' }}>
@@ -300,9 +309,10 @@ function MobileTopBar({ nav, pathname, onLogout, avatarInitial, ...brand }: Mobi
 }
 
 /**
- * Coque applicative partagée par les espaces admin et coach (sidebar + topbar mobile + zone main).
- * Avant cette factorisation, `routes/admin/route.tsx` et `routes/coach/route.tsx` répliquaient
- * presque ligne pour ligne le BrandMark, la sidebar, le drawer mobile et le bouton de logout.
+ * Coque applicative partagée par les espaces admin, coach et participant
+ * (sidebar + topbar mobile + zone main + footer optionnel). La logique d'auth est déléguée
+ * au caller via `onLogout` — chaque scope choisit `userAdmin` ou `userParticipant` et la
+ * route de redirection.
  */
 export function ScopedAppShell({
     brandIcon,
@@ -310,18 +320,13 @@ export function ScopedAppShell({
     brandEyebrow,
     avatarInitial,
     nav,
+    onLogout,
     desktopTopBar,
     topBanner,
+    footer,
     children,
 }: ScopedAppShellProps) {
     const location = useLocation();
-    const navigate = useNavigate();
-
-    const handleLogout = () => {
-        userAdmin.removeToken();
-        navigate({ to: '/admin/login' });
-    };
-
     const brand = { brandIcon, brandLabel, brandEyebrow };
 
     return (
@@ -330,17 +335,18 @@ export function ScopedAppShell({
                 {...brand}
                 nav={nav}
                 pathname={location.pathname}
-                onLogout={handleLogout}
+                onLogout={onLogout}
                 avatarInitial={avatarInitial}
             />
             <Box sx={{ display: 'flex', minHeight: '100vh' }}>
-                <Sidebar {...brand} nav={nav} pathname={location.pathname} onLogout={handleLogout} />
-                <Box sx={{ flex: 1 }}>
+                <Sidebar {...brand} nav={nav} pathname={location.pathname} onLogout={onLogout} />
+                <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
                     {topBanner}
                     <Box component="main" sx={{ flex: 1, px: { xs: 2, sm: 3, lg: 4 }, py: { xs: 2, sm: 3, lg: 4 } }}>
                         {desktopTopBar}
                         {children}
                     </Box>
+                    {footer}
                 </Box>
             </Box>
         </Box>

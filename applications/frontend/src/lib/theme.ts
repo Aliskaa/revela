@@ -32,6 +32,11 @@ declare module '@mui/material/styles' {
             subtleBg: string;
             overlayNeutral: string; // 0.03 — hover gris-noir (listes neutres)
             overlayWhite: string; // 0.10 — voile blanc sur fonds sombres
+            // Surfaces neutres : utilisées pour hover/sélection sur fond paper
+            // sans connotation brand (sidebar inactive, lignes de tableau, etc.)
+            neutralHover: string; // 0.04 — hover discret sur item nav inactif
+            dangerHover: string; // 0.08 rouge — hover bouton déconnexion
+            dangerText: string; // texte rouge bouton déconnexion
         };
         shadow: {
             brandSm: string; // logos, badges (12px)
@@ -99,6 +104,9 @@ export const theme = createTheme({
             subtleBg: 'rgba(15,23,42,0.06)',
             overlayNeutral: 'rgba(0,0,0,0.03)',
             overlayWhite: 'rgba(255,255,255,0.10)',
+            neutralHover: 'rgba(15,23,42,0.04)',
+            dangerHover: 'rgba(239,68,68,0.08)',
+            dangerText: 'rgb(220,38,38)',
         },
         shadow: {
             brandSm: '0 4px 12px rgba(15,24,152,0.25)',
