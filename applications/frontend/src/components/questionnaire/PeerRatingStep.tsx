@@ -240,7 +240,7 @@ export function PeerRatingStep({ qid, q, campaignId }: PeerRatingStepProps) {
                                 color: 'text.primary',
                             },
                             '& .Mui-selected': {
-                                bgcolor: 'rgba(21, 21, 176, 0.08) !important',
+                                bgcolor: (theme) => `${theme.palette.tint.primaryBg} !important`,
                                 color: 'primary.main !important',
                             },
                             '& .MuiTabs-indicator': { display: 'none' },

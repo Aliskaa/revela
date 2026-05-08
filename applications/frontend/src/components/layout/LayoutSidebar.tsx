@@ -29,7 +29,7 @@ export const LayoutSidebar = ({ subtitle, items, onLogout }: LayoutSidebarProps)
                         p: 1.2,
                         borderRadius: 2.5,
                         display: 'flex',
-                        boxShadow: '0 4px 12px rgba(21, 21, 176, 0.25)',
+                        boxShadow: (theme) => theme.palette.shadow.brandSm,
                     }}
                 >
                     <BarChartBig size={24} strokeWidth={2.5} />
@@ -68,14 +68,14 @@ export const LayoutSidebar = ({ subtitle, items, onLogout }: LayoutSidebarProps)
                             px: 2,
                             position: 'relative',
                             color: item.active ? 'primary.main' : 'text.secondary',
-                            bgcolor: item.active ? 'rgba(21, 21, 176, 0.06)' : 'transparent',
+                            bgcolor: item.active ? 'tint.primarySelected' : 'transparent',
                             transition: 'all 0.2s ease',
                             '&.Mui-selected': {
-                                bgcolor: 'rgba(21, 21, 176, 0.06)',
-                                '&:hover': { bgcolor: 'rgba(21, 21, 176, 0.1)' },
+                                bgcolor: 'tint.primarySelected',
+                                '&:hover': { bgcolor: 'tint.primaryRail' },
                             },
                             '&:hover': {
-                                bgcolor: item.active ? 'rgba(21, 21, 176, 0.1)' : 'rgba(0, 0, 0, 0.03)',
+                                bgcolor: item.active ? 'tint.primaryRail' : 'tint.overlayNeutral',
                                 color: item.active ? 'primary.main' : 'text.primary',
                             },
                             '&::before': item.active

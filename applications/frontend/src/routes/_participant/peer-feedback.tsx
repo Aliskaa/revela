@@ -61,7 +61,7 @@ function PeerCard({
                 opacity: alreadyRated ? 0.7 : 1,
                 transition: 'all 0.15s ease',
                 ...(!alreadyRated
-                    ? { '&:hover': { borderColor: 'primary.main', bgcolor: 'rgba(15,24,152,0.02)' } }
+                    ? { '&:hover': { borderColor: 'primary.main', bgcolor: 'tint.primaryGhost' } }
                     : {}),
             }}
         >
@@ -70,7 +70,7 @@ function PeerCard({
                     width: 38,
                     height: 38,
                     borderRadius: 3,
-                    bgcolor: selected ? 'rgba(15,24,152,0.12)' : 'tint.primaryBg',
+                    bgcolor: selected ? 'tint.primaryActive' : 'tint.primaryBg',
                     color: 'primary.main',
                     display: 'grid',
                     placeItems: 'center',
@@ -377,7 +377,6 @@ function ParticipantPeerFeedbackRoute() {
                                     startIcon={<BadgeCheck size={16} />}
                                     onClick={handleConfirmDone}
                                     disabled={!canInteract || confirmMutation.isPending}
-                                    sx={{ borderRadius: 3 }}
                                 >
                                     {confirmMutation.isPending
                                         ? 'Confirmation…'
@@ -454,7 +453,6 @@ function ParticipantPeerFeedbackRoute() {
                                     startIcon={allFilled ? <CheckCircle2 size={16} /> : <Save size={16} />}
                                     onClick={handleSubmit}
                                     disabled={!canInteract || filledCount === 0 || submitMutation.isPending}
-                                    sx={{ borderRadius: 3 }}
                                 >
                                     {submitMutation.isPending
                                         ? 'Enregistrement…'
@@ -469,7 +467,6 @@ function ParticipantPeerFeedbackRoute() {
                                         setScores({});
                                         setComments({});
                                     }}
-                                    sx={{ borderRadius: 3 }}
                                 >
                                     Annuler
                                 </Button>

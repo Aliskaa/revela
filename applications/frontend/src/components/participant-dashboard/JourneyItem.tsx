@@ -34,7 +34,12 @@ export function JourneyItem({ step }: JourneyItemProps) {
                 opacity: step.state === 'locked' ? 0.6 : 1,
                 transition: 'all 0.15s ease',
                 ...(clickable
-                    ? { '&:hover': { borderColor: 'primary.main', boxShadow: '0 2px 8px rgba(15,24,152,0.08)' } }
+                    ? {
+                          '&:hover': {
+                              borderColor: 'primary.main',
+                              boxShadow: (theme) => theme.palette.shadow.brandWhisper,
+                          },
+                      }
                     : {}),
             }}
         >

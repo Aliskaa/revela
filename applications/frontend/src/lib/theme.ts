@@ -1,33 +1,56 @@
 import { createTheme } from '@mui/material/styles';
 
+/**
+ * Triplet RGB du primary `#0F1898`. Utile pour les libs qui n'acceptent pas de couleur CSS
+ * (ex. `jsPDF.setDrawColor(r, g, b)`). Pour tout usage CSS / sx, utiliser `primary.main`.
+ */
+export const BRAND_PRIMARY_RGB = [15, 24, 152] as const;
+
 declare module '@mui/material/styles' {
     interface Palette {
         border: string;
         tint: {
-            primaryBg: string;
-            primaryHover: string;
-            secondaryBg: string;
+            // Bleu primary (`#0F1898` / rgb(15,24,152)) à différentes opacités.
+            primaryBg: string; // 0.08 — pastilles, chips brand
+            primaryHover: string; // 0.04 — hover discret
+            primaryGhost: string; // 0.02 — cellules tableau quasi-transparentes
+            primaryWash: string; // 0.05 — rangées de catégorie en tableau
+            primarySelected: string; // 0.06 — items de liste sélectionnés
+            primaryRail: string; // 0.10 — rails de slider, hover de liste actif
+            primaryActive: string; // 0.12 — item nav actif, peer card sélectionnée
+            primaryHalo: string; // 0.15 — focus rings / halo de thumb
+            primaryEmboss: string; // 0.18 — fond AppBar admin (Navbar legacy)
+            // Jaune secondary à différentes opacités (jaune ajusté `rgb(245,196,0)`).
+            secondaryBg: string; // 0.16 — chips secondary
+            secondaryRail: string; // 0.20 — rails de slider "désiré"
+            secondaryHalo: string; // 0.15 — halo focus jaune
             secondaryText: string;
             successBg: string;
             successText: string;
             mutedBg: string;
             mutedText: string;
             subtleBg: string;
+            overlayNeutral: string; // 0.03 — hover gris-noir (listes neutres)
+            overlayWhite: string; // 0.10 — voile blanc sur fonds sombres
+        };
+        shadow: {
+            brandSm: string; // logos, badges (12px)
+            brandMd: string; // boutons brand (14px)
+            brandWhisper: string; // hover carte discret (8px)
+            brandSubtle: string; // cartes type placeholder (24px)
+            brandPaper: string; // grands papers brand (40px)
+            brandHero: string; // BrandMark, logo principal (25px @ 0.18)
+            brandActive: string; // item nav actif (25px @ 0.16)
+            brandHaloPrimary: string; // halo focus thumb bleu
+            brandHaloSecondary: string; // halo focus thumb jaune
+            cardSoft: string; // cartes neutres
+            thumb: string; // thumbs de slider au repos
         };
     }
     interface PaletteOptions {
         border?: string;
-        tint?: {
-            primaryBg?: string;
-            primaryHover?: string;
-            secondaryBg?: string;
-            secondaryText?: string;
-            successBg?: string;
-            successText?: string;
-            mutedBg?: string;
-            mutedText?: string;
-            subtleBg?: string;
-        };
+        tint?: Partial<Palette['tint']>;
+        shadow?: Partial<Palette['shadow']>;
     }
 }
 
@@ -58,13 +81,37 @@ export const theme = createTheme({
         tint: {
             primaryBg: 'rgba(15,24,152,0.08)',
             primaryHover: 'rgba(15,24,152,0.04)',
+            primaryGhost: 'rgba(15,24,152,0.02)',
+            primaryWash: 'rgba(15,24,152,0.05)',
+            primarySelected: 'rgba(15,24,152,0.06)',
+            primaryRail: 'rgba(15,24,152,0.10)',
+            primaryActive: 'rgba(15,24,152,0.12)',
+            primaryHalo: 'rgba(15,24,152,0.15)',
+            primaryEmboss: 'rgba(15,24,152,0.18)',
             secondaryBg: 'rgba(255,204,0,0.16)',
+            secondaryRail: 'rgba(245,196,0,0.20)',
+            secondaryHalo: 'rgba(245,196,0,0.15)',
             secondaryText: 'rgb(180,120,0)',
             successBg: 'rgba(16,185,129,0.12)',
             successText: 'rgb(4,120,87)',
             mutedBg: 'rgba(148,163,184,0.16)',
             mutedText: 'rgb(100,116,139)',
             subtleBg: 'rgba(15,23,42,0.06)',
+            overlayNeutral: 'rgba(0,0,0,0.03)',
+            overlayWhite: 'rgba(255,255,255,0.10)',
+        },
+        shadow: {
+            brandSm: '0 4px 12px rgba(15,24,152,0.25)',
+            brandMd: '0 4px 14px rgba(15,24,152,0.25)',
+            brandWhisper: '0 2px 8px rgba(15,24,152,0.08)',
+            brandSubtle: '0 4px 24px rgba(15,24,152,0.06)',
+            brandPaper: '0 12px 40px rgba(15,24,152,0.05)',
+            brandHero: '0 10px 25px rgba(15,24,152,0.18)',
+            brandActive: '0 10px 25px rgba(15,24,152,0.16)',
+            brandHaloPrimary: '0 0 0 6px rgba(15,24,152,0.15)',
+            brandHaloSecondary: '0 0 0 6px rgba(245,196,0,0.15)',
+            cardSoft: '0 4px 20px rgba(0,0,0,0.03)',
+            thumb: '0 2px 8px rgba(0,0,0,0.12)',
         },
     },
     typography: {

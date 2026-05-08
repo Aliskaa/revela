@@ -151,7 +151,7 @@ export function CampaignsListPage({ scope }: CampaignsListPageProps) {
                             disableElevation
                             startIcon={<Plus size={16} />}
                             onClick={() => setDrawerOpen(true)}
-                            sx={{ borderRadius: 3, bgcolor: 'primary.main' }}
+                            sx={{ bgcolor: 'primary.main' }}
                         >
                             Nouvelle campagne
                         </Button>

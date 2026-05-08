@@ -4,6 +4,8 @@ import { jsPDF } from 'jspdf';
 
 import type { ParticipantSelfDataExport } from '@aor/types';
 
+import { BRAND_PRIMARY_RGB } from './theme';
+
 /**
  * Helpers de téléchargement RGPD de l'export « mes données » côté participant.
  *
@@ -145,7 +147,7 @@ export function downloadParticipantExportPdf(data: ParticipantSelfDataExport): v
         doc.setFont('helvetica', 'bold');
         doc.text(title, margin, cursorY);
         cursorY += 6;
-        doc.setDrawColor(15, 24, 152);
+        doc.setDrawColor(BRAND_PRIMARY_RGB[0], BRAND_PRIMARY_RGB[1], BRAND_PRIMARY_RGB[2]);
         doc.setLineWidth(1);
         doc.line(margin, cursorY, pageWidth - margin, cursorY);
         cursorY += 14;

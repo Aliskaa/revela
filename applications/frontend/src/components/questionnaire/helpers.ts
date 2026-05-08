@@ -1,4 +1,5 @@
 import { participantSessionKeys } from '@/hooks/participantSession';
+import type { SxProps, Theme } from '@mui/material';
 import type { QuestionnaireDetail } from '@aor/types';
 import type { QueryClient } from '@tanstack/react-query';
 
@@ -18,10 +19,10 @@ export function buildDimensionScoreMap(q: QuestionnaireDetail): Record<string, n
     return out;
 }
 
-export const aorPrimaryButtonSx = {
+export const aorPrimaryButtonSx: SxProps<Theme> = (theme) => ({
     py: 1.2,
     px: 3.5,
     borderRadius: 2,
     fontWeight: 700,
-    boxShadow: '0 4px 14px rgba(21, 21, 176, 0.25)',
-};
+    boxShadow: theme.palette.shadow.brandMd,
+});

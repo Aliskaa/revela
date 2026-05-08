@@ -207,7 +207,7 @@ function ParticipantSelfRatingRoute() {
                     variant="compact"
                     icon={Users}
                     label="Progression"
-                    value={'${filledCount} / ${totalItems}'}
+                    value={`${filledCount} / ${totalItems}`}
                     frame="box"
                 />
             </Box>

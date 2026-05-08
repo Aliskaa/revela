@@ -58,7 +58,7 @@ function LikertRow({
                     height: 8,
                     '& .MuiSlider-rail': {
                         opacity: 1,
-                        bgcolor: isDesired ? 'rgba(245, 196, 0, 0.2)' : 'rgba(21, 21, 176, 0.1)',
+                        bgcolor: isDesired ? 'tint.secondaryRail' : 'tint.primaryRail',
                     },
                     '& .MuiSlider-track': {
                         bgcolor: mainColor,
@@ -69,9 +69,10 @@ function LikertRow({
                         height: 20,
                         bgcolor: 'background.paper',
                         border: `3px solid ${mainColor}`,
-                        boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
+                        boxShadow: (theme) => theme.palette.shadow.thumb,
                         '&:hover, &.Mui-focusVisible': {
-                            boxShadow: `0 0 0 6px ${isDesired ? 'rgba(245, 196, 0, 0.15)' : 'rgba(21, 21, 176, 0.15)'}`,
+                            boxShadow: (theme) =>
+                                isDesired ? theme.palette.shadow.brandHaloSecondary : theme.palette.shadow.brandHaloPrimary,
                         },
                     },
                 }}
@@ -99,7 +100,7 @@ export function DimensionCards({ q, values, onScoreChange }: DimensionCardsProps
                         overflow: 'hidden',
                         border: '1px solid',
                         borderColor: 'divider',
-                        boxShadow: '0 4px 20px rgba(0,0,0,0.03)',
+                        boxShadow: (theme) => theme.palette.shadow.cardSoft,
                         display: 'flex',
                         flexDirection: 'column',
                     }}

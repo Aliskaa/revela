@@ -35,7 +35,7 @@ export function MatrixTableMode({ matrix, showInterpretations = true }: MatrixTa
             </TableCell>
             <TableCell
                 align="center"
-                sx={{ fontWeight: 700, color: 'primary.main', bgcolor: 'rgba(21, 21, 176, 0.02)' }}
+                sx={{ fontWeight: 700, color: 'primary.main', bgcolor: 'tint.primaryGhost' }}
             >
                 {row.self ?? '—'}
             </TableCell>
@@ -148,7 +148,7 @@ export function MatrixTableMode({ matrix, showInterpretations = true }: MatrixTa
 
     const renderDimensionHeader = (name: string) =>
         name.length === 0 ? null : (
-            <TableRow key={`dim-${name}`} sx={{ bgcolor: 'rgba(21,21,176,0.05)' }}>
+            <TableRow key={`dim-${name}`} sx={{ bgcolor: 'tint.primaryWash' }}>
                 <TableCell colSpan={totalCols} sx={{ py: 1.2 }}>
                     <Typography
                         variant="caption"

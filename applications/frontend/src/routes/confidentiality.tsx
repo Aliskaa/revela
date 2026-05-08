@@ -1,6 +1,6 @@
 // Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
 
-import { Box, Container, Divider, Link as MuiLink, Stack, Typography } from '@mui/material';
+import { Box, Container, Divider, Link as MuiLink, Stack, Typography, useTheme } from '@mui/material';
 import { Link, createFileRoute } from '@tanstack/react-router';
 import { ArrowLeft, ShieldCheck } from 'lucide-react';
 
@@ -20,6 +20,7 @@ export const Route = createFileRoute('/confidentiality')({
  * coordonnées CNIL, etc.) avant publication. Voir docs/avancement-2026-05-01.md §3 (G3).
  */
 function PrivacyPolicyPage() {
+    const theme = useTheme();
     return (
         <Container maxWidth="md" sx={{ py: { xs: 4, md: 8 } }}>
             <Stack spacing={4}>
@@ -43,7 +44,7 @@ function PrivacyPolicyPage() {
                         </Typography>
                     </MuiLink>
                     <Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 1 }}>
-                        <ShieldCheck size={28} color="rgb(15,24,152)" />
+                        <ShieldCheck size={28} color={theme.palette.primary.main} />
                         <Typography variant="h4" fontWeight={800} color="text.primary" sx={{ letterSpacing: -0.4 }}>
                             Politique de confidentialité — Parcours Élément Humain
                         </Typography>

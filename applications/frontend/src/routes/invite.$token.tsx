@@ -16,7 +16,9 @@ import {
     Link as MuiLink,
     Paper,
     Stack,
+    type SxProps,
     TextField,
+    type Theme,
     Typography,
     useTheme,
 } from '@mui/material';
@@ -31,22 +33,22 @@ export const Route = createFileRoute('/invite/$token')({
 type Step = 'welcome' | 'series0' | 'transition' | 'series1' | 'submitting';
 
 // Styles réutilisables pour la page d'invitation
-const aorBtnSx = {
+const aorBtnSx: SxProps<Theme> = (theme) => ({
     py: 1.2,
     px: 3,
     borderRadius: 2,
     fontWeight: 700,
-    boxShadow: '0 4px 14px rgba(21, 21, 176, 0.25)',
-};
+    boxShadow: theme.palette.shadow.brandMd,
+});
 
-const aorPaperSx = {
+const aorPaperSx: SxProps<Theme> = (theme) => ({
     p: { xs: 3, md: 5 },
     borderRadius: 3,
     border: '1px solid',
     borderColor: 'divider',
-    boxShadow: '0 12px 40px rgba(21, 21, 176, 0.05)',
+    boxShadow: theme.palette.shadow.brandPaper,
     bgcolor: 'background.paper',
-};
+});
 
 function InvitePage() {
     const { token } = Route.useParams();
@@ -160,7 +162,7 @@ function InvitePage() {
                         <Box
                             sx={{
                                 p: 1.5,
-                                bgcolor: 'rgba(21, 21, 176, 0.08)',
+                                bgcolor: 'tint.primaryBg',
                                 borderRadius: 2,
                                 color: 'primary.main',
                                 display: 'flex',
@@ -322,7 +324,7 @@ function InvitePage() {
                         <Box
                             sx={{
                                 p: 1.5,
-                                bgcolor: 'rgba(21, 21, 176, 0.08)',
+                                bgcolor: 'tint.primaryBg',
                                 borderRadius: 2,
                                 color: 'primary.main',
                                 display: 'flex',
@@ -523,7 +525,7 @@ function InvitePage() {
                 <Chip
                     label={`Type : ${q.id}`}
                     size="small"
-                    sx={{ bgcolor: 'rgba(21, 21, 176, 0.08)', color: 'primary.main', fontWeight: 800, mb: 1.5 }}
+                    sx={{ bgcolor: 'tint.primaryBg', color: 'primary.main', fontWeight: 800, mb: 1.5 }}
                 />
                 <Typography variant="h5" fontWeight={800} color="text.primary">
                     {q.title}

@@ -84,7 +84,6 @@ function RootErrorComponent({ error, reset }: { error: Error; reset: () => void 
                             disableElevation
                             startIcon={<RotateCcw size={16} />}
                             onClick={reset}
-                            sx={{ borderRadius: 3 }}
                         >
                             Réessayer
                         </Button>
@@ -93,7 +92,6 @@ function RootErrorComponent({ error, reset }: { error: Error; reset: () => void 
                             onClick={() => {
                                 window.location.href = '/';
                             }}
-                            sx={{ borderRadius: 3 }}
                         >
                             Retour à l'accueil
                         </Button>
@@ -134,7 +132,7 @@ function NotFoundComponent() {
                         </Typography>
                     </Box>
                     <Stack direction="row" spacing={1.2}>
-                        <Button component={Link} to="/" variant="contained" disableElevation sx={{ borderRadius: 3 }}>
+                        <Button component={Link} to="/" variant="contained" disableElevation>
                             Retour à l'accueil
                         </Button>
                     </Stack>

@@ -133,7 +133,7 @@ export function CampaignParticipantTransparencyPage({
             <Button
                 variant="outlined"
                 startIcon={<ArrowLeft size={16} />}
-                sx={{ borderRadius: 3, alignSelf: 'flex-start' }}
+                sx={{ alignSelf: 'flex-start' }}
             >
                 {cfg.backLabel}
             </Button>

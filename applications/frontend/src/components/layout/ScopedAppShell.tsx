@@ -69,7 +69,7 @@ function BrandMark({ brandIcon: Icon, brandLabel, brandEyebrow }: BrandMarkProps
                     color: '#fff',
                     display: 'grid',
                     placeItems: 'center',
-                    boxShadow: '0 10px 25px rgba(15,24,152,0.18)',
+                    boxShadow: (theme) => theme.palette.shadow.brandHero,
                 }}
             >
                 <Icon size={18} />
@@ -130,7 +130,7 @@ function Sidebar({ nav, pathname, onLogout, ...brand }: SidebarProps) {
                                 px: 2,
                                 bgcolor: active ? 'primary.main' : 'transparent',
                                 color: active ? '#fff' : 'text.secondary',
-                                boxShadow: active ? '0 10px 25px rgba(15,24,152,0.16)' : 'none',
+                                boxShadow: (theme) => (active ? theme.palette.shadow.brandActive : 'none'),
                                 '&:hover': {
                                     bgcolor: active ? 'rgb(10,18,130)' : 'rgba(15,23,42,0.04)',
                                 },

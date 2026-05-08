@@ -94,7 +94,7 @@ export function CompanyDetailPage({ scope, companyId }: CompanyDetailPageProps) 
                     <Typography variant="h6" color="text.secondary">
                         {cfg.notFound}
                     </Typography>
-                    <Button component={Link} to={cfg.backTo} variant="outlined" sx={{ mt: 2, borderRadius: 3 }}>
+                    <Button component={Link} to={cfg.backTo} variant="outlined" sx={{ mt: 2 }}>
                         Retour aux entreprises
                     </Button>
                 </CardContent>
@@ -126,7 +126,7 @@ export function CompanyDetailPage({ scope, companyId }: CompanyDetailPageProps) 
                 title={company.name}
                 subtitle="Fiche entreprise avec la liste des collaborateurs rattachés et les actions de gestion."
                 actions={
-                    <Button variant="outlined" component={Link} to={cfg.backTo} sx={{ borderRadius: 3 }}>
+                    <Button variant="outlined" component={Link} to={cfg.backTo}>
                         Retour aux entreprises
                     </Button>
                 }

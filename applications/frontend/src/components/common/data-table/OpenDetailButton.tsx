@@ -30,7 +30,7 @@ export function OpenDetailButton({ to, variant = 'table', label = 'Ouvrir', aria
                 href={to}
                 endIcon={<ChevronRight size={16} />}
                 aria-label={ariaLabel}
-                sx={{ borderRadius: 3, bgcolor: 'primary.main', width: 'fit-content' }}
+                sx={{ bgcolor: 'primary.main', width: 'fit-content' }}
             >
                 {label}
             </Button>

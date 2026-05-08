@@ -49,7 +49,6 @@ export function CampaignSynthesisPage({ scope, campaignId }: CampaignSynthesisPa
             <Button
                 variant="outlined"
                 startIcon={<ArrowLeft size={16} />}
-                sx={{ borderRadius: 3 }}
             >
                 {cfg.backLabel}
             </Button>

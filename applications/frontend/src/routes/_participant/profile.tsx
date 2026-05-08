@@ -23,6 +23,7 @@ import {
     Stack,
     TextField,
     Typography,
+    useTheme,
 } from '@mui/material';
 import { Link, createFileRoute } from '@tanstack/react-router';
 import { Building2, FileJson, FileText, Mail, PencilLine, ShieldCheck, UserRound } from 'lucide-react';
@@ -33,6 +34,7 @@ export const Route = createFileRoute('/_participant/profile')({
 });
 
 function ParticipantProfileRoute() {
+    const theme = useTheme();
     const { data: session, isLoading, isError } = useParticipantSession();
     const updateProfile = useUpdateParticipantProfile();
     const fetchExport = useFetchParticipantSelfDataExport();
@@ -251,7 +253,7 @@ function ParticipantProfileRoute() {
             <Card variant="outlined">
                 <CardContent sx={{ p: 2.5 }}>
                     <Stack direction="row" spacing={1.2} alignItems="center" sx={{ mb: 1 }}>
-                        <ShieldCheck size={22} color="rgb(15,24,152)" />
+                        <ShieldCheck size={22} color={theme.palette.primary.main} />
                         <Typography variant="h5" fontWeight={800} color="text.primary" sx={{ letterSpacing: -0.4 }}>
                             Mes données (RGPD)
                         </Typography>

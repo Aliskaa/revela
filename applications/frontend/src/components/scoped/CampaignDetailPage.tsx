@@ -107,7 +107,7 @@ export function CampaignDetailPage({ scope, campaignId }: CampaignDetailPageProp
                     to={cfg.backTo}
                     variant="outlined"
                     startIcon={<ArrowLeft size={16} />}
-                    sx={{ borderRadius: 3, alignSelf: 'flex-start' }}
+                    sx={{ alignSelf: 'flex-start' }}
                 >
                     {cfg.backLabel}
                 </Button>
@@ -127,7 +127,6 @@ export function CampaignDetailPage({ scope, campaignId }: CampaignDetailPageProp
                         to={cfg.backTo}
                         variant="outlined"
                         startIcon={<ArrowLeft size={16} />}
-                        sx={{ borderRadius: 3 }}
                     >
                         {cfg.backLabel}
                     </Button>

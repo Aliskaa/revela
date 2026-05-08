@@ -13,7 +13,7 @@ export function ScientificProgressBar({ valuePct }: { valuePct: number }) {
                 mx: 'auto',
                 height: 12,
                 borderRadius: 6,
-                bgcolor: 'rgba(21, 21, 176, 0.1)',
+                bgcolor: 'tint.primaryRail',
                 overflow: 'hidden',
                 mb: 3,
             }}

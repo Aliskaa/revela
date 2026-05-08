@@ -150,7 +150,7 @@ export function CompaniesListPage({ scope }: CompaniesListPageProps) {
                             variant="contained"
                             disableElevation
                             startIcon={<Plus size={16} />}
-                            sx={{ borderRadius: 3, bgcolor: 'primary.main' }}
+                            sx={{ bgcolor: 'primary.main' }}
                         >
                             Ajouter une entreprise
                         </Button>

@@ -84,7 +84,7 @@ export function Navbar() {
                         disableRipple
                         sx={{
                             color: barIsAdmin ? 'primary.main' : barFgMuted,
-                            bgcolor: barIsAdmin ? 'rgba(15, 24, 152, 0.12)' : 'transparent',
+                            bgcolor: barIsAdmin ? 'tint.primaryActive' : 'transparent',
                             fontWeight: 700,
                             fontSize: '0.85rem',
                             px: 2.5,
@@ -93,7 +93,7 @@ export function Navbar() {
                             transition: 'all 0.2s',
                             '&:hover': {
                                 color: barIsAdmin ? 'primary.dark' : theme.palette.primary.contrastText,
-                                bgcolor: barIsAdmin ? 'rgba(15, 24, 152, 0.18)' : 'rgba(255,255,255,0.1)',
+                                bgcolor: barIsAdmin ? 'tint.primaryEmboss' : 'tint.overlayWhite',
                             },
                         }}
                     >

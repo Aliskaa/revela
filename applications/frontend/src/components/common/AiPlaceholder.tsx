@@ -16,7 +16,7 @@ export function AiPlaceholder({ title, children, fullWidth }: AiPlaceholderProps
                 bgcolor: 'background.paper',
                 border: '1px solid',
                 borderColor: 'divider',
-                boxShadow: '0 4px 24px rgba(21, 21, 176, 0.06)', // Ombre légèrement teintée Bleu smalt
+                boxShadow: (theme) => theme.palette.shadow.brandSubtle, // Ombre légèrement teintée Bleu smalt
                 maxWidth: fullWidth ? 'none' : 420,
             }}
         >
