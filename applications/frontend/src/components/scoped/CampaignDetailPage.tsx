@@ -145,7 +145,7 @@ export function CampaignDetailPage({ scope, campaignId }: CampaignDetailPageProp
             <Box
                 sx={{
                     display: 'grid',
-                    gridTemplateColumns: { xs: '1fr', xl: '1.25fr 0.75fr' },
+                    gridTemplateColumns: { xs: '1fr', lg: '1fr 1fr' },
                     gap: 3,
                     alignItems: 'start',
                 }}

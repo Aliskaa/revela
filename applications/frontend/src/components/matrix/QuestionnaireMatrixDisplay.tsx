@@ -9,7 +9,7 @@ import {
     ToggleButtonGroup,
     Typography,
 } from '@mui/material';
-import { BarChart3, Info, Table2 } from 'lucide-react';
+import { BarChart3, Table2 } from 'lucide-react';
 import { useState } from 'react';
 import { MatrixChartMode } from './MatrixChartMode';
 import { MatrixTableMode } from './MatrixTableMode';
