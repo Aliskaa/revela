@@ -1,0 +1,507 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >
+  Revela — backend + frontend (Docker sur EC2) + RDS Postgres,
+  branches sur l'ALB existant via une regle host-header
+  (revela.aor-cabinet.fr). DNS reste chez o2switch (CNAME a poser
+  manuellement vers le DNS de l'ALB).
+
+# ─────────────────────────────────────────────────────────────────────
+# Parametres
+# ─────────────────────────────────────────────────────────────────────
+Parameters:
+  # -- Reseau (infra existante) --
+  VpcId:
+    Type: AWS::EC2::VPC::Id
+    Description: VPC ou vit l'ALB existant (celui de marketdash)
+
+  PublicSubnetIdEc2:
+    Type: AWS::EC2::Subnet::Id
+    Description: Subnet public pour l'EC2 (meme VPC que l'ALB)
+
+  PrivateSubnetIdsRds:
+    Type: List<AWS::EC2::Subnet::Id>
+    Description: Deux subnets prives pour RDS (AZ differentes)
+
+  AlbSecurityGroupId:
+    Type: AWS::EC2::SecurityGroup::Id
+    Description: SG de l'ALB existant (autorise le trafic ALB → EC2)
+
+  AlbHttpsListenerArn:
+    Type: String
+    Description: ARN du listener HTTPS:443 de l'ALB existant
+
+  AlbListenerRulePriority:
+    Type: Number
+    Default: 100
+    Description: Priorite de la nouvelle regle (unique sur le listener)
+
+  # -- Domaine --
+  DomainName:
+    Type: String
+    Default: revela.aor-cabinet.fr
+    Description: FQDN servi (cert ACM + condition host-header)
+
+  # -- Images applicatives --
+  # Les repositories ECR sont crees par ce stack (revela/backend & revela/frontend).
+  # Tu pousses tes images dans ces repos et l'EC2 pull le tag indique ci-dessous.
+  ImageTag:
+    Type: String
+    Default: latest
+    Description: Tag Docker a deployer pour le backend ET le frontend (ex. latest, v1.0.0, sha-abc123)
+    AllowedPattern: '[a-zA-Z0-9_.-]+'
+
+  BackendPort:
+    Type: Number
+    Default: 3000
+    Description: Port interne du conteneur backend (pas expose hors VPC)
+
+  # -- Base de donnees --
+  DBName:
+    Type: String
+    Default: questionnaire_platform
+    AllowedPattern: '[a-zA-Z][a-zA-Z0-9_]*'
+
+  DBUsername:
+    Type: String
+    Default: revela_admin
+    AllowedPattern: '[a-zA-Z][a-zA-Z0-9_]*'
+    NoEcho: false
+
+  # -- Super-admin applicatif --
+  AdminUsername:
+    Type: String
+    Default: admin
+    Description: Login super-admin Revela (lu par requireEnv('ADMIN_USERNAME'))
+    AllowedPattern: '[a-zA-Z0-9_.@-]+'
+
+  DBEngineVersion:
+    Type: String
+    Default: '16.4'
+    Description: Version Postgres RDS (verifier la dispo dans la region)
+
+  # -- EC2 --
+  Ec2InstanceType:
+    Type: String
+    Default: t4g.small
+    AllowedValues: [t4g.micro, t4g.small, t4g.medium]
+
+  LatestAl2023Arm64Ami:
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+    Default: /aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-arm64
+    Description: Resolu automatiquement vers la derniere AL2023 ARM64
+
+# ─────────────────────────────────────────────────────────────────────
+# Ressources
+# ─────────────────────────────────────────────────────────────────────
+Resources:
+
+  # ── ECR repositories ──────────────────────────────────────────────
+  # Namespace `revela/` : un seul prefixe logique en console pour les 2 repos.
+  # `RetainExceptOnCreate` evite de purger les images si on detruit le stack
+  # par accident (= les images survivent a un delete suivi d'un re-create).
+  BackendEcrRepo:
+    Type: AWS::ECR::Repository
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      RepositoryName: revela/backend
+      ImageScanningConfiguration: { ScanOnPush: true }
+      LifecyclePolicy:
+        LifecyclePolicyText: |
+          {
+            "rules": [{
+              "rulePriority": 1,
+              "description": "Expire untagged images apres 30 jours",
+              "selection": {
+                "tagStatus": "untagged",
+                "countType": "sinceImagePushed",
+                "countUnit": "days",
+                "countNumber": 30
+              },
+              "action": { "type": "expire" }
+            }]
+          }
+      Tags:
+        - { Key: Project, Value: Revela }
+
+  FrontendEcrRepo:
+    Type: AWS::ECR::Repository
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      RepositoryName: revela/frontend
+      ImageScanningConfiguration: { ScanOnPush: true }
+      LifecyclePolicy:
+        LifecyclePolicyText: |
+          {
+            "rules": [{
+              "rulePriority": 1,
+              "description": "Expire untagged images apres 30 jours",
+              "selection": {
+                "tagStatus": "untagged",
+                "countType": "sinceImagePushed",
+                "countUnit": "days",
+                "countNumber": 30
+              },
+              "action": { "type": "expire" }
+            }]
+          }
+      Tags:
+        - { Key: Project, Value: Revela }
+
+  # ── ACM cert (validation DNS) ─────────────────────────────────────
+  # IMPORTANT: au CREATE, va dans la console ACM pour recuperer le
+  # CNAME de validation (nom + valeur) et pose-le sur o2switch.
+  # Le stack reste bloque sur cette ressource jusqu'a validation.
+  Certificate:
+    Type: AWS::CertificateManager::Certificate
+    Properties:
+      DomainName: !Ref DomainName
+      ValidationMethod: DNS
+      Tags:
+        - { Key: Project, Value: Revela }
+
+  # ── Secret RDS (mot de passe genere) ──────────────────────────────
+  DBSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: !Sub "${AWS::StackName}/rds"
+      Description: Identifiants master Postgres Revela
+      GenerateSecretString:
+        SecretStringTemplate: !Sub '{"username":"${DBUsername}"}'
+        GenerateStringKey: password
+        PasswordLength: 32
+        ExcludeCharacters: '"@/\'
+      Tags:
+        - { Key: Project, Value: Revela }
+
+  # ── Secrets applicatifs (JWT + super-admin) ──────────────────────
+  # JwtSecret : signe les JWT admin/participant (requireEnv('JWT_SECRET')).
+  # 64 chars hex pour la solidite cryptographique.
+  JwtSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: !Sub "${AWS::StackName}/jwt"
+      Description: JWT_SECRET signe les tokens admin et participant
+      GenerateSecretString:
+        SecretStringTemplate: '{}'
+        GenerateStringKey: value
+        PasswordLength: 64
+        ExcludePunctuation: true
+      Tags:
+        - { Key: Project, Value: Revela }
+
+  # AdminPasswordSecret : mot de passe super-admin (ADMIN_PASSWORD).
+  # A recuperer dans la console Secrets Manager apres deploiement.
+  AdminPasswordSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: !Sub "${AWS::StackName}/admin"
+      Description: Mot de passe du super-admin Revela
+      GenerateSecretString:
+        SecretStringTemplate: !Sub '{"username":"${AdminUsername}"}'
+        GenerateStringKey: password
+        PasswordLength: 24
+        ExcludeCharacters: '"@/\$`'
+      Tags:
+        - { Key: Project, Value: Revela }
+
+  # ── Reseau / SG ────────────────────────────────────────────────────
+  Ec2SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Revela EC2 - HTTP 80 ingress depuis ALB
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          SourceSecurityGroupId: !Ref AlbSecurityGroupId
+          Description: HTTP from ALB
+      Tags:
+        - { Key: Name, Value: revela-ec2 }
+        - { Key: Project, Value: Revela }
+
+  RdsSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Revela RDS - Postgres ingress depuis EC2 SG uniquement
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 5432
+          ToPort: 5432
+          SourceSecurityGroupId: !Ref Ec2SecurityGroup
+          Description: Postgres from app EC2
+      Tags:
+        - { Key: Name, Value: revela-rds }
+        - { Key: Project, Value: Revela }
+
+  # ── RDS ───────────────────────────────────────────────────────────
+  RdsSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: Revela private subnets
+      SubnetIds: !Ref PrivateSubnetIdsRds
+      Tags:
+        - { Key: Project, Value: Revela }
+
+  RdsInstance:
+    Type: AWS::RDS::DBInstance
+    # Retain : si le stack est supprime, la base reste en place (pas de snapshot
+    # intermediaire, donnees immediatement accessibles). A purger manuellement
+    # via la console RDS si tu veux vraiment t'en debarrasser.
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      DBInstanceIdentifier: !Sub "${AWS::StackName}-pg"
+      Engine: postgres
+      EngineVersion: !Ref DBEngineVersion
+      DBInstanceClass: db.t4g.micro
+      AllocatedStorage: '20'
+      StorageType: gp3
+      StorageEncrypted: true
+      DBName: !Ref DBName
+      MasterUsername: !Sub "{{resolve:secretsmanager:${DBSecret}:SecretString:username}}"
+      MasterUserPassword: !Sub "{{resolve:secretsmanager:${DBSecret}:SecretString:password}}"
+      DBSubnetGroupName: !Ref RdsSubnetGroup
+      VPCSecurityGroups: [!Ref RdsSecurityGroup]
+      PubliclyAccessible: false
+      MultiAZ: false
+      BackupRetentionPeriod: 7
+      DeletionProtection: false
+      Tags:
+        - { Key: Project, Value: Revela }
+
+  # ── EC2 IAM ───────────────────────────────────────────────────────
+  Ec2Role:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal: { Service: ec2.amazonaws.com }
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore        # Session Manager
+        - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly  # ECR pull
+        - arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy         # logs (optionnel)
+      Policies:
+        - PolicyName: read-app-secrets
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: [secretsmanager:GetSecretValue, secretsmanager:DescribeSecret]
+                Resource:
+                  - !Ref DBSecret
+                  - !Ref JwtSecret
+                  - !Ref AdminPasswordSecret
+
+  Ec2InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Roles: [!Ref Ec2Role]
+
+  # ── EC2 instance + bootstrap docker-compose ────────────────────────
+  Ec2Instance:
+    Type: AWS::EC2::Instance
+    DependsOn: RdsInstance
+    Properties:
+      InstanceType: !Ref Ec2InstanceType
+      ImageId: !Ref LatestAl2023Arm64Ami
+      IamInstanceProfile: !Ref Ec2InstanceProfile
+      SubnetId: !Ref PublicSubnetIdEc2
+      SecurityGroupIds: [!Ref Ec2SecurityGroup]
+      Tags:
+        - { Key: Name, Value: revela-app }
+        - { Key: Project, Value: Revela }
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          set -euxo pipefail
+          exec > >(tee /var/log/revela-bootstrap.log | logger -t revela-bootstrap -s 2>/dev/console) 2>&1
+
+          # ── Docker + compose plugin (ARM64) ───────────────────────
+          dnf update -y
+          dnf install -y docker jq awscli
+          systemctl enable --now docker
+          DOCKER_PLUGIN_DIR=/usr/libexec/docker/cli-plugins
+          mkdir -p "$DOCKER_PLUGIN_DIR"
+          curl -SL https://github.com/docker/compose/releases/download/v2.29.7/docker-compose-linux-aarch64 \
+            -o "$DOCKER_PLUGIN_DIR/docker-compose"
+          chmod +x "$DOCKER_PLUGIN_DIR/docker-compose"
+
+          # ── Recup secrets depuis Secrets Manager ──────────────────
+          REGION=${AWS::Region}
+          fetch_secret() {
+            aws secretsmanager get-secret-value \
+              --secret-id "$1" --region "$REGION" \
+              --query SecretString --output text
+          }
+          DB_JSON=$(fetch_secret "${DBSecret}")
+          DB_USER=$(echo "$DB_JSON" | jq -r .username)
+          DB_PASS=$(echo "$DB_JSON" | jq -r .password)
+
+          JWT_JSON=$(fetch_secret "${JwtSecret}")
+          JWT_SECRET=$(echo "$JWT_JSON" | jq -r .value)
+
+          ADMIN_JSON=$(fetch_secret "${AdminPasswordSecret}")
+          ADMIN_PASS=$(echo "$ADMIN_JSON" | jq -r .password)
+
+          # ── URI complets des images (repos crees par ce stack) ───
+          BACKEND_IMAGE="${BackendEcrRepo.RepositoryUri}:${ImageTag}"
+          FRONTEND_IMAGE="${FrontendEcrRepo.RepositoryUri}:${ImageTag}"
+          ECR_REGISTRY="${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com"
+
+          # ── ECR login ─────────────────────────────────────────────
+          aws ecr get-login-password --region "$REGION" \
+            | docker login --username AWS --password-stdin "$ECR_REGISTRY"
+
+          # ── .env applicatif (consomme par le conteneur backend) ──
+          # Toutes les variables requises par le code backend :
+          #  - JWT_SECRET / ADMIN_USERNAME / ADMIN_PASSWORD / FRONTEND_URL : requireEnv()
+          #  - DATABASE_URL : pool drizzle
+          #  - FRONTEND_ORIGIN : CORS (memes domaine front et API → meme valeur)
+          mkdir -p /opt/revela
+          cat > /opt/revela/.env <<EOF
+          NODE_ENV=production
+          PORT=${BackendPort}
+
+          DB_HOST=${RdsInstance.Endpoint.Address}
+          DB_PORT=${RdsInstance.Endpoint.Port}
+          DB_NAME=${DBName}
+          DB_USER=$DB_USER
+          DB_PASSWORD=$DB_PASS
+          DATABASE_URL=postgres://$DB_USER:$DB_PASS@${RdsInstance.Endpoint.Address}:${RdsInstance.Endpoint.Port}/${DBName}
+
+          JWT_SECRET=$JWT_SECRET
+          ADMIN_USERNAME=${AdminUsername}
+          ADMIN_PASSWORD=$ADMIN_PASS
+
+          FRONTEND_URL=https://${DomainName}
+          FRONTEND_ORIGIN=https://${DomainName}
+          EOF
+          chmod 600 /opt/revela/.env
+
+          cat > /opt/revela/docker-compose.yml <<EOF
+          services:
+            backend:
+              image: $BACKEND_IMAGE
+              env_file: /opt/revela/.env
+              restart: unless-stopped
+              networks: [revela]
+            frontend:
+              image: $FRONTEND_IMAGE
+              ports:
+                - "80:80"
+              depends_on: [backend]
+              restart: unless-stopped
+              networks: [revela]
+          networks:
+            revela:
+          EOF
+
+          # ── Premier demarrage : tolerant si les images n'ont pas ─
+          # encore ete pushees. Reessayer via SSM apres `docker push` :
+          #   sudo docker compose -f /opt/revela/docker-compose.yml pull \
+          #   && sudo docker compose -f /opt/revela/docker-compose.yml up -d
+          cd /opt/revela
+          docker compose pull || echo "[bootstrap] images pas encore disponibles dans ECR — relance via SSM apres push"
+          docker compose up -d || echo "[bootstrap] up differe — relance via SSM apres push"
+
+  # ── Branchement ALB existant ──────────────────────────────────────
+  TargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Name: !Sub "${AWS::StackName}-tg"
+      VpcId: !Ref VpcId
+      Protocol: HTTP
+      Port: 80
+      TargetType: instance
+      Targets:
+        - Id: !Ref Ec2Instance
+          Port: 80
+      HealthCheckProtocol: HTTP
+      # NestJS expose /health hors prefixe /api ; nginx du frontend proxy ce path.
+      HealthCheckPath: /health
+      HealthCheckIntervalSeconds: 30
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 2
+      UnhealthyThresholdCount: 3
+      Matcher: { HttpCode: 200-399 }
+      Tags:
+        - { Key: Project, Value: Revela }
+
+  ListenerCertificate:
+    Type: AWS::ElasticLoadBalancingV2::ListenerCertificate
+    Properties:
+      ListenerArn: !Ref AlbHttpsListenerArn
+      Certificates:
+        - CertificateArn: !Ref Certificate
+
+  ListenerRule:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      ListenerArn: !Ref AlbHttpsListenerArn
+      Priority: !Ref AlbListenerRulePriority
+      Conditions:
+        - Field: host-header
+          HostHeaderConfig:
+            Values: [!Ref DomainName]
+      Actions:
+        - Type: forward
+          TargetGroupArn: !Ref TargetGroup
+
+# ─────────────────────────────────────────────────────────────────────
+# Outputs
+# ─────────────────────────────────────────────────────────────────────
+Outputs:
+  BackendEcrRepoUri:
+    Description: URI du repo ECR backend (push tes images ici)
+    Value: !GetAtt BackendEcrRepo.RepositoryUri
+
+  FrontendEcrRepoUri:
+    Description: URI du repo ECR frontend (push tes images ici)
+    Value: !GetAtt FrontendEcrRepo.RepositoryUri
+
+  DockerLoginCommand:
+    Description: Commande de login ECR a executer avant le 1er push
+    Value: !Sub "aws ecr get-login-password --region ${AWS::Region} | docker login --username AWS --password-stdin ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com"
+
+  CertificateArn:
+    Description: ARN du cert ACM. Le CNAME de validation se lit dans la console ACM (a poser sur o2switch).
+    Value: !Ref Certificate
+
+  RdsEndpoint:
+    Description: Hostname Postgres
+    Value: !GetAtt RdsInstance.Endpoint.Address
+
+  RdsPort:
+    Value: !GetAtt RdsInstance.Endpoint.Port
+
+  DbSecretArn:
+    Description: Secret contenant username/password Postgres (lu par l'EC2)
+    Value: !Ref DBSecret
+
+  JwtSecretArn:
+    Description: Secret contenant JWT_SECRET (lu par l'EC2 au boot)
+    Value: !Ref JwtSecret
+
+  AdminPasswordSecretArn:
+    Description: Secret contenant le mot de passe super-admin — recuperer dans la console Secrets Manager pour la 1ere connexion
+    Value: !Ref AdminPasswordSecret
+
+  Ec2InstanceId:
+    Description: Instance ID (pour Session Manager — Console AWS > Systems Manager > Session Manager > Start Session)
+    Value: !Ref Ec2Instance
+
+  TargetGroupArn:
+    Value: !Ref TargetGroup
+
+  DnsCnameToCreateOnO2switch:
+    Description: >
+      Une fois le stack cree, recupere le DNS de ton ALB (Console EC2 > Load Balancers >
+      DNS name) et pose un CNAME "revela" → <ALB-DNS> dans la zone aor-cabinet.fr chez o2switch.
+    Value: 'CNAME revela → <DNS de ton ALB existant>'

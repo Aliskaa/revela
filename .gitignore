@@ -6,3 +6,6 @@ dist/
 
 # Sortie locale du script scripts/generate-rules-sync.sh
 combined_cursor_rules.txt
+
+# Config locale du script de deploiement AWS (contient des IDs de ressources)
+infra/aws/deploy.config.json

@@ -1,0 +1,35 @@
+# Dependencies / outputs
+node_modules
+**/node_modules
+**/dist
+**/.turbo
+**/.cache
+**/coverage
+**/.vite
+
+# VCS / IDE
+.git
+.gitignore
+.vscode
+.idea
+.cursor
+
+# Tests / docs (non requis pour le build d'image)
+**/__tests__
+**/*.spec.ts
+**/*.test.ts
+
+# Environnement local
+.env
+.env.*
+!.env.example
+
+# Infra / docs (non necessaires aux images applicatives)
+infra
+docs
+*.md
+!packages/**/README.md
+
+# Logs et temporaires
+**/*.log
+**/.DS_Store

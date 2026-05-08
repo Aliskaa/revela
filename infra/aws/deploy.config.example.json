@@ -1,0 +1,33 @@
+{
+    "_comment_1": "Copie ce fichier en deploy.config.json (gitignore-le) puis remplis les valeurs.",
+    "_comment_2": "Tout est trouvable dans la console AWS, region eu-west-3.",
+
+    "Region": "eu-west-3",
+    "StackName": "revela",
+
+    "_VpcId_help": "Console VPC > selectionner le VPC de marketdash > VPC ID",
+    "VpcId": "vpc-xxxxxxxxxxxx",
+
+    "_PublicSubnetIdEc2_help": "Un subnet public du meme VPC (pour l'EC2)",
+    "PublicSubnetIdEc2": "subnet-xxxxxxxxxxxx",
+
+    "_PrivateSubnetIdsRds_help": "Deux subnets prives en AZ differentes (RDS)",
+    "PrivateSubnetIdsRds": [
+        "subnet-aaaaaaaaaaaa",
+        "subnet-bbbbbbbbbbbb"
+    ],
+
+    "_AlbSecurityGroupId_help": "Console EC2 > Load Balancers > marketdash > Security",
+    "AlbSecurityGroupId": "sg-xxxxxxxxxxxx",
+
+    "_AlbHttpsListenerArn_help": "Console EC2 > Load Balancers > marketdash > Listeners > HTTPS:443 > ARN",
+    "AlbHttpsListenerArn": "arn:aws:elasticloadbalancing:eu-west-3:000000000000:listener/app/.../...",
+
+    "_AlbListenerRulePriority_help": "Numero libre entre les regles existantes (defaut 100)",
+    "AlbListenerRulePriority": 100,
+
+    "DomainName": "revela.aor-cabinet.fr",
+
+    "_AdminUsername_help": "Login super-admin (optionnel, defaut 'admin')",
+    "AdminUsername": "admin"
+}
