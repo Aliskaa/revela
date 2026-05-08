@@ -62,9 +62,18 @@ function ParticipantCampaignWorkspaceRoute() {
                 });
                 return;
             }
+            if (routeKind === 'test') {
+                const qCode = assignment?.questionnaire_id?.toUpperCase();
+                if (!qCode) return;
+                navigate({
+                    to: '/test/$questionnaireCode',
+                    params: { questionnaireCode: qCode },
+                });
+                return;
+            }
             navigate({ to: `/${routeKind}` });
         },
-        [navigate, campaignId]
+        [navigate, campaignId, assignment]
     );
 
     if (isLoading) {

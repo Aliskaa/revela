@@ -22,12 +22,12 @@
 | 4. Invitation & RGPD | 5 | 0 | 0 | 1 |
 | 5. Regard sur soi | 1 | 0 | 0 | 1 |
 | 6. Feedback des pairs | 5 | 0 | 0 | — |
-| 7. Questionnaire Élément B | 1 | 1 | 1 | — |
+| 7. Questionnaire Élément B | 2 | 0 | 1 | — |
 | 8. Résultats Participant | 5 | 0 | 2 | 1 |
 | 9. Vue de synthèse Admin/Coach | 1 | 0 | 2 | 1 |
 | 10. IA & retour formateur/coach | 0 | 0 | 4 | — |
 | 11. Hébergement & domaine | 0 | 0 | 1 | 1 |
-| **Total court terme** | **32** | **1** | **10** | **5** |
+| **Total court terme** | **33** | **0** | **10** | **5** |
 
 Le gros de la **gouvernance et du parcours participant** est en place. Les chantiers restants sont concentrés sur :
 1. La **vue résultats participant** : restent les **libellés d'interprétation des écarts** (texte attendu de Nora). Filtres « pairs me voient », retrait colonnes « je vois les autres » et **tooltips commentaires pairs** : faits (2026-05-06).
@@ -106,8 +106,8 @@ Le gros de la **gouvernance et du parcours participant** est en place. Les chant
 
 | Statut | Profil | Item PDF | État | Preuve / reste à faire |
 |---|---|---|---|---|
-| 🟡 | Participant | Simplifier la page : retirer bloc « résumé / dimensions » et éléments parasites | Partiel | `SidebarSummary` retiré de `ParticipantTestSessionRoute` (commit `700db00`). **Reste** : ajouter le paragraphe descriptif du questionnaire (texte à fournir par Nora) |
-| ❌ | Participant | Paragraphe descriptif du questionnaire à insérer | Pas fait | Texte à fournir par Nora |
+| ✅ | Participant | Simplifier la page : retirer bloc « résumé / dimensions » et éléments parasites | Fait (2026-05-08) | Décision : la page d'accueil intermédiaire `/test/` (ancien `routes/_participant/test/index.tsx`) est **supprimée**. Le clic sur la card « Test Élément Humain » depuis `/campaigns/:id` route directement vers `/test/$questionnaireCode` (première question). Navigation corrigée dans `routes/_participant/campaigns/$campaignId/index.tsx:55-74` (branche `routeKind === 'test'` qui résout `assignment.questionnaire_id`). `routeTree.gen.ts` régénéré par le plugin Vite TanStack — plus aucune référence à `ParticipantTestIndex`. Simplification ultime : on saute la page de présentation puisque le contexte (chip « Test Élément Humain », titre, description, StatCards Séries/Questions, card Dimensions) est déjà rendu sur la page de test elle-même |
+| ✅ | Participant | Paragraphe descriptif du questionnaire à insérer | Fait (2026-05-08) | Résolu par la suppression de la page intermédiaire (item ci-dessus). L'en-tête de `routes/_participant/test/$questionnaireCode.tsx:399-405` affiche déjà `detail.description` (description venant de la donnée questionnaire côté API). Si Nora veut affiner ce texte, il se met à jour côté contenu (seed/BDD du questionnaire) sans toucher au code |
 | ❌ | Participant | Enregistrement automatique des réponses entre les deux séries (54×2) | Pas fait | Idem section 5 — pas d'autosave. Chantier sécurité anti-déconnexion |
 
 ---
@@ -194,7 +194,7 @@ Le gros de la **gouvernance et du parcours participant** est en place. Les chant
 **Bloc 2 — Parcours participant manquants (2-3 j)**
 4. Autosave Élément B uniquement (section 7) — décision 2026-05-06 : **pas d'autosave sur le regard sur soi** (questionnaire court, soumission manuelle suffit).
 5. ~~Commentaire optionnel pair, max 150 caractères (section 6) — schéma DB + UI + validation.~~ ✅ Fait (2026-05-06) — décision design : commentaire **par note** (pas global). Migration `0017_amusing_bedlam.sql` + Zod + use case + UI bouton `+` dans `RatingDimensionCard`. Garde-fou serveur 150 chars + rejet commentaires orphelins.
-6. Paragraphe descriptif Élément B (texte Nora attendu).
+6. ~~Paragraphe descriptif Élément B.~~ ✅ Fait (2026-05-08) — résolu par la suppression de la page d'accueil intermédiaire `/test/`. Le participant arrive directement sur la première question, dont l'en-tête affiche déjà `detail.description` venant de la donnée questionnaire (API). Mise à jour du texte = mise à jour côté contenu, pas côté code.
 
 **Bloc 3 — Vue résultats participant (2 j)**
 7. ~~Filtres « comment mes pairs me voient ».~~ ✅ Fait (2026-05-06) — perspective `'received'` codée en dur dans `results.tsx:36`, pas de toggle UI nécessaire.

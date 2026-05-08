@@ -264,8 +264,8 @@ function QuestionCard({
                                 {isSubmitting
                                     ? 'Envoi en cours…'
                                     : allAnswered
-                                      ? 'Terminer et envoyer'
-                                      : `${String(answeredCount)} / ${String(totalQuestions)} réponses`}
+                                        ? 'Terminer et envoyer'
+                                        : `${String(answeredCount)} / ${String(totalQuestions)} réponses`}
                             </Button>
                         ) : (
                             <Button
@@ -436,106 +436,30 @@ function ParticipantTestSessionRoute() {
                 </CardContent>
             </Card>
 
-            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(4, minmax(0, 1fr))' }, gap: 2 }}>
-                <StatCard
-                    variant="compact"
-                    icon={BadgeCheck}
-                    label="Questionnaire actif"
-                    value={questionnaireCode}
-                    frame="box"
+            <Stack spacing={2.5}>
+                {/* @ts-expect-error Vite injects import.meta.env at build time */}
+                {import.meta.env.DEV && (
+                    <Alert
+                        severity="info"
+                        action={
+                            <Button color="inherit" size="small" onClick={handleDevFill}>
+                                Remplir tout
+                            </Button>
+                        }
+                    >
+                        Mode développement — remplir les {totalQuestions} réponses automatiquement.
+                    </Alert>
+                )}
+                <QuestionCard
+                    seriesLabels={effectiveSeriesLabels}
+                    questions={detail.questions.series}
+                    answers={answers}
+                    onAnswer={handleAnswer}
+                    onSubmit={handleSubmit}
+                    isSubmitting={submitMutation.isPending}
+                    submitError={submitMutation.isError}
                 />
-                <StatCard
-                    variant="compact"
-                    icon={CircleDot}
-                    label="Séries"
-                    value={String(detail.questions.series.length)}
-                    frame="box"
-                />
-                <StatCard
-                    variant="compact"
-                    icon={Hash}
-                    label="Questions"
-                    value={`${String(detail.questions.series[0]?.length ?? 0)} / série`}
-                    frame="box"
-                />
-                <StatCard variant="compact" icon={Sparkles} label="Étape" value="Test" frame="box" />
-            </Box>
-
-            <Box
-                sx={{
-                    display: 'grid',
-                    gridTemplateColumns: { xs: '1fr', xl: '1.2fr 0.8fr' },
-                    gap: 3,
-                    alignItems: 'start',
-                }}
-            >
-                <Stack spacing={2.5}>
-                    {/* @ts-expect-error Vite injects import.meta.env at build time */}
-                    {import.meta.env.DEV && (
-                        <Alert
-                            severity="info"
-                            action={
-                                <Button color="inherit" size="small" onClick={handleDevFill}>
-                                    Remplir tout
-                                </Button>
-                            }
-                        >
-                            Mode développement — remplir les {totalQuestions} réponses automatiquement.
-                        </Alert>
-                    )}
-                    <QuestionCard
-                        seriesLabels={effectiveSeriesLabels}
-                        questions={detail.questions.series}
-                        answers={answers}
-                        onAnswer={handleAnswer}
-                        onSubmit={handleSubmit}
-                        isSubmitting={submitMutation.isPending}
-                        submitError={submitMutation.isError}
-                    />
-
-                    <Card variant="outlined">
-                        <CardContent sx={{ p: 2.5 }}>
-                            <Typography variant="h6" fontWeight={800} color="text.primary">
-                                Dimensions du questionnaire
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                                La structure dépend du questionnaire de la campagne.
-                            </Typography>
-                            <Stack
-                                spacing={1.2}
-                                sx={{
-                                    mt: 2,
-                                    display: 'grid',
-                                    gridTemplateColumns: {
-                                        xs: '1fr',
-                                        md: `repeat(${Math.min(detail.result_dims.length, 3)}, minmax(0, 1fr))`,
-                                    },
-                                    gap: 1.2,
-                                }}
-                            >
-                                {detail.result_dims.map(dimension => (
-                                    <Box
-                                        key={dimension.name}
-                                        sx={{ border: '1px solid', borderColor: 'border', borderRadius: 4, p: 1.5 }}
-                                    >
-                                        <Typography variant="caption" color="text.secondary">
-                                            Dimension
-                                        </Typography>
-                                        <Typography
-                                            variant="body2"
-                                            fontWeight={700}
-                                            color="text.primary"
-                                            sx={{ mt: 0.25 }}
-                                        >
-                                            {dimension.name}
-                                        </Typography>
-                                    </Box>
-                                ))}
-                            </Stack>
-                        </CardContent>
-                    </Card>
-                </Stack>
-            </Box>
+            </Stack>
 
             <Snackbar
                 open={successOpen}
