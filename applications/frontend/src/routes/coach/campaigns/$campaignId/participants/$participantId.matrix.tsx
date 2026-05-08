@@ -1,7 +1,7 @@
 // Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
 
 import { QuestionnaireMatrixDisplay } from '@/components/matrix/QuestionnaireMatrixDisplay';
-import { useAdminCampaign, useParticipantQuestionnaireMatrix } from '@/hooks/admin';
+import { useAdminCampaign, useParticipant, useParticipantQuestionnaireMatrix } from '@/hooks/admin';
 import { Alert, Box, Button, Card, CircularProgress, Stack, Typography } from '@mui/material';
 import { createFileRoute, useRouter } from '@tanstack/react-router';
 import { ArrowLeft, LayoutPanelLeft } from 'lucide-react';
@@ -28,7 +28,10 @@ function CoachCampaignParticipantMatrixPage() {
     const participantIdNum = Number(participantId);
 
     const { data: campaignDetail, isLoading: campaignLoading } = useAdminCampaign(campaignId);
+    const { data: participantDetail } = useParticipant(participantIdNum);
     const qid = campaignDetail?.campaign.questionnaireId ?? '';
+    const participantName = participantDetail?.participant.full_name ?? `Participant #${participantId}`;
+    const campaignName = campaignDetail?.campaign.name ?? `Campagne #${campaignIdParam}`;
 
     const {
         data: matrix,
@@ -70,8 +73,8 @@ function CoachCampaignParticipantMatrixPage() {
                         Matrice des scores
                     </Typography>
                     <Typography variant="body1" color="text.secondary">
-                        Participant #{participantId} — Campagne #{campaignIdParam} — Comparaison détaillée entre le
-                        Regard sur soi, les retours pairs et l'analyse scientifique.
+                        {participantName} — {campaignName} — Comparaison détaillée entre le Regard sur soi, les retours
+                        pairs et l'analyse scientifique.
                     </Typography>
                 </Box>
             </Stack>

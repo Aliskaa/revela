@@ -32,19 +32,6 @@ export const QuestionnaireMatrixDisplay = ({ matrix }: QuestionnaireMatrixDispla
                 sx={{ mb: 4 }}
             >
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }}>
-                    <Info size={18} className="text-secondary" color="#6b7280" />
-                    <Typography variant="body2" color="text.secondary" fontWeight={500}>
-                        Regard sur soi (Rép. #{matrix.self_response_id ?? '—'})
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                        •
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary" fontWeight={500}>
-                        Analyse Scientifique (#{matrix.scientific_response_id ?? '—'})
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                        •
-                    </Typography>
                     <Chip
                         label={`${matrix.peer_columns.length} retour(s) pair(s)`}
                         size="small"
