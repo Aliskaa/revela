@@ -12,7 +12,11 @@
       "Bash(grep -E \"\\\\.\\(ts|js\\)$\")",
       "Bash(pnpm lint *)",
       "Bash(npx biome *)",
-      "Bash(docker exec *)"
+      "Bash(docker exec *)",
+      "Bash(pnpm --filter @aor/ai-harness lint)",
+      "Bash(pnpm --filter @aor/ai-harness exec biome check --write .)",
+      "Bash(node -e ' *)",
+      "Bash(pnpm --filter @aor/ai-harness build)"
     ],
     "additionalDirectories": [
       "c:\\Users\\kevin\\Documents\\DataLoco\\Nora\\base\\questionnaire-platform\\applications\\frontend\\src\\components\\common"

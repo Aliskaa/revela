@@ -364,6 +364,25 @@ importers:
         specifier: ^0.1.0
         version: 0.1.0(vitest@4.1.2(@types/node@22.19.15)(jsdom@25.0.1)(vite@6.4.1(@types/node@22.19.15)(terser@5.46.1)(tsx@4.21.0)))
 
+  packages/aor-ai-harness:
+    dependencies:
+      zod:
+        specifier: 'catalog:'
+        version: 4.3.6
+    devDependencies:
+      '@biomejs/biome':
+        specifier: 'catalog:'
+        version: 1.9.4
+      '@types/node':
+        specifier: 'catalog:'
+        version: 22.19.15
+      tsx:
+        specifier: 'catalog:'
+        version: 4.21.0
+      typescript:
+        specifier: 'catalog:'
+        version: 5.7.3
+
   packages/aor-common/adapters:
     dependencies:
       '@aor/ports':
