@@ -1,0 +1,2 @@
+ALTER TABLE "ai_prompt_versions" ADD COLUMN "provider" varchar(32) DEFAULT 'anthropic' NOT NULL;--> statement-breakpoint
+ALTER TABLE "ai_prompt_versions" ADD COLUMN "model" varchar(64) DEFAULT 'claude-opus-4-7' NOT NULL;

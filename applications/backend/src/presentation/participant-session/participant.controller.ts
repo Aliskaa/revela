@@ -6,6 +6,7 @@ import {
     Controller,
     Get,
     Inject,
+    NotFoundException,
     Param,
     ParseIntPipe,
     Patch,
@@ -23,6 +24,7 @@ import { Throttle } from '@nestjs/throttler';
 import type { Request, Response } from 'express';
 
 import { updateParticipantProfileBodySchema } from '@aor/types';
+import type { GetOwnParticipantAiRestitutionUseCase } from '@src/application/ai-restitutions/get-own-participant-ai-restitution.usecase';
 import { AuditLoggerService } from '@src/application/audit/audit-logger.service';
 import {
     RefreshTokenInvalidError,
@@ -62,6 +64,7 @@ import {
     CONFIRM_CAMPAIGN_PARTICIPATION_USE_CASE_SYMBOL,
     CONFIRM_PEER_FEEDBACK_USE_CASE_SYMBOL,
     EXPORT_PARTICIPANT_SELF_DATA_USE_CASE_SYMBOL,
+    GET_OWN_PARTICIPANT_AI_RESTITUTION_USE_CASE_SYMBOL,
     GET_OWN_PARTICIPANT_TRANSPARENCY_SCORE_USE_CASE_SYMBOL,
     GET_PARTICIPANT_ELEMENT_B_DRAFT_USE_CASE_SYMBOL,
     GET_PARTICIPANT_OWNED_RESPONSE_USE_CASE_SYMBOL,
@@ -98,6 +101,8 @@ export class ParticipantController {
         private readonly exportParticipantSelfData: ExportParticipantSelfDataUseCase,
         @Inject(GET_OWN_PARTICIPANT_TRANSPARENCY_SCORE_USE_CASE_SYMBOL)
         private readonly getOwnParticipantTransparencyScore: GetOwnParticipantTransparencyScoreUseCase,
+        @Inject(GET_OWN_PARTICIPANT_AI_RESTITUTION_USE_CASE_SYMBOL)
+        private readonly getOwnParticipantAiRestitution: GetOwnParticipantAiRestitutionUseCase,
         @Inject(GET_PARTICIPANT_ELEMENT_B_DRAFT_USE_CASE_SYMBOL)
         private readonly getParticipantElementBDraft: GetParticipantElementBDraftUseCase,
         @Inject(UPSERT_PARTICIPANT_ELEMENT_B_DRAFT_USE_CASE_SYMBOL)
@@ -346,6 +351,25 @@ export class ParticipantController {
                 activated_by_coach_id: snapshot.activatedByCoachId,
             },
         };
+    }
+
+    /**
+     * Lecture de la restitution IA (Niveau 3 résultats §10 PDF) du participant
+     * authentifié. 404 tant que le coach n'a pas explicitement approuvé —
+     * la diffusion est contrôlée (décision Laurent 2026-05-10).
+     */
+    @Get('campaigns/:campaignId/restitution')
+    @UseGuards(ParticipantJwtAuthGuard)
+    @UseFilters(ParticipantSessionExceptionFilter)
+    public async campaignAiRestitution(
+        @CurrentParticipantId() participantId: number,
+        @Param('campaignId', ParseIntPipe) campaignId: number
+    ) {
+        const view = await this.getOwnParticipantAiRestitution.execute({ participantId, campaignId });
+        if (!view) {
+            throw new NotFoundException('Aucune restitution disponible pour cette campagne.');
+        }
+        return view;
     }
 
     @Post('campaigns/:campaignId/peer-feedback/confirm')

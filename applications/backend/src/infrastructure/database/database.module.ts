@@ -4,6 +4,7 @@ import { DATABASE_POOL_SYMBOL, DRIZZLE_DB_SYMBOL, createDatabasePool, createDriz
 import { Global, Module } from '@nestjs/common';
 
 import { DatabaseLifecycle } from '@src/infrastructure/database/database.lifecycle';
+import { DrizzleAiRestitutionsRepository } from '@src/infrastructure/database/repositories/drizzle-ai-restitutions.repository';
 import { DrizzleCampaignsRepository } from '@src/infrastructure/database/repositories/drizzle-campaigns.repository';
 import { DrizzleCoachesRepository } from '@src/infrastructure/database/repositories/drizzle-coaches.repository';
 import { DrizzleCompaniesRepository } from '@src/infrastructure/database/repositories/drizzle-companies.repository';
@@ -12,6 +13,7 @@ import { DrizzleInvitationsRepository } from '@src/infrastructure/database/repos
 import { DrizzleInviteActivationRepository } from '@src/infrastructure/database/repositories/drizzle-invite-activation.repository';
 import { DrizzleParticipantsRepository } from '@src/infrastructure/database/repositories/drizzle-participants.repository';
 import { DrizzleResponsesRepository } from '@src/infrastructure/database/repositories/drizzle-responses.repository';
+import { AI_RESTITUTIONS_REPOSITORY_PORT_SYMBOL } from '@src/interfaces/ai-restitutions/IAiRestitutionsRepository.port';
 import { CAMPAIGNS_REPOSITORY_PORT_SYMBOL } from '@src/interfaces/campaigns/ICampaignsRepository.port';
 import { COACHES_REPOSITORY_PORT_SYMBOL } from '@src/interfaces/coaches/ICoachesRepository.port';
 import { COMPANIES_REPOSITORY_PORT_SYMBOL } from '@src/interfaces/companies/ICompaniesRepository.port';
@@ -39,9 +41,14 @@ import { RESPONSES_REPOSITORY_PORT_SYMBOL } from '@src/interfaces/responses/IRes
         DrizzleParticipantsRepository,
         DrizzleResponsesRepository,
         DrizzleElementBDraftsRepository,
+        DrizzleAiRestitutionsRepository,
         {
             provide: COMPANIES_REPOSITORY_PORT_SYMBOL,
             useExisting: DrizzleCompaniesRepository,
+        },
+        {
+            provide: AI_RESTITUTIONS_REPOSITORY_PORT_SYMBOL,
+            useExisting: DrizzleAiRestitutionsRepository,
         },
         {
             provide: CAMPAIGNS_REPOSITORY_PORT_SYMBOL,
@@ -83,6 +90,7 @@ import { RESPONSES_REPOSITORY_PORT_SYMBOL } from '@src/interfaces/responses/IRes
         PARTICIPANTS_REPOSITORY_PORT_SYMBOL,
         RESPONSES_REPOSITORY_PORT_SYMBOL,
         ELEMENT_B_DRAFTS_REPOSITORY_PORT_SYMBOL,
+        AI_RESTITUTIONS_REPOSITORY_PORT_SYMBOL,
         DrizzleCompaniesRepository,
         DrizzleCampaignsRepository,
         DrizzleCoachesRepository,
@@ -91,6 +99,7 @@ import { RESPONSES_REPOSITORY_PORT_SYMBOL } from '@src/interfaces/responses/IRes
         DrizzleParticipantsRepository,
         DrizzleResponsesRepository,
         DrizzleElementBDraftsRepository,
+        DrizzleAiRestitutionsRepository,
     ],
 })
 export class DatabaseModule {}

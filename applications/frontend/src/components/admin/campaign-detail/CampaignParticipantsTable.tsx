@@ -23,6 +23,7 @@ import { SectionTitle } from '@/components/common/SectionTitle';
 import { ProgressChip } from '@/components/common/chips';
 import type { CampaignParticipantProgress } from '@aor/types';
 
+import { CampaignParticipantAiRestitutionButton } from './CampaignParticipantAiRestitutionButton';
 import { CampaignParticipantTransparencyButton } from './CampaignParticipantTransparencyButton';
 import { ParticipantTokensRow } from './ParticipantTokensRow';
 
@@ -47,6 +48,11 @@ export type CampaignParticipantsTableProps = {
      * `${prefix}/${campaignId}/participants/${participantId}/transparency`.
      */
     transparencyUrlPrefix?: string;
+    /**
+     * Préfixe d'URL pour la page de restitution IA scopée à la campagne. L'URL
+     * finale est `${prefix}/${campaignId}/participants/${participantId}/ai-restitution`.
+     */
+    aiRestitutionUrlPrefix?: string;
 };
 
 const COL_SPAN = 7;
@@ -57,6 +63,7 @@ export function CampaignParticipantsTable({
     participantUrlPrefix,
     matrixUrlPrefix,
     transparencyUrlPrefix,
+    aiRestitutionUrlPrefix,
 }: CampaignParticipantsTableProps) {
     const [expandedParticipant, setExpandedParticipant] = React.useState<number | null>(null);
     const [page, setPage] = React.useState(0);
@@ -193,6 +200,13 @@ export function CampaignParticipantsTable({
                                                                 campaignId={campaignId}
                                                                 participantId={p.participantId}
                                                                 transparencyUrlPrefix={transparencyUrlPrefix}
+                                                            />
+                                                        ) : null}
+                                                        {aiRestitutionUrlPrefix ? (
+                                                            <CampaignParticipantAiRestitutionButton
+                                                                campaignId={campaignId}
+                                                                participantId={p.participantId}
+                                                                aiRestitutionUrlPrefix={aiRestitutionUrlPrefix}
                                                             />
                                                         ) : null}
                                                     </Stack>

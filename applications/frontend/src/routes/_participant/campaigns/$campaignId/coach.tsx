@@ -1,10 +1,12 @@
 import { LoadingCard } from '@/components/common/LoadingCard';
+import { useParticipantOwnAiRestitution } from '@/hooks/aiRestitutions';
 import { useParticipantSession } from '@/hooks/participantSession';
 import type { ParticipantSession } from '@aor/types';
 import { Alert, Box, Button, Card, CardContent, Chip, Stack, Typography } from '@mui/material';
 import { Link, createFileRoute } from '@tanstack/react-router';
-import { ArrowLeft, Sparkles, UserRound, Users } from 'lucide-react';
+import { ArrowLeft, Bot, Sparkles, UserRound, Users } from 'lucide-react';
 import * as React from 'react';
+import ReactMarkdown from 'react-markdown';
 
 export const Route = createFileRoute('/_participant/campaigns/$campaignId/coach')({
     component: ParticipantCoachRoute,
@@ -74,6 +76,7 @@ function ParticipantCoachRoute() {
     const { campaignId: campaignIdParam } = Route.useParams();
     const campaignId = Number(campaignIdParam);
     const { data: session, isLoading, isError } = useParticipantSession();
+    const { data: aiRestitution } = useParticipantOwnAiRestitution(campaignId);
 
     const assignment = React.useMemo(() => {
         if (!session) return undefined;
@@ -237,6 +240,51 @@ function ParticipantCoachRoute() {
                             <InfoPill label="Cadre" value="Confidentialité et lecture partagée" icon={Users} />
                         </Box>
                     </Stack>
+                </CardContent>
+            </Card>
+
+            <Card variant="outlined">
+                <CardContent sx={{ p: 2.5 }}>
+                    <Stack direction="row" alignItems="center" spacing={1.2} sx={{ mb: 1 }}>
+                        <Bot size={18} />
+                        <Typography variant="h5" fontWeight={800} color="text.primary" sx={{ letterSpacing: -0.4 }}>
+                            Retour personnalisé
+                        </Typography>
+                    </Stack>
+                    <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, mb: 2, lineHeight: 1.7 }}>
+                        Lecture rédigée à partir de vos écarts comportementaux et validée par votre coach avant partage.
+                    </Typography>
+                    {aiRestitution ? (
+                        <Box>
+                            <Chip
+                                label={`Partagé le ${new Date(aiRestitution.approved_at).toLocaleDateString('fr-FR', {
+                                    day: '2-digit',
+                                    month: 'long',
+                                    year: 'numeric',
+                                })}`}
+                                size="small"
+                                sx={{ borderRadius: 99, mb: 2 }}
+                            />
+                            <Box
+                                sx={{
+                                    p: 2.5,
+                                    bgcolor: 'rgba(15,23,42,0.03)',
+                                    borderRadius: 4,
+                                    '& h1, & h2, & h3': { mt: 2, mb: 1, fontWeight: 700 },
+                                    '& p': { mb: 1.5, lineHeight: 1.7 },
+                                    '& ul, & ol': { pl: 3, mb: 1.5 },
+                                    '& li': { mb: 0.5 },
+                                }}
+                            >
+                                <ReactMarkdown>{aiRestitution.text}</ReactMarkdown>
+                            </Box>
+                        </Box>
+                    ) : (
+                        <Alert severity="info" sx={{ borderRadius: 3 }}>
+                            Votre coach n'a pas encore partagé de retour personnalisé pour cette campagne. Vous serez
+                            notifié dès qu'il sera disponible.
+                        </Alert>
+                    )}
                 </CardContent>
             </Card>
         </Stack>

@@ -134,6 +134,20 @@
       "when": 1778236825409,
       "tag": "0018_early_mimic",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1778428038371,
+      "tag": "0019_plain_human_torch",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1778432974884,
+      "tag": "0020_glamorous_rocket_raccoon",
+      "breakpoints": true
     }
   ]
 }

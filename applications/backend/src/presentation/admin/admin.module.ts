@@ -2,6 +2,7 @@
 
 import { Module } from '@nestjs/common';
 
+import { AdminAiRestitutionsModule } from './admin-ai-restitutions.module';
 import { AdminAuditModule } from './admin-audit.module';
 import { AdminAuthModule } from './admin-auth.module';
 import { AdminCampaignsModule } from './admin-campaigns.module';
@@ -25,6 +26,7 @@ import { AdminResponsesModule } from './admin-responses.module';
         AdminParticipantsModule,
         AdminResponsesModule,
         AdminAuditModule,
+        AdminAiRestitutionsModule,
     ],
 })
 export class AdminModule {}

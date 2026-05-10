@@ -6,6 +6,7 @@ import { PassportModule } from '@nestjs/passport';
 
 import { ScryptPasswordAdapter } from '@aor/adapters';
 import { type IPasswordVerifierPort, PASSWORD_VERIFIER_PORT_SYMBOL } from '@aor/ports';
+import { GetOwnParticipantAiRestitutionUseCase } from '@src/application/ai-restitutions/get-own-participant-ai-restitution.usecase';
 import { ConfirmCampaignParticipationUseCase } from '@src/application/participant-session/confirm-campaign-participation.usecase';
 import { ConfirmPeerFeedbackUseCase } from '@src/application/participant-session/confirm-peer-feedback.usecase';
 import { ExportParticipantSelfDataUseCase } from '@src/application/participant-session/export-participant-self-data.usecase';
@@ -19,6 +20,10 @@ import { GetParticipantOwnedResponseUseCase } from '@src/application/responses/g
 import { SubmitParticipantQuestionnaireUseCase } from '@src/application/responses/submit-participant-questionnaire.usecase';
 import { UpsertParticipantElementBDraftUseCase } from '@src/application/responses/upsert-participant-element-b-draft.usecase';
 import { GetOwnParticipantTransparencyScoreUseCase } from '@src/application/transparency/get-own-participant-transparency-score.usecase';
+import {
+    AI_RESTITUTIONS_REPOSITORY_PORT_SYMBOL,
+    type IAiRestitutionsRepositoryPort,
+} from '@src/interfaces/ai-restitutions/IAiRestitutionsRepository.port';
 import {
     CAMPAIGNS_REPOSITORY_PORT_SYMBOL,
     type ICampaignsReadPort,
@@ -61,6 +66,7 @@ import {
     CONFIRM_CAMPAIGN_PARTICIPATION_USE_CASE_SYMBOL,
     CONFIRM_PEER_FEEDBACK_USE_CASE_SYMBOL,
     EXPORT_PARTICIPANT_SELF_DATA_USE_CASE_SYMBOL,
+    GET_OWN_PARTICIPANT_AI_RESTITUTION_USE_CASE_SYMBOL,
     GET_OWN_PARTICIPANT_TRANSPARENCY_SCORE_USE_CASE_SYMBOL,
     GET_PARTICIPANT_ELEMENT_B_DRAFT_USE_CASE_SYMBOL,
     GET_PARTICIPANT_OWNED_RESPONSE_USE_CASE_SYMBOL,
@@ -247,6 +253,12 @@ import {
             useFactory: (repo: IParticipantsInviteAssignmentsReaderPort & IParticipantsTransparencyScorePort) =>
                 new GetOwnParticipantTransparencyScoreUseCase({ participants: repo, transparency: repo }),
             inject: [PARTICIPANTS_REPOSITORY_PORT_SYMBOL],
+        },
+        {
+            provide: GET_OWN_PARTICIPANT_AI_RESTITUTION_USE_CASE_SYMBOL,
+            useFactory: (restitutions: IAiRestitutionsRepositoryPort) =>
+                new GetOwnParticipantAiRestitutionUseCase({ restitutions }),
+            inject: [AI_RESTITUTIONS_REPOSITORY_PORT_SYMBOL],
         },
         {
             provide: EXPORT_PARTICIPANT_SELF_DATA_USE_CASE_SYMBOL,

@@ -34,6 +34,7 @@ const SCOPE_CFG: Record<
         participantUrlPrefix: string;
         matrixUrlPrefix: string;
         transparencyUrlPrefix: string;
+        aiRestitutionUrlPrefix: string;
     }
 > = {
     admin: {
@@ -45,6 +46,7 @@ const SCOPE_CFG: Record<
         participantUrlPrefix: '/admin/participants',
         matrixUrlPrefix: '/admin/campaigns',
         transparencyUrlPrefix: '/admin/campaigns',
+        aiRestitutionUrlPrefix: '/admin/campaigns',
     },
     coach: {
         backTo: '/coach/campaigns',
@@ -54,6 +56,7 @@ const SCOPE_CFG: Record<
         participantUrlPrefix: '/coach/participants',
         matrixUrlPrefix: '/coach/campaigns',
         transparencyUrlPrefix: '/coach/campaigns',
+        aiRestitutionUrlPrefix: '/coach/campaigns',
     },
 };
 
@@ -122,12 +125,7 @@ export function CampaignDetailPage({ scope, campaignId }: CampaignDetailPageProp
                 title={campaign.name}
                 subtitle={cfg.subtitle}
                 actions={
-                    <Button
-                        component={Link}
-                        to={cfg.backTo}
-                        variant="outlined"
-                        startIcon={<ArrowLeft size={16} />}
-                    >
+                    <Button component={Link} to={cfg.backTo} variant="outlined" startIcon={<ArrowLeft size={16} />}>
                         {cfg.backLabel}
                     </Button>
                 }
@@ -167,6 +165,7 @@ export function CampaignDetailPage({ scope, campaignId }: CampaignDetailPageProp
                         participantUrlPrefix={cfg.participantUrlPrefix}
                         matrixUrlPrefix={cfg.matrixUrlPrefix}
                         transparencyUrlPrefix={cfg.transparencyUrlPrefix}
+                        aiRestitutionUrlPrefix={cfg.aiRestitutionUrlPrefix}
                     />
                 </Stack>
 

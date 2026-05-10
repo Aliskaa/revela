@@ -18,3 +18,4 @@ export * from './campaign-synthesis';
 export * from './participant-results-view';
 export * from './audit';
 export * from './transparency';
+export * from './ai-restitution';
