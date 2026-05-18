@@ -134,6 +134,7 @@ export class GenerateAiRestitutionUseCase {
         coachId?: number;
         harnessInput: HarnessInput;
     }): Promise<AiRestitutionRecord> {
+        console.log('params', JSON.stringify(params, null, 2));
         const campaign = await this.ports.campaigns.findById(params.campaignId, {
             coachId: params.coachId,
         });
@@ -147,9 +148,11 @@ export class GenerateAiRestitutionUseCase {
         }
 
         const selected = selectDimensions(params.harnessInput);
+        console.log('selected', selected);
         const intermediate = buildIntermediateObject(params.harnessInput, selected);
+        console.log('intermediate', intermediate);
         const baseUserPrompt = buildUserPrompt(intermediate);
-
+        console.log('baseUserPrompt', baseUserPrompt);
         // ── Tentative 1 : provider/model configurés en BDD ──────────────────
         const attempt1 = await callOnce({
             registry: this.ports.llmRegistry,
@@ -157,7 +160,9 @@ export class GenerateAiRestitutionUseCase {
             provider: promptVersion.provider,
             userPrompt: baseUserPrompt,
         });
+        console.log('attempt1', attempt1);
         const validation1 = validateOutput(attempt1.text, intermediate);
+        console.log('validation1', validation1);
         if (validation1.ok) {
             return this.persist({
                 params,

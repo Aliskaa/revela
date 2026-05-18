@@ -1,26 +1,13 @@
 // Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
 
-import {
-    Alert,
-    Box,
-    Button,
-    Card,
-    CardContent,
-    Chip,
-    Divider,
-    InputAdornment,
-    Stack,
-    TextField,
-    Tooltip,
-    Typography,
-} from '@mui/material';
+import { Alert, Box, Button, Card, CardContent, Chip, Stack, TextField, Tooltip, Typography } from '@mui/material';
 import { Link } from '@tanstack/react-router';
 import { ArrowLeft, BadgeCheck, Bot, CheckCircle, Eye, Pencil, RotateCw, Sparkles, XCircle } from 'lucide-react';
 import * as React from 'react';
 import ReactMarkdown from 'react-markdown';
 
 import { LoadingCard } from '@/components/common/LoadingCard';
-import { useAdminCampaign, useParticipant } from '@/hooks/admin';
+import { useAdminCampaign, useParticipant, useParticipantQuestionnaireMatrix } from '@/hooks/admin';
 import {
     type GenerateAiRestitutionBody,
     useAdminAiRestitution,
@@ -29,7 +16,7 @@ import {
     useGenerateAiRestitution,
     useRejectAiRestitution,
 } from '@/hooks/aiRestitutions';
-import type { AiRestitutionAdminView } from '@aor/types';
+import type { AiRestitutionAdminView, ParticipantQuestionnaireMatrix } from '@aor/types';
 
 export type CampaignParticipantAiRestitutionScope = 'admin' | 'coach';
 
@@ -87,42 +74,131 @@ const DEFAULT_FORM = {
     inclusion: { ...DEFAULT_DIM },
     control: { ...DEFAULT_DIM },
     openness: { ...DEFAULT_DIM },
-    transparency: 50,
 };
 
 type FormState = typeof DEFAULT_FORM;
+
+/**
+ * Mapping du nom de dimension (catalog) vers la clé FIRO du harness.
+ *
+ * Les `score_keys` exacts ne sont JAMAIS hardcodés ici — ils viennent
+ * dynamiquement de `matrix.result_dims[].diff_pairs` (catalog) :
+ *  - 1ʳᵉ paire `(e, w)` → `expressed` & `wanted` (« je fais aux autres »).
+ *  - 2ᵉ paire `(e, _)`  → `peer_feedback` (proxy V1 : « les autres me font »,
+ *    cf. catalog Élément B où la 2ᵉ paire correspond aux dimensions reçues
+ *    reI/reC/reA). Les vrais feedbacks pairs venant du regard sur soi
+ *    seront intégrés dans une version ultérieure.
+ *
+ * Si un questionnaire utilise un autre nom de dimension, on retombe sur
+ * les valeurs neutres (5) — le coach saisit alors manuellement.
+ */
+const NAME_TO_FIRO: Record<string, 'inclusion' | 'control' | 'openness'> = {
+    Inclusion: 'inclusion',
+    inclusion: 'inclusion',
+    Contrôle: 'control',
+    Controle: 'control',
+    'Contrôle / Influence': 'control',
+    Affection: 'openness',
+    Ouverture: 'openness',
+    'Affection / Ouverture': 'openness',
+    'Ouverture / Affection': 'openness',
+};
 
 const clampInt = (value: number, min: number, max: number): number => {
     if (Number.isNaN(value)) return min;
     return Math.max(min, Math.min(max, Math.round(value)));
 };
 
+const scientificByKey = (matrix: ParticipantQuestionnaireMatrix | undefined): ReadonlyMap<number, number> => {
+    const map = new Map<number, number>();
+    if (!matrix) return map;
+    for (const row of matrix.rows) {
+        if (row.scientific !== null && Number.isFinite(row.scientific)) {
+            map.set(row.score_key, clampInt(row.scientific, 0, 9));
+        }
+    }
+    return map;
+};
+
+const buildPrefilledForm = (
+    matrix: ParticipantQuestionnaireMatrix | undefined
+): { form: FormState; coverage: number } => {
+    const form: FormState = {
+        inclusion: { ...DEFAULT_DIM },
+        control: { ...DEFAULT_DIM },
+        openness: { ...DEFAULT_DIM },
+    };
+    if (!matrix) return { form, coverage: 0 };
+
+    const scores = scientificByKey(matrix);
+    let filled = 0;
+    let total = 0;
+
+    for (const dim of matrix.result_dims) {
+        const firo = NAME_TO_FIRO[dim.name];
+        if (!firo) continue;
+        const pairs = dim.diff_pairs ?? [];
+        const selfPair = pairs[0]; // « je fais aux autres » : (e, w) → expressed / wanted
+        const receivedPair = pairs[1]; // « les autres me font » : (e, _) → peer_feedback proxy
+
+        if (selfPair) {
+            total += 2;
+            const eValue = scores.get(selfPair.e);
+            const wValue = scores.get(selfPair.w);
+            if (eValue !== undefined) {
+                form[firo].expressed = eValue;
+                filled += 1;
+            }
+            if (wValue !== undefined) {
+                form[firo].wanted = wValue;
+                filled += 1;
+            }
+        }
+        if (receivedPair) {
+            total += 1;
+            const pfValue = scores.get(receivedPair.e);
+            if (pfValue !== undefined) {
+                form[firo].peer_feedback = pfValue;
+                filled += 1;
+            }
+        }
+    }
+
+    return { form, coverage: total === 0 ? 0 : filled / total };
+};
+
 const FiroInput = ({
     label,
     value,
     onChange,
+    helper,
 }: {
     label: string;
     value: number;
     onChange: (v: number) => void;
+    helper?: string;
 }) => (
-    <TextField
-        label={label}
-        type="number"
-        size="small"
-        value={value}
-        onChange={e => onChange(clampInt(Number.parseInt(e.target.value, 10), 0, 9))}
-        slotProps={{ htmlInput: { min: 0, max: 9 } }}
-        sx={{ width: 90 }}
-    />
+    <Tooltip title={helper ?? ''}>
+        <TextField
+            label={label}
+            type="number"
+            size="small"
+            value={value}
+            onChange={e => onChange(clampInt(Number.parseInt(e.target.value, 10), 0, 9))}
+            slotProps={{ htmlInput: { min: 0, max: 9 } }}
+            sx={{ width: 110 }}
+        />
+    </Tooltip>
 );
 
 const DimensionRow = ({
     title,
+    helperByField,
     value,
     onChange,
 }: {
     title: string;
+    helperByField: { expressed: string; wanted: string; peer_feedback: string };
     value: DimensionForm;
     onChange: (v: DimensionForm) => void;
 }) => (
@@ -130,15 +206,35 @@ const DimensionRow = ({
         <Typography variant="subtitle2" sx={{ minWidth: 200, fontWeight: 600 }}>
             {title}
         </Typography>
-        <FiroInput label="Exprimé" value={value.expressed} onChange={v => onChange({ ...value, expressed: v })} />
-        <FiroInput label="Désiré" value={value.wanted} onChange={v => onChange({ ...value, wanted: v })} />
         <FiroInput
-            label="Feedback pairs"
+            label="Exprimé"
+            value={value.expressed}
+            onChange={v => onChange({ ...value, expressed: v })}
+            helper={helperByField.expressed}
+        />
+        <FiroInput
+            label="Désiré"
+            value={value.wanted}
+            onChange={v => onChange({ ...value, wanted: v })}
+            helper={helperByField.wanted}
+        />
+        <FiroInput
+            label="Reçu"
             value={value.peer_feedback}
             onChange={v => onChange({ ...value, peer_feedback: v })}
+            helper={helperByField.peer_feedback}
         />
     </Stack>
 );
+
+/**
+ * V1 : seules les données scientifiques (Élément B) entrent dans le harness.
+ * `transparency.score` est envoyé en valeur neutre (50) — non affiché à
+ * l'utilisateur, pas pris en compte dans la sélection §4 (qui ne traite que
+ * les dimensions comportementales). La prise en compte de la transparence
+ * et des feedbacks pairs (regard sur soi) viendra dans une version ultérieure.
+ */
+const TRANSPARENCY_NEUTRAL_V1 = 50;
 
 const buildBody = (form: FormState): GenerateAiRestitutionBody => ({
     module: 'firo_b_short_restitution',
@@ -147,7 +243,7 @@ const buildBody = (form: FormState): GenerateAiRestitutionBody => ({
         inclusion: form.inclusion,
         control: form.control,
         openness: form.openness,
-        transparency: { score: clampInt(form.transparency, 0, 100) },
+        transparency: { score: TRANSPARENCY_NEUTRAL_V1 },
     },
 });
 
@@ -246,18 +342,16 @@ const TechnicalDetails = ({ restitution }: { restitution: AiRestitutionAdminView
 /**
  * Vue admin/coach de la restitution IA d'un participant pour une campagne donnée.
  *
- * Quatre états principaux gérés par cette page :
- *  - aucune restitution → formulaire de saisie des 12 chiffres + bouton Générer.
+ * Cinq états gérés par cette page :
+ *  - aucune restitution → formulaire pré-rempli depuis Élément B + bouton Générer.
  *  - generated/edited   → preview Markdown + édition + Approuver / Rejeter / Régénérer.
  *  - approved           → preview lecture seule + date d'approbation.
  *  - rejected           → bandeau d'info + bouton Régénérer.
  *
- * Sécurité : scope coach respecté côté backend (404 si campagne hors périmètre).
- *
- * Limitation V1 : le coach saisit les 12 chiffres manuellement en regardant la
- * matrice. Un pré-remplissage automatique depuis les agrégats FIRO-B viendra
- * en Lot 4b (besoin d'arbitrage Nora sur le mapping 12 paires → 3 dimensions
- * agrégées).
+ * Lot 4b : pré-remplissage automatique depuis la matrice Élément B (qid='B').
+ * Mapping : `expressed=e*`, `wanted=w*`, `peer_feedback=re*` (« reçu » du même
+ * questionnaire — proxy V1). La transparence et les vrais feedbacks pairs
+ * (regard sur soi) seront intégrés en version ultérieure.
  */
 export function CampaignParticipantAiRestitutionPage({
     scope,
@@ -270,16 +364,31 @@ export function CampaignParticipantAiRestitutionPage({
     const { data: participantDetail } = useParticipant(participantId);
     const { data: envelope, isLoading: envelopeLoading } = useAdminAiRestitution(campaignId, participantId);
 
+    const qid = campaignDetail?.campaign.questionnaireId ?? '';
+    const { data: matrix, isLoading: matrixLoading } = useParticipantQuestionnaireMatrix(participantId, qid);
+
     const generate = useGenerateAiRestitution();
     const edit = useEditAiRestitution();
     const approve = useApproveAiRestitution();
     const reject = useRejectAiRestitution();
 
+    const { form: prefilledForm, coverage } = React.useMemo(() => buildPrefilledForm(matrix), [matrix]);
     const [form, setForm] = React.useState<FormState>(DEFAULT_FORM);
+    const [formInitialised, setFormInitialised] = React.useState(false);
     const [editing, setEditing] = React.useState(false);
     const [editedDraft, setEditedDraft] = React.useState('');
 
     const restitution = envelope?.restitution ?? null;
+
+    // Une fois la matrice chargée, initialiser le formulaire avec les valeurs
+    // pré-calculées — uniquement la première fois, pour ne pas écraser les
+    // ajustements manuels du coach pendant la session.
+    React.useEffect(() => {
+        if (!formInitialised && matrix) {
+            setForm(prefilledForm);
+            setFormInitialised(true);
+        }
+    }, [matrix, prefilledForm, formInitialised]);
 
     React.useEffect(() => {
         if (restitution && !editing) {
@@ -298,7 +407,7 @@ export function CampaignParticipantAiRestitutionPage({
         </Link>
     );
 
-    if (campaignLoading || envelopeLoading) {
+    if (campaignLoading || envelopeLoading || (qid.length > 0 && matrixLoading)) {
         return <LoadingCard title="Chargement de la restitution IA" />;
     }
 
@@ -312,6 +421,7 @@ export function CampaignParticipantAiRestitutionPage({
     }
 
     const handleGenerate = () => generate.mutate({ campaignId, participantId, body: buildBody(form) });
+    const handleResetFromMatrix = () => setForm(prefilledForm);
 
     const handleSaveEdit = () => {
         edit.mutate(
@@ -327,6 +437,9 @@ export function CampaignParticipantAiRestitutionPage({
     const isRejected = restitution?.status === 'rejected';
     const validationOk = restitution?.validation_report?.ok ?? false;
     const currentText = restitution?.edited_output ?? restitution?.raw_output ?? '';
+
+    const isElementHumain = qid === 'B';
+    const coveragePercent = Math.round(coverage * 100);
 
     return (
         <Stack spacing={3}>
@@ -349,56 +462,88 @@ export function CampaignParticipantAiRestitutionPage({
             {!restitution && (
                 <Card variant="outlined">
                     <CardContent>
-                        <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1 }}>
-                            Saisir les scores agrégés
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                            Renseigne les 3 chiffres par dimension (Exprimé / Désiré / Feedback pairs, échelle 0-9) et
-                            le score de transparence (0-100). Ces valeurs sont injectées telles quelles dans le harness
-                            §5 du PDF Marius. <em>Pré-remplissage automatique prévu en Lot 4b.</em>
-                        </Typography>
+                        <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1 }}>
+                            <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                                Scores Élément B (test scientifique)
+                            </Typography>
+                            <Button
+                                size="small"
+                                startIcon={<RotateCw size={14} />}
+                                onClick={handleResetFromMatrix}
+                                disabled={!matrix}
+                            >
+                                Réinitialiser depuis les données
+                            </Button>
+                        </Stack>
+
+                        {!isElementHumain && (
+                            <Alert severity="warning" sx={{ mb: 2 }}>
+                                Cette campagne utilise le questionnaire « {qid || 'inconnu'} ». La restitution IA est
+                                pour l'instant calibrée sur Élément Humain (qid « B ») — les valeurs ci-dessous seront
+                                neutres tant qu'aucun mapping n'est défini pour ce questionnaire.
+                            </Alert>
+                        )}
+
+                        <Alert severity={coverage === 1 ? 'success' : coverage > 0 ? 'info' : 'warning'} sx={{ mb: 2 }}>
+                            <Typography variant="body2">
+                                {coverage === 1 && (
+                                    <>
+                                        ✅ Valeurs pré-remplies depuis les scores Élément B du participant. Ajuste si
+                                        besoin avant de générer.
+                                    </>
+                                )}
+                                {coverage > 0 && coverage < 1 && (
+                                    <>
+                                        ℹ️ {coveragePercent}% des scores Élément B sont disponibles. Les champs manquants
+                                        sont à 5 (valeur neutre).
+                                    </>
+                                )}
+                                {coverage === 0 && (
+                                    <>
+                                        ⚠️ Aucune donnée Élément B trouvée pour ce participant (test scientifique non
+                                        terminé ?). Tous les champs sont à 5.
+                                    </>
+                                )}
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
+                                V1 : seules les données scientifiques sont injectées. Le score de transparence et les
+                                feedbacks pairs (regard sur soi) seront intégrés dans une version ultérieure.
+                            </Typography>
+                        </Alert>
+
                         <Stack spacing={2.5}>
                             <DimensionRow
                                 title="Inclusion"
                                 value={form.inclusion}
                                 onChange={v => setForm(f => ({ ...f, inclusion: v }))}
+                                helperByField={{
+                                    expressed: 'eI — Inclusion exprimée (Élément B)',
+                                    wanted: 'wI — Inclusion souhaitée (Élément B)',
+                                    peer_feedback: 'reI — Inclusion reçue (Élément B, proxy V1)',
+                                }}
                             />
                             <DimensionRow
                                 title="Contrôle"
                                 value={form.control}
                                 onChange={v => setForm(f => ({ ...f, control: v }))}
+                                helperByField={{
+                                    expressed: 'eC — Contrôle exprimé (Élément B)',
+                                    wanted: 'wC — Contrôle souhaité (Élément B)',
+                                    peer_feedback: 'reC — Contrôle reçu (Élément B, proxy V1)',
+                                }}
                             />
                             <DimensionRow
                                 title="Affection / Ouverture"
                                 value={form.openness}
                                 onChange={v => setForm(f => ({ ...f, openness: v }))}
+                                helperByField={{
+                                    expressed: 'eA — Affection exprimée (Élément B)',
+                                    wanted: 'wA — Affection souhaitée (Élément B)',
+                                    peer_feedback: 'reA — Affection reçue (Élément B, proxy V1)',
+                                }}
                             />
-                            <Divider />
-                            <Stack direction="row" spacing={2} alignItems="center">
-                                <Typography variant="subtitle2" sx={{ minWidth: 200, fontWeight: 600 }}>
-                                    Transparence
-                                </Typography>
-                                <TextField
-                                    label="Score"
-                                    type="number"
-                                    size="small"
-                                    value={form.transparency}
-                                    onChange={e =>
-                                        setForm(f => ({
-                                            ...f,
-                                            transparency: clampInt(Number.parseInt(e.target.value, 10), 0, 100),
-                                        }))
-                                    }
-                                    slotProps={{
-                                        htmlInput: { min: 0, max: 100 },
-                                        input: {
-                                            endAdornment: <InputAdornment position="end">%</InputAdornment>,
-                                        },
-                                    }}
-                                    sx={{ width: 130 }}
-                                />
-                            </Stack>
                         </Stack>
+
                         <Stack direction="row" justifyContent="flex-end" sx={{ mt: 3 }}>
                             <Button
                                 variant="contained"

@@ -39,7 +39,10 @@
       "Bash(pnpm --filter @aor/frontend-app exec biome check src/hooks/aiRestitutions.ts src/components/scoped/CampaignParticipantAiRestitutionPage.tsx src/components/admin/campaign-detail/CampaignParticipantAiRestitutionButton.tsx src/components/admin/campaign-detail/CampaignParticipantsTable.tsx src/components/scoped/CampaignDetailPage.tsx 'src/routes/_participant/campaigns/$campaignId/coach.tsx' 'src/routes/admin/campaigns/$campaignId/participants/$participantId.ai-restitution.tsx' 'src/routes/coach/campaigns/$campaignId/participants/$participantId.ai-restitution.tsx')",
       "Bash(pnpm --filter @aor/backend-api test src/application/scoring)",
       "Bash(pnpm --filter @aor/questionnaires build)",
-      "Bash(pnpm --filter @aor/backend-api run build:workspace-libs)"
+      "Bash(pnpm --filter @aor/backend-api run build:workspace-libs)",
+      "Bash(pnpm --filter @aor/frontend-app exec biome check --write src/components/scoped/CampaignParticipantAiRestitutionPage.tsx)",
+      "Bash(pnpm --filter @aor/frontend-app exec biome check src/components/scoped/CampaignParticipantAiRestitutionPage.tsx)",
+      "Bash(pnpm --filter @aor/backend-api test src/application/ai-restitutions)"
     ],
     "additionalDirectories": [
       "c:\\Users\\kevin\\Documents\\DataLoco\\Nora\\base\\questionnaire-platform\\applications\\frontend\\src\\components\\common"
