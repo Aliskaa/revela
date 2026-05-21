@@ -312,18 +312,24 @@ ssm_run() {
         return 0
     else
         err "$description : statut $inv_status"
+        [[ -n "$inv_stdout" ]] && printf "${C_RED}%s${C_RESET}\n" "$inv_stdout" >&2
         [[ -n "$inv_stderr" ]] && printf "${C_RED}%s${C_RESET}\n" "$inv_stderr" >&2
         return 1
     fi
 }
 
 # ─── Pull + up sur l'EC2 ────────────────────────────────────────────
-step "SSM : docker compose pull && up -d"
+# Le login ECR du bootstrap expire (~12h). Sans re-login, pull/up echouent
+# mais SSM reste Success si la derniere commande (ps) passe — d'ou set -e.
+step "SSM : ECR login + pull + up -d --force-recreate"
 ssm_run "Restart conteneurs" 8 \
+    'set -euo pipefail' \
     'cd /opt/revela' \
+    "aws ecr get-login-password --region ${REGION} | sudo docker login --username AWS --password-stdin ${REGISTRY}" \
     'sudo docker compose pull' \
-    'sudo docker compose up -d' \
-    'sudo docker compose ps --format "{{.Service}}: {{.Status}}"'
+    'sudo docker compose up -d --force-recreate --remove-orphans' \
+    'for c in revela-backend-1 revela-frontend-1; do age=$(( $(date +%s) - $(date -d "$(sudo docker inspect -f "{{.State.StartedAt}}" "$c")" +%s) )); if (( age > 600 )); then echo "Container $c pas redemarre (age ${age}s)"; exit 1; fi; done' \
+    'sudo docker compose ps --format "{{.Service}}: {{.Status}} (image {{.Image}})"'
 
 # ─── Migration DB optionnelle ───────────────────────────────────────
 if $MIGRATE_DB; then
