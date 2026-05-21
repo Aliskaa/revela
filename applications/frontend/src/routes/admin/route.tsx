@@ -10,6 +10,7 @@ import {
     UserRound,
 } from 'lucide-react';
 
+import { HarmonizedChromeProvider } from '@/components/layout/HarmonizedChromeContext';
 import { ScopedAppShell, type ScopedNavItem } from '@/components/layout/ScopedAppShell';
 import { parseAdminJwtClaims, userAdmin } from '@/lib/auth';
 
@@ -28,8 +29,9 @@ const adminNav: ScopedNavItem[] = [
     { label: 'Coachs', to: '/admin/coaches', icon: UserRound },
     { label: 'Questionnaires', to: '/admin/questionnaires', icon: Sparkles },
     { label: 'Audit log', to: '/admin/audit-log', icon: ScrollText },
-    { label: 'Vue coach', to: '/coach', icon: Gauge },
 ];
+
+const adminFooterNav: ScopedNavItem[] = [{ label: 'Vue coach', to: '/coach', icon: Gauge }];
 
 function AdminRoot() {
     const location = useLocation();
@@ -44,16 +46,20 @@ function AdminRoot() {
     };
 
     return (
-        <ScopedAppShell
-            brandIcon={Shield}
-            brandLabel="Révéla"
-            brandEyebrow="Administration"
-            avatarInitial="A"
-            nav={adminNav}
-            onLogout={handleLogout}
-        >
-            <Outlet />
-        </ScopedAppShell>
+        <HarmonizedChromeProvider>
+            <ScopedAppShell
+                variant="harmonized"
+                brandIcon={Shield}
+                brandLabel="Révéla"
+                brandEyebrow="Operational Cockpit"
+                avatarInitial="A"
+                nav={adminNav}
+                footerNav={adminFooterNav}
+                onLogout={handleLogout}
+            >
+                <Outlet />
+            </ScopedAppShell>
+        </HarmonizedChromeProvider>
     );
 }
 

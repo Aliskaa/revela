@@ -2,7 +2,7 @@
 
 import { createFileRoute } from '@tanstack/react-router';
 
-import { CampaignDetailPage } from '@/components/scoped/CampaignDetailPage';
+import { AdminCampaignDetailPage } from '@/components/admin/campaign-detail/AdminCampaignDetailPage';
 
 export const Route = createFileRoute('/admin/campaigns/$campaignId/')({
     component: AdminCampaignDetailRoute,
@@ -10,5 +10,5 @@ export const Route = createFileRoute('/admin/campaigns/$campaignId/')({
 
 function AdminCampaignDetailRoute() {
     const { campaignId } = Route.useParams();
-    return <CampaignDetailPage scope="admin" campaignId={Number(campaignId)} />;
+    return <AdminCampaignDetailPage campaignId={Number(campaignId)} />;
 }

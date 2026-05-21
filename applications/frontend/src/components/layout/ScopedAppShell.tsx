@@ -16,9 +16,17 @@ import {
     Toolbar,
     Typography,
 } from '@mui/material';
+import {
+    HARMONIZED_SIDEBAR_WIDTH,
+    HarmonizedDesktopTopBar,
+    HarmonizedMobileChrome,
+    HarmonizedSidebar,
+} from '@/components/layout/HarmonizedAppShellChrome';
 import { Link, useLocation } from '@tanstack/react-router';
 import { ChevronRight, LogOut, Menu, X } from 'lucide-react';
 import * as React from 'react';
+
+export type ScopedAppShellVariant = 'default' | 'harmonized';
 
 export type ScopedNavItem = {
     label: string;
@@ -37,6 +45,10 @@ export type ScopedAppShellProps = {
     /** Initiale affichée dans l'avatar mobile. */
     avatarInitial: string;
     nav: ScopedNavItem[];
+    /** Liens bas de sidebar (ex. Vue coach) — utilisé avec `variant="harmonized"`. */
+    footerNav?: ScopedNavItem[];
+    /** `harmonized` : chrome admin aligné maquette Stitch (sidebar bleu smalt + top bar). */
+    variant?: ScopedAppShellVariant;
     /**
      * Callback déclenché par les boutons « Déconnexion » (sidebar desktop + drawer mobile).
      * Chaque scope passe son propre comportement (`userAdmin.removeToken()` + redirect admin
@@ -318,6 +330,8 @@ export function ScopedAppShell({
     brandEyebrow,
     avatarInitial,
     nav,
+    footerNav = [],
+    variant = 'default',
     onLogout,
     topBanner,
     footer,
@@ -325,6 +339,48 @@ export function ScopedAppShell({
 }: ScopedAppShellProps) {
     const location = useLocation();
     const brand = { brandIcon, brandLabel, brandEyebrow };
+    const isHarmonized = variant === 'harmonized';
+
+    if (isHarmonized) {
+        const sidebarProps = {
+            brandLabel,
+            brandEyebrow,
+            nav,
+            footerNav,
+            pathname: location.pathname,
+            onLogout,
+        };
+
+        return (
+            <Box sx={{ minHeight: '100vh', bgcolor: '#FAFAFA' }}>
+                <HarmonizedMobileChrome {...sidebarProps} avatarInitial={avatarInitial} />
+                <HarmonizedSidebar {...sidebarProps} />
+                <Box
+                    sx={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        minHeight: '100vh',
+                        ml: { xs: 0, lg: `${HARMONIZED_SIDEBAR_WIDTH}px` },
+                        minWidth: 0,
+                    }}
+                >
+                    <HarmonizedDesktopTopBar avatarInitial={avatarInitial} />
+                    {topBanner}
+                    <Box
+                        component="main"
+                        sx={{
+                            flex: 1,
+                            px: { xs: 2, sm: 3, lg: 5 },
+                            py: { xs: 2, sm: 3, lg: 5 },
+                        }}
+                    >
+                        {children}
+                    </Box>
+                    {footer}
+                </Box>
+            </Box>
+        );
+    }
 
     return (
         <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>

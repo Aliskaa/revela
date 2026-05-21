@@ -6,7 +6,40 @@ import { CalendarDays, Clock3 } from 'lucide-react';
 import { SectionTitle } from '@/components/common/SectionTitle';
 import { StatCard } from '@/components/common/cards';
 import { CampaignStatusChip } from '@/components/common/chips';
-import type { AdminCampaign } from '@aor/types';
+import type { AdminCampaign, CampaignStatus } from '@aor/types';
+
+import { harmonizedCardSx } from './campaignDetailHarmonizedStyles';
+import { HarmonizedSummaryField } from './HarmonizedSummaryField';
+
+const HARMONIZED_STATUS_PILL: Record<
+    CampaignStatus,
+    { label: string; bgcolor: string; color: string; borderColor: string }
+> = {
+    active: {
+        label: 'Active',
+        bgcolor: 'rgba(240, 253, 244, 1)',
+        color: 'rgb(21, 128, 61)',
+        borderColor: 'rgba(187, 247, 208, 1)',
+    },
+    draft: {
+        label: 'Brouillon',
+        bgcolor: 'rgba(255, 251, 235, 1)',
+        color: 'rgb(180, 83, 9)',
+        borderColor: 'rgba(253, 230, 138, 1)',
+    },
+    closed: {
+        label: 'Clôturée',
+        bgcolor: 'rgba(248, 250, 252, 1)',
+        color: 'rgb(100, 116, 139)',
+        borderColor: 'rgba(226, 232, 240, 1)',
+    },
+    archived: {
+        label: 'Archivée',
+        bgcolor: 'rgba(248, 250, 252, 1)',
+        color: 'rgb(100, 116, 139)',
+        borderColor: 'rgba(226, 232, 240, 1)',
+    },
+};
 
 export type CampaignSummaryCardProps = {
     campaign: AdminCampaign;
@@ -14,6 +47,7 @@ export type CampaignSummaryCardProps = {
     coachName: string;
     questionnaireLabel: string;
     progress: number;
+    harmonized?: boolean;
 };
 
 export function CampaignSummaryCard({
@@ -22,8 +56,110 @@ export function CampaignSummaryCard({
     coachName,
     questionnaireLabel,
     progress,
+    harmonized = false,
 }: CampaignSummaryCardProps) {
     const createdLabel = campaign.createdAt ? new Date(campaign.createdAt).toLocaleDateString('fr-FR') : '–';
+    const statusPill = HARMONIZED_STATUS_PILL[campaign.status] ?? HARMONIZED_STATUS_PILL.draft;
+
+    if (harmonized) {
+        return (
+            <Card variant="outlined" sx={harmonizedCardSx}>
+                <CardContent sx={{ p: 4 }}>
+                    <Typography
+                        variant="h6"
+                        fontWeight={700}
+                        color="primary.main"
+                        sx={{ mb: 2, letterSpacing: -0.2, fontSize: '1.5rem' }}
+                    >
+                        Résumé opérationnel
+                    </Typography>
+                    <Typography variant="body1" color="text.secondary" sx={{ mb: 4, lineHeight: 1.7 }}>
+                        Les informations clés pour piloter rapidement la campagne.
+                    </Typography>
+
+                    <Box
+                        sx={{
+                            display: 'grid',
+                            gridTemplateColumns: { xs: '1fr', md: 'repeat(3, minmax(0, 1fr))' },
+                            gap: 2,
+                            mb: 4,
+                        }}
+                    >
+                        <HarmonizedSummaryField label="Entreprise" value={companyName} />
+                        <HarmonizedSummaryField label="Coach" value={coachName} />
+                        <HarmonizedSummaryField label="Questionnaire" value={questionnaireLabel} />
+                    </Box>
+
+                    <Box sx={{ mb: 2 }}>
+                        <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
+                            <Typography variant="body2" color="text.secondary" fontWeight={600}>
+                                Progression globale
+                            </Typography>
+                            <Typography variant="body2" color="primary.main" fontWeight={700}>
+                                {progress}%
+                            </Typography>
+                        </Stack>
+                        <Box
+                            sx={{
+                                height: 16,
+                                width: '100%',
+                                bgcolor: '#F5F5FB',
+                                borderRadius: 99,
+                                overflow: 'hidden',
+                            }}
+                        >
+                            <Box
+                                sx={{
+                                    height: '100%',
+                                    width: `${progress}%`,
+                                    borderRadius: 99,
+                                    backgroundImage: 'linear-gradient(90deg, #4F70E5 0%, #0F1898 100%)',
+                                    transition: 'width 0.4s ease',
+                                }}
+                            />
+                        </Box>
+                    </Box>
+
+                    <Stack direction="row" alignItems="center" spacing={2} sx={{ mt: 4, flexWrap: 'wrap' }}>
+                        <Box
+                            sx={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: 1,
+                                px: 2,
+                                py: 1,
+                                borderRadius: 2,
+                                bgcolor: '#F5F5FB',
+                                color: 'text.secondary',
+                            }}
+                        >
+                            <CalendarDays size={18} strokeWidth={1.75} aria-hidden />
+                            <Typography variant="body2" fontWeight={500} color="text.secondary">
+                                Créée le {createdLabel}
+                            </Typography>
+                        </Box>
+                        <Typography
+                            component="span"
+                            sx={{
+                                px: 1.5,
+                                py: 0.5,
+                                borderRadius: 99,
+                                fontSize: '0.8125rem',
+                                fontWeight: 600,
+                                bgcolor: statusPill.bgcolor,
+                                color: statusPill.color,
+                                border: '1px solid',
+                                borderColor: statusPill.borderColor,
+                            }}
+                        >
+                            {statusPill.label}
+                        </Typography>
+                    </Stack>
+                </CardContent>
+            </Card>
+        );
+    }
+
     return (
         <Card variant="outlined">
             <CardContent sx={{ p: 2.5 }}>
