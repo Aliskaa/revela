@@ -13,7 +13,7 @@ type RatingScaleProps = {
     ariaLabel?: string;
 };
 
-export const RatingScale = ({ value, onChange, max = 9, min = 1, size = 'small', ariaLabel }: RatingScaleProps) => (
+export const RatingScale = ({ value, onChange, max = 9, min = 0, size = 'small', ariaLabel }: RatingScaleProps) => (
     <ToggleButtonGroup
         value={value}
         exclusive
