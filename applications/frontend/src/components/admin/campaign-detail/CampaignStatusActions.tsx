@@ -7,7 +7,7 @@ import { SectionTitle } from '@/components/common/SectionTitle';
 import { useUpdateAdminCampaignStatus } from '@/hooks/admin';
 import type { AdminCampaign } from '@aor/types';
 
-import { harmonizedCardSx } from './campaignDetailHarmonizedStyles';
+import { surfaceCardSx } from '@/components/common/styles/listSurfaces';
 
 export type CampaignStatusActionsProps = {
     campaign: AdminCampaign;
@@ -22,7 +22,7 @@ export function CampaignStatusActions({ campaign, participantsCount, harmonized 
     const cannotLaunch = participantsCount === 0;
 
     return (
-        <Card variant="outlined" sx={harmonized ? harmonizedCardSx : undefined}>
+        <Card variant="outlined" sx={harmonized ? surfaceCardSx : undefined}>
             <CardContent sx={{ p: harmonized ? 3 : 2.5 }}>
                 {harmonized ? (
                     <Box sx={{ mb: 2 }}>

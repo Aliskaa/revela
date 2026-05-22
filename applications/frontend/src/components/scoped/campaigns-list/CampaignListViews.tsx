@@ -1,28 +1,35 @@
-import { Box, Card, CardContent, Stack, Table, TableBody, TableCell, TableHead, TableRow, Typography } from '@mui/material';
 import type { AdminCampaign } from '@aor/types';
+import {
+    Box,
+    Card,
+    CardContent,
+    Stack,
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableRow,
+    Typography,
+} from '@mui/material';
 
-import { harmonizedListTableHeadCellSx } from '@/components/admin/campaign-detail/campaignDetailHarmonizedStyles';
+import { SkeletonCards, SkeletonTableRows } from '@/components/common/SkeletonRows';
 import { StatCard } from '@/components/common/cards';
 import { CampaignStatusChip } from '@/components/common/chips';
 import {
     EmptyTableRow,
-    HarmonizedPaginationFooter,
-    HarmonizedTableLink,
+    ListTableHead,
     OpenDetailButton,
     StandardTablePagination,
+    TablePaginationFooter,
+    TableRowLink,
 } from '@/components/common/data-table';
 import { MobileListEmptyMessage, ResponsiveListViews } from '@/components/common/layout';
-import { SkeletonCards, SkeletonTableRows } from '@/components/common/SkeletonRows';
+import { listRowSx } from '@/components/common/styles/listSurfaces';
 import { companyInitial } from '@/lib/companyInitial';
 import { questionnaireLabel } from '@/lib/labels';
 
 const ADMIN_TABLE_COLUMNS = 7;
 const COACH_TABLE_COLUMNS = 6;
-
-const harmonizedRowSx = {
-    '&:hover': { bgcolor: 'rgba(245, 245, 251, 0.8)' },
-    '& td': { borderColor: 'rgba(245, 245, 251, 0.8)' },
-};
 
 export type CampaignListViewsProps = {
     variant: 'admin' | 'coach';
@@ -74,30 +81,30 @@ export function CampaignListViews({
             desktop={
                 <>
                     <Table sx={{ minWidth: isAdmin ? 1000 : 900 }}>
-                        <TableHead>
-                            <TableRow>
-                                {isAdmin ? (
-                                    <>
-                                        <TableCell sx={{ ...harmonizedListTableHeadCellSx, pl: 4 }}>Statut</TableCell>
-                                        <TableCell sx={harmonizedListTableHeadCellSx}>Campagne</TableCell>
-                                        <TableCell sx={harmonizedListTableHeadCellSx}>Entreprise</TableCell>
-                                        <TableCell sx={harmonizedListTableHeadCellSx}>Coach</TableCell>
-                                        <TableCell sx={harmonizedListTableHeadCellSx}>Questionnaire</TableCell>
-                                        <TableCell sx={harmonizedListTableHeadCellSx}>Créée le</TableCell>
-                                        <TableCell sx={harmonizedListTableHeadCellSx}></TableCell>
-                                    </>
-                                ) : (
-                                    <>
-                                        <TableCell />
-                                        <TableCell>Campagne</TableCell>
-                                        <TableCell>Entreprise</TableCell>
-                                        <TableCell>Questionnaire</TableCell>
-                                        <TableCell>Créée le</TableCell>
-                                        <TableCell />
-                                    </>
-                                )}
-                            </TableRow>
-                        </TableHead>
+                        {isAdmin ? (
+                            <ListTableHead
+                                columns={[
+                                    { key: 'status', label: 'Statut', sx: { pl: 4 } },
+                                    { key: 'name', label: 'Campagne' },
+                                    { key: 'company', label: 'Entreprise' },
+                                    { key: 'coach', label: 'Coach' },
+                                    { key: 'questionnaire', label: 'Questionnaire' },
+                                    { key: 'createdAt', label: 'Créée le' },
+                                    { key: 'action', align: 'right', sx: { pr: 4 } },
+                                ]}
+                            />
+                        ) : (
+                            <TableHead>
+                                <TableRow>
+                                    <TableCell />
+                                    <TableCell>Campagne</TableCell>
+                                    <TableCell>Entreprise</TableCell>
+                                    <TableCell>Questionnaire</TableCell>
+                                    <TableCell>Créée le</TableCell>
+                                    <TableCell />
+                                </TableRow>
+                            </TableHead>
+                        )}
                         <TableBody>
                             {isLoading ? (
                                 <SkeletonTableRows rows={4} columns={tableColumns} />
@@ -119,7 +126,11 @@ export function CampaignListViews({
                         </TableBody>
                     </Table>
                     {pagination ? (
-                        isAdmin ? <HarmonizedPaginationFooter>{pagination}</HarmonizedPaginationFooter> : pagination
+                        isAdmin ? (
+                            <TablePaginationFooter>{pagination}</TablePaginationFooter>
+                        ) : (
+                            pagination
+                        )
                     ) : null}
                 </>
             }
@@ -165,7 +176,7 @@ function CampaignTableRow({ campaign, variant, detailPathPrefix, companyName, co
 
     if (isAdmin) {
         return (
-            <TableRow hover key={campaign.id} sx={harmonizedRowSx}>
+            <TableRow hover key={campaign.id} sx={listRowSx}>
                 <TableCell sx={{ pl: 4, py: 2.5 }}>
                     <CampaignStatusChip status={campaign.status} />
                 </TableCell>
@@ -213,7 +224,7 @@ function CampaignTableRow({ campaign, variant, detailPathPrefix, companyName, co
                     </Typography>
                 </TableCell>
                 <TableCell align="right" sx={{ pr: 4, py: 2.5 }}>
-                    <HarmonizedTableLink to={detailTo} />
+                    <TableRowLink to={detailTo} />
                 </TableCell>
             </TableRow>
         );
@@ -250,11 +261,7 @@ function CampaignMobileCard({ campaign, variant, detailPathPrefix, companyName, 
                 <Stack spacing={2}>
                     <Stack direction="row" justifyContent="space-between" alignItems="start" spacing={2}>
                         <Box>
-                            <Typography
-                                variant="h6"
-                                fontWeight={800}
-                                color={isAdmin ? 'primary.main' : 'text.primary'}
-                            >
+                            <Typography variant="h6" fontWeight={800} color={isAdmin ? 'primary.main' : 'text.primary'}>
                                 {campaign.name}
                             </Typography>
                             <Typography

@@ -2,12 +2,9 @@ import { Box, Card, Stack, Typography } from '@mui/material';
 import type { SxProps, Theme } from '@mui/material';
 import type * as React from 'react';
 
-import {
-    HARMONIZED_LAVENDER_GREY,
-    harmonizedListPanelSx,
-} from '@/components/admin/campaign-detail/campaignDetailHarmonizedStyles';
+import { LAVENDER_GREY, listPanelSurfaceSx } from '@/components/common/styles/listSurfaces';
 
-export type HarmonizedListPanelProps = {
+export type ListPanelProps = {
     title: string;
     subtitle?: string;
     headerActions?: React.ReactNode;
@@ -17,16 +14,9 @@ export type HarmonizedListPanelProps = {
 };
 
 /** Panneau de liste admin harmonisé : carte avec en-tête titre + actions (recherche, pagination). */
-export function HarmonizedListPanel({
-    title,
-    subtitle,
-    headerActions,
-    headerBorder = false,
-    children,
-    sx,
-}: HarmonizedListPanelProps) {
+export function ListPanel({ title, subtitle, headerActions, headerBorder = false, children, sx }: ListPanelProps) {
     return (
-        <Card variant="outlined" sx={{ ...harmonizedListPanelSx, ...sx }}>
+        <Card variant="outlined" sx={{ ...listPanelSurfaceSx, ...sx }}>
             <Box
                 sx={{
                     px: { xs: 2.5, md: 4 },
@@ -36,7 +26,7 @@ export function HarmonizedListPanel({
                     alignItems: { sm: 'center' },
                     justifyContent: 'space-between',
                     gap: 3,
-                    ...(headerBorder ? { borderBottom: `1px solid ${HARMONIZED_LAVENDER_GREY}` } : {}),
+                    ...(headerBorder ? { borderBottom: `1px solid ${LAVENDER_GREY}` } : {}),
                 }}
             >
                 <Box>
@@ -50,12 +40,7 @@ export function HarmonizedListPanel({
                     ) : null}
                 </Box>
                 {headerActions ? (
-                    <Stack
-                        direction="row"
-                        alignItems="center"
-                        spacing={2}
-                        sx={{ width: { xs: '100%', sm: 'auto' } }}
-                    >
+                    <Stack direction="row" alignItems="center" spacing={2} sx={{ width: { xs: '100%', sm: 'auto' } }}>
                         {headerActions}
                     </Stack>
                 ) : null}

@@ -4,7 +4,7 @@ import { Box, Link as MuiLink, Skeleton, Stack, Typography } from '@mui/material
 import { Link } from '@tanstack/react-router';
 import { BadgeCheck, MessageSquareText, Target, Users } from 'lucide-react';
 
-import { useHarmonizedBreadcrumbs } from '@/components/layout/HarmonizedChromeContext';
+import { useBreadcrumbs } from '@/components/layout/AppShellChromeContext';
 
 import { CampaignManageParticipants } from '@/components/admin/campaign-detail/CampaignManageParticipants';
 import { CampaignParticipantsTable } from '@/components/admin/campaign-detail/CampaignParticipantsTable';
@@ -51,7 +51,7 @@ export function AdminCampaignDetailPage({ campaignId }: AdminCampaignDetailPageP
     const qLabel = questionnaireLabel(campaign?.questionnaireId);
     const progress = computeProgress(participants);
 
-    useHarmonizedBreadcrumbs(
+    useBreadcrumbs(
         campaign
             ? [
                   { label: 'Campagnes', to: '/admin/campaigns' },

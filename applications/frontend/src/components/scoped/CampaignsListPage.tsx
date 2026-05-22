@@ -6,15 +6,9 @@ import * as React from 'react';
 
 import { AdminCampaignDrawerForm } from '@/components/admin/AdminCampaignDrawerForm';
 import { KpiCard } from '@/components/common/cards';
-import { HarmonizedSearchField } from '@/components/common/forms/HarmonizedSearchField';
-import {
-    CoachScopedListCard,
-    HarmonizedAdminPageHeader,
-    HarmonizedListPanel,
-    KpiGrid,
-    PageHeroCard,
-} from '@/components/common/layout';
-import { useHarmonizedBreadcrumbs } from '@/components/layout/HarmonizedChromeContext';
+import { SearchField } from '@/components/common/forms/SearchField';
+import { AdminPageHeader, CoachScopedListCard, KpiGrid, ListPanel, PageHeroCard } from '@/components/common/layout';
+import { useBreadcrumbs } from '@/components/layout/AppShellChromeContext';
 import { CampaignListViews } from '@/components/scoped/campaigns-list/CampaignListViews';
 import { useAdminCampaigns, useAdminDashboard, useCoaches, useCompanies, useCreateAdminCampaign } from '@/hooks/admin';
 import { parseAdminJwtClaims } from '@/lib/auth';
@@ -58,7 +52,7 @@ const SCOPE_LABELS: Record<
  */
 export function CampaignsListPage({ scope }: CampaignsListPageProps) {
     const isAdmin = scope === 'admin';
-    useHarmonizedBreadcrumbs(isAdmin ? [{ label: 'Administration' }, { label: 'Campagnes' }] : []);
+    useBreadcrumbs(isAdmin ? [{ label: 'Administration' }, { label: 'Campagnes' }] : []);
     const labels = SCOPE_LABELS[scope];
     const detailPathPrefix = isAdmin ? '/admin/campaigns' : '/coach/campaigns';
 
@@ -96,9 +90,7 @@ export function CampaignsListPage({ scope }: CampaignsListPageProps) {
         resetWhen: [search],
     });
 
-    const emptyMessage = search
-        ? 'Aucune campagne ne correspond à la recherche.'
-        : 'Aucune campagne pour le moment.';
+    const emptyMessage = search ? 'Aucune campagne ne correspond à la recherche.' : 'Aucune campagne pour le moment.';
 
     const listViews = (
         <CampaignListViews
@@ -152,7 +144,7 @@ export function CampaignsListPage({ scope }: CampaignsListPageProps) {
         return (
             <Stack spacing={4}>
                 {drawer}
-                <HarmonizedAdminPageHeader
+                <AdminPageHeader
                     title={labels.title}
                     subtitle={labels.subtitle}
                     action={{ label: 'Nouvelle campagne', onClick: () => setDrawerOpen(true) }}
@@ -183,18 +175,15 @@ export function CampaignsListPage({ scope }: CampaignsListPageProps) {
                         icon={Sparkles}
                     />
                 </KpiGrid>
-                <HarmonizedListPanel
+                <ListPanel
                     title="Liste des campagnes"
+                    headerBorder
                     headerActions={
-                        <HarmonizedSearchField
-                            value={search}
-                            onChange={setSearch}
-                            placeholder="Rechercher une campagne…"
-                        />
+                        <SearchField value={search} onChange={setSearch} placeholder="Rechercher une campagne…" />
                     }
                 >
                     {listViews}
-                </HarmonizedListPanel>
+                </ListPanel>
             </Stack>
         );
     }

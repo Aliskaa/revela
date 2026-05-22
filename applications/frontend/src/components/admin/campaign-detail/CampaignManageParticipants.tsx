@@ -31,7 +31,7 @@ import {
 } from '@/hooks/admin';
 import type { AdminCampaign } from '@aor/types';
 
-import { harmonizedCardSx } from './campaignDetailHarmonizedStyles';
+import { surfaceCardSx } from '@/components/common/styles/listSurfaces';
 
 export type CampaignManageParticipantsProps = {
     campaign: AdminCampaign;
@@ -144,7 +144,7 @@ export function CampaignManageParticipants({
             sx={
                 harmonized
                     ? {
-                          ...harmonizedCardSx,
+                          ...surfaceCardSx,
                           display: 'flex',
                           flexDirection: 'column',
                           minHeight: 400,

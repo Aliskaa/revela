@@ -26,7 +26,7 @@ import type { CampaignParticipantProgress } from '@aor/types';
 
 import { CampaignParticipantTransparencyButton } from './CampaignParticipantTransparencyButton';
 import { ParticipantTokensRow } from './ParticipantTokensRow';
-import { harmonizedCardSx } from './campaignDetailHarmonizedStyles';
+import { surfaceCardSx } from '@/components/common/styles/listSurfaces';
 
 function participantInitials(fullName: string): string {
     const parts = fullName.trim().split(/\s+/).filter(Boolean);
@@ -107,7 +107,7 @@ export function CampaignParticipantsTable({
         : undefined;
 
     return (
-        <Card variant="outlined" sx={harmonized ? { ...harmonizedCardSx, overflow: 'hidden' } : undefined}>
+        <Card variant="outlined" sx={harmonized ? { ...surfaceCardSx, overflow: 'hidden' } : undefined}>
             <CardContent sx={{ p: 0 }}>
                 <Box sx={{ px: harmonized ? 3 : 2.5, pt: harmonized ? 3 : 2.5, pb: harmonized ? 2 : 0 }}>
                     {harmonized ? (

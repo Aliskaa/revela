@@ -6,7 +6,7 @@ import { Building2, Mail, Users } from 'lucide-react';
 import * as React from 'react';
 
 import { CompanyDangerZone } from '@/components/admin/company-detail/CompanyDangerZone';
-import { useHarmonizedBreadcrumbs } from '@/components/layout/HarmonizedChromeContext';
+import { useBreadcrumbs } from '@/components/layout/AppShellChromeContext';
 import { CompanyParticipantsTable } from '@/components/admin/company-detail/CompanyParticipantsTable';
 import { DeleteCompanyDialog } from '@/components/admin/company-detail/DeleteCompanyDialog';
 import { DeleteCompanyParticipantDialog } from '@/components/admin/company-detail/DeleteCompanyParticipantDialog';
@@ -76,7 +76,7 @@ export function CompanyDetailPage({ scope, companyId }: CompanyDetailPageProps) 
 
     const company = companies.find(c => c.id === companyId);
 
-    useHarmonizedBreadcrumbs(
+    useBreadcrumbs(
         isAdmin
             ? company
                 ? [

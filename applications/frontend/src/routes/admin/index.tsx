@@ -20,7 +20,7 @@ import { KpiCard } from '@/components/common/cards';
 import { CampaignStatusChip } from '@/components/common/chips';
 import { EmptyTableRow } from '@/components/common/data-table';
 import { KpiGrid, PageHeroCard } from '@/components/common/layout';
-import { useHarmonizedBreadcrumbs } from '@/components/layout/HarmonizedChromeContext';
+import { useBreadcrumbs } from '@/components/layout/AppShellChromeContext';
 import { useAdminCampaigns, useAdminDashboard, useCoaches, useCompanies } from '@/hooks/admin';
 import { questionnaireLabel } from '@/lib/labels';
 
@@ -29,7 +29,7 @@ export const Route = createFileRoute('/admin/')({
 });
 
 function AdminDashboardRoute() {
-    useHarmonizedBreadcrumbs([{ label: 'Administration' }, { label: 'Tableau de bord' }]);
+    useBreadcrumbs([{ label: 'Administration' }, { label: 'Tableau de bord' }]);
 
     const { data: dashboard, isLoading: dashboardLoading } = useAdminDashboard();
     const { data: campaigns = [], isLoading: campaignsLoading } = useAdminCampaigns();

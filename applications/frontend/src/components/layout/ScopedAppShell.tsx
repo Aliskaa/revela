@@ -17,12 +17,12 @@ import {
     Typography,
 } from '@mui/material';
 import {
-    HARMONIZED_CONTENT_MAX_WIDTH,
-    HARMONIZED_SIDEBAR_WIDTH,
-    HarmonizedDesktopTopBar,
-    HarmonizedMobileChrome,
-    HarmonizedSidebar,
-} from '@/components/layout/HarmonizedAppShellChrome';
+    APP_SHELL_CONTENT_MAX_WIDTH,
+    APP_SHELL_SIDEBAR_WIDTH,
+    AppShellMobileChrome,
+    AppShellSidebar,
+    AppShellTopBar,
+} from '@/components/layout/AppShellChrome';
 import { Link, useLocation } from '@tanstack/react-router';
 import { ChevronRight, LogOut, Menu, X } from 'lucide-react';
 import * as React from 'react';
@@ -354,18 +354,18 @@ export function ScopedAppShell({
 
         return (
             <Box sx={{ minHeight: '100vh', bgcolor: '#FAFAFA' }}>
-                <HarmonizedMobileChrome {...sidebarProps} avatarInitial={avatarInitial} />
-                <HarmonizedSidebar {...sidebarProps} />
+                <AppShellMobileChrome {...sidebarProps} avatarInitial={avatarInitial} />
+                <AppShellSidebar {...sidebarProps} />
                 <Box
                     sx={{
                         display: 'flex',
                         flexDirection: 'column',
                         minHeight: '100vh',
-                        ml: { xs: 0, lg: `${HARMONIZED_SIDEBAR_WIDTH}px` },
+                        ml: { xs: 0, lg: `${APP_SHELL_SIDEBAR_WIDTH}px` },
                         minWidth: 0,
                     }}
                 >
-                    <HarmonizedDesktopTopBar avatarInitial={avatarInitial} />
+                    <AppShellTopBar avatarInitial={avatarInitial} />
                     {topBanner}
                     <Box
                         component="main"
@@ -375,7 +375,7 @@ export function ScopedAppShell({
                             py: { xs: 2, sm: 3, lg: 5 },
                         }}
                     >
-                        <Box sx={{ maxWidth: HARMONIZED_CONTENT_MAX_WIDTH, mx: 'auto', width: '100%' }}>
+                        <Box sx={{ maxWidth: APP_SHELL_CONTENT_MAX_WIDTH, mx: 'auto', width: '100%' }}>
                             {children}
                         </Box>
                     </Box>

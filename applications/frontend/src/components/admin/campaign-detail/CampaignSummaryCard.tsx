@@ -8,8 +8,8 @@ import { StatCard } from '@/components/common/cards';
 import { CampaignStatusChip } from '@/components/common/chips';
 import type { AdminCampaign } from '@aor/types';
 
-import { harmonizedCardSx } from './campaignDetailHarmonizedStyles';
-import { HarmonizedSummaryField } from './HarmonizedSummaryField';
+import { surfaceCardSx } from '@/components/common/styles/listSurfaces';
+import { SummaryField } from './SummaryField';
 
 export type CampaignSummaryCardProps = {
     campaign: AdminCampaign;
@@ -32,7 +32,7 @@ export function CampaignSummaryCard({
 
     if (harmonized) {
         return (
-            <Card variant="outlined" sx={harmonizedCardSx}>
+            <Card variant="outlined" sx={surfaceCardSx}>
                 <CardContent sx={{ p: 4 }}>
                     <Typography
                         variant="h6"
@@ -54,9 +54,9 @@ export function CampaignSummaryCard({
                             mb: 4,
                         }}
                     >
-                        <HarmonizedSummaryField label="Entreprise" value={companyName} />
-                        <HarmonizedSummaryField label="Coach" value={coachName} />
-                        <HarmonizedSummaryField label="Questionnaire" value={questionnaireLabel} />
+                        <SummaryField label="Entreprise" value={companyName} />
+                        <SummaryField label="Coach" value={coachName} />
+                        <SummaryField label="Questionnaire" value={questionnaireLabel} />
                     </Box>
 
                     <Box sx={{ mb: 2 }}>

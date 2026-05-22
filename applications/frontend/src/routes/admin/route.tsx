@@ -10,7 +10,7 @@ import {
     UserRound,
 } from 'lucide-react';
 
-import { HarmonizedChromeProvider } from '@/components/layout/HarmonizedChromeContext';
+import { AppShellChromeProvider } from '@/components/layout/AppShellChromeContext';
 import { ScopedAppShell, type ScopedNavItem } from '@/components/layout/ScopedAppShell';
 import { parseAdminJwtClaims, userAdmin } from '@/lib/auth';
 
@@ -46,7 +46,7 @@ function AdminRoot() {
     };
 
     return (
-        <HarmonizedChromeProvider>
+        <AppShellChromeProvider>
             <ScopedAppShell
                 variant="harmonized"
                 brandIcon={Shield}
@@ -59,7 +59,7 @@ function AdminRoot() {
             >
                 <Outlet />
             </ScopedAppShell>
-        </HarmonizedChromeProvider>
+        </AppShellChromeProvider>
     );
 }
 

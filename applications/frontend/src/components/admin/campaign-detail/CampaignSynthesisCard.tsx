@@ -6,7 +6,7 @@ import { BarChart3 } from 'lucide-react';
 
 import { SectionTitle } from '@/components/common/SectionTitle';
 
-import { harmonizedCardSx } from './campaignDetailHarmonizedStyles';
+import { surfaceCardSx } from '@/components/common/styles/listSurfaces';
 
 export type CampaignSynthesisCardScope = 'admin' | 'coach';
 
@@ -38,7 +38,7 @@ export function CampaignSynthesisCard({ campaignId, scope, harmonized = false }:
             sx={
                 harmonized
                     ? {
-                          ...harmonizedCardSx,
+                          ...surfaceCardSx,
                           bgcolor: 'primary.main',
                           color: 'primary.contrastText',
                           border: 'none',

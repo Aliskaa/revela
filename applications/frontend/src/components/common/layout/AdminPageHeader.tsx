@@ -2,7 +2,7 @@ import { Box, Button, Typography } from '@mui/material';
 import { Plus } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
-export type HarmonizedAdminPageHeaderProps = {
+export type AdminPageHeaderProps = {
     title: string;
     subtitle: string;
     action?: {
@@ -12,8 +12,8 @@ export type HarmonizedAdminPageHeaderProps = {
     };
 };
 
-/** En-tête admin harmonisé : titre H3 + sous-titre + CTA primaire optionnel. */
-export function HarmonizedAdminPageHeader({ title, subtitle, action }: HarmonizedAdminPageHeaderProps) {
+/** En-tête de page admin harmonisé : titre H3 + sous-titre + CTA primaire optionnel. */
+export function AdminPageHeader({ title, subtitle, action }: AdminPageHeaderProps) {
     const ActionIcon = action?.icon ?? Plus;
 
     return (

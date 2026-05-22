@@ -2,9 +2,9 @@ import { InputAdornment, TextField } from '@mui/material';
 import type { SxProps, Theme } from '@mui/material';
 import { Search } from 'lucide-react';
 
-import { HARMONIZED_LAVENDER_GREY } from '@/components/admin/campaign-detail/campaignDetailHarmonizedStyles';
+import { LAVENDER_GREY } from '@/components/common/styles/listSurfaces';
 
-export type HarmonizedSearchFieldProps = {
+export type SearchFieldProps = {
     value: string;
     onChange: (value: string) => void;
     placeholder?: string;
@@ -12,12 +12,7 @@ export type HarmonizedSearchFieldProps = {
 };
 
 /** Champ de recherche harmonisé (fond lavande, icône loupe, sans bordure au repos). */
-export function HarmonizedSearchField({
-    value,
-    onChange,
-    placeholder = 'Rechercher…',
-    sx,
-}: HarmonizedSearchFieldProps) {
+export function SearchField({ value, onChange, placeholder = 'Rechercher…', sx }: SearchFieldProps) {
     return (
         <TextField
             size="small"
@@ -36,7 +31,7 @@ export function HarmonizedSearchField({
             sx={{
                 width: { xs: '100%', sm: 320 },
                 '& .MuiOutlinedInput-root': {
-                    bgcolor: HARMONIZED_LAVENDER_GREY,
+                    bgcolor: LAVENDER_GREY,
                     borderRadius: 3,
                     py: 0.75,
                     '& fieldset': { border: 'none' },

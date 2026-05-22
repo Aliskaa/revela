@@ -1,28 +1,18 @@
 // Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
 
-import {
-    AppBar,
-    Avatar,
-    Box,
-    Drawer,
-    IconButton,
-    Stack,
-    Theme,
-    Toolbar,
-    Typography,
-} from '@mui/material';
+import { AppBar, Avatar, Box, Drawer, IconButton, Stack, type Theme, Toolbar, Typography } from '@mui/material';
 import { Link } from '@tanstack/react-router';
 import { Bell, ChevronRight, LineChart, LogOut, Menu, Settings, X } from 'lucide-react';
 import * as React from 'react';
 
+import { useAppShellChrome } from '@/components/layout/AppShellChromeContext';
 import type { ScopedNavItem } from '@/components/layout/ScopedAppShell';
-import { useHarmonizedChrome } from '@/components/layout/HarmonizedChromeContext';
 
-export const HARMONIZED_SIDEBAR_WIDTH = 288;
-export const HARMONIZED_CONTENT_MAX_WIDTH = 1600;
+export const APP_SHELL_SIDEBAR_WIDTH = 288;
+export const APP_SHELL_CONTENT_MAX_WIDTH = 1600;
 
 const SIDEBAR_SX = {
-    width: HARMONIZED_SIDEBAR_WIDTH,
+    width: APP_SHELL_SIDEBAR_WIDTH,
     flexShrink: 0,
     display: { xs: 'none', lg: 'flex' },
     flexDirection: 'column',
@@ -37,13 +27,13 @@ const SIDEBAR_SX = {
     overflow: 'hidden',
 } as const;
 
-type HarmonizedBrandMarkProps = {
+type AppShellBrandMarkProps = {
     brandLabel: string;
     brandEyebrow: string;
     onDark?: boolean;
 };
 
-export function HarmonizedBrandMark({ brandLabel, brandEyebrow, onDark = true }: HarmonizedBrandMarkProps) {
+export function AppShellBrandMark({ brandLabel, brandEyebrow, onDark = true }: AppShellBrandMarkProps) {
     return (
         <Stack direction="row" spacing={1.5} alignItems="center" sx={{ px: onDark ? 4 : 0.5 }}>
             <Box
@@ -90,13 +80,13 @@ export function HarmonizedBrandMark({ brandLabel, brandEyebrow, onDark = true }:
     );
 }
 
-type HarmonizedNavLinkProps = {
+type AppShellNavLinkProps = {
     item: ScopedNavItem;
     active: boolean;
     onClick?: () => void;
 };
 
-function HarmonizedNavLink({ item, active, onClick }: HarmonizedNavLinkProps) {
+function AppShellNavLink({ item, active, onClick }: AppShellNavLinkProps) {
     const Icon = item.icon;
     return (
         <Box
@@ -132,7 +122,7 @@ function HarmonizedNavLink({ item, active, onClick }: HarmonizedNavLinkProps) {
     );
 }
 
-type HarmonizedSidebarProps = {
+type AppShellSidebarProps = {
     brandLabel: string;
     brandEyebrow: string;
     nav: ScopedNavItem[];
@@ -146,17 +136,24 @@ function isActive(item: ScopedNavItem, pathname: string): boolean {
     return pathname.startsWith(item.to);
 }
 
-export function HarmonizedSidebar({ brandLabel, brandEyebrow, nav, footerNav, pathname, onLogout }: HarmonizedSidebarProps) {
+export function AppShellSidebar({
+    brandLabel,
+    brandEyebrow,
+    nav,
+    footerNav,
+    pathname,
+    onLogout,
+}: AppShellSidebarProps) {
     return (
         <Box component="aside" sx={SIDEBAR_SX}>
             <Box sx={{ mb: 5 }}>
-                <HarmonizedBrandMark brandLabel={brandLabel} brandEyebrow={brandEyebrow} />
+                <AppShellBrandMark brandLabel={brandLabel} brandEyebrow={brandEyebrow} />
             </Box>
 
             <Box component="nav" sx={{ flex: 1, px: 1 }}>
                 <Stack spacing={0.5}>
                     {nav.map(item => (
-                        <HarmonizedNavLink key={item.label} item={item} active={isActive(item, pathname)} />
+                        <AppShellNavLink key={item.label} item={item} active={isActive(item, pathname)} />
                     ))}
                 </Stack>
             </Box>
@@ -164,7 +161,7 @@ export function HarmonizedSidebar({ brandLabel, brandEyebrow, nav, footerNav, pa
             <Box sx={{ px: 1, mt: 'auto' }}>
                 <Box sx={{ height: '1px', bgcolor: 'rgba(255,255,255,0.1)', mx: 3, mb: 3 }} />
                 {footerNav.map(item => (
-                    <HarmonizedNavLink key={item.label} item={item} active={isActive(item, pathname)} />
+                    <AppShellNavLink key={item.label} item={item} active={isActive(item, pathname)} />
                 ))}
                 <Box
                     component="button"
@@ -201,12 +198,12 @@ export function HarmonizedSidebar({ brandLabel, brandEyebrow, nav, footerNav, pa
     );
 }
 
-type HarmonizedDesktopTopBarProps = {
+type AppShellTopBarProps = {
     avatarInitial: string;
 };
 
-export function HarmonizedDesktopTopBar({ avatarInitial }: HarmonizedDesktopTopBarProps) {
-    const { breadcrumbs } = useHarmonizedChrome();
+export function AppShellTopBar({ avatarInitial }: AppShellTopBarProps) {
+    const { breadcrumbs } = useAppShellChrome();
 
     return (
         <Box
@@ -230,9 +227,7 @@ export function HarmonizedDesktopTopBar({ avatarInitial }: HarmonizedDesktopTopB
                     const isLast = index === breadcrumbs.length - 1;
                     return (
                         <React.Fragment key={`${segment.label}-${index}`}>
-                            {index > 0 ? (
-                                <ChevronRight size={14} color="rgba(107, 114, 128, 0.6)" aria-hidden />
-                            ) : null}
+                            {index > 0 ? <ChevronRight size={14} color="rgba(107, 114, 128, 0.6)" aria-hidden /> : null}
                             {segment.to && !isLast ? (
                                 <Typography
                                     component={Link}
@@ -302,11 +297,11 @@ export function HarmonizedDesktopTopBar({ avatarInitial }: HarmonizedDesktopTopB
     );
 }
 
-type HarmonizedMobileChromeProps = HarmonizedSidebarProps & {
+type AppShellMobileChromeProps = AppShellSidebarProps & {
     avatarInitial: string;
 };
 
-export function HarmonizedMobileChrome({
+export function AppShellMobileChrome({
     brandLabel,
     brandEyebrow,
     nav,
@@ -314,7 +309,7 @@ export function HarmonizedMobileChrome({
     pathname,
     onLogout,
     avatarInitial,
-}: HarmonizedMobileChromeProps) {
+}: AppShellMobileChromeProps) {
     const [open, setOpen] = React.useState(false);
     const close = () => setOpen(false);
 
@@ -336,7 +331,7 @@ export function HarmonizedMobileChrome({
                         <Menu size={22} />
                     </IconButton>
                     <Box sx={{ flex: 1 }}>
-                        <HarmonizedBrandMark brandLabel={brandLabel} brandEyebrow={brandEyebrow} onDark={false} />
+                        <AppShellBrandMark brandLabel={brandLabel} brandEyebrow={brandEyebrow} onDark={false} />
                     </Box>
                     <Avatar sx={{ width: 36, height: 36, bgcolor: 'primary.main' }}>{avatarInitial}</Avatar>
                 </Toolbar>
@@ -349,7 +344,7 @@ export function HarmonizedMobileChrome({
                 slotProps={{
                     paper: {
                         sx: {
-                            width: HARMONIZED_SIDEBAR_WIDTH,
+                            width: APP_SHELL_SIDEBAR_WIDTH,
                             bgcolor: 'primary.main',
                             color: '#FAFAFA',
                         },
@@ -357,14 +352,14 @@ export function HarmonizedMobileChrome({
                 }}
             >
                 <Stack direction="row" justifyContent="space-between" alignItems="start" sx={{ px: 2, pt: 3, pb: 1 }}>
-                    <HarmonizedBrandMark brandLabel={brandLabel} brandEyebrow={brandEyebrow} />
+                    <AppShellBrandMark brandLabel={brandLabel} brandEyebrow={brandEyebrow} />
                     <IconButton onClick={close} aria-label="Fermer le menu" sx={{ color: 'rgba(255,255,255,0.8)' }}>
                         <X size={20} />
                     </IconButton>
                 </Stack>
                 <Box sx={{ flex: 1, overflowY: 'auto', py: 2 }}>
                     {nav.map(item => (
-                        <HarmonizedNavLink
+                        <AppShellNavLink
                             key={item.label}
                             item={item}
                             active={isActive(item, pathname)}
@@ -375,7 +370,7 @@ export function HarmonizedMobileChrome({
                 <Box sx={{ pb: 3 }}>
                     <Box sx={{ height: '1px', bgcolor: 'rgba(255,255,255,0.1)', mx: 4, mb: 2 }} />
                     {footerNav.map(item => (
-                        <HarmonizedNavLink
+                        <AppShellNavLink
                             key={item.label}
                             item={item}
                             active={isActive(item, pathname)}

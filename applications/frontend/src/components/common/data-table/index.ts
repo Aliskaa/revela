@@ -1,10 +1,12 @@
 export { EmptyTableRow } from './EmptyTableRow';
 export type { EmptyTableRowProps } from './EmptyTableRow';
-export { HarmonizedPaginationFooter } from './HarmonizedPaginationFooter';
-export type { HarmonizedPaginationFooterProps } from './HarmonizedPaginationFooter';
-export { HarmonizedTableLink } from './HarmonizedTableLink';
-export type { HarmonizedTableLinkProps } from './HarmonizedTableLink';
+export { ListTableHead } from './ListTableHead';
+export type { ListTableColumn, ListTableHeadProps } from './ListTableHead';
 export { OpenDetailButton } from './OpenDetailButton';
 export type { OpenDetailButtonProps } from './OpenDetailButton';
 export { StandardTablePagination } from './StandardTablePagination';
 export type { StandardTablePaginationProps } from './StandardTablePagination';
+export { TablePaginationFooter } from './TablePaginationFooter';
+export type { TablePaginationFooterProps } from './TablePaginationFooter';
+export { TableRowLink } from './TableRowLink';
+export type { TableRowLinkProps } from './TableRowLink';

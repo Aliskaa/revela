@@ -1,5 +1,6 @@
 export { ActiveStatusChip } from './ActiveStatusChip';
 export type { ActiveStatusChipProps } from './ActiveStatusChip';
+export { AdminBadge } from './AdminBadge';
 export { BaseStatusChip } from './BaseStatusChip';
 export type { BaseStatusChipProps, StatusChipTone } from './BaseStatusChip';
 export { CampaignStatusChip } from './CampaignStatusChip';

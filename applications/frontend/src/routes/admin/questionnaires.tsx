@@ -1,24 +1,24 @@
-import { SectionTitle } from '@/components/common/SectionTitle';
-import { useHarmonizedBreadcrumbs } from '@/components/layout/HarmonizedChromeContext';
 import { SkeletonCards, SkeletonTableRows } from '@/components/common/SkeletonRows';
 import { KpiCard } from '@/components/common/cards';
-import { useAdminQuestionnaires } from '@/hooks/questionnaires';
-import { usePageResetEffect } from '@/lib/usePageResetEffect';
 import {
-    Box,
-    Card,
-    CardContent,
-    Chip,
-    Stack,
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TablePagination,
-    TableRow,
-    TextField,
-    Typography,
-} from '@mui/material';
+    EmptyTableRow,
+    ListTableHead,
+    StandardTablePagination,
+    TablePaginationFooter,
+} from '@/components/common/data-table';
+import { SearchField } from '@/components/common/forms/SearchField';
+import {
+    AdminPageHeader,
+    KpiGrid,
+    ListPanel,
+    MobileListEmptyMessage,
+    ResponsiveListViews,
+} from '@/components/common/layout';
+import { listRowSx } from '@/components/common/styles/listSurfaces';
+import { useBreadcrumbs } from '@/components/layout/AppShellChromeContext';
+import { useAdminQuestionnaires } from '@/hooks/questionnaires';
+import { useTablePagination } from '@/lib/useTablePagination';
+import { Box, Card, CardContent, Chip, Stack, Table, TableBody, TableCell, TableRow, Typography } from '@mui/material';
 import { createFileRoute } from '@tanstack/react-router';
 import { ClipboardList, Users } from 'lucide-react';
 import * as React from 'react';
@@ -27,12 +27,12 @@ export const Route = createFileRoute('/admin/questionnaires')({
     component: AdminQuestionnairesRoute,
 });
 
+const TABLE_COLUMNS = 3;
+
 function AdminQuestionnairesRoute() {
-    useHarmonizedBreadcrumbs([{ label: 'Administration' }, { label: 'Questionnaires' }]);
+    useBreadcrumbs([{ label: 'Administration' }, { label: 'Questionnaires' }]);
 
     const [search, setSearch] = React.useState('');
-    const [page, setPage] = React.useState(0);
-    const [rowsPerPage, setRowsPerPage] = React.useState(10);
 
     const { data: questionnaires = [], isLoading } = useAdminQuestionnaires();
 
@@ -44,57 +44,42 @@ function AdminQuestionnairesRoute() {
         return set.size;
     }, [questionnaires]);
 
-    const filtered = React.useMemo(
-        () =>
-            search.trim()
-                ? questionnaires.filter(
-                      q =>
-                          q.title.toLowerCase().includes(search.toLowerCase()) ||
-                          q.id.toLowerCase().includes(search.toLowerCase())
-                  )
-                : questionnaires,
-        [questionnaires, search]
-    );
+    const filtered = React.useMemo(() => {
+        const needle = search.trim().toLowerCase();
+        return needle
+            ? questionnaires.filter(q => q.title.toLowerCase().includes(needle) || q.id.toLowerCase().includes(needle))
+            : questionnaires;
+    }, [questionnaires, search]);
 
-    const paged = React.useMemo(
-        () => filtered.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage),
-        [filtered, page, rowsPerPage]
-    );
+    const { page, rowsPerPage, paged, setPage, setRowsPerPage } = useTablePagination({
+        items: filtered,
+        resetWhen: [search],
+    });
 
-    usePageResetEffect(setPage, [search]);
+    const isEmpty = !isLoading && filtered.length === 0;
+    const emptyMessage = search
+        ? 'Aucun questionnaire ne correspond à la recherche.'
+        : 'Aucun questionnaire pour le moment.';
+
+    const pagination =
+        filtered.length > 0 ? (
+            <StandardTablePagination
+                count={filtered.length}
+                page={page}
+                rowsPerPage={rowsPerPage}
+                onPageChange={setPage}
+                onRowsPerPageChange={setRowsPerPage}
+            />
+        ) : null;
 
     return (
-        <Stack spacing={3}>
-            <Card variant="outlined">
-                <CardContent sx={{ p: { xs: 2.5, md: 3 } }}>
-                    <Stack
-                        spacing={2.5}
-                        direction={{ xs: 'column', lg: 'row' }}
-                        justifyContent="space-between"
-                        alignItems={{ xs: 'start', lg: 'start' }}
-                    >
-                        <Box>
-                            <Chip
-                                label="Questionnaires"
-                                sx={{ borderRadius: 99, bgcolor: 'tint.primaryBg', color: 'primary.main', mb: 1.5 }}
-                            />
-                            <Typography variant="h4" fontWeight={800} color="text.primary" sx={{ letterSpacing: -0.5 }}>
-                                Questionnaires
-                            </Typography>
-                            <Typography
-                                variant="body1"
-                                color="text.secondary"
-                                sx={{ mt: 1, lineHeight: 1.7, maxWidth: 860 }}
-                            >
-                                Référentiel des questionnaires, avec les dimensions, le volume de questions et l'état de
-                                publication.
-                            </Typography>
-                        </Box>
-                    </Stack>
-                </CardContent>
-            </Card>
+        <Stack spacing={4}>
+            <AdminPageHeader
+                title="Questionnaires"
+                subtitle="Référentiel des questionnaires, avec les dimensions, le volume de questions et l'état de publication."
+            />
 
-            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(2, minmax(0, 1fr))' }, gap: 2 }}>
+            <KpiGrid columns={2}>
                 <KpiCard
                     label="Questionnaires"
                     value={questionnaires.length}
@@ -109,134 +94,101 @@ function AdminQuestionnairesRoute() {
                     icon={Users}
                     loading={isLoading}
                 />
-            </Box>
+            </KpiGrid>
 
-            <Card variant="outlined">
-                <CardContent sx={{ p: 2.5 }}>
-                    <SectionTitle
-                        title="Liste des questionnaires"
-                        subtitle="Voir rapidement la structure et ouvrir le détail ou l'édition."
-                        action={
-                            <TextField
-                                size="small"
-                                placeholder="Rechercher un questionnaire…"
-                                value={search}
-                                onChange={e => setSearch(e.target.value)}
-                                sx={{ minWidth: 300 }}
-                            />
-                        }
-                    />
-
-                    {/* Desktop table */}
-                    <Box sx={{ display: { xs: 'none', lg: 'block' }, overflowX: 'auto' }}>
-                        <Table sx={{ minWidth: 800 }}>
-                            <TableHead>
-                                <TableRow>
-                                    <TableCell>Code</TableCell>
-                                    <TableCell>Questionnaire</TableCell>
-                                    <TableCell>Dimensions</TableCell>
-                                </TableRow>
-                            </TableHead>
-                            <TableBody>
-                                {isLoading ? (
-                                    <SkeletonTableRows rows={3} columns={3} />
-                                ) : (
-                                    paged.map(q => (
-                                        <TableRow hover key={q.id}>
-                                            <TableCell>
-                                                <Typography fontWeight={700} color="text.primary">
-                                                    {q.id}
-                                                </Typography>
-                                            </TableCell>
-                                            <TableCell>
-                                                <Typography fontWeight={700} color="text.primary">
-                                                    {q.title}
-                                                </Typography>
-                                                <Typography variant="caption" color="text.secondary">
-                                                    {q.description}
-                                                </Typography>
-                                            </TableCell>
-                                            <TableCell>{q.dimensions.map(d => d.name).join(' · ')}</TableCell>
-                                        </TableRow>
-                                    ))
-                                )}
-                                {!isLoading && filtered.length === 0 && (
-                                    <TableRow>
-                                        <TableCell colSpan={3} align="center" sx={{ py: 4 }}>
-                                            <Typography variant="body2" color="text.secondary">
-                                                {search
-                                                    ? 'Aucun questionnaire ne correspond à la recherche.'
-                                                    : 'Aucun questionnaire pour le moment.'}
-                                            </Typography>
-                                        </TableCell>
-                                    </TableRow>
-                                )}
-                            </TableBody>
-                        </Table>
-                        {filtered.length > 0 && (
-                            <TablePagination
-                                component="div"
-                                count={filtered.length}
-                                page={page}
-                                onPageChange={(_, newPage) => setPage(newPage)}
-                                rowsPerPage={rowsPerPage}
-                                onRowsPerPageChange={e => {
-                                    setRowsPerPage(Number(e.target.value));
-                                    setPage(0);
-                                }}
-                                rowsPerPageOptions={[10, 25, 50]}
-                                labelRowsPerPage="Lignes par page"
-                                labelDisplayedRows={({ from, to, count }) => `${from}–${to} sur ${count}`}
-                            />
-                        )}
-                    </Box>
-
-                    {/* Mobile cards */}
-                    <Stack spacing={2} sx={{ display: { xs: 'flex', lg: 'none' }, mt: 2 }}>
-                        {isLoading ? (
-                            <SkeletonCards count={3} height={160} />
-                        ) : (
-                            filtered.map(q => (
-                                <Card variant="outlined" key={q.id}>
-                                    <CardContent sx={{ p: 2.5 }}>
-                                        <Stack spacing={1.8}>
-                                            <Box>
-                                                <Typography variant="h6" fontWeight={800} color="text.primary">
-                                                    {q.id} · {q.title}
-                                                </Typography>
-                                                <Typography variant="body2" color="text.secondary" sx={{ mt: 0.4 }}>
-                                                    {q.description}
-                                                </Typography>
-                                            </Box>
-                                            <Stack direction="row" spacing={0.8} flexWrap="wrap" useFlexGap>
-                                                {q.dimensions.map(d => (
-                                                    <Chip
-                                                        key={d.name}
-                                                        label={d.name}
-                                                        size="small"
-                                                        sx={{
-                                                            borderRadius: 99,
-                                                            bgcolor: 'tint.primaryBg',
-                                                            color: 'primary.main',
-                                                        }}
-                                                    />
-                                                ))}
+            <ListPanel
+                title="Liste des questionnaires"
+                subtitle="Voir rapidement la structure et ouvrir le détail ou l'édition."
+                headerBorder
+                headerActions={
+                    <SearchField value={search} onChange={setSearch} placeholder="Rechercher un questionnaire…" />
+                }
+            >
+                <ResponsiveListViews
+                    desktop={
+                        <>
+                            <Table sx={{ minWidth: 800 }}>
+                                <ListTableHead
+                                    columns={[
+                                        { key: 'code', label: 'Code', sx: { pl: 4 } },
+                                        { key: 'title', label: 'Questionnaire' },
+                                        { key: 'dimensions', label: 'Dimensions', sx: { pr: 4 } },
+                                    ]}
+                                />
+                                <TableBody>
+                                    {isLoading ? (
+                                        <SkeletonTableRows rows={3} columns={TABLE_COLUMNS} />
+                                    ) : (
+                                        paged.map(q => (
+                                            <TableRow hover key={q.id} sx={listRowSx}>
+                                                <TableCell sx={{ pl: 4, py: 2.5 }}>
+                                                    <Typography fontWeight={700} color="primary.main">
+                                                        {q.id}
+                                                    </Typography>
+                                                </TableCell>
+                                                <TableCell sx={{ py: 2.5 }}>
+                                                    <Typography fontWeight={700} color="text.primary">
+                                                        {q.title}
+                                                    </Typography>
+                                                    <Typography variant="caption" color="text.secondary">
+                                                        {q.description}
+                                                    </Typography>
+                                                </TableCell>
+                                                <TableCell sx={{ pr: 4, py: 2.5 }}>
+                                                    <Typography color="text.secondary" fontWeight={600}>
+                                                        {q.dimensions.map(d => d.name).join(' · ')}
+                                                    </Typography>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))
+                                    )}
+                                    {isEmpty ? <EmptyTableRow colSpan={TABLE_COLUMNS} message={emptyMessage} /> : null}
+                                </TableBody>
+                            </Table>
+                            {pagination ? <TablePaginationFooter>{pagination}</TablePaginationFooter> : null}
+                        </>
+                    }
+                    mobile={
+                        <>
+                            {isLoading ? (
+                                <SkeletonCards count={3} height={160} />
+                            ) : (
+                                paged.map(q => (
+                                    <Card variant="outlined" key={q.id} sx={{ borderRadius: 3 }}>
+                                        <CardContent sx={{ p: 2.5 }}>
+                                            <Stack spacing={1.8}>
+                                                <Box>
+                                                    <Typography variant="h6" fontWeight={800} color="primary.main">
+                                                        {q.id} · {q.title}
+                                                    </Typography>
+                                                    <Typography variant="body2" color="text.secondary" sx={{ mt: 0.4 }}>
+                                                        {q.description}
+                                                    </Typography>
+                                                </Box>
+                                                <Stack direction="row" spacing={0.8} flexWrap="wrap" useFlexGap>
+                                                    {q.dimensions.map(d => (
+                                                        <Chip
+                                                            key={d.name}
+                                                            label={d.name}
+                                                            size="small"
+                                                            sx={{
+                                                                borderRadius: 99,
+                                                                bgcolor: 'tint.primaryBg',
+                                                                color: 'primary.main',
+                                                            }}
+                                                        />
+                                                    ))}
+                                                </Stack>
                                             </Stack>
-                                        </Stack>
-                                    </CardContent>
-                                </Card>
-                            ))
-                        )}
-                        {!isLoading && filtered.length === 0 && (
-                            <Typography variant="body2" color="text.secondary" sx={{ py: 2, textAlign: 'center' }}>
-                                {search
-                                    ? 'Aucun questionnaire ne correspond à la recherche.'
-                                    : 'Aucun questionnaire pour le moment.'}
-                            </Typography>
-                        )}
-                    </Stack>
-                </CardContent>
-            </Card>
+                                        </CardContent>
+                                    </Card>
+                                ))
+                            )}
+                            {isEmpty ? <MobileListEmptyMessage message={emptyMessage} /> : null}
+                        </>
+                    }
+                />
+            </ListPanel>
         </Stack>
     );
 }

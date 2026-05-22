@@ -6,15 +6,9 @@ import * as React from 'react';
 
 import { AdminCompanyDrawerForm } from '@/components/admin/AdminCompanyDrawerForm';
 import { KpiCard } from '@/components/common/cards';
-import { HarmonizedSearchField } from '@/components/common/forms/HarmonizedSearchField';
-import {
-    CoachScopedListCard,
-    HarmonizedAdminPageHeader,
-    HarmonizedListPanel,
-    KpiGrid,
-    PageHeroCard,
-} from '@/components/common/layout';
-import { useHarmonizedBreadcrumbs } from '@/components/layout/HarmonizedChromeContext';
+import { SearchField } from '@/components/common/forms/SearchField';
+import { AdminPageHeader, CoachScopedListCard, KpiGrid, ListPanel, PageHeroCard } from '@/components/common/layout';
+import { useBreadcrumbs } from '@/components/layout/AppShellChromeContext';
 import {
     CompanyListViews,
     type CompanySortKey,
@@ -58,7 +52,7 @@ const SCOPE_LABELS: Record<
  */
 export function CompaniesListPage({ scope }: CompaniesListPageProps) {
     const isAdmin = scope === 'admin';
-    useHarmonizedBreadcrumbs(isAdmin ? [{ label: 'Administration' }, { label: 'Entreprises' }] : []);
+    useBreadcrumbs(isAdmin ? [{ label: 'Administration' }, { label: 'Entreprises' }] : []);
     const labels = SCOPE_LABELS[scope];
     const detailPathPrefix = isAdmin ? '/admin/companies' : '/coach/companies';
 
@@ -159,7 +153,7 @@ export function CompaniesListPage({ scope }: CompaniesListPageProps) {
         return (
             <Stack spacing={4}>
                 {drawer}
-                <HarmonizedAdminPageHeader
+                <AdminPageHeader
                     title={labels.title}
                     subtitle={labels.subtitle}
                     action={{ label: 'Ajouter une entreprise', onClick: () => setDrawerOpen(true) }}
@@ -187,22 +181,15 @@ export function CompaniesListPage({ scope }: CompaniesListPageProps) {
                         loading={campaignsLoading}
                     />
                 </KpiGrid>
-                <HarmonizedListPanel
+                <ListPanel
                     title="Liste des entreprises"
                     headerBorder
                     headerActions={
-                        <>
-                            <HarmonizedSearchField
-                                value={search}
-                                onChange={setSearch}
-                                placeholder="Rechercher une entreprise…"
-                                sx={{ flex: 1, minWidth: { sm: 280 }, width: 'auto' }}
-                            />
-                        </>
+                        <SearchField value={search} onChange={setSearch} placeholder="Rechercher une entreprise…" />
                     }
                 >
                     {listViews}
-                </HarmonizedListPanel>
+                </ListPanel>
             </Stack>
         );
     }

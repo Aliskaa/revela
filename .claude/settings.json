@@ -13,7 +13,8 @@
       "Bash(pnpm lint *)",
       "Bash(npx biome *)",
       "Bash(docker exec *)",
-      "Bash(findstr -i charte)"
+      "Bash(findstr -i charte)",
+      "Bash(git rm *)"
     ],
     "additionalDirectories": [
       "c:\\Users\\kevin\\Documents\\DataLoco\\Nora\\base\\questionnaire-platform\\applications\\frontend\\src\\components\\common"

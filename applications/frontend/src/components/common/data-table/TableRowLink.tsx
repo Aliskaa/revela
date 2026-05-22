@@ -2,13 +2,13 @@ import { Typography } from '@mui/material';
 import { Link } from '@tanstack/react-router';
 import { ChevronRight } from 'lucide-react';
 
-export type HarmonizedTableLinkProps = {
+export type TableRowLinkProps = {
     to: string;
     label?: string;
 };
 
 /** Lien « Ouvrir » harmonisé pour la dernière cellule d'une ligne de tableau admin. */
-export function HarmonizedTableLink({ to, label = 'Ouvrir' }: HarmonizedTableLinkProps) {
+export function TableRowLink({ to, label = 'Ouvrir' }: TableRowLinkProps) {
     return (
         <Typography
             component={Link}

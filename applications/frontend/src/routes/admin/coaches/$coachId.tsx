@@ -1,5 +1,5 @@
 import { AdminCoachDrawerForm } from '@/components/admin/AdminCoachDrawerForm';
-import { useHarmonizedBreadcrumbs } from '@/components/layout/HarmonizedChromeContext';
+import { useBreadcrumbs } from '@/components/layout/AppShellChromeContext';
 import { SectionTitle } from '@/components/common/SectionTitle';
 import { KpiCard, StatCard } from '@/components/common/cards';
 import { ActiveStatusChip, CampaignStatusChip } from '@/components/common/chips';
@@ -50,7 +50,7 @@ function AdminCoachDetailRoute() {
     const campaigns = data?.campaigns ?? [];
     const isAdminCoach = coach?.isAdmin ?? false;
 
-    useHarmonizedBreadcrumbs(
+    useBreadcrumbs(
         coach
             ? [
                   { label: 'Administration' },

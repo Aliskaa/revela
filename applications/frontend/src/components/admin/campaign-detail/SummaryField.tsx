@@ -2,13 +2,13 @@
 
 import { Box, Typography } from '@mui/material';
 
-export type HarmonizedSummaryFieldProps = {
+export type SummaryFieldProps = {
     label: string;
     value: string;
 };
 
 /** Champ Entreprise / Coach / Questionnaire — maquette Stitch Résumé opérationnel. */
-export function HarmonizedSummaryField({ label, value }: HarmonizedSummaryFieldProps) {
+export function SummaryField({ label, value }: SummaryFieldProps) {
     return (
         <Box
             sx={{

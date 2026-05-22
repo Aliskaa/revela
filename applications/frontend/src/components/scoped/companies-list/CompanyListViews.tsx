@@ -1,3 +1,4 @@
+import type { AdminCampaign, Company } from '@aor/types';
 import {
     Box,
     Card,
@@ -11,31 +12,26 @@ import {
     TableSortLabel,
     Typography,
 } from '@mui/material';
-import type { AdminCampaign, Company } from '@aor/types';
-import type * as React from 'react';
 
-import { harmonizedListTableHeadCellSx } from '@/components/admin/campaign-detail/campaignDetailHarmonizedStyles';
+import { SkeletonCards, SkeletonTableRows } from '@/components/common/SkeletonRows';
 import { StatCard } from '@/components/common/cards';
 import { CompanyListStatusChip, resolveCompanyListStatus } from '@/components/common/chips';
+import { CompanyStatusChip } from '@/components/common/chips/CompanyListStatusChip';
 import {
     EmptyTableRow,
-    HarmonizedPaginationFooter,
-    HarmonizedTableLink,
+    ListTableHead,
     OpenDetailButton,
     StandardTablePagination,
+    TablePaginationFooter,
+    TableRowLink,
 } from '@/components/common/data-table';
+import type { ListTableColumn } from '@/components/common/data-table';
 import { MobileListEmptyMessage, ResponsiveListViews } from '@/components/common/layout';
-import { SkeletonCards, SkeletonTableRows } from '@/components/common/SkeletonRows';
+import { listRowSx } from '@/components/common/styles/listSurfaces';
 import { companyInitial } from '@/lib/companyInitial';
-import { CompanyStatusChip } from '@/components/common/chips/CompanyListStatusChip';
 
 const ADMIN_TABLE_COLUMNS = 5;
 const COACH_TABLE_COLUMNS = 4;
-
-const harmonizedRowSx = {
-    '&:hover': { bgcolor: 'rgba(245, 245, 251, 0.8)' },
-    '& td': { borderColor: 'rgba(245, 245, 251, 0.8)' },
-};
 
 export type CompanySortKey = 'name' | 'contact_name' | 'participant_count';
 export type CompanySortOrder = 'asc' | 'desc';
@@ -88,51 +84,43 @@ export function CompanyListViews({
             />
         ) : null;
 
+    const sortLabel = (key: CompanySortKey, label: string) => (
+        <TableSortLabel
+            active={sortKey === key}
+            direction={sortKey === key ? sortOrder : 'asc'}
+            onClick={() => onSort(key)}
+        >
+            {label}
+        </TableSortLabel>
+    );
+
+    const adminColumns: ListTableColumn[] = [
+        { key: 'status', label: 'Statut', sx: { pl: 4 } },
+        { key: 'name', label: sortLabel('name', 'Entreprise'), sx: { pl: 4 } },
+        { key: 'contact', label: sortLabel('contact_name', 'Contact principal') },
+        { key: 'participants', label: sortLabel('participant_count', 'Participants') },
+        { key: 'action', align: 'right', sx: { pr: 4 } },
+    ];
+
     return (
         <ResponsiveListViews
             mobileSx={isAdmin ? undefined : { p: 0, mt: 2 }}
             desktop={
                 <>
                     <Table sx={{ minWidth: isAdmin ? 900 : 800 }}>
-                        <TableHead>
-                            <TableRow>
-                                {isAdmin ? (
-                                    <TableCell sx={{ ...harmonizedListTableHeadCellSx, pl: 4 }}>Statut</TableCell>
-                                ) : <TableCell />}
-                                <SortableHeadCell
-                                    harmonized={isAdmin}
-                                    active={sortKey === 'name'}
-                                    direction={sortKey === 'name' ? sortOrder : 'asc'}
-                                    onClick={() => onSort('name')}
-                                    pl={isAdmin ? 4 : undefined}
-                                >
-                                    Entreprise
-                                </SortableHeadCell>
-                                <SortableHeadCell
-                                    harmonized={isAdmin}
-                                    active={sortKey === 'contact_name'}
-                                    direction={sortKey === 'contact_name' ? sortOrder : 'asc'}
-                                    onClick={() => onSort('contact_name')}
-                                >
-                                    {isAdmin ? 'Contact principal' : 'Contact'}
-                                </SortableHeadCell>
-                                <SortableHeadCell
-                                    harmonized={isAdmin}
-                                    active={sortKey === 'participant_count'}
-                                    direction={sortKey === 'participant_count' ? sortOrder : 'asc'}
-                                    onClick={() => onSort('participant_count')}
-                                >
-                                    Participants
-                                </SortableHeadCell>
-                                {isAdmin ? (
-                                    <>
-                                        <TableCell align="right" sx={{ ...harmonizedListTableHeadCellSx, pr: 4 }} />
-                                    </>
-                                ) : (
+                        {isAdmin ? (
+                            <ListTableHead columns={adminColumns} />
+                        ) : (
+                            <TableHead>
+                                <TableRow>
                                     <TableCell />
-                                )}
-                            </TableRow>
-                        </TableHead>
+                                    <TableCell>{sortLabel('name', 'Entreprise')}</TableCell>
+                                    <TableCell>{sortLabel('contact_name', 'Contact')}</TableCell>
+                                    <TableCell>{sortLabel('participant_count', 'Participants')}</TableCell>
+                                    <TableCell />
+                                </TableRow>
+                            </TableHead>
+                        )}
                         <TableBody>
                             {isLoading ? (
                                 <SkeletonTableRows rows={4} columns={tableColumns} />
@@ -153,7 +141,11 @@ export function CompanyListViews({
                         </TableBody>
                     </Table>
                     {pagination ? (
-                        isAdmin ? <HarmonizedPaginationFooter>{pagination}</HarmonizedPaginationFooter> : pagination
+                        isAdmin ? (
+                            <TablePaginationFooter>{pagination}</TablePaginationFooter>
+                        ) : (
+                            pagination
+                        )
                     ) : null}
                 </>
             }
@@ -179,29 +171,6 @@ export function CompanyListViews({
     );
 }
 
-type SortableHeadCellProps = {
-    harmonized: boolean;
-    active: boolean;
-    direction: CompanySortOrder;
-    onClick: () => void;
-    pl?: number;
-    children: React.ReactNode;
-};
-
-function SortableHeadCell({ harmonized, active, direction, onClick, pl, children }: SortableHeadCellProps) {
-    const sortLabel = (
-        <TableSortLabel active={active} direction={direction} onClick={onClick}>
-            {children}
-        </TableSortLabel>
-    );
-
-    if (harmonized) {
-        return <TableCell sx={{ ...harmonizedListTableHeadCellSx, ...(pl != null ? { pl } : {}) }}>{sortLabel}</TableCell>;
-    }
-
-    return <TableCell>{sortLabel}</TableCell>;
-}
-
 type CompanyRowProps = {
     company: Company;
     campaigns: AdminCampaign[];
@@ -216,7 +185,7 @@ function CompanyTableRow({ company, campaigns, variant, detailPathPrefix }: Comp
 
     if (isAdmin) {
         return (
-            <TableRow hover sx={harmonizedRowSx}>
+            <TableRow hover sx={listRowSx}>
                 <TableCell sx={{ py: 2.5 }}>
                     <CompanyStatusChip status={status} />
                 </TableCell>
@@ -264,7 +233,7 @@ function CompanyTableRow({ company, campaigns, variant, detailPathPrefix }: Comp
                     </Box>
                 </TableCell>
                 <TableCell align="right" sx={{ pr: 4, py: 2.5 }}>
-                    <HarmonizedTableLink to={detailTo} />
+                    <TableRowLink to={detailTo} />
                 </TableCell>
             </TableRow>
         );
