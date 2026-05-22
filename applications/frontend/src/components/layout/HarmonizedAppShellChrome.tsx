@@ -7,6 +7,7 @@ import {
     Drawer,
     IconButton,
     Stack,
+    Theme,
     Toolbar,
     Typography,
 } from '@mui/material';
@@ -18,6 +19,7 @@ import type { ScopedNavItem } from '@/components/layout/ScopedAppShell';
 import { useHarmonizedChrome } from '@/components/layout/HarmonizedChromeContext';
 
 export const HARMONIZED_SIDEBAR_WIDTH = 288;
+export const HARMONIZED_CONTENT_MAX_WIDTH = 1600;
 
 const SIDEBAR_SX = {
     width: HARMONIZED_SIDEBAR_WIDTH,
@@ -29,7 +31,7 @@ const SIDEBAR_SX = {
     left: 0,
     top: 0,
     height: '100vh',
-    zIndex: theme => theme.zIndex.drawer + 1,
+    zIndex: (theme: Theme) => theme.zIndex.drawer + 1,
     py: 4,
     boxShadow: '0 25px 50px -12px rgba(15, 24, 152, 0.25)',
     overflow: 'hidden',

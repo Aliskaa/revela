@@ -6,40 +6,10 @@ import { CalendarDays, Clock3 } from 'lucide-react';
 import { SectionTitle } from '@/components/common/SectionTitle';
 import { StatCard } from '@/components/common/cards';
 import { CampaignStatusChip } from '@/components/common/chips';
-import type { AdminCampaign, CampaignStatus } from '@aor/types';
+import type { AdminCampaign } from '@aor/types';
 
 import { harmonizedCardSx } from './campaignDetailHarmonizedStyles';
 import { HarmonizedSummaryField } from './HarmonizedSummaryField';
-
-const HARMONIZED_STATUS_PILL: Record<
-    CampaignStatus,
-    { label: string; bgcolor: string; color: string; borderColor: string }
-> = {
-    active: {
-        label: 'Active',
-        bgcolor: 'rgba(240, 253, 244, 1)',
-        color: 'rgb(21, 128, 61)',
-        borderColor: 'rgba(187, 247, 208, 1)',
-    },
-    draft: {
-        label: 'Brouillon',
-        bgcolor: 'rgba(255, 251, 235, 1)',
-        color: 'rgb(180, 83, 9)',
-        borderColor: 'rgba(253, 230, 138, 1)',
-    },
-    closed: {
-        label: 'Clôturée',
-        bgcolor: 'rgba(248, 250, 252, 1)',
-        color: 'rgb(100, 116, 139)',
-        borderColor: 'rgba(226, 232, 240, 1)',
-    },
-    archived: {
-        label: 'Archivée',
-        bgcolor: 'rgba(248, 250, 252, 1)',
-        color: 'rgb(100, 116, 139)',
-        borderColor: 'rgba(226, 232, 240, 1)',
-    },
-};
 
 export type CampaignSummaryCardProps = {
     campaign: AdminCampaign;
@@ -59,7 +29,6 @@ export function CampaignSummaryCard({
     harmonized = false,
 }: CampaignSummaryCardProps) {
     const createdLabel = campaign.createdAt ? new Date(campaign.createdAt).toLocaleDateString('fr-FR') : '–';
-    const statusPill = HARMONIZED_STATUS_PILL[campaign.status] ?? HARMONIZED_STATUS_PILL.draft;
 
     if (harmonized) {
         return (
@@ -138,22 +107,7 @@ export function CampaignSummaryCard({
                                 Créée le {createdLabel}
                             </Typography>
                         </Box>
-                        <Typography
-                            component="span"
-                            sx={{
-                                px: 1.5,
-                                py: 0.5,
-                                borderRadius: 99,
-                                fontSize: '0.8125rem',
-                                fontWeight: 600,
-                                bgcolor: statusPill.bgcolor,
-                                color: statusPill.color,
-                                border: '1px solid',
-                                borderColor: statusPill.borderColor,
-                            }}
-                        >
-                            {statusPill.label}
-                        </Typography>
+                        <CampaignStatusChip status={campaign.status} />
                     </Stack>
                 </CardContent>
             </Card>

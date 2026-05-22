@@ -1,6 +1,7 @@
 import { AdminCoachDrawerForm } from '@/components/admin/AdminCoachDrawerForm';
+import { useHarmonizedBreadcrumbs } from '@/components/layout/HarmonizedChromeContext';
 import { SectionTitle } from '@/components/common/SectionTitle';
-import { StatCard } from '@/components/common/cards';
+import { KpiCard, StatCard } from '@/components/common/cards';
 import { ActiveStatusChip, CampaignStatusChip } from '@/components/common/chips';
 import { useAdminCoach, useCompanies, useDeleteCoach, useUpdateCoach } from '@/hooks/admin';
 import {
@@ -48,6 +49,16 @@ function AdminCoachDetailRoute() {
     const coach = data?.coach;
     const campaigns = data?.campaigns ?? [];
     const isAdminCoach = coach?.isAdmin ?? false;
+
+    useHarmonizedBreadcrumbs(
+        coach
+            ? [
+                  { label: 'Administration' },
+                  { label: 'Coachs', to: '/admin/coaches' },
+                  { label: coach.displayName },
+              ]
+            : [{ label: 'Administration' }, { label: 'Coachs', to: '/admin/coaches' }]
+    );
 
     const companyNameById = React.useMemo(() => {
         const m = new Map<number, string>();
@@ -212,14 +223,14 @@ function AdminCoachDetailRoute() {
 
             {/* Stat cards */}
             <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(3, minmax(0, 1fr))' }, gap: 2 }}>
-                <StatCard
+                <KpiCard
                     label="Campagnes"
                     value={campaigns.length}
                     helper="rattachées au coach"
                     icon={ClipboardList}
                 />
-                <StatCard label="Actives" value={activeCampaigns} helper="en cours" icon={ClipboardList} />
-                <StatCard
+                <KpiCard label="Actives" value={activeCampaigns} helper="en cours" icon={ClipboardList} />
+                <KpiCard
                     label="Compte créé"
                     value={coach.createdAt ? new Date(coach.createdAt).toLocaleDateString('fr-FR') : '–'}
                     helper={`ID ${coach.id}`}

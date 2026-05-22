@@ -11,7 +11,7 @@ import { CampaignParticipantsTable } from '@/components/admin/campaign-detail/Ca
 import { CampaignStatusActions } from '@/components/admin/campaign-detail/CampaignStatusActions';
 import { CampaignSummaryCard } from '@/components/admin/campaign-detail/CampaignSummaryCard';
 import { CampaignSynthesisCard } from '@/components/admin/campaign-detail/CampaignSynthesisCard';
-import { HarmonizedKpiCard } from '@/components/admin/campaign-detail/HarmonizedKpiCard';
+import { KpiCard } from '@/components/common/cards';
 import { KpiGrid } from '@/components/common/layout';
 import { useAdminCampaign, useCoaches, useCompanies } from '@/hooks/admin';
 import { computeProgress, statusText } from '@/lib/admin/campaignDetailView';
@@ -89,7 +89,7 @@ export function AdminCampaignDetailPage({ campaignId }: AdminCampaignDetailPageP
     }
 
     return (
-        <Stack spacing={3} sx={{ maxWidth: 1280, mx: 'auto', width: '100%' }}>
+        <Stack spacing={3}>
             <Box>
                 <Typography
                     variant="h3"
@@ -109,15 +109,15 @@ export function AdminCampaignDetailPage({ campaignId }: AdminCampaignDetailPageP
             </Box>
 
             <KpiGrid columns={4}>
-                <HarmonizedKpiCard label="Participants" value={participants.length} helper="rattachés" icon={Users} />
-                <HarmonizedKpiCard
+                <KpiCard label="Participants" value={participants.length} helper="rattachés" icon={Users} />
+                <KpiCard
                     label="Réponses"
                     value={responsesTotal}
                     helper="collectées"
                     icon={MessageSquareText}
                 />
-                <HarmonizedKpiCard label="Progression" value={`${progress}%`} helper="parcours global" icon={Target} />
-                <HarmonizedKpiCard
+                <KpiCard label="Progression" value={`${progress}%`} helper="parcours global" icon={Target} />
+                <KpiCard
                     label="Statut"
                     value={statusText(campaign.status)}
                     helper={statusHelper(campaign.status)}

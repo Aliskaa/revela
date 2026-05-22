@@ -9,7 +9,7 @@ import { CampaignParticipantsTable } from '@/components/admin/campaign-detail/Ca
 import { CampaignStatusActions } from '@/components/admin/campaign-detail/CampaignStatusActions';
 import { CampaignSummaryCard } from '@/components/admin/campaign-detail/CampaignSummaryCard';
 import { CampaignSynthesisCard } from '@/components/admin/campaign-detail/CampaignSynthesisCard';
-import { StatCard } from '@/components/common/cards';
+import { KpiCard } from '@/components/common/cards';
 import { KpiGrid, PageHeroCard } from '@/components/common/layout';
 import { useAdminCampaign, useCoaches, useCompanies } from '@/hooks/admin';
 import { computeProgress, statusText } from '@/lib/admin/campaignDetailView';
@@ -134,10 +134,10 @@ export function CampaignDetailPage({ scope, campaignId }: CampaignDetailPageProp
             />
 
             <KpiGrid columns={4}>
-                <StatCard label="Participants" value={participants.length} helper="rattachés" icon={Users} />
-                <StatCard label="Réponses" value={responsesTotal} helper="collectées" icon={MessageSquareText} />
-                <StatCard label="Progression" value={`${progress}%`} helper="parcours global" icon={Target} />
-                <StatCard
+                <KpiCard label="Participants" value={participants.length} helper="rattachés" icon={Users} />
+                <KpiCard label="Réponses" value={responsesTotal} helper="collectées" icon={MessageSquareText} />
+                <KpiCard label="Progression" value={`${progress}%`} helper="parcours global" icon={Target} />
+                <KpiCard
                     label="Statut"
                     value={statusText(campaign.status)}
                     helper={campaign.status}

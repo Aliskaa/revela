@@ -1,7 +1,8 @@
 import { AdminCoachDrawerForm } from '@/components/admin/AdminCoachDrawerForm';
+import { useHarmonizedBreadcrumbs } from '@/components/layout/HarmonizedChromeContext';
 import { SectionTitle } from '@/components/common/SectionTitle';
 import { SkeletonCards, SkeletonTableRows } from '@/components/common/SkeletonRows';
-import { StatCard } from '@/components/common/cards';
+import { KpiCard, StatCard } from '@/components/common/cards';
 import { ActiveStatusChip } from '@/components/common/chips';
 import { EmptyTableRow, OpenDetailButton, StandardTablePagination } from '@/components/common/data-table';
 import { KpiGrid, PageHeroCard } from '@/components/common/layout';
@@ -31,6 +32,8 @@ export const Route = createFileRoute('/admin/coaches/')({
 });
 
 function AdminCoachesRoute() {
+    useHarmonizedBreadcrumbs([{ label: 'Administration' }, { label: 'Coachs' }]);
+
     const [createOpen, setCreateOpen] = React.useState(false);
     const [search, setSearch] = React.useState('');
 
@@ -113,21 +116,21 @@ function AdminCoachesRoute() {
             />
 
             <KpiGrid columns={3}>
-                <StatCard
+                <KpiCard
                     label="Coachs"
                     value={coaches.length}
                     helper="référencés"
                     icon={UserRound}
                     loading={isLoading}
                 />
-                <StatCard
+                <KpiCard
                     label="Actifs"
                     value={activeCount}
                     helper="en activité"
                     icon={UserRound}
                     loading={isLoading}
                 />
-                <StatCard
+                <KpiCard
                     label="Campagnes"
                     value={campaigns.length}
                     helper="attribuées"

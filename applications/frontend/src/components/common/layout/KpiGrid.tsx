@@ -8,7 +8,7 @@ export type KpiGridProps = {
 };
 
 /**
- * Grille responsive 1 → N colonnes pour aligner les `StatCard` de KPI en haut de page.
+ * Grille responsive 1 → N colonnes pour aligner les `KpiCard` en haut de page.
  * Centralise la définition des points de rupture (avant : `gridTemplateColumns: { xs: '1fr', md: 'repeat(N, ...)' }`
  * répété dans toutes les routes).
  */

@@ -1,23 +1,33 @@
 // Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
 
-import { Box, Card, CardContent, Typography } from '@mui/material';
+import { Box, Card, CardContent, Skeleton, Typography } from '@mui/material';
+import type { SxProps, Theme } from '@mui/material';
 import type * as React from 'react';
 
-import { harmonizedCardSx } from './campaignDetailHarmonizedStyles';
-
-export type HarmonizedKpiCardProps = {
-    label: string;
-    value: string | number;
-    helper: string;
-    icon: React.ElementType;
+const KPI_CARD_SX: SxProps<Theme> = {
+    borderRadius: 2,
+    boxShadow: theme => theme.palette.shadow.brandPaper,
+    border: '1px solid',
+    borderColor: 'rgba(15, 24, 152, 0.08)',
+    bgcolor: 'background.paper',
 };
 
-export function HarmonizedKpiCard({ label, value, helper, icon: Icon }: HarmonizedKpiCardProps) {
+export type KpiCardProps = {
+    label: string;
+    value: string | number;
+    helper?: string;
+    icon: React.ElementType;
+    loading?: boolean;
+};
+
+export function KpiCard({ label, value, helper, icon: Icon, loading }: KpiCardProps) {
+    const displayValue = loading ? '–' : value;
+
     return (
         <Card
             variant="outlined"
             sx={{
-                ...harmonizedCardSx,
+                ...KPI_CARD_SX,
                 position: 'relative',
                 overflow: 'hidden',
                 transition: 'box-shadow 0.3s ease, transform 0.3s ease',
@@ -35,6 +45,7 @@ export function HarmonizedKpiCard({ label, value, helper, icon: Icon }: Harmoniz
                     p: 2,
                     color: 'tint.primaryGhost',
                     pointerEvents: 'none',
+                    transform: 'none',
                 }}
                 aria-hidden
             >
@@ -54,20 +65,26 @@ export function HarmonizedKpiCard({ label, value, helper, icon: Icon }: Harmoniz
                 >
                     {label}
                 </Typography>
-                <Typography
-                    variant="h3"
-                    sx={{
-                        color: 'primary.main',
-                        fontWeight: 800,
-                        letterSpacing: -0.02,
-                        lineHeight: 1.1,
-                    }}
-                >
-                    {value}
-                </Typography>
-                <Typography variant="body2" sx={{ color: 'text.secondary', opacity: 0.75, mt: 0.5 }}>
-                    {helper}
-                </Typography>
+                {loading ? (
+                    <Skeleton variant="text" width={64} height={48} />
+                ) : (
+                    <Typography
+                        variant="h3"
+                        sx={{
+                            color: 'primary.main',
+                            fontWeight: 800,
+                            letterSpacing: -0.02,
+                            lineHeight: 1.1,
+                        }}
+                    >
+                        {displayValue}
+                    </Typography>
+                )}
+                {helper ? (
+                    <Typography variant="body2" sx={{ color: 'text.secondary', opacity: 0.75, mt: 0.5 }}>
+                        {helper}
+                    </Typography>
+                ) : null}
             </CardContent>
         </Card>
     );

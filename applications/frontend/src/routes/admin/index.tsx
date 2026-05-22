@@ -16,10 +16,11 @@ import { ArrowRight, Building2, Plus, Target, UserRound, Users } from 'lucide-re
 
 import { SectionTitle } from '@/components/common/SectionTitle';
 import { SkeletonTableRows } from '@/components/common/SkeletonRows';
-import { StatCard } from '@/components/common/cards';
+import { KpiCard } from '@/components/common/cards';
 import { CampaignStatusChip } from '@/components/common/chips';
 import { EmptyTableRow } from '@/components/common/data-table';
 import { KpiGrid, PageHeroCard } from '@/components/common/layout';
+import { useHarmonizedBreadcrumbs } from '@/components/layout/HarmonizedChromeContext';
 import { useAdminCampaigns, useAdminDashboard, useCoaches, useCompanies } from '@/hooks/admin';
 import { questionnaireLabel } from '@/lib/labels';
 
@@ -28,6 +29,8 @@ export const Route = createFileRoute('/admin/')({
 });
 
 function AdminDashboardRoute() {
+    useHarmonizedBreadcrumbs([{ label: 'Administration' }, { label: 'Tableau de bord' }]);
+
     const { data: dashboard, isLoading: dashboardLoading } = useAdminDashboard();
     const { data: campaigns = [], isLoading: campaignsLoading } = useAdminCampaigns();
     const { data: coaches = [], isLoading: coachesLoading } = useCoaches();
@@ -67,28 +70,28 @@ function AdminDashboardRoute() {
             />
 
             <KpiGrid columns={4}>
-                <StatCard
+                <KpiCard
                     label="Campagnes actives"
                     value={activeCampaigns}
                     helper={`sur ${campaigns.length} campagne${campaigns.length !== 1 ? 's' : ''}`}
                     icon={Target}
                     loading={campaignsLoading}
                 />
-                <StatCard
+                <KpiCard
                     label="Participants"
                     value={dashboard?.total_participants ?? '-'}
                     helper="accès ouverts"
                     icon={Users}
                     loading={dashboardLoading}
                 />
-                <StatCard
+                <KpiCard
                     label="Entreprises"
                     value={dashboard?.total_companies ?? '-'}
                     helper="clients suivis"
                     icon={Building2}
                     loading={dashboardLoading}
                 />
-                <StatCard
+                <KpiCard
                     label="Coachs"
                     value={coaches.length}
                     helper="utilisateurs actifs"

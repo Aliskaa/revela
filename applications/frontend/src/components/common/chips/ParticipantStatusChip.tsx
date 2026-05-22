@@ -1,6 +1,6 @@
-import { Chip } from '@mui/material';
-
 import type { Participant } from '@aor/types';
+
+import { BaseStatusChip, type StatusChipTone } from './BaseStatusChip';
 
 export type ParticipantActivityStatus = 'active' | 'invited' | 'new';
 
@@ -14,31 +14,26 @@ export type ParticipantStatusChipProps = {
     participant: Participant;
 };
 
+const PALETTE: Record<ParticipantActivityStatus, StatusChipTone> = {
+    active: {
+        label: 'Actif',
+        bg: 'tint.successBg',
+        color: 'tint.successText',
+        dot: 'tint.successText',
+        pulse: true,
+    },
+    invited: {
+        label: 'Invité',
+        bg: 'tint.secondaryBg',
+        color: 'tint.secondaryText',
+        dot: 'tint.secondaryText',
+    },
+    new: { label: 'Nouveau', bg: 'tint.mutedBg', color: 'tint.mutedText', dot: 'tint.mutedText' },
+};
+
 export function ParticipantStatusChip({ participant }: ParticipantStatusChipProps) {
     const status = getParticipantActivityStatus(participant);
-    if (status === 'active') {
-        return (
-            <Chip
-                label="Actif"
-                size="small"
-                sx={{ borderRadius: 99, bgcolor: 'tint.successBg', color: 'tint.successText' }}
-            />
-        );
-    }
-    if (status === 'invited') {
-        return (
-            <Chip
-                label="Invité"
-                size="small"
-                sx={{ borderRadius: 99, bgcolor: 'tint.secondaryBg', color: 'tint.secondaryText' }}
-            />
-        );
-    }
-    return (
-        <Chip
-            label="Nouveau"
-            size="small"
-            sx={{ borderRadius: 99, bgcolor: 'tint.mutedBg', color: 'tint.mutedText' }}
-        />
-    );
+    const tone = PALETTE[status];
+
+    return <BaseStatusChip {...tone} />;
 }

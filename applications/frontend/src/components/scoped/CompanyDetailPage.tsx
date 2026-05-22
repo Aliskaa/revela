@@ -6,10 +6,11 @@ import { Building2, Mail, Users } from 'lucide-react';
 import * as React from 'react';
 
 import { CompanyDangerZone } from '@/components/admin/company-detail/CompanyDangerZone';
+import { useHarmonizedBreadcrumbs } from '@/components/layout/HarmonizedChromeContext';
 import { CompanyParticipantsTable } from '@/components/admin/company-detail/CompanyParticipantsTable';
 import { DeleteCompanyDialog } from '@/components/admin/company-detail/DeleteCompanyDialog';
 import { DeleteCompanyParticipantDialog } from '@/components/admin/company-detail/DeleteCompanyParticipantDialog';
-import { StatCard } from '@/components/common/cards';
+import { KpiCard } from '@/components/common/cards';
 import { KpiGrid, PageHeroCard } from '@/components/common/layout';
 import { useCompanies, useParticipants } from '@/hooks/admin';
 import { useToast } from '@/lib/toast';
@@ -74,6 +75,19 @@ export function CompanyDetailPage({ scope, companyId }: CompanyDetailPageProps) 
     const toast = useToast();
 
     const company = companies.find(c => c.id === companyId);
+
+    useHarmonizedBreadcrumbs(
+        isAdmin
+            ? company
+                ? [
+                      { label: 'Administration' },
+                      { label: 'Entreprises', to: '/admin/companies' },
+                      { label: company.name },
+                  ]
+                : [{ label: 'Administration' }, { label: 'Entreprises', to: '/admin/companies' }]
+            : []
+    );
+
     const participants = participantsData?.items ?? [];
     const totalCount = participantsData?.total ?? 0;
     const isLoading = companiesLoading || participantsLoading;
@@ -132,19 +146,19 @@ export function CompanyDetailPage({ scope, companyId }: CompanyDetailPageProps) 
             />
 
             <KpiGrid columns={3}>
-                <StatCard
+                <KpiCard
                     label="Collaborateurs"
                     value={company.participant_count}
                     helper="dans cette entreprise"
                     icon={Users}
                 />
-                <StatCard
+                <KpiCard
                     label="Contact"
                     value={company.contact_name ?? '–'}
                     helper={company.contact_email ?? 'non renseigné'}
                     icon={Mail}
                 />
-                <StatCard label="Entreprise" value={company.name} icon={Building2} />
+                <KpiCard label="Entreprise" value={company.name} icon={Building2} />
             </KpiGrid>
 
             <Stack spacing={3}>

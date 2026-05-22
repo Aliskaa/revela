@@ -1,6 +1,6 @@
-import { Chip } from '@mui/material';
-
 import type { CampaignParticipantProgress } from '@aor/types';
+
+import { BaseStatusChip, type StatusChipTone } from './BaseStatusChip';
 
 export type ProgressStatus = CampaignParticipantProgress['selfRatingStatus'];
 
@@ -8,30 +8,25 @@ export type ProgressChipProps = {
     status: ProgressStatus;
 };
 
+const PALETTE: Record<ProgressStatus, StatusChipTone> = {
+    completed: {
+        label: 'Terminé',
+        bg: 'tint.successBg',
+        color: 'tint.successText',
+        dot: 'tint.successText',
+    },
+    pending: {
+        label: 'En cours',
+        bg: 'tint.primaryBg',
+        color: 'primary.main',
+        dot: 'primary.main',
+        pulse: true,
+    },
+    locked: { label: 'Verrouillé', bg: 'tint.mutedBg', color: 'tint.mutedText', dot: 'tint.mutedText' },
+};
+
 export function ProgressChip({ status }: ProgressChipProps) {
-    if (status === 'completed') {
-        return (
-            <Chip
-                label="Terminé"
-                size="small"
-                sx={{ borderRadius: 99, bgcolor: 'tint.successBg', color: 'tint.successText' }}
-            />
-        );
-    }
-    if (status === 'pending') {
-        return (
-            <Chip
-                label="En cours"
-                size="small"
-                sx={{ borderRadius: 99, bgcolor: 'tint.primaryBg', color: 'primary.main' }}
-            />
-        );
-    }
-    return (
-        <Chip
-            label="Verrouillé"
-            size="small"
-            sx={{ borderRadius: 99, bgcolor: 'tint.mutedBg', color: 'tint.mutedText' }}
-        />
-    );
+    const tone = PALETTE[status] ?? PALETTE.locked;
+
+    return <BaseStatusChip {...tone} />;
 }

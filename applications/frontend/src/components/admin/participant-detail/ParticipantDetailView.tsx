@@ -1,7 +1,7 @@
 // Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
 
 import { SectionTitle } from '@/components/common/SectionTitle';
-import { StatCard } from '@/components/common/cards';
+import { KpiCard, StatCard } from '@/components/common/cards';
 import { CampaignStatusChip } from '@/components/common/chips';
 import { useParticipant, useUpdateParticipant } from '@/hooks/admin';
 import type {
@@ -184,14 +184,14 @@ export function ParticipantDetailView({ participantId, scopePrefix }: Participan
             </Card>
 
             <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(3, minmax(0, 1fr))' }, gap: 2 }}>
-                <StatCard
+                <KpiCard
                     label="Réponses"
                     value={participant.response_count}
                     helper="collectées"
                     icon={MessageSquareText}
                 />
-                <StatCard label="Invitations" value={inviteCount} helper="par questionnaire" icon={Mail} />
-                <StatCard label="Campagnes" value={campaigns.length} helper="rattachées" icon={ClipboardList} />
+                <KpiCard label="Invitations" value={inviteCount} helper="par questionnaire" icon={Mail} />
+                <KpiCard label="Campagnes" value={campaigns.length} helper="rattachées" icon={ClipboardList} />
             </Box>
 
             <Box

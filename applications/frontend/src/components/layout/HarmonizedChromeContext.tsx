@@ -28,12 +28,13 @@ export function useHarmonizedChrome() {
     return ctx;
 }
 
-/** Pousse le fil d'Ariane dans la top bar harmonisée (nettoyage au démontage). */
+/** Pousse le fil d'Ariane dans la top bar harmonisée (nettoyage au démontage). No-op hors provider. */
 export function useHarmonizedBreadcrumbs(segments: HarmonizedBreadcrumbSegment[]) {
-    const { setBreadcrumbs } = useHarmonizedChrome();
+    const setBreadcrumbs = React.useContext(HarmonizedChromeContext)?.setBreadcrumbs;
     const key = segments.map(s => `${s.label}:${s.to ?? ''}`).join('|');
 
     React.useEffect(() => {
+        if (!setBreadcrumbs) return;
         setBreadcrumbs(segments);
         return () => setBreadcrumbs([]);
     }, [key, setBreadcrumbs]);

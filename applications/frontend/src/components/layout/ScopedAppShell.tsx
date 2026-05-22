@@ -17,6 +17,7 @@ import {
     Typography,
 } from '@mui/material';
 import {
+    HARMONIZED_CONTENT_MAX_WIDTH,
     HARMONIZED_SIDEBAR_WIDTH,
     HarmonizedDesktopTopBar,
     HarmonizedMobileChrome,
@@ -374,7 +375,9 @@ export function ScopedAppShell({
                             py: { xs: 2, sm: 3, lg: 5 },
                         }}
                     >
-                        {children}
+                        <Box sx={{ maxWidth: HARMONIZED_CONTENT_MAX_WIDTH, mx: 'auto', width: '100%' }}>
+                            {children}
+                        </Box>
                     </Box>
                     {footer}
                 </Box>

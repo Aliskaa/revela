@@ -4,7 +4,7 @@ import { Stack } from '@mui/material';
 import { createFileRoute } from '@tanstack/react-router';
 import { ClipboardList, MessageSquareText, Target, Users } from 'lucide-react';
 
-import { StatCard } from '@/components/common/cards';
+import { KpiCard } from '@/components/common/cards';
 import { KpiGrid, PageHeroCard } from '@/components/common/layout';
 import { useAdminCampaigns, useAdminResponses, useParticipants } from '@/hooks/admin';
 import { parseAdminJwtClaims } from '@/lib/auth';
@@ -43,28 +43,28 @@ function CoachDashboardRoute() {
             <PageHeroCard eyebrow="Tableau de bord" title={heroTitle} subtitle={heroSubtitle} />
 
             <KpiGrid columns={4}>
-                <StatCard
+                <KpiCard
                     label={campaignsLabel}
                     value={campaigns.length}
                     helper={campaignsHelper}
                     icon={ClipboardList}
                     loading={campaignsLoading}
                 />
-                <StatCard
+                <KpiCard
                     label="Actives"
                     value={activeCampaigns}
                     helper="en cours"
                     icon={Target}
                     loading={campaignsLoading}
                 />
-                <StatCard
+                <KpiCard
                     label={participantsLabel}
                     value={participantsPaged?.total ?? 0}
                     helper={participantsHelper}
                     icon={Users}
                     loading={participantsLoading}
                 />
-                <StatCard
+                <KpiCard
                     label={responsesLabel}
                     value={responsesPaged?.total ?? 0}
                     helper={responsesHelper}

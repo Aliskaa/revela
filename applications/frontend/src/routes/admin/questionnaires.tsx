@@ -1,6 +1,7 @@
 import { SectionTitle } from '@/components/common/SectionTitle';
+import { useHarmonizedBreadcrumbs } from '@/components/layout/HarmonizedChromeContext';
 import { SkeletonCards, SkeletonTableRows } from '@/components/common/SkeletonRows';
-import { StatCard } from '@/components/common/cards';
+import { KpiCard } from '@/components/common/cards';
 import { useAdminQuestionnaires } from '@/hooks/questionnaires';
 import { usePageResetEffect } from '@/lib/usePageResetEffect';
 import {
@@ -27,6 +28,8 @@ export const Route = createFileRoute('/admin/questionnaires')({
 });
 
 function AdminQuestionnairesRoute() {
+    useHarmonizedBreadcrumbs([{ label: 'Administration' }, { label: 'Questionnaires' }]);
+
     const [search, setSearch] = React.useState('');
     const [page, setPage] = React.useState(0);
     const [rowsPerPage, setRowsPerPage] = React.useState(10);
@@ -92,14 +95,14 @@ function AdminQuestionnairesRoute() {
             </Card>
 
             <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(2, minmax(0, 1fr))' }, gap: 2 }}>
-                <StatCard
+                <KpiCard
                     label="Questionnaires"
                     value={questionnaires.length}
                     helper="référencés"
                     icon={ClipboardList}
                     loading={isLoading}
                 />
-                <StatCard
+                <KpiCard
                     label="Dimensions"
                     value={uniqueDimensions}
                     helper="au total"

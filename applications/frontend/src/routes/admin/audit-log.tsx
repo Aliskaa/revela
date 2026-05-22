@@ -17,6 +17,7 @@ import { createFileRoute } from '@tanstack/react-router';
 import * as React from 'react';
 
 import { SectionTitle } from '@/components/common/SectionTitle';
+import { useHarmonizedBreadcrumbs } from '@/components/layout/HarmonizedChromeContext';
 import { SkeletonTableRows } from '@/components/common/SkeletonRows';
 import { EmptyTableRow, StandardTablePagination } from '@/components/common/data-table';
 import { useAdminAuditEvents } from '@/hooks/admin';
@@ -58,6 +59,8 @@ const formatDate = (iso: string): string => {
 };
 
 function AdminAuditLogRoute() {
+    useHarmonizedBreadcrumbs([{ label: 'Administration' }, { label: 'Audit log' }]);
+
     const [page, setPage] = React.useState(0);
     const [rowsPerPage, setRowsPerPage] = React.useState(50);
 
