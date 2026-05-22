@@ -1,5 +1,9 @@
 export { EmptyTableRow } from './EmptyTableRow';
 export type { EmptyTableRowProps } from './EmptyTableRow';
+export { HarmonizedPaginationFooter } from './HarmonizedPaginationFooter';
+export type { HarmonizedPaginationFooterProps } from './HarmonizedPaginationFooter';
+export { HarmonizedTableLink } from './HarmonizedTableLink';
+export type { HarmonizedTableLinkProps } from './HarmonizedTableLink';
 export { OpenDetailButton } from './OpenDetailButton';
 export type { OpenDetailButtonProps } from './OpenDetailButton';
 export { StandardTablePagination } from './StandardTablePagination';
