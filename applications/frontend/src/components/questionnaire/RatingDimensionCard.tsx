@@ -120,6 +120,7 @@ export const RatingDimensionCard = ({
                                                                     aria-label={`Ajouter un commentaire pour ${item.label}`}
                                                                 >
                                                                     <Plus size={14} />
+                                                                    <Typography variant="caption" color="text.secondary" sx={{ fontSize: 12 }}>Ajouter un commentaire</Typography>
                                                                 </IconButton>
                                                             </span>
                                                         </Tooltip>
