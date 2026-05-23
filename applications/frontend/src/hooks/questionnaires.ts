@@ -1,5 +1,6 @@
 import { apiClient } from '@/api/client';
 import { participantApiClient } from '@/api/participantClient';
+import { participantSessionKeys } from '@/hooks/participantSession';
 import type {
     ElementBDraft,
     ElementBDraftEnvelope,
@@ -63,6 +64,8 @@ export function useSubmitParticipantQuestionnaire(qid: string, campaignId?: numb
             if (typeof campaignId === 'number' && campaignId > 0) {
                 void queryClient.invalidateQueries({ queryKey: questionnaireKeys.elementBDraft(qid, campaignId) });
             }
+            void queryClient.invalidateQueries({ queryKey: participantSessionKeys.session });
+            void queryClient.invalidateQueries({ queryKey: participantSessionKeys.matrixRoot });
         },
     });
 }
