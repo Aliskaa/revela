@@ -380,7 +380,6 @@ export function useAdminCampaigns() {
     return useQuery<AdminCampaign[]>({
         queryKey: adminKeys.campaigns,
         queryFn: () => apiClient.get('/admin/campaigns').then(r => r.data),
-        refetchOnMount: 'always',
     });
 }
 
@@ -389,7 +388,6 @@ export function useAdminCampaign(campaignId: number) {
         queryKey: adminKeys.campaign(campaignId),
         queryFn: () => apiClient.get(`/admin/campaigns/${campaignId}`).then(r => r.data),
         enabled: campaignId > 0,
-        refetchOnMount: 'always',
     });
 }
 
@@ -398,7 +396,6 @@ export function useAdminCampaignSynthesis(campaignId: number) {
         queryKey: adminKeys.campaignSynthesis(campaignId),
         queryFn: () => apiClient.get(`/admin/campaigns/${campaignId}/synthesis-matrix`).then(r => r.data),
         enabled: campaignId > 0,
-        refetchOnMount: 'always',
     });
 }
 

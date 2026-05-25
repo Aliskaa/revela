@@ -23,7 +23,8 @@ import { AppController } from '@src/app/app.controller';
  *    (objectifs habituels du brute-force credentials).
  *  - `auth-refresh` : 30 requêtes / 60s — pour `auth/refresh`, qui peut être appelé en
  *    chaîne par plusieurs onglets ouverts simultanément.
- *  - `default` : 60 requêtes / 60s — fallback large (pour ne pas pénaliser le reste).
+ *  - `default` : 180 requêtes / 60s — fallback large : un dashboard admin charge facilement
+ *    10+ endpoints en parallèle au mount, avec navigation rapide et invalidations React Query.
  *
  * Le `ThrottlerGuard` est enregistré comme `APP_GUARD` global : chaque endpoint hérite
  * du throttle `default` sauf override explicite via `@Throttle()`.
@@ -35,7 +36,7 @@ import { AppController } from '@src/app/app.controller';
     imports: [
         ThrottlerModule.forRoot({
             throttlers: [
-                { name: 'default', limit: 60, ttl: seconds(60) },
+                { name: 'default', limit: 180, ttl: seconds(60) },
                 { name: 'auth-strict', limit: 5, ttl: seconds(60) },
                 { name: 'auth-refresh', limit: 30, ttl: seconds(60) },
             ],
