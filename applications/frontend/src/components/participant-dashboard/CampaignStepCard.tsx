@@ -30,8 +30,8 @@ const stepStateFromStatus = (status?: 'locked' | 'pending' | 'completed'): Campa
 const STEP_TEMPLATES: ReadonlyArray<Omit<CampaignStep, 'state'>> = [
     {
         label: 'Regard sur soi',
-        subtitle: 'Notes de 1 à 9 sur les short labels',
-        description: 'Vous devez noter chaque label de chaque dimension sur une échelle de 1 à 9.',
+        subtitle: 'Notes de 0 à 9 sur les short labels',
+        description: 'Vous devez noter chaque label de chaque dimension sur une échelle de 0 à 9.',
         icon: ClipboardList,
         routeKind: 'self-rating',
     },
