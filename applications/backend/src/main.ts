@@ -34,10 +34,10 @@ const bootstrap = async (): Promise<void> => {
     const app = await NestFactory.create<NestExpressApplication>(AppModule, { bufferLogs: true });
     app.useLogger(new NestLoggerBridge(createConsoleLogger({ context: 'Nest', level: resolvedLevel })));
 
-    // Derrière nginx en prod : faire confiance au premier proxy pour que `req.ip` retourne
-    // la vraie IP du client (lue dans `X-Forwarded-For`). Sans ça, le ThrottlerGuard clé
-    // sur l'IP du proxy → quota global partagé entre tous les users → 429 cascade.
-    app.set('trust proxy', 1);
+    // Derrière ALB + nginx en prod (2 proxies) : faire confiance à 2 hops pour que `req.ip`
+    // retourne la vraie IP du client (lue dans `X-Forwarded-For`). Sans ça, le ThrottlerGuard
+    // clé sur l'IP de l'ALB → quota global partagé entre tous les users → 429 cascade.
+    app.set('trust proxy', 2);
 
     /**
      * Cookie parser : indispensable pour lire les cookies httpOnly d'auth (G1 RGPD —
