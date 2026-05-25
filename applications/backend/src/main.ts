@@ -6,6 +6,7 @@ import 'reflect-metadata';
 import { createConsoleLogger, resolveLogLevelFromEnv } from '@aor/logger';
 import { RequestMethod } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
+import type { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
 
@@ -30,8 +31,13 @@ const bootstrap = async (): Promise<void> => {
         portEnv: process.env.PORT ?? `(défaut ${DEFAULT_PORT})`,
     });
 
-    const app = await NestFactory.create(AppModule, { bufferLogs: true });
+    const app = await NestFactory.create<NestExpressApplication>(AppModule, { bufferLogs: true });
     app.useLogger(new NestLoggerBridge(createConsoleLogger({ context: 'Nest', level: resolvedLevel })));
+
+    // Derrière nginx en prod : faire confiance au premier proxy pour que `req.ip` retourne
+    // la vraie IP du client (lue dans `X-Forwarded-For`). Sans ça, le ThrottlerGuard clé
+    // sur l'IP du proxy → quota global partagé entre tous les users → 429 cascade.
+    app.set('trust proxy', 1);
 
     /**
      * Cookie parser : indispensable pour lire les cookies httpOnly d'auth (G1 RGPD —
