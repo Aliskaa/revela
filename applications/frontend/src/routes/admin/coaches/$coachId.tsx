@@ -2,6 +2,7 @@ import { AdminCoachDrawerForm } from '@/components/admin/AdminCoachDrawerForm';
 import { SectionTitle } from '@/components/common/SectionTitle';
 import { StatCard } from '@/components/common/cards';
 import { ActiveStatusChip, CampaignStatusChip } from '@/components/common/chips';
+import { stickyActionCellSx, stickyActionHeadSx } from '@/components/common/data-table';
 import { useAdminCoach, useCompanies, useDeleteCoach, useUpdateCoach } from '@/hooks/admin';
 import {
     Alert,
@@ -251,7 +252,7 @@ function AdminCoachDetailRoute() {
                                         <TableCell>Entreprise</TableCell>
                                         <TableCell>Statut</TableCell>
                                         <TableCell>Créée le</TableCell>
-                                        <TableCell />
+                                        <TableCell sx={stickyActionHeadSx} />
                                     </TableRow>
                                 </TableHead>
                                 <TableBody>
@@ -285,7 +286,7 @@ function AdminCoachDetailRoute() {
                                                         ? new Date(c.createdAt).toLocaleDateString('fr-FR')
                                                         : '–'}
                                                 </TableCell>
-                                                <TableCell align="right">
+                                                <TableCell align="right" sx={stickyActionCellSx}>
                                                     <Button
                                                         size="small"
                                                         variant="text"

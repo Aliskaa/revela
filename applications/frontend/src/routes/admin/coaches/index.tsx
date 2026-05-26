@@ -3,7 +3,13 @@ import { SectionTitle } from '@/components/common/SectionTitle';
 import { SkeletonCards, SkeletonTableRows } from '@/components/common/SkeletonRows';
 import { StatCard } from '@/components/common/cards';
 import { ActiveStatusChip } from '@/components/common/chips';
-import { EmptyTableRow, OpenDetailButton, StandardTablePagination } from '@/components/common/data-table';
+import {
+    EmptyTableRow,
+    OpenDetailButton,
+    StandardTablePagination,
+    stickyActionCellSx,
+    stickyActionHeadSx,
+} from '@/components/common/data-table';
 import { KpiGrid, PageHeroCard } from '@/components/common/layout';
 import { useAdminCampaigns, useCoaches, useCreateCoach } from '@/hooks/admin';
 import { useTablePagination } from '@/lib/useTablePagination';
@@ -162,7 +168,7 @@ function AdminCoachesRoute() {
                                     <TableCell>Username</TableCell>
                                     <TableCell>Campagnes</TableCell>
                                     <TableCell>Créé le</TableCell>
-                                    <TableCell></TableCell>
+                                    <TableCell sx={stickyActionHeadSx} />
                                 </TableRow>
                             </TableHead>
                             <TableBody>
@@ -206,7 +212,7 @@ function AdminCoachesRoute() {
                                                     ? new Date(coach.createdAt).toLocaleDateString('fr-FR')
                                                     : '–'}
                                             </TableCell>
-                                            <TableCell align="right">
+                                            <TableCell align="right" sx={stickyActionCellSx}>
                                                 <OpenDetailButton
                                                     to={`/admin/coaches/${coach.id}`}
                                                     ariaLabel={`Ouvrir ${coach.displayName}`}

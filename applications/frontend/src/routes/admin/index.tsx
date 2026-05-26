@@ -18,7 +18,7 @@ import { SectionTitle } from '@/components/common/SectionTitle';
 import { SkeletonTableRows } from '@/components/common/SkeletonRows';
 import { StatCard } from '@/components/common/cards';
 import { CampaignStatusChip } from '@/components/common/chips';
-import { EmptyTableRow } from '@/components/common/data-table';
+import { EmptyTableRow, stickyActionCellSx, stickyActionHeadSx } from '@/components/common/data-table';
 import { KpiGrid, PageHeroCard } from '@/components/common/layout';
 import { useAdminCampaigns, useAdminDashboard, useCoaches, useCompanies } from '@/hooks/admin';
 import { questionnaireLabel } from '@/lib/labels';
@@ -119,7 +119,7 @@ function AdminDashboardRoute() {
                                     <TableCell>Coach</TableCell>
                                     <TableCell>Questionnaire</TableCell>
                                     <TableCell>Créée le</TableCell>
-                                    <TableCell />
+                                    <TableCell sx={stickyActionHeadSx} />
                                 </TableRow>
                             </TableHead>
                             <TableBody>
@@ -144,7 +144,7 @@ function AdminDashboardRoute() {
                                                     ? new Date(campaign.createdAt).toLocaleDateString('fr-FR')
                                                     : '–'}
                                             </TableCell>
-                                            <TableCell align="right">
+                                            <TableCell align="right" sx={stickyActionCellSx}>
                                                 <Button
                                                     href={`/admin/campaigns/${campaign.id}`}
                                                     variant="text"

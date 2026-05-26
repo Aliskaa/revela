@@ -22,7 +22,13 @@ import { AdminCompanyDrawerForm } from '@/components/admin/AdminCompanyDrawerFor
 import { SectionTitle } from '@/components/common/SectionTitle';
 import { SkeletonCards, SkeletonTableRows } from '@/components/common/SkeletonRows';
 import { StatCard } from '@/components/common/cards';
-import { EmptyTableRow, OpenDetailButton, StandardTablePagination } from '@/components/common/data-table';
+import {
+    EmptyTableRow,
+    OpenDetailButton,
+    StandardTablePagination,
+    stickyActionCellSx,
+    stickyActionHeadSx,
+} from '@/components/common/data-table';
 import { KpiGrid, PageHeroCard } from '@/components/common/layout';
 import { useAdminCampaigns, useCompanies, useCreateCompany } from '@/hooks/admin';
 import { useTablePagination } from '@/lib/useTablePagination';
@@ -230,7 +236,7 @@ export function CompaniesListPage({ scope }: CompaniesListPageProps) {
                                             Participants
                                         </TableSortLabel>
                                     </TableCell>
-                                    <TableCell />
+                                    <TableCell sx={stickyActionHeadSx} />
                                 </TableRow>
                             </TableHead>
                             <TableBody>
@@ -253,7 +259,7 @@ export function CompaniesListPage({ scope }: CompaniesListPageProps) {
                                                 </Typography>
                                             </TableCell>
                                             <TableCell>{company.participant_count}</TableCell>
-                                            <TableCell align="right">
+                                            <TableCell align="right" sx={stickyActionCellSx}>
                                                 <OpenDetailButton to={`${detailPathPrefix}/${company.id}`} />
                                             </TableCell>
                                         </TableRow>

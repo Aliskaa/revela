@@ -22,7 +22,13 @@ import { SectionTitle } from '@/components/common/SectionTitle';
 import { SkeletonCards, SkeletonTableRows } from '@/components/common/SkeletonRows';
 import { StatCard } from '@/components/common/cards';
 import { CampaignStatusChip } from '@/components/common/chips';
-import { EmptyTableRow, OpenDetailButton, StandardTablePagination } from '@/components/common/data-table';
+import {
+    EmptyTableRow,
+    OpenDetailButton,
+    StandardTablePagination,
+    stickyActionCellSx,
+    stickyActionHeadSx,
+} from '@/components/common/data-table';
 import { KpiGrid, PageHeroCard } from '@/components/common/layout';
 import { useAdminCampaigns, useAdminDashboard, useCoaches, useCompanies, useCreateAdminCampaign } from '@/hooks/admin';
 import { parseAdminJwtClaims } from '@/lib/auth';
@@ -231,7 +237,7 @@ export function CampaignsListPage({ scope }: CampaignsListPageProps) {
                                     {isAdmin ? <TableCell>Coach</TableCell> : null}
                                     <TableCell>Questionnaire</TableCell>
                                     <TableCell>Créée le</TableCell>
-                                    <TableCell />
+                                    <TableCell sx={stickyActionHeadSx} />
                                 </TableRow>
                             </TableHead>
                             <TableBody>
@@ -256,7 +262,7 @@ export function CampaignsListPage({ scope }: CampaignsListPageProps) {
                                                     ? new Date(campaign.createdAt).toLocaleDateString('fr-FR')
                                                     : '–'}
                                             </TableCell>
-                                            <TableCell align="right">
+                                            <TableCell align="right" sx={stickyActionCellSx}>
                                                 <OpenDetailButton to={`${detailPathPrefix}/${campaign.id}`} />
                                             </TableCell>
                                         </TableRow>
