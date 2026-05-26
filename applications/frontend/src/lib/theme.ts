@@ -27,9 +27,17 @@ declare module '@mui/material/styles' {
             secondaryText: string;
             successBg: string;
             successText: string;
+            // Vert saturé `#10b981` pour les éléments "Analyse Scientifique"
+            // (texte de cellule, badge gap, label colonne). Distinct du vert pastel
+            // `success.main` utilisé pour les barres et les chips de succès.
+            scientific: string;
+            scientificBg: string; // rgba(16,185,129,0.02) — fond très subtle de cellule scientifique
+            // Cyan saturé `#0EA5C9` pour les badges d'écart des pairs (gap pill).
+            peerStrong: string;
             mutedBg: string;
             mutedText: string;
             subtleBg: string;
+            subtleRow: string; // rgba(15,23,42,0.025) — fond de rangée "écart" (plus discret que subtleBg)
             overlayNeutral: string; // 0.03 — hover gris-noir (listes neutres)
             overlayWhite: string; // 0.10 — voile blanc sur fonds sombres
             // Surfaces neutres : utilisées pour hover/sélection sur fond paper
@@ -99,9 +107,13 @@ export const theme = createTheme({
             secondaryText: 'rgb(180,120,0)',
             successBg: 'rgba(16,185,129,0.12)',
             successText: 'rgb(4,120,87)',
+            scientific: '#10b981',
+            scientificBg: 'rgba(16,185,129,0.02)',
+            peerStrong: '#0EA5C9',
             mutedBg: 'rgba(148,163,184,0.16)',
             mutedText: 'rgb(100,116,139)',
             subtleBg: 'rgba(15,23,42,0.06)',
+            subtleRow: 'rgba(15,23,42,0.025)',
             overlayNeutral: 'rgba(0,0,0,0.03)',
             overlayWhite: 'rgba(255,255,255,0.10)',
             neutralHover: 'rgba(15,23,42,0.04)',
