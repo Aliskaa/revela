@@ -11,6 +11,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
 
 import { AppModule } from '@src/app/app.module';
+import { createHttpLoggingMiddleware } from '@src/middleware/http-logging.middleware';
 import { NestLoggerBridge } from '@src/nest-logger-bridge';
 
 /**
@@ -45,6 +46,11 @@ const bootstrap = async (): Promise<void> => {
      * Doit être enregistré avant les guards qui les consomment.
      */
     app.use(cookieParser());
+
+    /**
+     * Log HTTP transverse — une ligne par requête (cf. `http-logging.middleware.ts`).
+     */
+    app.use(createHttpLoggingMiddleware(createConsoleLogger({ context: 'HTTP', level: resolvedLevel })));
 
     /**
      * CORS avec credentials : le frontend (servi sur même domaine en prod, localhost:5173 en
