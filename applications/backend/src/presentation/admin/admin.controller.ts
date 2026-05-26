@@ -13,7 +13,7 @@ import {
     UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { Throttle } from '@nestjs/throttler';
+import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import type { Request, Response } from 'express';
 
 import type { AdminAuthUseCase } from '@src/application/admin/auth/admin-auth.usecase';
@@ -59,6 +59,7 @@ export class AdminController {
     ) {}
 
     @Post('auth/login')
+    @UseGuards(ThrottlerGuard)
     @Throttle({ 'auth-strict': { limit: 5, ttl: 60_000 } })
     @ApiOperation({
         summary:
@@ -124,6 +125,7 @@ export class AdminController {
      * présente un token déjà utilisé → revoke famille (détection de vol).
      */
     @Post('auth/refresh')
+    @UseGuards(ThrottlerGuard)
     @Throttle({ 'auth-refresh': { limit: 30, ttl: 60_000 } })
     @ApiOperation({ summary: 'Rotation de la paire de cookies d’authentification admin.' })
     public async refresh(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
