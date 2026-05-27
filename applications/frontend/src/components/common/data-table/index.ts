@@ -2,6 +2,8 @@ export { ClickableTableRow } from './ClickableTableRow';
 export type { ClickableTableRowProps } from './ClickableTableRow';
 export { EmptyTableRow } from './EmptyTableRow';
 export type { EmptyTableRowProps } from './EmptyTableRow';
+export { ListTablePagination, LIST_TABLE_EDGE_PADDING, LIST_TABLE_ROWS_PER_PAGE_OPTIONS } from './ListTablePagination';
+export type { ListTablePaginationProps } from './ListTablePagination';
 export { TablePagination } from './TablePagination';
 export type { TablePaginationProps } from './TablePagination';
 export { StickyActionTableScroll } from './StickyActionTableScroll';

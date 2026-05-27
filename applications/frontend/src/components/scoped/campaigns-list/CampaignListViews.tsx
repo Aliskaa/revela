@@ -18,8 +18,8 @@ import {
     ClickableTableRow,
     EmptyTableRow,
     ListTableHead,
+    ListTablePagination,
     RowNavigateHint,
-    TablePagination
 } from '@/components/common/data-table';
 import { MobileListEmptyMessage, ResponsiveListViews } from '@/components/common/layout';
 import { companyInitial } from '@/lib/companyInitial';
@@ -62,13 +62,12 @@ export function CampaignListViews({
 
     const adminPagination =
         totalCount > 0 ? (
-            <TablePagination
+            <ListTablePagination
                 count={totalCount}
                 page={page}
                 rowsPerPage={rowsPerPage}
                 onPageChange={onPageChange}
                 onRowsPerPageChange={onRowsPerPageChange}
-                edgePadding={EDGE_X}
             />
         ) : null;
 
@@ -82,10 +81,10 @@ export function CampaignListViews({
     ];
 
     return (
-        <ResponsiveListViews
-            desktopScroll={false}
-            desktop={
-                <>
+        <>
+            <ResponsiveListViews
+                desktopScroll={false}
+                desktop={
                     <Box sx={{ overflowX: 'auto' }}>
                         <Table sx={{ minWidth: TABLE_MIN_WIDTH }}>
                             <ListTableHead columns={adminColumns} />
@@ -109,28 +108,28 @@ export function CampaignListViews({
                             </TableBody>
                         </Table>
                     </Box>
-                    {adminPagination}
-                </>
-            }
-            mobile={
-                <>
-                    {isLoading ? (
-                        <SkeletonCards count={3} height={160} />
-                    ) : (
-                        campaigns.map(campaign => (
-                            <CampaignMobileCard
-                                key={campaign.id}
-                                campaign={campaign}
-                                detailPathPrefix={detailPathPrefix}
-                                companyName={companyName}
-                                coachName={coachName}
-                            />
-                        ))
-                    )}
-                    {!isLoading && isEmpty ? <MobileListEmptyMessage message={emptyMessage} /> : null}
-                </>
-            }
-        />
+                }
+                mobile={
+                    <>
+                        {isLoading ? (
+                            <SkeletonCards count={3} height={160} />
+                        ) : (
+                            campaigns.map(campaign => (
+                                <CampaignMobileCard
+                                    key={campaign.id}
+                                    campaign={campaign}
+                                    detailPathPrefix={detailPathPrefix}
+                                    companyName={companyName}
+                                    coachName={coachName}
+                                />
+                            ))
+                        )}
+                        {!isLoading && isEmpty ? <MobileListEmptyMessage message={emptyMessage} /> : null}
+                    </>
+                }
+            />
+            {adminPagination}
+        </>
     );
 }
 

@@ -17,8 +17,8 @@ import {
     ClickableTableRow,
     EmptyTableRow,
     ListTableHead,
+    ListTablePagination,
     RowNavigateHint,
-    TablePagination,
 } from '@/components/common/data-table';
 import type { ListTableColumn } from '@/components/common/data-table';
 import { MobileListEmptyMessage, ResponsiveListViews } from '@/components/common/layout';
@@ -66,13 +66,12 @@ export function CoachListViews({
 }: CoachListViewsProps) {
     const pagination =
         totalCount > 0 ? (
-            <TablePagination
+            <ListTablePagination
                 count={totalCount}
                 page={page}
                 rowsPerPage={rowsPerPage}
                 onPageChange={onPageChange}
                 onRowsPerPageChange={onRowsPerPageChange}
-                edgePadding={ADMIN_EDGE_X}
             />
         ) : null;
 
@@ -85,9 +84,10 @@ export function CoachListViews({
     ];
 
     return (
-        <ResponsiveListViews
-            desktop={
-                <>
+        <>
+            <ResponsiveListViews
+                desktopScroll={false}
+                desktop={
                     <Box sx={{ overflowX: 'auto' }}>
                         <Table sx={{ minWidth: ADMIN_TABLE_MIN_WIDTH }}>
                             <ListTableHead columns={adminColumns} />
@@ -110,27 +110,27 @@ export function CoachListViews({
                             </TableBody>
                         </Table>
                     </Box>
-                    {pagination}
-                </>
-            }
-            mobile={
-                <>
-                    {isLoading ? (
-                        <SkeletonCards count={3} height={140} />
-                    ) : (
-                        coaches.map(coach => (
-                            <CoachMobileCard
-                                key={coach.id}
-                                coach={coach}
-                                campaignCount={campaignCountByCoach.get(coach.id) ?? 0}
-                                detailPathPrefix={detailPathPrefix}
-                            />
-                        ))
-                    )}
-                    {!isLoading && isEmpty ? <MobileListEmptyMessage message={emptyMessage} /> : null}
-                </>
-            }
-        />
+                }
+                mobile={
+                    <>
+                        {isLoading ? (
+                            <SkeletonCards count={3} height={140} />
+                        ) : (
+                            coaches.map(coach => (
+                                <CoachMobileCard
+                                    key={coach.id}
+                                    coach={coach}
+                                    campaignCount={campaignCountByCoach.get(coach.id) ?? 0}
+                                    detailPathPrefix={detailPathPrefix}
+                                />
+                            ))
+                        )}
+                        {!isLoading && isEmpty ? <MobileListEmptyMessage message={emptyMessage} /> : null}
+                    </>
+                }
+            />
+            {pagination}
+        </>
     );
 }
 

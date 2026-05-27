@@ -16,8 +16,8 @@ import { CompanyListStatusChip, resolveCompanyListStatus } from '@/components/co
 import {
     ClickableTableRow,
     EmptyTableRow,
-    TablePagination,
     ListTableHead,
+    ListTablePagination,
     RowNavigateHint,
 } from '@/components/common/data-table';
 import type { ListTableColumn } from '@/components/common/data-table';
@@ -66,13 +66,12 @@ export function CompanyListViews({
 }: CompanyListViewsProps) {
     const pagination =
         totalCount > 0 ? (
-            <TablePagination
+            <ListTablePagination
                 count={totalCount}
                 page={page}
                 rowsPerPage={rowsPerPage}
                 onPageChange={onPageChange}
                 onRowsPerPageChange={onRowsPerPageChange}
-                edgePadding={ADMIN_EDGE_X}
             />
         ) : null;
     const sortLabel = (key: CompanySortKey, label: string) => (
@@ -91,9 +90,10 @@ export function CompanyListViews({
         { key: 'status', label: 'Statut', sx: { pr: ADMIN_EDGE_X } },
     ];
     return (
-        <ResponsiveListViews
-            desktop={
-                <>
+        <>
+            <ResponsiveListViews
+                desktopScroll={false}
+                desktop={
                     <Box sx={{ overflowX: 'auto' }}>
                         <Table sx={{ minWidth: ADMIN_TABLE_MIN_WIDTH }}>
                             <ListTableHead columns={adminColumns} />
@@ -116,27 +116,27 @@ export function CompanyListViews({
                             </TableBody>
                         </Table>
                     </Box>
-                    {pagination}
-                </>
-            }
-            mobile={
-                <>
-                    {isLoading ? (
-                        <SkeletonCards count={3} height={140} />
-                    ) : (
-                        companies.map(company => (
-                            <CompanyMobileCard
-                                key={company.id}
-                                company={company}
-                                campaigns={campaigns}
-                                detailPathPrefix={detailPathPrefix}
-                            />
-                        ))
-                    )}
-                    {!isLoading && isEmpty ? <MobileListEmptyMessage message={emptyMessage} /> : null}
-                </>
-            }
-        />
+                }
+                mobile={
+                    <>
+                        {isLoading ? (
+                            <SkeletonCards count={3} height={140} />
+                        ) : (
+                            companies.map(company => (
+                                <CompanyMobileCard
+                                    key={company.id}
+                                    company={company}
+                                    campaigns={campaigns}
+                                    detailPathPrefix={detailPathPrefix}
+                                />
+                            ))
+                        )}
+                        {!isLoading && isEmpty ? <MobileListEmptyMessage message={emptyMessage} /> : null}
+                    </>
+                }
+            />
+            {pagination}
+        </>
     );
 }
 
