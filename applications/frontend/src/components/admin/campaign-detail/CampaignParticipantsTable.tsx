@@ -102,7 +102,7 @@ export function CampaignParticipantsTable({
               textTransform: 'uppercase' as const,
               letterSpacing: '0.08em',
               color: 'text.secondary',
-              bgcolor: 'rgba(79, 112, 229, 0.06)',
+              bgcolor: 'surface.listTableHead',
               borderBottom: 'none',
           }
         : undefined;
@@ -172,8 +172,8 @@ export function CampaignParticipantsTable({
                                                 cursor: 'pointer',
                                                 ...(harmonized
                                                     ? {
-                                                          '&:hover': { bgcolor: 'rgba(79, 112, 229, 0.06)' },
-                                                          '& td': { borderColor: 'rgba(79, 112, 229, 0.08)' },
+                                                          '&:hover': { bgcolor: 'surface.listTableHead' },
+                                                          '& td': { borderColor: 'surface.listTableRowBorder' },
                                                       }
                                                     : {}),
                                             }}

@@ -49,7 +49,7 @@ export function CampaignSynthesisCard({ campaignId, scope, harmonized = false }:
                               content: '""',
                               position: 'absolute',
                               inset: 0,
-                              background: 'linear-gradient(135deg, rgba(255,255,255,0.12) 0%, transparent 55%)',
+                              background: theme => theme.palette.tint.onPrimarySheen,
                               pointerEvents: 'none',
                           },
                       }
@@ -62,7 +62,7 @@ export function CampaignSynthesisCard({ campaignId, scope, harmonized = false }:
                         <Typography variant="h6" fontWeight={700} sx={{ mb: 0.5 }}>
                             Synthèse Élément B
                         </Typography>
-                        <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.85)', lineHeight: 1.6 }}>
+                        <Typography variant="body2" sx={{ color: 'tint.onPrimaryText', lineHeight: 1.6 }}>
                             Vue agrégée du test scientifique pour tous les participants, avec mise en évidence
                             automatique des écarts forts.
                         </Typography>
@@ -86,13 +86,13 @@ export function CampaignSynthesisCard({ campaignId, scope, harmonized = false }:
                             harmonized
                                 ? {
                                       borderRadius: 2,
-                                      borderColor: 'rgba(255,255,255,0.25)',
+                                      borderColor: 'tint.onPrimaryBorder',
                                       color: 'primary.contrastText',
-                                      bgcolor: 'rgba(255,255,255,0.1)',
+                                      bgcolor: 'tint.onPrimarySurface',
                                       backdropFilter: 'blur(8px)',
                                       '&:hover': {
-                                          borderColor: 'rgba(255,255,255,0.4)',
-                                          bgcolor: 'rgba(255,255,255,0.2)',
+                                          borderColor: 'tint.onPrimaryBorderHover',
+                                          bgcolor: 'tint.onPrimarySurfaceHover',
                                       },
                                   }
                                 : { borderRadius: 3 }

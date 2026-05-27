@@ -12,11 +12,11 @@ export function SummaryField({ label, value }: SummaryFieldProps) {
     return (
         <Box
             sx={{
-                bgcolor: '#FAFAFA',
+                bgcolor: 'surface.softWhite',
                 borderRadius: 2,
                 p: 2,
                 border: '1px solid',
-                borderColor: 'rgba(198, 197, 214, 0.45)',
+                borderColor: 'surface.outlineVariantSoft',
             }}
         >
             <Typography

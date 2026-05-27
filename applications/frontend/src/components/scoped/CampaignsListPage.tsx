@@ -42,17 +42,9 @@ const SCOPE_LABELS: Record<
     },
 };
 
-/**
- * Liste de campagnes — unifie `admin/campaigns` et `coach/campaigns`. Le scope contrôle :
- *  - les libellés (eyebrow, titre, sous-titre, stats) ;
- *  - le préfixe de lien vers le détail (`/admin/campaigns/$id` vs `/coach/campaigns/$id`) ;
- *  - l'affichage de la colonne « Coach » (admin uniquement) ;
- *  - le pré-remplissage `lockedCoachId` côté coach via les claims JWT ;
- *  - le KPI « Participants » (admin) vs « Entreprises » (coach).
- */
 export function CampaignsListPage({ scope }: CampaignsListPageProps) {
     const isAdmin = scope === 'admin';
-    useBreadcrumbs(isAdmin ? [{ label: 'Administration' }, { label: 'Campagnes' }] : []);
+    useBreadcrumbs(isAdmin ? [{ label: 'Administration' }, { label: 'Campagnes' }] : [{ label: 'Campagnes' }]);
     const labels = SCOPE_LABELS[scope];
     const detailPathPrefix = isAdmin ? '/admin/campaigns' : '/coach/campaigns';
 

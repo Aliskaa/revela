@@ -70,12 +70,12 @@ export function CampaignStatusActions({ campaign, participantsCount, harmonized 
                                                   borderRadius: 2,
                                                   bgcolor: 'tint.successText',
                                                   fontWeight: 700,
-                                                  '&:hover': { bgcolor: 'rgb(3,100,70)' },
+                                                  '&:hover': { bgcolor: 'tint.successTextHover' },
                                               }
                                             : {
                                                   borderRadius: 3,
-                                                  bgcolor: 'rgb(4,120,87)',
-                                                  '&:hover': { bgcolor: 'rgb(3,100,70)' },
+                                                  bgcolor: 'tint.successText',
+                                                  '&:hover': { bgcolor: 'tint.successTextHover' },
                                               }
                                     }
                                 >
@@ -98,13 +98,13 @@ export function CampaignStatusActions({ campaign, participantsCount, harmonized 
                                           bgcolor: 'secondary.main',
                                           color: 'primary.main',
                                           fontWeight: 700,
-                                          boxShadow: '0 8px 24px rgba(255, 204, 0, 0.25)',
+                                          boxShadow: theme => theme.palette.shadow.secondaryLift,
                                           '&:hover': { bgcolor: 'secondary.main', filter: 'brightness(0.95)' },
                                       }
                                     : {
                                           borderRadius: 3,
-                                          bgcolor: 'rgb(180,120,0)',
-                                          '&:hover': { bgcolor: 'rgb(150,100,0)' },
+                                          bgcolor: 'tint.secondaryText',
+                                          '&:hover': { bgcolor: 'tint.secondaryTextHover' },
                                       }
                             }
                         >

@@ -1,6 +1,8 @@
-import { Box, Button, Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import { Plus } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
+
+import { Button } from '@/components/common/Button';
 
 export type AdminPageHeaderProps = {
     title: string;
@@ -45,23 +47,15 @@ export function AdminPageHeader({ title, subtitle, action }: AdminPageHeaderProp
             </Box>
             {action ? (
                 <Button
-                    variant="contained"
-                    disableElevation
-                    startIcon={<ActionIcon size={18} />}
+                    appearance="primary"
+                    startIcon={<ActionIcon size={20} strokeWidth={2} />}
                     onClick={action.onClick}
                     sx={{
-                        bgcolor: 'primary.main',
                         px: 4,
-                        py: 1.75,
-                        borderRadius: 3,
-                        fontWeight: 700,
-                        boxShadow: '0 10px 20px rgba(15, 24, 152, 0.2)',
+                        py: 2,
+                        gap: 1,
                         alignSelf: { xs: 'flex-start', md: 'auto' },
-                        '&:hover': {
-                            bgcolor: 'primary.dark',
-                            transform: 'translateY(-2px)',
-                            boxShadow: theme => theme.palette.shadow.brandSubtle,
-                        },
+                        flexShrink: 0,
                     }}
                 >
                     {action.label}

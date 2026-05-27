@@ -1,9 +1,17 @@
+export { ClickableTableRow } from './ClickableTableRow';
+export type { ClickableTableRowProps } from './ClickableTableRow';
 export { EmptyTableRow } from './EmptyTableRow';
 export type { EmptyTableRowProps } from './EmptyTableRow';
+export { TablePagination } from './TablePagination';
+export type { TablePaginationProps } from './TablePagination';
+export { StickyActionTableScroll } from './StickyActionTableScroll';
+export type { StickyActionTableScrollProps } from './StickyActionTableScroll';
 export { ListTableHead } from './ListTableHead';
 export type { ListTableColumn, ListTableHeadProps } from './ListTableHead';
 export { OpenDetailButton } from './OpenDetailButton';
 export type { OpenDetailButtonProps } from './OpenDetailButton';
+export { RowNavigateHint } from './RowNavigateHint';
+export type { RowNavigateHintProps } from './RowNavigateHint';
 export { StandardTablePagination } from './StandardTablePagination';
 export type { StandardTablePaginationProps } from './StandardTablePagination';
 export { stickyActionCellSx, stickyActionHeadSx } from './stickyActionCell';

@@ -22,6 +22,7 @@ import {
     StandardTablePagination,
     stickyActionCellSx,
     stickyActionHeadSx,
+    StickyActionTableScroll,
     TablePaginationFooter,
     TableRowLink,
 } from '@/components/common/data-table';
@@ -79,10 +80,12 @@ export function CampaignListViews({
 
     return (
         <ResponsiveListViews
+            desktopScroll={false}
             mobileSx={isAdmin ? undefined : { p: 0, mt: 2 }}
             desktop={
                 <>
-                    <Table sx={{ minWidth: isAdmin ? 1000 : 900 }}>
+                    <StickyActionTableScroll>
+                        <Table sx={{ minWidth: isAdmin ? 1000 : 900 }}>
                         {isAdmin ? (
                             <ListTableHead
                                 columns={[
@@ -109,7 +112,11 @@ export function CampaignListViews({
                         )}
                         <TableBody>
                             {isLoading ? (
-                                <SkeletonTableRows rows={4} columns={tableColumns} />
+                                <SkeletonTableRows
+                                    rows={4}
+                                    columns={tableColumns}
+                                    stickyLastColumn
+                                />
                             ) : (
                                 campaigns.map(campaign => (
                                     <CampaignTableRow
@@ -126,7 +133,8 @@ export function CampaignListViews({
                                 <EmptyTableRow colSpan={tableColumns} message={emptyMessage} />
                             ) : null}
                         </TableBody>
-                    </Table>
+                        </Table>
+                    </StickyActionTableScroll>
                     {pagination ? (
                         isAdmin ? (
                             <TablePaginationFooter>{pagination}</TablePaginationFooter>

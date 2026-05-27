@@ -1,13 +1,13 @@
 // Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
 
-import { Stack, TextField } from '@mui/material';
+import { Divider, Stack, Typography } from '@mui/material';
 import { Building2, ClipboardList, Users } from 'lucide-react';
 import * as React from 'react';
 
 import { AdminCompanyDrawerForm } from '@/components/admin/AdminCompanyDrawerForm';
 import { KpiCard } from '@/components/common/cards';
 import { SearchField } from '@/components/common/forms/SearchField';
-import { AdminPageHeader, CoachScopedListCard, KpiGrid, ListPanel, PageHeroCard } from '@/components/common/layout';
+import { AdminPageHeader, KpiGrid, ListPanel } from '@/components/common/layout';
 import { useBreadcrumbs } from '@/components/layout/AppShellChromeContext';
 import {
     CompanyListViews,
@@ -25,10 +25,9 @@ export type CompaniesListPageProps = {
 
 const SCOPE_LABELS: Record<
     CompaniesListScope,
-    { eyebrow: string; title: string; subtitle: string; statsHelper: string; emptyMessage: string }
+    { title: string; subtitle: string; statsHelper: string; emptyMessage: string }
 > = {
     admin: {
-        eyebrow: 'Entreprises',
         title: 'Entreprises',
         subtitle:
             'Référentiel des entreprises clientes, avec leurs campagnes actives, leurs participants rattachés et leurs points de contact privilégiés.',
@@ -36,7 +35,6 @@ const SCOPE_LABELS: Record<
         emptyMessage: 'Aucune entreprise pour le moment.',
     },
     coach: {
-        eyebrow: 'Mes entreprises',
         title: 'Entreprises rattachées',
         subtitle:
             'Référentiel des entreprises ayant au moins une de vos campagnes attribuées, avec leurs participants et leurs contacts.',
@@ -52,7 +50,7 @@ const SCOPE_LABELS: Record<
  */
 export function CompaniesListPage({ scope }: CompaniesListPageProps) {
     const isAdmin = scope === 'admin';
-    useBreadcrumbs(isAdmin ? [{ label: 'Administration' }, { label: 'Entreprises' }] : []);
+    useBreadcrumbs(isAdmin ? [{ label: 'Administration' }, { label: 'Entreprises' }] : [{ label: 'Entreprises' }]);
     const labels = SCOPE_LABELS[scope];
     const detailPathPrefix = isAdmin ? '/admin/companies' : '/coach/companies';
 
@@ -69,15 +67,14 @@ export function CompaniesListPage({ scope }: CompaniesListPageProps) {
         () => companies.reduce((sum, c) => sum + c.participant_count, 0),
         [companies]
     );
-    const activeCampaigns = campaigns.filter(c => c.status === 'active').length;
 
     const filtered = React.useMemo(() => {
         const base = search.trim()
             ? companies.filter(
-                  c =>
-                      c.name.toLowerCase().includes(search.toLowerCase()) ||
-                      (c.contact_name ?? '').toLowerCase().includes(search.toLowerCase())
-              )
+                c =>
+                    c.name.toLowerCase().includes(search.toLowerCase()) ||
+                    (c.contact_name ?? '').toLowerCase().includes(search.toLowerCase())
+            )
             : companies;
         const direction = sortOrder === 'asc' ? 1 : -1;
         return [...base].sort((a, b) => {
@@ -106,9 +103,11 @@ export function CompaniesListPage({ scope }: CompaniesListPageProps) {
 
     const emptyMessage = search ? 'Aucune entreprise ne correspond à la recherche.' : labels.emptyMessage;
 
+    const displayFrom = filtered.length === 0 ? 0 : page * rowsPerPage + 1;
+    const displayTo = filtered.length === 0 ? 0 : Math.min((page + 1) * rowsPerPage, filtered.length);
+
     const listViews = (
         <CompanyListViews
-            variant={scope}
             companies={paged}
             campaigns={campaigns}
             isLoading={companiesLoading}
@@ -130,6 +129,7 @@ export function CompaniesListPage({ scope }: CompaniesListPageProps) {
         <AdminCompanyDrawerForm
             open={drawerOpen}
             mode="create"
+            isSubmitting={createCompany.isPending}
             onClose={() => {
                 setDrawerOpen(false);
                 createCompany.reset();
@@ -149,54 +149,18 @@ export function CompaniesListPage({ scope }: CompaniesListPageProps) {
         />
     ) : null;
 
-    if (isAdmin) {
-        return (
-            <Stack spacing={4}>
-                {drawer}
-                <AdminPageHeader
-                    title={labels.title}
-                    subtitle={labels.subtitle}
-                    action={{ label: 'Ajouter une entreprise', onClick: () => setDrawerOpen(true) }}
-                />
-                <KpiGrid columns={3}>
-                    <KpiCard
-                        label="Entreprises"
-                        value={companies.length}
-                        helper={labels.statsHelper}
-                        icon={Building2}
-                        loading={companiesLoading}
-                    />
-                    <KpiCard
-                        label="Participants"
-                        value={totalParticipants}
-                        helper="rattachés aux campagnes"
-                        icon={Users}
-                        loading={companiesLoading}
-                    />
-                    <KpiCard
-                        label="Campagnes"
-                        value={activeCampaigns}
-                        helper="projets de coaching en cours"
-                        icon={ClipboardList}
-                        loading={campaignsLoading}
-                    />
-                </KpiGrid>
-                <ListPanel
-                    title="Liste des entreprises"
-                    headerBorder
-                    headerActions={
-                        <SearchField value={search} onChange={setSearch} placeholder="Rechercher une entreprise…" />
-                    }
-                >
-                    {listViews}
-                </ListPanel>
-            </Stack>
-        );
-    }
-
     return (
         <Stack spacing={3}>
-            <PageHeroCard eyebrow={labels.eyebrow} title={labels.title} subtitle={labels.subtitle} />
+            { isAdmin ? drawer : null}
+            <AdminPageHeader
+                title={labels.title}
+                subtitle={labels.subtitle}
+                action={isAdmin ? {
+                    label: 'Ajouter une entreprise',
+                    onClick: () => setDrawerOpen(true),
+                    icon: Building2,
+                } : undefined}
+            />
             <KpiGrid columns={3}>
                 <KpiCard
                     label="Entreprises"
@@ -220,21 +184,33 @@ export function CompaniesListPage({ scope }: CompaniesListPageProps) {
                     loading={campaignsLoading}
                 />
             </KpiGrid>
-            <CoachScopedListCard
-                title="Liste des entreprises"
-                subtitle="Recherche rapide et accès au détail des campagnes associées."
-                search={
-                    <TextField
-                        size="small"
-                        placeholder="Rechercher une entreprise…"
-                        value={search}
-                        onChange={e => setSearch(e.target.value)}
-                        sx={{ minWidth: 300 }}
-                    />
-                }
-            >
-                {listViews}
-            </CoachScopedListCard>
+                <ListPanel
+                    title="Liste des entreprises"
+                    headerBorder
+                    headerActions={
+                        <Stack direction="row" alignItems="center" spacing={2} sx={{ width: { xs: '100%', sm: 'auto' } }}>
+                            <SearchField value={search} onChange={setSearch} placeholder="Rechercher une entreprise…" />
+                            {filtered.length > 0 ? (
+                                <>
+                                    <Divider
+                                        orientation="vertical"
+                                        flexItem
+                                        sx={{ display: { xs: 'none', md: 'block' }, borderColor: 'surface.lavenderGrey' }}
+                                    />
+                                    <Typography
+                                        variant="caption"
+                                        color="text.secondary"
+                                        sx={{ display: { xs: 'none', md: 'block' }, whiteSpace: 'nowrap' }}
+                                    >
+                                        Affichage {displayFrom}–{displayTo} sur {filtered.length}
+                                    </Typography>
+                                </>
+                            ) : null}
+                        </Stack>
+                    }
+                >
+                    {listViews}
+                </ListPanel>
         </Stack>
     );
 }

@@ -8,9 +8,12 @@ export type StatusChipTone = {
     pulse?: boolean;
 };
 
-export type BaseStatusChipProps = StatusChipTone;
+export type BaseStatusChipProps = StatusChipTone & {
+    /** Affiche le point de statut. Désactivé pour les pills compacts type Stitch. */
+    showDot?: boolean;
+};
 
-export function BaseStatusChip({ label, bg, color, dot, pulse = false }: BaseStatusChipProps) {
+export function BaseStatusChip({ label, bg, color, dot, pulse = false, showDot = true }: BaseStatusChipProps) {
     const dotColor = dot ?? color;
 
     return (
@@ -30,26 +33,28 @@ export function BaseStatusChip({ label, bg, color, dot, pulse = false }: BaseSta
                 letterSpacing: '0.04em',
             }}
         >
-            <Box
-                component="span"
-                sx={{
-                    width: 6,
-                    height: 6,
-                    borderRadius: '50%',
-                    bgcolor: dotColor,
-                    mr: 1,
-                    flexShrink: 0,
-                    ...(pulse
-                        ? {
-                              animation: 'statusChipPulse 2s ease-in-out infinite',
-                              '@keyframes statusChipPulse': {
-                                  '0%, 100%': { opacity: 1 },
-                                  '50%': { opacity: 0.45 },
-                              },
-                          }
-                        : {}),
-                }}
-            />
+            {showDot ? (
+                <Box
+                    component="span"
+                    sx={{
+                        width: 6,
+                        height: 6,
+                        borderRadius: '50%',
+                        bgcolor: dotColor,
+                        mr: 1,
+                        flexShrink: 0,
+                        ...(pulse
+                            ? {
+                                  animation: 'statusChipPulse 2s ease-in-out infinite',
+                                  '@keyframes statusChipPulse': {
+                                      '0%, 100%': { opacity: 1 },
+                                      '50%': { opacity: 0.45 },
+                                  },
+                              }
+                            : {}),
+                    }}
+                />
+            ) : null}
             <Typography component="span" sx={{ font: 'inherit', lineHeight: 1 }}>
                 {label}
             </Typography>

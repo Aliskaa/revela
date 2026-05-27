@@ -2,7 +2,7 @@ import { Box, Card, Stack, Typography } from '@mui/material';
 import type { SxProps, Theme } from '@mui/material';
 import type * as React from 'react';
 
-import { LAVENDER_GREY, listPanelSurfaceSx } from '@/components/common/styles/listSurfaces';
+import { listPanelSurfaceSx } from '@/components/common/styles/listSurfaces';
 
 export type ListPanelProps = {
     title: string;
@@ -26,7 +26,7 @@ export function ListPanel({ title, subtitle, headerActions, headerBorder = false
                     alignItems: { sm: 'center' },
                     justifyContent: 'space-between',
                     gap: 3,
-                    ...(headerBorder ? { borderBottom: `1px solid ${LAVENDER_GREY}` } : {}),
+                    ...(headerBorder ? { borderBottom: '1px solid', borderColor: 'surface.lavenderGrey' } : {}),
                 }}
             >
                 <Box>

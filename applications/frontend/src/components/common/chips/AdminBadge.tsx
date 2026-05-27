@@ -10,8 +10,8 @@ export function AdminBadge() {
             label="Admin"
             sx={{
                 borderRadius: 99,
-                bgcolor: 'rgb(254,243,199)',
-                color: 'rgb(120,53,15)',
+                bgcolor: 'tint.adminBadgeBg',
+                color: 'tint.adminBadgeText',
                 fontWeight: 700,
                 height: 22,
             }}

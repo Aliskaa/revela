@@ -11,7 +11,7 @@ export type CompanyDangerZoneProps = {
 
 export function CompanyDangerZone({ onDeleteClick }: CompanyDangerZoneProps) {
     return (
-        <Card variant="outlined" sx={{ borderColor: 'rgba(239,68,68,0.3)' }}>
+        <Card variant="outlined" sx={{ borderColor: 'tint.dangerBorder' }}>
             <CardContent sx={{ p: 2.5 }}>
                 <SectionTitle title="Zone dangereuse" subtitle="Actions irréversibles — RGPD." />
                 <Button

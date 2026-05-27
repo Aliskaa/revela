@@ -200,8 +200,8 @@ function AdminCoachDetailRoute() {
                                         label="Compte admin"
                                         sx={{
                                             borderRadius: 99,
-                                            bgcolor: 'rgb(254,243,199)',
-                                            color: 'rgb(120,53,15)',
+                                            bgcolor: 'tint.adminBadgeBg',
+                                            color: 'tint.adminBadgeText',
                                             fontWeight: 700,
                                         }}
                                     />
@@ -357,7 +357,7 @@ function AdminCoachDetailRoute() {
                     </Card>
 
                     {!isAdminCoach && (
-                        <Card variant="outlined" sx={{ borderColor: 'rgba(239,68,68,0.3)' }}>
+                        <Card variant="outlined" sx={{ borderColor: 'tint.dangerBorder' }}>
                             <CardContent sx={{ p: 2.5 }}>
                                 <SectionTitle title="Zone dangereuse" subtitle="Actions irréversibles." />
                                 <Button

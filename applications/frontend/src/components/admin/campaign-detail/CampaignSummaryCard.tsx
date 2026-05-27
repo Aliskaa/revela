@@ -72,7 +72,7 @@ export function CampaignSummaryCard({
                             sx={{
                                 height: 16,
                                 width: '100%',
-                                bgcolor: '#F5F5FB',
+                                bgcolor: 'surface.lavenderGrey',
                                 borderRadius: 99,
                                 overflow: 'hidden',
                             }}
@@ -82,7 +82,7 @@ export function CampaignSummaryCard({
                                     height: '100%',
                                     width: `${progress}%`,
                                     borderRadius: 99,
-                                    backgroundImage: 'linear-gradient(90deg, #4F70E5 0%, #0F1898 100%)',
+                                    backgroundImage: theme => theme.palette.surface.progressGradient,
                                     transition: 'width 0.4s ease',
                                 }}
                             />
@@ -98,7 +98,7 @@ export function CampaignSummaryCard({
                                 px: 2,
                                 py: 1,
                                 borderRadius: 2,
-                                bgcolor: '#F5F5FB',
+                                bgcolor: 'surface.lavenderGrey',
                                 color: 'text.secondary',
                             }}
                         >
@@ -146,7 +146,7 @@ export function CampaignSummaryCard({
                             mt: 1,
                             height: 10,
                             borderRadius: 99,
-                            bgcolor: 'rgba(15,23,42,0.06)',
+                            bgcolor: 'tint.subtleBg',
                             '& .MuiLinearProgress-bar': { bgcolor: 'primary.main' },
                         }}
                     />

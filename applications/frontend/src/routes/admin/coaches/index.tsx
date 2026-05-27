@@ -9,6 +9,7 @@ import {
     StandardTablePagination,
     stickyActionCellSx,
     stickyActionHeadSx,
+    StickyActionTableScroll,
     TablePaginationFooter,
     TableRowLink,
 } from '@/components/common/data-table';
@@ -144,9 +145,11 @@ function AdminCoachesRoute() {
                 headerActions={<SearchField value={search} onChange={setSearch} placeholder="Rechercher un coach…" />}
             >
                 <ResponsiveListViews
+                    desktopScroll={false}
                     desktop={
                         <>
-                            <Table sx={{ minWidth: 900 }}>
+                            <StickyActionTableScroll>
+                                <Table sx={{ minWidth: 900 }}>
                                 <ListTableHead
                                     columns={[
                                         { key: 'status', label: 'Statut', sx: { pl: 4 } },
@@ -159,7 +162,7 @@ function AdminCoachesRoute() {
                                 />
                                 <TableBody>
                                     {isLoading ? (
-                                        <SkeletonTableRows rows={4} columns={TABLE_COLUMNS} />
+                                        <SkeletonTableRows rows={4} columns={TABLE_COLUMNS} stickyLastColumn />
                                     ) : (
                                         paged.map(coach => (
                                             <TableRow hover key={coach.id} sx={listRowSx}>
@@ -198,6 +201,7 @@ function AdminCoachesRoute() {
                                     {isEmpty ? <EmptyTableRow colSpan={TABLE_COLUMNS} message={emptyMessage} /> : null}
                                 </TableBody>
                             </Table>
+                            </StickyActionTableScroll>
                             {pagination ? <TablePaginationFooter>{pagination}</TablePaginationFooter> : null}
                         </>
                     }

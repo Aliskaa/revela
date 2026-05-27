@@ -9,6 +9,23 @@ export const BRAND_PRIMARY_RGB = [15, 24, 152] as const;
 declare module '@mui/material/styles' {
     interface Palette {
         border: string;
+        /** Surfaces Stitch (lavande, outline, fonds neutres). */
+        surface: {
+            lavenderGrey: string;
+            lavenderGreyHover: string;
+            lavenderGreyFaint: string;
+            outlineVariant: string;
+            outlineVariantFaint: string;
+            outlineVariantSoft: string;
+            onSurfaceVariant: string;
+            containerLow: string;
+            softWhite: string;
+            footerWash: string;
+            azurin: string;
+            listTableHead: string;
+            listTableRowBorder: string;
+            progressGradient: string;
+        };
         tint: {
             // Bleu primary (`#0F1898` / rgb(15,24,152)) à différentes opacités.
             primaryBg: string; // 0.08 — pastilles, chips brand
@@ -45,6 +62,20 @@ declare module '@mui/material/styles' {
             neutralHover: string; // 0.04 — hover discret sur item nav inactif
             dangerHover: string; // 0.08 rouge — hover bouton déconnexion
             dangerText: string; // texte rouge bouton déconnexion
+            dangerBorder: string;
+            primaryFocusRing: string;
+            primarySwitchTrack: string;
+            iconMuted: string;
+            adminBadgeBg: string;
+            adminBadgeText: string;
+            successTextHover: string;
+            onPrimaryText: string;
+            onPrimaryBorder: string;
+            onPrimaryBorderHover: string;
+            onPrimarySurface: string;
+            onPrimarySurfaceHover: string;
+            onPrimarySheen: string;
+            secondaryTextHover: string;
         };
         shadow: {
             brandSm: string; // logos, badges (12px)
@@ -58,10 +89,15 @@ declare module '@mui/material/styles' {
             brandHaloSecondary: string; // halo focus thumb jaune
             cardSoft: string; // cartes neutres
             thumb: string; // thumbs de slider au repos
+            buttonLift: string;
+            buttonLiftHover: string;
+            stickyAction: string;
+            secondaryLift: string;
         };
     }
     interface PaletteOptions {
         border?: string;
+        surface?: Partial<Palette['surface']>;
         tint?: Partial<Palette['tint']>;
         shadow?: Partial<Palette['shadow']>;
     }
@@ -91,6 +127,22 @@ export const theme = createTheme({
             secondary: '#6b7280',
         },
         border: 'rgba(15,23,42,0.10)',
+        surface: {
+            lavenderGrey: '#F5F5FB',
+            lavenderGreyHover: 'rgba(245, 245, 251, 0.8)',
+            lavenderGreyFaint: 'rgba(245, 245, 251, 0.2)',
+            outlineVariant: 'rgba(198, 197, 214, 1)',
+            outlineVariantFaint: 'rgba(198, 197, 214, 0.3)',
+            outlineVariantSoft: 'rgba(198, 197, 214, 0.45)',
+            onSurfaceVariant: '#454653',
+            containerLow: '#f3f3f3',
+            softWhite: '#FAFAFA',
+            footerWash: 'rgba(250, 250, 250, 0.8)',
+            azurin: '#4F70E5',
+            listTableHead: 'rgba(79, 112, 229, 0.06)',
+            listTableRowBorder: 'rgba(79, 112, 229, 0.08)',
+            progressGradient: 'linear-gradient(90deg, #4F70E5 0%, #0F1898 100%)',
+        },
         tint: {
             primaryBg: 'rgba(15,24,152,0.08)',
             primaryHover: 'rgba(15,24,152,0.04)',
@@ -119,6 +171,20 @@ export const theme = createTheme({
             neutralHover: 'rgba(15,23,42,0.04)',
             dangerHover: 'rgba(239,68,68,0.08)',
             dangerText: 'rgb(220,38,38)',
+            dangerBorder: 'rgba(239,68,68,0.3)',
+            primaryFocusRing: 'rgba(15, 24, 152, 0.2)',
+            primarySwitchTrack: 'rgba(15, 24, 152, 0.4)',
+            iconMuted: 'rgba(107, 114, 128, 0.7)',
+            adminBadgeBg: 'rgb(254,243,199)',
+            adminBadgeText: 'rgb(120,53,15)',
+            successTextHover: 'rgb(3,100,70)',
+            secondaryTextHover: 'rgb(150,100,0)',
+            onPrimaryText: 'rgba(255,255,255,0.85)',
+            onPrimaryBorder: 'rgba(255,255,255,0.25)',
+            onPrimaryBorderHover: 'rgba(255,255,255,0.4)',
+            onPrimarySurface: 'rgba(255,255,255,0.1)',
+            onPrimarySurfaceHover: 'rgba(255,255,255,0.2)',
+            onPrimarySheen: 'linear-gradient(135deg, rgba(255,255,255,0.12) 0%, transparent 55%)',
         },
         shadow: {
             brandSm: '0 4px 12px rgba(15,24,152,0.25)',
@@ -132,6 +198,10 @@ export const theme = createTheme({
             brandHaloSecondary: '0 0 0 6px rgba(245,196,0,0.15)',
             cardSoft: '0 4px 20px rgba(0,0,0,0.03)',
             thumb: '0 2px 8px rgba(0,0,0,0.12)',
+            buttonLift: '0 10px 25px -5px rgba(15, 24, 152, 0.2)',
+            buttonLiftHover: '0 14px 30px -5px rgba(15, 24, 152, 0.3)',
+            stickyAction: '-8px 0 16px -8px rgba(15, 24, 152, 0.1)',
+            secondaryLift: '0 8px 24px rgba(255, 204, 0, 0.25)',
         },
     },
     typography: {

@@ -6,13 +6,30 @@ export type ResponsiveListViewsProps = {
     desktop: React.ReactNode;
     mobile: React.ReactNode;
     mobileSx?: SxProps<Theme>;
+    /**
+     * Scroll horizontal global du bloc desktop. Désactiver quand le desktop gère lui-même
+     * le scroll via `StickyActionTableScroll` (colonne d'action sticky).
+     */
+    desktopScroll?: boolean;
 };
 
 /** Affiche un tableau desktop (lg+) et des cartes empilées sur mobile. */
-export function ResponsiveListViews({ desktop, mobile, mobileSx }: ResponsiveListViewsProps) {
+export function ResponsiveListViews({
+    desktop,
+    mobile,
+    mobileSx,
+    desktopScroll = true,
+}: ResponsiveListViewsProps) {
     return (
         <>
-            <Box sx={{ display: { xs: 'none', lg: 'block' }, overflowX: 'auto' }}>{desktop}</Box>
+            <Box
+                sx={{
+                    display: { xs: 'none', lg: 'block' },
+                    ...(desktopScroll ? { overflowX: 'auto' } : {}),
+                }}
+            >
+                {desktop}
+            </Box>
             <Stack
                 spacing={2}
                 sx={{

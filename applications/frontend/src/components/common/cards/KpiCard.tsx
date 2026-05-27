@@ -8,7 +8,7 @@ const KPI_CARD_SX: SxProps<Theme> = {
     borderRadius: 2,
     boxShadow: theme => theme.palette.shadow.brandPaper,
     border: '1px solid',
-    borderColor: 'rgba(15, 24, 152, 0.08)',
+    borderColor: 'tint.primaryBg',
     bgcolor: 'background.paper',
 };
 

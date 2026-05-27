@@ -405,7 +405,7 @@ export function CampaignManageParticipants({
                             py: harmonized ? 2 : 0,
                             borderTop: harmonized ? '1px solid' : 'none',
                             borderColor: 'border',
-                            bgcolor: harmonized ? 'rgba(250, 250, 250, 0.8)' : 'transparent',
+                            bgcolor: harmonized ? 'surface.footerWash' : 'transparent',
                             mt: harmonized ? 'auto' : 0,
                         }}
                     >

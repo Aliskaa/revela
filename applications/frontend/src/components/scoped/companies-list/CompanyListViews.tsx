@@ -7,39 +7,31 @@ import {
     Table,
     TableBody,
     TableCell,
-    TableHead,
-    TableRow,
     TableSortLabel,
     Typography,
 } from '@mui/material';
-
+import { Link } from '@tanstack/react-router';
 import { SkeletonCards, SkeletonTableRows } from '@/components/common/SkeletonRows';
-import { StatCard } from '@/components/common/cards';
 import { CompanyListStatusChip, resolveCompanyListStatus } from '@/components/common/chips';
-import { CompanyStatusChip } from '@/components/common/chips/CompanyListStatusChip';
 import {
+    ClickableTableRow,
     EmptyTableRow,
+    TablePagination,
     ListTableHead,
-    OpenDetailButton,
-    StandardTablePagination,
-    stickyActionCellSx,
-    stickyActionHeadSx,
-    TablePaginationFooter,
-    TableRowLink,
+    RowNavigateHint,
 } from '@/components/common/data-table';
 import type { ListTableColumn } from '@/components/common/data-table';
 import { MobileListEmptyMessage, ResponsiveListViews } from '@/components/common/layout';
-import { listRowSx } from '@/components/common/styles/listSurfaces';
 import { companyInitial } from '@/lib/companyInitial';
 
-const ADMIN_TABLE_COLUMNS = 5;
-const COACH_TABLE_COLUMNS = 4;
+const ADMIN_EDGE_X = 5;
+const ADMIN_CELL_PY = 3;
+const ADMIN_HEAD_BG = 'rgba(245, 245, 251, 0.3)';
+const ADMIN_TABLE_MIN_WIDTH = 760;
 
 export type CompanySortKey = 'name' | 'contact_name' | 'participant_count';
 export type CompanySortOrder = 'asc' | 'desc';
-
 export type CompanyListViewsProps = {
-    variant: 'admin' | 'coach';
     companies: Company[];
     campaigns: AdminCampaign[];
     isLoading: boolean;
@@ -57,7 +49,6 @@ export type CompanyListViewsProps = {
 };
 
 export function CompanyListViews({
-    variant,
     companies,
     campaigns,
     isLoading,
@@ -73,19 +64,17 @@ export function CompanyListViews({
     onPageChange,
     onRowsPerPageChange,
 }: CompanyListViewsProps) {
-    const isAdmin = variant === 'admin';
-    const tableColumns = isAdmin ? ADMIN_TABLE_COLUMNS : COACH_TABLE_COLUMNS;
     const pagination =
         totalCount > 0 ? (
-            <StandardTablePagination
+            <TablePagination
                 count={totalCount}
                 page={page}
                 rowsPerPage={rowsPerPage}
                 onPageChange={onPageChange}
                 onRowsPerPageChange={onRowsPerPageChange}
+                edgePadding={ADMIN_EDGE_X}
             />
         ) : null;
-
     const sortLabel = (key: CompanySortKey, label: string) => (
         <TableSortLabel
             active={sortKey === key}
@@ -95,60 +84,39 @@ export function CompanyListViews({
             {label}
         </TableSortLabel>
     );
-
     const adminColumns: ListTableColumn[] = [
-        { key: 'status', label: 'Statut', sx: { pl: 4 } },
-        { key: 'name', label: sortLabel('name', 'Entreprise'), sx: { pl: 4 } },
-        { key: 'contact', label: sortLabel('contact_name', 'Contact principal') },
-        { key: 'participants', label: sortLabel('participant_count', 'Participants') },
-        { key: 'action', align: 'right', sx: { pr: 4, ...stickyActionHeadSx } },
+        { key: 'name', label: sortLabel('name', 'Entreprise'), sx: { pl: ADMIN_EDGE_X, bgcolor: ADMIN_HEAD_BG } },
+        { key: 'contact', label: sortLabel('contact_name', 'Contact principal'), sx: { bgcolor: ADMIN_HEAD_BG } },
+        { key: 'participants', label: sortLabel('participant_count', 'Participants'), sx: { bgcolor: ADMIN_HEAD_BG } },
+        { key: 'status', label: 'Statut', sx: { pr: ADMIN_EDGE_X, bgcolor: ADMIN_HEAD_BG } },
     ];
-
     return (
         <ResponsiveListViews
-            mobileSx={isAdmin ? undefined : { p: 0, mt: 2 }}
             desktop={
                 <>
-                    <Table sx={{ minWidth: isAdmin ? 900 : 800 }}>
-                        {isAdmin ? (
+                    <Box sx={{ overflowX: 'auto' }}>
+                        <Table sx={{ minWidth: ADMIN_TABLE_MIN_WIDTH }}>
                             <ListTableHead columns={adminColumns} />
-                        ) : (
-                            <TableHead>
-                                <TableRow>
-                                    <TableCell />
-                                    <TableCell>{sortLabel('name', 'Entreprise')}</TableCell>
-                                    <TableCell>{sortLabel('contact_name', 'Contact')}</TableCell>
-                                    <TableCell>{sortLabel('participant_count', 'Participants')}</TableCell>
-                                    <TableCell sx={stickyActionHeadSx} />
-                                </TableRow>
-                            </TableHead>
-                        )}
-                        <TableBody>
-                            {isLoading ? (
-                                <SkeletonTableRows rows={4} columns={tableColumns} />
-                            ) : (
-                                companies.map(company => (
-                                    <CompanyTableRow
-                                        key={company.id}
-                                        company={company}
-                                        campaigns={campaigns}
-                                        variant={variant}
-                                        detailPathPrefix={detailPathPrefix}
-                                    />
-                                ))
-                            )}
-                            {!isLoading && isEmpty ? (
-                                <EmptyTableRow colSpan={tableColumns} message={emptyMessage} />
-                            ) : null}
-                        </TableBody>
-                    </Table>
-                    {pagination ? (
-                        isAdmin ? (
-                            <TablePaginationFooter>{pagination}</TablePaginationFooter>
-                        ) : (
-                            pagination
-                        )
-                    ) : null}
+                            <TableBody>
+                                {isLoading ? (
+                                    <SkeletonTableRows rows={4} columns={3} />
+                                ) : (
+                                    companies.map(company => (
+                                        <CompanyTableRow
+                                            key={company.id}
+                                            company={company}
+                                            campaigns={campaigns}
+                                            detailPathPrefix={detailPathPrefix}
+                                        />
+                                    ))
+                                )}
+                                {!isLoading && isEmpty ? (
+                                    <EmptyTableRow colSpan={3} message={emptyMessage} />
+                                ) : null}
+                            </TableBody>
+                        </Table>
+                    </Box>
+                    {pagination}
                 </>
             }
             mobile={
@@ -161,7 +129,6 @@ export function CompanyListViews({
                                 key={company.id}
                                 company={company}
                                 campaigns={campaigns}
-                                variant={variant}
                                 detailPathPrefix={detailPathPrefix}
                             />
                         ))
@@ -176,160 +143,134 @@ export function CompanyListViews({
 type CompanyRowProps = {
     company: Company;
     campaigns: AdminCampaign[];
-    variant: 'admin' | 'coach';
     detailPathPrefix: string;
 };
 
-function CompanyTableRow({ company, campaigns, variant, detailPathPrefix }: CompanyRowProps) {
-    const isAdmin = variant === 'admin';
+function CompanyTableRow({ company, campaigns, detailPathPrefix }: CompanyRowProps) {
     const status = resolveCompanyListStatus(company.id, campaigns);
     const detailTo = `${detailPathPrefix}/${company.id}`;
-
-    if (isAdmin) {
-        return (
-            <TableRow hover sx={listRowSx}>
-                <TableCell sx={{ py: 2.5 }}>
-                    <CompanyStatusChip status={status} />
-                </TableCell>
-                <TableCell sx={{ pl: 4, py: 2.5 }}>
-                    <Stack direction="row" spacing={2} alignItems="center">
-                        <Box
-                            sx={{
-                                width: 48,
-                                height: 48,
-                                borderRadius: 2,
-                                bgcolor: 'tint.primaryBg',
-                                color: 'primary.main',
-                                display: 'grid',
-                                placeItems: 'center',
-                                fontWeight: 800,
-                                fontSize: '1.125rem',
-                                flexShrink: 0,
-                            }}
+    const rowLabel = `Ouvrir ${company.name}`;
+    return (
+        <ClickableTableRow to={detailTo} ariaLabel={rowLabel}>
+            <TableCell sx={{ pl: ADMIN_EDGE_X, py: ADMIN_CELL_PY }}>
+                <Stack direction="row" spacing={2} alignItems="center">
+                    <Box
+                        sx={{
+                            width: 48,
+                            height: 48,
+                            borderRadius: 2,
+                            bgcolor: 'grey.100',
+                            color: 'primary.main',
+                            display: 'grid',
+                            placeItems: 'center',
+                            fontWeight: 800,
+                            fontSize: '1.125rem',
+                            flexShrink: 0,
+                            overflow: 'hidden',
+                        }}
+                    >
+                        {companyInitial(company.name)}
+                    </Box>
+                    <Box>
+                        <Typography
+                            fontWeight={700}
+                            color="primary.main"
+                            lineHeight={1}
+                            sx={{ fontSize: '1.125rem' }}
                         >
-                            {companyInitial(company.name)}
-                        </Box>
-                        <Typography fontWeight={700} color="primary.main" lineHeight={1.2}>
                             {company.name}
                         </Typography>
-                    </Stack>
-                </TableCell>
-                <TableCell sx={{ py: 2.5 }}>
-                    <Typography fontWeight={700} color="text.primary" lineHeight={1.2}>
-                        {company.contact_name ?? '–'}
-                    </Typography>
-                    {company.contact_email ? (
-                        <Typography variant="caption" color="text.secondary">
-                            {company.contact_email}
-                        </Typography>
-                    ) : null}
-                </TableCell>
-                <TableCell sx={{ py: 2.5 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 0.75 }}>
-                        <Typography fontWeight={800} color="primary.main">
-                            {company.participant_count}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                            participants
-                        </Typography>
                     </Box>
-                </TableCell>
-                <TableCell align="right" sx={{ pr: 4, py: 2.5, ...stickyActionCellSx }}>
-                    <TableRowLink to={detailTo} />
-                </TableCell>
-            </TableRow>
-        );
-    }
-
-    return (
-        <TableRow hover>
-            <TableCell>
-                <Typography fontWeight={700} color="text.primary">
-                    {company.name}
-                </Typography>
+                </Stack>
             </TableCell>
-            <TableCell>
-                <Typography fontWeight={600} color="text.primary">
+            <TableCell sx={{ py: ADMIN_CELL_PY }}>
+                <Typography fontWeight={700} color="text.primary" lineHeight={1.2}>
                     {company.contact_name ?? '–'}
                 </Typography>
-                <Typography variant="caption" color="text.secondary">
-                    {company.contact_email ?? ''}
-                </Typography>
+                {company.contact_email ? (
+                    <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        sx={{ display: 'block', mt: 0.25, opacity: 0.6 }}
+                    >
+                        {company.contact_email}
+                    </Typography>
+                ) : null}
             </TableCell>
-            <TableCell>{company.participant_count}</TableCell>
-            <TableCell align="right" sx={stickyActionCellSx}>
-                <OpenDetailButton to={detailTo} />
+            <TableCell sx={{ py: ADMIN_CELL_PY }}>
+                <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 0.75 }}>
+                    <Typography fontWeight={800} color="primary.main">
+                        {company.participant_count}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary" sx={{ opacity: 0.6 }}>
+                        participants
+                    </Typography>
+                </Box>
             </TableCell>
-        </TableRow>
+            <TableCell sx={{ py: ADMIN_CELL_PY, pr: ADMIN_EDGE_X }}>
+                <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={2}>
+                    <CompanyListStatusChip status={status} compact />
+                    <RowNavigateHint />
+                </Stack>
+            </TableCell>
+        </ClickableTableRow>
     );
 }
 
-function CompanyMobileCard({ company, campaigns, variant, detailPathPrefix }: CompanyRowProps) {
-    const isAdmin = variant === 'admin';
+function CompanyMobileCard({ company, campaigns, detailPathPrefix }: CompanyRowProps) {
     const status = resolveCompanyListStatus(company.id, campaigns);
     const detailTo = `${detailPathPrefix}/${company.id}`;
-
     return (
-        <Card variant="outlined" sx={isAdmin ? { borderRadius: 3 } : undefined}>
+        <Card
+            component={Link}
+            to={detailTo}
+            variant="outlined"
+            sx={{
+                borderRadius: 3,
+                textDecoration: 'none',
+                color: 'inherit',
+                transition: 'box-shadow 0.2s ease, transform 0.2s ease',
+                '&:hover': {
+                    boxShadow: theme => theme.palette.shadow.brandPaper,
+                    transform: 'translateY(-1px)',
+                },
+            }}
+        >
             <CardContent sx={{ p: 2.5 }}>
-                <Stack spacing={isAdmin ? 2 : 1.8}>
-                    {isAdmin ? (
-                        <Stack direction="row" justifyContent="space-between" alignItems="start" spacing={2}>
-                            <Stack direction="row" spacing={2} alignItems="center">
-                                <Box
-                                    sx={{
-                                        width: 40,
-                                        height: 40,
-                                        borderRadius: 2,
-                                        bgcolor: 'tint.primaryBg',
-                                        color: 'primary.main',
-                                        display: 'grid',
-                                        placeItems: 'center',
-                                        fontWeight: 800,
-                                    }}
-                                >
-                                    {companyInitial(company.name)}
-                                </Box>
-                                <Box>
-                                    <Typography variant="h6" fontWeight={800} color="primary.main">
-                                        {company.name}
-                                    </Typography>
-                                    <Typography variant="body2" color="text.secondary">
-                                        {company.contact_name ?? '–'}
-                                    </Typography>
-                                </Box>
-                            </Stack>
-                            <CompanyListStatusChip status={status} />
+                <Stack spacing={2}>
+                    <Stack direction="row" justifyContent="space-between" alignItems="start" spacing={2}>
+                        <Stack direction="row" spacing={2} alignItems="center">
+                            <Box
+                                sx={{
+                                    width: 40,
+                                    height: 40,
+                                    borderRadius: 2,
+                                    bgcolor: 'tint.primaryBg',
+                                    color: 'primary.main',
+                                    display: 'grid',
+                                    placeItems: 'center',
+                                    fontWeight: 800,
+                                }}
+                            >
+                                {companyInitial(company.name)}
+                            </Box>
+                            <Box>
+                                <Typography variant="h6" fontWeight={800} color="primary.main">
+                                    {company.name}
+                                </Typography>
+                                <Typography variant="body2" color="text.secondary">
+                                    {company.contact_name ?? '–'}
+                                </Typography>
+                            </Box>
                         </Stack>
-                    ) : (
-                        <Box>
-                            <Typography variant="h6" fontWeight={800} color="text.primary">
-                                {company.name}
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.4 }}>
-                                {company.contact_name ?? '–'}
-                            </Typography>
-                            <Typography variant="caption" color="text.secondary">
-                                {company.contact_email ?? ''}
-                            </Typography>
-                        </Box>
-                    )}
-                    {isAdmin ? (
+                        <CompanyListStatusChip status={status} compact />
+                    </Stack>
+                    <Stack direction="row" alignItems="center" justifyContent="space-between">
                         <Typography variant="caption" color="text.secondary">
                             {company.participant_count} participants
                         </Typography>
-                    ) : (
-                        <Box
-                            sx={{
-                                display: 'grid',
-                                gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
-                                gap: 1.2,
-                            }}
-                        >
-                            <StatCard variant="mini" label="Participants" value={String(company.participant_count)} />
-                        </Box>
-                    )}
-                    <OpenDetailButton to={detailTo} variant="card" />
+                        <RowNavigateHint />
+                    </Stack>
                 </Stack>
             </CardContent>
         </Card>

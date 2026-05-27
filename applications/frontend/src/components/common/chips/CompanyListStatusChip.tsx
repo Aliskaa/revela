@@ -5,8 +5,8 @@ import { BaseStatusChip, StatusChipTone } from './BaseStatusChip';
 export type CompanyListStatus = 'active' | 'inactive';
 
 const PALETTE: Record<CompanyListStatus, StatusChipTone> = {
-    active: { label: 'Actif', bg: 'tint.successBg', color: 'tint.successText', dot: 'tint.successText', pulse: true },
-    inactive: { label: 'Inactif', bg: 'tint.mutedBg', color: 'tint.mutedText', dot: 'tint.mutedText' },
+    active: { label: 'Actif', bg: 'tint.successBg', color: 'tint.successText', dot: 'tint.successText' },
+    inactive: { label: 'Pause', bg: 'tint.mutedBg', color: 'tint.mutedText', dot: 'tint.mutedText' },
 };
 
 export function resolveCompanyListStatus(companyId: number, campaigns: AdminCampaign[]): CompanyListStatus {
@@ -18,10 +18,12 @@ export function resolveCompanyListStatus(companyId: number, campaigns: AdminCamp
 
 export type CompanyListStatusChipProps = {
     status: CompanyListStatus;
+    /** Pill compact sans point — aligné sur le tableau Stitch. */
+    compact?: boolean;
 };
 
 /** Statut dérivé des campagnes rattachées à une entreprise (liste admin). */
-export function CompanyStatusChip({ status }: CompanyListStatusChipProps) {
+export function CompanyStatusChip({ status, compact = false }: CompanyListStatusChipProps) {
     const tone = PALETTE[status];
-    return <BaseStatusChip {...tone} />;
+    return <BaseStatusChip {...tone} showDot={!compact} />;
 }
