@@ -19,7 +19,7 @@ import {
     UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { Throttle } from '@nestjs/throttler';
+import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import type { Request, Response } from 'express';
 
 import { updateParticipantProfileBodySchema } from '@aor/types';
@@ -117,6 +117,7 @@ export class ParticipantController {
     }
 
     @Post('auth/login')
+    @UseGuards(ThrottlerGuard)
     @Throttle({ 'auth-strict': { limit: 5, ttl: 60_000 } })
     @UseFilters(ParticipantAuthExceptionFilter)
     public async login(
@@ -177,6 +178,7 @@ export class ParticipantController {
      * Rotation : ancien token marqué `usedAt`. Réutilisation détectée → revoke famille.
      */
     @Post('auth/refresh')
+    @UseGuards(ThrottlerGuard)
     @Throttle({ 'auth-refresh': { limit: 30, ttl: 60_000 } })
     public async refreshAuth(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
         const cookies = (req as Request & { cookies?: Record<string, string> }).cookies ?? {};

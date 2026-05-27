@@ -1,4 +1,4 @@
-import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios';
+import axios, { AxiosError, type InternalAxiosRequestConfig } from 'axios';
 
 import { useAuthStore } from '@/stores/authStore';
 
@@ -48,7 +48,15 @@ apiClient.interceptors.response.use(
             try {
                 await performAdminRefresh();
                 return apiClient(config);
-            } catch {
+            } catch (refreshErr) {
+                // Cas transient : refresh throttlé (429) ou indisponible réseau. On NE déconnecte
+                // PAS — la session est probablement encore valide, juste rate-limitée. Le user verra
+                // l'erreur sur la requête originale et pourra réessayer.
+                const refreshStatus =
+                    refreshErr instanceof AxiosError ? refreshErr.response?.status : undefined;
+                if (refreshStatus === 429 || refreshStatus === undefined || refreshStatus >= 500) {
+                    return Promise.reject(error);
+                }
                 useAuthStore.getState().setAdminMe(null);
                 if (window.location.pathname.startsWith('/admin')) {
                     window.location.href = '/admin/login';

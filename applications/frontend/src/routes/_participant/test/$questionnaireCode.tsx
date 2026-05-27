@@ -275,7 +275,7 @@ function QuestionCard({
                                 onChange={v => {
                                     if (v !== null) handleSelect(v);
                                 }}
-                                max={ANSWER_MAX + 1}
+                                max={ANSWER_MAX}
                                 min={ANSWER_MIN}
                             />
                         </Stack>
@@ -439,7 +439,7 @@ function ParticipantTestSessionRoute() {
         const filled: Record<string, number> = {};
         for (let s = 0; s < seriesCount; s++) {
             for (let q = 0; q < questionCount; q++) {
-                filled[answerKey(s, q)] = Math.floor(Math.random() * (ANSWER_MAX + 1));
+                filled[answerKey(s, q)] = Math.floor(Math.random() * (ANSWER_MAX));
             }
         }
         setAnswers(filled);

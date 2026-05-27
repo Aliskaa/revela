@@ -22,6 +22,8 @@ import {
     ListTableHead,
     OpenDetailButton,
     StandardTablePagination,
+    stickyActionCellSx,
+    stickyActionHeadSx,
     TablePaginationFooter,
     TableRowLink,
 } from '@/components/common/data-table';
@@ -99,7 +101,7 @@ export function CompanyListViews({
         { key: 'name', label: sortLabel('name', 'Entreprise'), sx: { pl: 4 } },
         { key: 'contact', label: sortLabel('contact_name', 'Contact principal') },
         { key: 'participants', label: sortLabel('participant_count', 'Participants') },
-        { key: 'action', align: 'right', sx: { pr: 4 } },
+        { key: 'action', align: 'right', sx: { pr: 4, ...stickyActionHeadSx } },
     ];
 
     return (
@@ -117,7 +119,7 @@ export function CompanyListViews({
                                     <TableCell>{sortLabel('name', 'Entreprise')}</TableCell>
                                     <TableCell>{sortLabel('contact_name', 'Contact')}</TableCell>
                                     <TableCell>{sortLabel('participant_count', 'Participants')}</TableCell>
-                                    <TableCell />
+                                    <TableCell sx={stickyActionHeadSx} />
                                 </TableRow>
                             </TableHead>
                         )}
@@ -232,7 +234,7 @@ function CompanyTableRow({ company, campaigns, variant, detailPathPrefix }: Comp
                         </Typography>
                     </Box>
                 </TableCell>
-                <TableCell align="right" sx={{ pr: 4, py: 2.5 }}>
+                <TableCell align="right" sx={{ pr: 4, py: 2.5, ...stickyActionCellSx }}>
                     <TableRowLink to={detailTo} />
                 </TableCell>
             </TableRow>
@@ -255,7 +257,7 @@ function CompanyTableRow({ company, campaigns, variant, detailPathPrefix }: Comp
                 </Typography>
             </TableCell>
             <TableCell>{company.participant_count}</TableCell>
-            <TableCell align="right">
+            <TableCell align="right" sx={stickyActionCellSx}>
                 <OpenDetailButton to={detailTo} />
             </TableCell>
         </TableRow>

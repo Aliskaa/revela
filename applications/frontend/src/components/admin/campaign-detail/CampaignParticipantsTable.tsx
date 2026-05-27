@@ -22,6 +22,7 @@ import * as React from 'react';
 
 import { SectionTitle } from '@/components/common/SectionTitle';
 import { ProgressChip } from '@/components/common/chips';
+import { stickyActionCellSx, stickyActionHeadSx } from '@/components/common/data-table';
 import type { CampaignParticipantProgress } from '@aor/types';
 
 import { CampaignParticipantTransparencyButton } from './CampaignParticipantTransparencyButton';
@@ -144,7 +145,10 @@ export function CampaignParticipantsTable({
                                 </TableCell>
                                 {!harmonized ? <TableCell sx={headCellSx}>Résultats</TableCell> : null}
                                 {participantUrlPrefix && matrixUrlPrefix ? (
-                                    <TableCell align="right" sx={headCellSx}>
+                                    <TableCell
+                                        align="right"
+                                        sx={{ ...(headCellSx ?? {}), ...stickyActionHeadSx }}
+                                    >
                                         Actions
                                     </TableCell>
                                 ) : null}
@@ -259,7 +263,11 @@ export function CampaignParticipantsTable({
                                                 </TableCell>
                                             ) : null}
                                             {participantUrlPrefix && matrixUrlPrefix ? (
-                                                <TableCell align="right" onClick={e => e.stopPropagation()}>
+                                                <TableCell
+                                                    align="right"
+                                                    onClick={e => e.stopPropagation()}
+                                                    sx={stickyActionCellSx}
+                                                >
                                                     <Stack
                                                         direction="row"
                                                         spacing={1}

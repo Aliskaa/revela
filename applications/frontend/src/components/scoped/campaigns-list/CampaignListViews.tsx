@@ -20,6 +20,8 @@ import {
     ListTableHead,
     OpenDetailButton,
     StandardTablePagination,
+    stickyActionCellSx,
+    stickyActionHeadSx,
     TablePaginationFooter,
     TableRowLink,
 } from '@/components/common/data-table';
@@ -90,7 +92,7 @@ export function CampaignListViews({
                                     { key: 'coach', label: 'Coach' },
                                     { key: 'questionnaire', label: 'Questionnaire' },
                                     { key: 'createdAt', label: 'Créée le' },
-                                    { key: 'action', align: 'right', sx: { pr: 4 } },
+                                    { key: 'action', align: 'right', sx: { pr: 4, ...stickyActionHeadSx } },
                                 ]}
                             />
                         ) : (
@@ -101,7 +103,7 @@ export function CampaignListViews({
                                     <TableCell>Entreprise</TableCell>
                                     <TableCell>Questionnaire</TableCell>
                                     <TableCell>Créée le</TableCell>
-                                    <TableCell />
+                                    <TableCell sx={stickyActionHeadSx} />
                                 </TableRow>
                             </TableHead>
                         )}
@@ -223,7 +225,7 @@ function CampaignTableRow({ campaign, variant, detailPathPrefix, companyName, co
                         {formatCreatedAt(campaign.createdAt)}
                     </Typography>
                 </TableCell>
-                <TableCell align="right" sx={{ pr: 4, py: 2.5 }}>
+                <TableCell align="right" sx={{ pr: 4, py: 2.5, ...stickyActionCellSx }}>
                     <TableRowLink to={detailTo} />
                 </TableCell>
             </TableRow>
@@ -243,7 +245,7 @@ function CampaignTableRow({ campaign, variant, detailPathPrefix, companyName, co
             <TableCell>{company}</TableCell>
             <TableCell>{questionnaireLabel(campaign.questionnaireId)}</TableCell>
             <TableCell>{formatCreatedAt(campaign.createdAt)}</TableCell>
-            <TableCell align="right">
+            <TableCell align="right" sx={stickyActionCellSx}>
                 <OpenDetailButton to={detailTo} />
             </TableCell>
         </TableRow>

@@ -69,7 +69,7 @@ export function MatrixTableMode({ matrix, showInterpretations = true }: MatrixTa
                     </TableCell>
                 );
             })}
-            <TableCell align="center" sx={{ fontWeight: 700, color: '#10b981', bgcolor: 'rgba(16, 185, 129, 0.02)' }}>
+            <TableCell align="center" sx={{ fontWeight: 700, color: 'tint.scientific', bgcolor: 'tint.scientificBg' }}>
                 {row.scientific ?? '—'}
             </TableCell>
         </TableRow>
@@ -110,7 +110,7 @@ export function MatrixTableMode({ matrix, showInterpretations = true }: MatrixTa
         return (
             <TableRow
                 key={`gap-${pair.eRow.score_key}-${pair.wRow.score_key}`}
-                sx={{ bgcolor: 'rgba(15,23,42,0.025)' }}
+                sx={{ bgcolor: 'tint.subtleRow' }}
             >
                 <TableCell sx={{ py: 1.2, verticalAlign: 'top' }}>
                     <Typography
@@ -124,14 +124,14 @@ export function MatrixTableMode({ matrix, showInterpretations = true }: MatrixTa
                 </TableCell>
                 {renderGapCell(
                     selfGap,
-                    pickGapLabel(pair.eRow.self, pair.wRow.self),
+                    null,
                     { fontWeight: 800, color: 'primary.main' },
                     `gap-${pair.eRow.score_key}-self`
                 )}
                 {peerGaps.map((g, i) =>
                     renderGapCell(
                         g,
-                        pickGapLabel(pair.eRow.peers[i] ?? null, pair.wRow.peers[i] ?? null),
+                        null,
                         { fontWeight: 700, color: 'text.secondary' },
                         `gap-${pair.eRow.score_key}-peer-${matrix.peer_columns[i]?.response_id ?? i}`
                     )
@@ -139,7 +139,7 @@ export function MatrixTableMode({ matrix, showInterpretations = true }: MatrixTa
                 {renderGapCell(
                     sciGap,
                     pickGapLabel(pair.eRow.scientific, pair.wRow.scientific),
-                    { fontWeight: 800, color: '#10b981' },
+                    { fontWeight: 800, color: 'tint.scientific' },
                     `gap-${pair.eRow.score_key}-sci`
                 )}
             </TableRow>
@@ -212,7 +212,7 @@ export function MatrixTableMode({ matrix, showInterpretations = true }: MatrixTa
                                 fontWeight: 800,
                                 textTransform: 'uppercase',
                                 fontSize: '0.75rem',
-                                color: '#10b981',
+                                color: 'tint.scientific',
                                 py: 2,
                             }}
                         >

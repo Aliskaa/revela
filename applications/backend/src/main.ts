@@ -6,10 +6,12 @@ import 'reflect-metadata';
 import { createConsoleLogger, resolveLogLevelFromEnv } from '@aor/logger';
 import { RequestMethod } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
+import type { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
 
 import { AppModule } from '@src/app/app.module';
+import { createHttpLoggingMiddleware } from '@src/middleware/http-logging.middleware';
 import { NestLoggerBridge } from '@src/nest-logger-bridge';
 
 /**
@@ -30,8 +32,13 @@ const bootstrap = async (): Promise<void> => {
         portEnv: process.env.PORT ?? `(défaut ${DEFAULT_PORT})`,
     });
 
-    const app = await NestFactory.create(AppModule, { bufferLogs: true });
+    const app = await NestFactory.create<NestExpressApplication>(AppModule, { bufferLogs: true });
     app.useLogger(new NestLoggerBridge(createConsoleLogger({ context: 'Nest', level: resolvedLevel })));
+
+    // Derrière ALB + nginx en prod (2 proxies) : faire confiance à 2 hops pour que `req.ip`
+    // retourne la vraie IP du client (lue dans `X-Forwarded-For`). Sans ça, le ThrottlerGuard
+    // clé sur l'IP de l'ALB → quota global partagé entre tous les users → 429 cascade.
+    app.set('trust proxy', 2);
 
     /**
      * Cookie parser : indispensable pour lire les cookies httpOnly d'auth (G1 RGPD —
@@ -39,6 +46,11 @@ const bootstrap = async (): Promise<void> => {
      * Doit être enregistré avant les guards qui les consomment.
      */
     app.use(cookieParser());
+
+    /**
+     * Log HTTP transverse — une ligne par requête (cf. `http-logging.middleware.ts`).
+     */
+    app.use(createHttpLoggingMiddleware(createConsoleLogger({ context: 'HTTP', level: resolvedLevel })));
 
     /**
      * CORS avec credentials : le frontend (servi sur même domaine en prod, localhost:5173 en

@@ -7,6 +7,8 @@ import {
     ListTableHead,
     OpenDetailButton,
     StandardTablePagination,
+    stickyActionCellSx,
+    stickyActionHeadSx,
     TablePaginationFooter,
     TableRowLink,
 } from '@/components/common/data-table';
@@ -152,7 +154,7 @@ function AdminCoachesRoute() {
                                         { key: 'username', label: 'Username' },
                                         { key: 'campaigns', label: 'Campagnes' },
                                         { key: 'createdAt', label: 'Créé le' },
-                                        { key: 'action', align: 'right', sx: { pr: 4 } },
+                                        { key: 'action', align: 'right', sx: { pr: 4, ...stickyActionHeadSx } },
                                     ]}
                                 />
                                 <TableBody>
@@ -187,7 +189,7 @@ function AdminCoachesRoute() {
                                                         {formatCreatedAt(coach.createdAt)}
                                                     </Typography>
                                                 </TableCell>
-                                                <TableCell align="right" sx={{ pr: 4, py: 2.5 }}>
+                                                <TableCell align="right" sx={{ pr: 4, py: 2.5, ...stickyActionCellSx }}>
                                                     <TableRowLink to={`/admin/coaches/${coach.id}`} />
                                                 </TableCell>
                                             </TableRow>

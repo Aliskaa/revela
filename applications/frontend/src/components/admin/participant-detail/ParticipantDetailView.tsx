@@ -3,6 +3,7 @@
 import { SectionTitle } from '@/components/common/SectionTitle';
 import { KpiCard, StatCard } from '@/components/common/cards';
 import { CampaignStatusChip } from '@/components/common/chips';
+import { stickyActionCellSx, stickyActionHeadSx } from '@/components/common/data-table';
 import { useParticipant, useUpdateParticipant } from '@/hooks/admin';
 import type {
     CampaignStatus,
@@ -343,7 +344,7 @@ export function ParticipantDetailView({ participantId, scopePrefix }: Participan
                                         <TableCell>Campagne</TableCell>
                                         <TableCell>Entreprise</TableCell>
                                         <TableCell>Rejoint le</TableCell>
-                                        <TableCell />
+                                        <TableCell sx={stickyActionHeadSx} />
                                     </TableRow>
                                 </TableHead>
                                 <TableBody>
@@ -380,7 +381,7 @@ export function ParticipantDetailView({ participantId, scopePrefix }: Participan
                                                 </TableCell>
                                                 <TableCell>{c.company_name ?? '–'}</TableCell>
                                                 <TableCell>{c.joined_at ? new Date(c.joined_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' }) : '–'}</TableCell>
-                                                <TableCell align="right">
+                                                <TableCell align="right" sx={stickyActionCellSx}>
                                                     <Button
                                                         size="small"
                                                         variant="outlined"

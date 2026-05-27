@@ -21,7 +21,12 @@ import { AddParticipantToCampaignDrawerForm } from '@/components/admin/AddPartic
 import { SectionTitle } from '@/components/common/SectionTitle';
 import { SkeletonTableRows } from '@/components/common/SkeletonRows';
 import { ParticipantStatusChip } from '@/components/common/chips';
-import { EmptyTableRow, StandardTablePagination } from '@/components/common/data-table';
+import {
+    EmptyTableRow,
+    StandardTablePagination,
+    stickyActionCellSx,
+    stickyActionHeadSx,
+} from '@/components/common/data-table';
 import { useAddParticipantToCompany } from '@/hooks/admin';
 import type { Participant } from '@aor/types';
 
@@ -161,7 +166,7 @@ export function CompanyParticipantsTable({
                                 <TableCell></TableCell>
                                 <TableCell>Participant</TableCell>
                                 <TableCell>Organisation</TableCell>
-                                <TableCell />
+                                <TableCell sx={stickyActionHeadSx} />
                             </TableRow>
                         </TableHead>
                         <TableBody>
@@ -200,7 +205,7 @@ export function CompanyParticipantsTable({
                                                 {p.direction}
                                             </Typography>
                                         </TableCell>
-                                        <TableCell align="right">
+                                        <TableCell align="right" sx={stickyActionCellSx}>
                                             {canDelete(p) && (
                                                 <Button
                                                     size="small"
