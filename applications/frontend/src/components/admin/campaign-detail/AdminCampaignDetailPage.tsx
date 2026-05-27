@@ -143,7 +143,6 @@ export function AdminCampaignDetailPage({ campaignId }: AdminCampaignDetailPageP
                         progress={progress}
                     />
                     <CampaignParticipantsTable
-                        harmonized
                         campaignId={campaign.id}
                         participants={participants}
                         participantUrlPrefix="/admin/participants"

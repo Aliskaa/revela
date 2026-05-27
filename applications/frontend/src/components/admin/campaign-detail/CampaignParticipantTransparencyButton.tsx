@@ -2,7 +2,8 @@
 
 import { useAdminCampaignParticipantTransparency } from '@/hooks/transparency';
 import { Button, Tooltip } from '@mui/material';
-import { ScanEye } from 'lucide-react';
+
+import { harmonizedTableActionButtonSx } from '@/components/common/styles/listSurfaces';
 
 export type CampaignParticipantTransparencyButtonProps = {
     campaignId: number;
@@ -31,7 +32,7 @@ export function CampaignParticipantTransparencyButton({
     const snapshot = envelope?.snapshot ?? null;
     const hasSnapshot = snapshot !== null;
 
-    const label = hasSnapshot ? `Transparence ${String(snapshot.value)} %` : 'Voir la transparence';
+    const label = hasSnapshot ? `${snapshot.value} %` : 'Transparence';
     const tooltip = hasSnapshot
         ? `Activé le ${new Date(snapshot.activated_at).toLocaleDateString()} — basé sur ${String(
               snapshot.peer_count
@@ -45,12 +46,11 @@ export function CampaignParticipantTransparencyButton({
             <span>
                 <Button
                     size="small"
-                    variant={hasSnapshot ? 'contained' : 'outlined'}
-                    color={hasSnapshot ? 'primary' : 'inherit'}
-                    startIcon={<ScanEye size={14} />}
+                    variant="outlined"
+                    color="primary"
                     href={href}
                     disabled={isLoading}
-                    sx={{ borderRadius: 99 }}
+                    sx={harmonizedTableActionButtonSx}
                 >
                     {label}
                 </Button>

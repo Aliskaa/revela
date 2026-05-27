@@ -1,7 +1,6 @@
 // Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
 
 import {
-    Avatar,
     Box,
     Button,
     Card,
@@ -11,23 +10,30 @@ import {
     Table,
     TableBody,
     TableCell,
-    TableHead,
-    TablePagination,
     TableRow,
     Typography,
 } from '@mui/material';
 import { Link } from '@tanstack/react-router';
-import { ChevronDown, LayoutPanelLeft } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 import * as React from 'react';
 
-import { SectionTitle } from '@/components/common/SectionTitle';
 import { ProgressChip } from '@/components/common/chips';
-import { stickyActionCellSx, stickyActionHeadSx } from '@/components/common/data-table';
+import type { ListTableColumn } from '@/components/common/data-table';
+import { EmptyTableRow, ListTableHead, ListTablePagination } from '@/components/common/data-table';
+import {
+    harmonizedTableActionButtonSx,
+    harmonizedTableCellSx,
+    listRowSx,
+    surfaceCardSx,
+} from '@/components/common/styles/listSurfaces';
+import { useTablePagination } from '@/lib/useTablePagination';
 import type { CampaignParticipantProgress } from '@aor/types';
 
 import { CampaignParticipantTransparencyButton } from './CampaignParticipantTransparencyButton';
 import { ParticipantTokensRow } from './ParticipantTokensRow';
-import { surfaceCardSx } from '@/components/common/styles/listSurfaces';
+
+const EDGE_X = 5;
+const TABLE_MIN_WIDTH = 900;
 
 function participantInitials(fullName: string): string {
     const parts = fullName.trim().split(/\s+/).filter(Boolean);
@@ -43,7 +49,6 @@ function participantInitials(fullName: string): string {
 export type CampaignParticipantsTableProps = {
     campaignId: number;
     participants: CampaignParticipantProgress[];
-    harmonized?: boolean;
     /**
      * Préfixe d'URL pour la fiche participant (e.g. `/admin/participants` ou
      * `/coach/participants`). Si non fourni, les liens vers la fiche et la matrix
@@ -64,122 +69,78 @@ export type CampaignParticipantsTableProps = {
     transparencyUrlPrefix?: string;
 };
 
-const COL_SPAN_DEFAULT = 7;
-const COL_SPAN_HARMONIZED = 6;
-
 export function CampaignParticipantsTable({
     campaignId,
     participants,
     participantUrlPrefix,
     matrixUrlPrefix,
     transparencyUrlPrefix,
-    harmonized = false,
 }: CampaignParticipantsTableProps) {
     const [expandedParticipant, setExpandedParticipant] = React.useState<number | null>(null);
-    const [page, setPage] = React.useState(0);
-    const [rowsPerPage, setRowsPerPage] = React.useState(10);
 
-    const toggleExpanded = (participantId: number) =>
-        setExpandedParticipant(prev => (prev === participantId ? null : participantId));
-
-    const paged = React.useMemo(
-        () => participants.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage),
-        [participants, page, rowsPerPage]
-    );
+    const { page, rowsPerPage, paged, setPage, setRowsPerPage } = useTablePagination({
+        items: participants,
+        resetWhen: [participants.length],
+    });
 
     React.useEffect(() => {
         const maxPage = Math.max(0, Math.ceil(participants.length / rowsPerPage) - 1);
         if (page > maxPage) setPage(maxPage);
-    }, [participants.length, rowsPerPage, page]);
+    }, [participants.length, rowsPerPage, page, setPage]);
 
-    const colSpan = harmonized ? COL_SPAN_HARMONIZED : COL_SPAN_DEFAULT;
+    const toggleExpanded = (participantId: number) =>
+        setExpandedParticipant(prev => (prev === participantId ? null : participantId));
 
-    const headCellSx = harmonized
-        ? {
-              py: 2,
-              fontSize: '0.625rem',
-              fontWeight: 700,
-              textTransform: 'uppercase' as const,
-              letterSpacing: '0.08em',
-              color: 'text.secondary',
-              bgcolor: 'surface.listTableHead',
-              borderBottom: 'none',
-          }
-        : undefined;
+    const hasActions = Boolean(participantUrlPrefix && matrixUrlPrefix);
+
+    const columns: ListTableColumn[] = [
+        { key: 'expand', sx: { pl: EDGE_X, width: 48 } },
+        { key: 'participant', label: 'Participant' },
+        { key: 'self', label: 'Regard sur soi', align: 'center' },
+        { key: 'peer', label: 'Pairs', align: 'center' },
+        { key: 'element', label: 'Élément Humain', align: 'center' },
+        ...(hasActions ? [{ key: 'actions', align: 'right' as const, sx: { pr: EDGE_X } }] : []),
+    ];
+    const colSpan = columns.length;
+
+    const pagination =
+        participants.length > 0 ? (
+            <ListTablePagination
+                count={participants.length}
+                page={page}
+                rowsPerPage={rowsPerPage}
+                onPageChange={setPage}
+                onRowsPerPageChange={setRowsPerPage}
+            />
+        ) : null;
 
     return (
-        <Card variant="outlined" sx={harmonized ? { ...surfaceCardSx, overflow: 'hidden' } : undefined}>
+        <Card variant="outlined" sx={{ ...surfaceCardSx, overflow: 'hidden' }}>
             <CardContent sx={{ p: 0 }}>
-                <Box sx={{ px: harmonized ? 3 : 2.5, pt: harmonized ? 3 : 2.5, pb: harmonized ? 2 : 0 }}>
-                    {harmonized ? (
-                        <Box sx={{ mb: 1 }}>
-                            <Typography variant="h6" fontWeight={700} color="primary.main" sx={{ mb: 0.5 }}>
-                                Participants de la campagne
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.7 }}>
-                                Vue opérationnelle des participants rattachés et de leur état de collecte.
-                            </Typography>
-                        </Box>
-                    ) : (
-                        <SectionTitle
-                            title="Participants de la campagne"
-                            subtitle="Vue opérationnelle des participants rattachés et de leur état de collecte."
-                        />
-                    )}
+                <Box sx={{ px: 3, pt: 3, pb: 2 }}>
+                    <Typography variant="h6" fontWeight={700} color="primary.main" sx={{ mb: 0.5 }}>
+                        Participants de la campagne
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.7 }}>
+                        Vue opérationnelle des participants rattachés et de leur état de collecte.
+                    </Typography>
                 </Box>
 
-                <Box sx={{ overflowX: 'auto', px: harmonized ? 1 : 0, pb: harmonized ? 1 : 0 }}>
-                    <Table sx={{ minWidth: 900 }}>
-                        <TableHead>
-                            <TableRow>
-                                <TableCell padding="checkbox" sx={headCellSx} />
-                                <TableCell sx={headCellSx}>Participant</TableCell>
-                                <TableCell align={harmonized ? 'center' : 'left'} sx={headCellSx}>
-                                    Regard sur soi
-                                </TableCell>
-                                <TableCell align={harmonized ? 'center' : 'left'} sx={headCellSx}>
-                                    Pairs
-                                </TableCell>
-                                <TableCell align={harmonized ? 'center' : 'left'} sx={headCellSx}>
-                                    Élément Humain
-                                </TableCell>
-                                {!harmonized ? <TableCell sx={headCellSx}>Résultats</TableCell> : null}
-                                {participantUrlPrefix && matrixUrlPrefix ? (
-                                    <TableCell
-                                        align="right"
-                                        sx={{ ...(headCellSx ?? {}), ...stickyActionHeadSx }}
-                                    >
-                                        Actions
-                                    </TableCell>
-                                ) : null}
-                            </TableRow>
-                        </TableHead>
+                <Box sx={{ overflowX: 'auto' }}>
+                    <Table sx={{ minWidth: TABLE_MIN_WIDTH }}>
+                        <ListTableHead columns={columns} />
                         <TableBody>
                             {participants.length === 0 ? (
-                                <TableRow>
-                                    <TableCell colSpan={colSpan} align="center" sx={{ py: 4 }}>
-                                        <Typography variant="body2" color="text.secondary">
-                                            Aucun participant pour le moment.
-                                        </Typography>
-                                    </TableCell>
-                                </TableRow>
+                                <EmptyTableRow colSpan={colSpan} message="Aucun participant pour le moment." />
                             ) : (
                                 paged.map(p => (
                                     <React.Fragment key={p.participantId}>
                                         <TableRow
                                             hover
-                                            sx={{
-                                                cursor: 'pointer',
-                                                ...(harmonized
-                                                    ? {
-                                                          '&:hover': { bgcolor: 'surface.listTableHead' },
-                                                          '& td': { borderColor: 'surface.listTableRowBorder' },
-                                                      }
-                                                    : {}),
-                                            }}
+                                            sx={{ cursor: 'pointer', ...listRowSx }}
                                             onClick={() => toggleExpanded(p.participantId)}
                                         >
-                                            <TableCell padding="checkbox">
+                                            <TableCell padding="checkbox" sx={{ pl: EDGE_X, ...harmonizedTableCellSx }}>
                                                 <IconButton
                                                     size="small"
                                                     aria-label={
@@ -201,24 +162,24 @@ export function CampaignParticipantsTable({
                                                     />
                                                 </IconButton>
                                             </TableCell>
-                                            <TableCell onClick={e => e.stopPropagation()}>
+                                            <TableCell onClick={e => e.stopPropagation()} sx={harmonizedTableCellSx}>
                                                 <Stack direction="row" spacing={1.5} alignItems="center">
-                                                    {harmonized ? (
-                                                        <Avatar
-                                                            sx={{
-                                                                width: 40,
-                                                                height: 40,
-                                                                bgcolor: 'background.paper',
-                                                                color: 'primary.main',
-                                                                border: '1px solid',
-                                                                borderColor: 'border',
-                                                                fontSize: '0.75rem',
-                                                                fontWeight: 700,
-                                                            }}
-                                                        >
-                                                            {participantInitials(p.fullName)}
-                                                        </Avatar>
-                                                    ) : null}
+                                                    <Box
+                                                        sx={{
+                                                            width: 40,
+                                                            height: 40,
+                                                            borderRadius: 2,
+                                                            bgcolor: 'grey.100',
+                                                            color: 'primary.main',
+                                                            display: 'grid',
+                                                            placeItems: 'center',
+                                                            fontWeight: 800,
+                                                            fontSize: '0.75rem',
+                                                            flexShrink: 0,
+                                                        }}
+                                                    >
+                                                        {participantInitials(p.fullName)}
+                                                    </Box>
                                                     <Box>
                                                         {participantUrlPrefix ? (
                                                             <Link
@@ -228,7 +189,11 @@ export function CampaignParticipantsTable({
                                                                 <Typography
                                                                     fontWeight={700}
                                                                     color="primary.main"
-                                                                    sx={{ '&:hover': { textDecoration: 'underline' } }}
+                                                                    lineHeight={1.2}
+                                                                    sx={{
+                                                                        fontSize: '1.0625rem',
+                                                                        '&:hover': { textDecoration: 'underline' },
+                                                                    }}
                                                                 >
                                                                     {p.fullName}
                                                                 </Typography>
@@ -241,32 +206,27 @@ export function CampaignParticipantsTable({
                                                         <Typography
                                                             variant="caption"
                                                             color="text.secondary"
-                                                            sx={harmonized ? { fontSize: '0.6875rem' } : undefined}
+                                                            sx={{ display: 'block', mt: 0.25, opacity: 0.7 }}
                                                         >
                                                             {p.email}
                                                         </Typography>
                                                     </Box>
                                                 </Stack>
                                             </TableCell>
-                                            <TableCell align={harmonized ? 'center' : 'left'}>
+                                            <TableCell align="center" sx={harmonizedTableCellSx}>
                                                 <ProgressChip status={p.selfRatingStatus} />
                                             </TableCell>
-                                            <TableCell align={harmonized ? 'center' : 'left'}>
+                                            <TableCell align="center" sx={harmonizedTableCellSx}>
                                                 <ProgressChip status={p.peerFeedbackStatus} />
                                             </TableCell>
-                                            <TableCell align={harmonized ? 'center' : 'left'}>
+                                            <TableCell align="center" sx={harmonizedTableCellSx}>
                                                 <ProgressChip status={p.elementHumainStatus} />
                                             </TableCell>
-                                            {!harmonized ? (
-                                                <TableCell>
-                                                    <ProgressChip status={p.resultsStatus} />
-                                                </TableCell>
-                                            ) : null}
-                                            {participantUrlPrefix && matrixUrlPrefix ? (
+                                            {hasActions ? (
                                                 <TableCell
                                                     align="right"
                                                     onClick={e => e.stopPropagation()}
-                                                    sx={stickyActionCellSx}
+                                                    sx={{ ...harmonizedTableCellSx, pr: EDGE_X }}
                                                 >
                                                     <Stack
                                                         direction="row"
@@ -278,18 +238,9 @@ export function CampaignParticipantsTable({
                                                         <Button
                                                             size="small"
                                                             variant="outlined"
-                                                            startIcon={harmonized ? undefined : <LayoutPanelLeft size={14} />}
+                                                            color="primary"
                                                             href={`${matrixUrlPrefix}/${campaignId}/participants/${p.participantId}/matrix`}
-                                                            sx={
-                                                                harmonized
-                                                                    ? {
-                                                                          borderRadius: 2,
-                                                                          fontSize: '0.6875rem',
-                                                                          fontWeight: 700,
-                                                                          px: 2,
-                                                                      }
-                                                                    : { borderRadius: 99 }
-                                                            }
+                                                            sx={harmonizedTableActionButtonSx}
                                                         >
                                                             Réponses
                                                         </Button>
@@ -304,35 +255,20 @@ export function CampaignParticipantsTable({
                                                 </TableCell>
                                             ) : null}
                                         </TableRow>
-                                        {expandedParticipant === p.participantId && (
+                                        {expandedParticipant === p.participantId ? (
                                             <ParticipantTokensRow
                                                 participantId={p.participantId}
                                                 campaignId={campaignId}
                                                 colSpan={colSpan}
                                             />
-                                        )}
+                                        ) : null}
                                     </React.Fragment>
                                 ))
                             )}
                         </TableBody>
                     </Table>
-                    {participants.length > 0 && (
-                        <TablePagination
-                            component="div"
-                            count={participants.length}
-                            page={page}
-                            onPageChange={(_, newPage) => setPage(newPage)}
-                            rowsPerPage={rowsPerPage}
-                            onRowsPerPageChange={e => {
-                                setRowsPerPage(Number(e.target.value));
-                                setPage(0);
-                            }}
-                            rowsPerPageOptions={[10, 25, 50]}
-                            labelRowsPerPage="Lignes par page"
-                            labelDisplayedRows={({ from, to, count }) => `${from}–${to} sur ${count}`}
-                        />
-                    )}
                 </Box>
+                {pagination}
             </CardContent>
         </Card>
     );
