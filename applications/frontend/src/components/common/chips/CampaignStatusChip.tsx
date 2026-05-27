@@ -4,6 +4,8 @@ import { BaseStatusChip, type StatusChipTone } from './BaseStatusChip';
 
 export type CampaignStatusChipProps = {
     status: CampaignStatus;
+    /** Pill compact sans point — aligné sur le tableau Stitch. */
+    compact?: boolean;
 };
 
 const PALETTE: Record<CampaignStatus, StatusChipTone> = {
@@ -19,7 +21,7 @@ const PALETTE: Record<CampaignStatus, StatusChipTone> = {
     draft: { label: 'Brouillon', bg: 'tint.secondaryBg', color: 'tint.secondaryText', dot: 'tint.secondaryText' },
 };
 
-export function CampaignStatusChip({ status }: CampaignStatusChipProps) {
+export function CampaignStatusChip({ status, compact = false }: CampaignStatusChipProps) {
     const tone = PALETTE[status] ?? PALETTE.draft;
-    return <BaseStatusChip {...tone} />;
+    return <BaseStatusChip {...tone} showDot={!compact} />;
 }

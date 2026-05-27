@@ -6,6 +6,7 @@ export type ActiveStatusChipProps = {
     isActive: boolean;
     activeLabel?: string;
     inactiveLabel?: string;
+    compact?: boolean;
 };
 
 const PALETTE: Record<ActiveStatus, StatusChipTone> = {
@@ -23,6 +24,7 @@ export function ActiveStatusChip({
     isActive,
     activeLabel = 'Actif',
     inactiveLabel = 'Inactif',
+    compact = false,
 }: ActiveStatusChipProps) {
     const key = isActive ? 'active' : 'inactive';
     const tone = {
@@ -30,5 +32,5 @@ export function ActiveStatusChip({
         label: isActive ? activeLabel : inactiveLabel,
     };
 
-    return <BaseStatusChip {...tone} />;
+    return <BaseStatusChip {...tone} showDot={!compact} />;
 }

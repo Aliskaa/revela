@@ -1,16 +1,16 @@
 // Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
 
-import { Stack, TextField } from '@mui/material';
+import { Divider, Stack, Typography } from '@mui/material';
 import { ClipboardList, Sparkles, Target, Users } from 'lucide-react';
 import * as React from 'react';
 
 import { AdminCampaignDrawerForm } from '@/components/admin/AdminCampaignDrawerForm';
 import { KpiCard } from '@/components/common/cards';
 import { SearchField } from '@/components/common/forms/SearchField';
-import { AdminPageHeader, CoachScopedListCard, KpiGrid, ListPanel, PageHeroCard } from '@/components/common/layout';
+import { AdminPageHeader, KpiGrid, ListPanel } from '@/components/common/layout';
 import { useBreadcrumbs } from '@/components/layout/AppShellChromeContext';
 import { CampaignListViews } from '@/components/scoped/campaigns-list/CampaignListViews';
-import { useAdminCampaigns, useAdminDashboard, useCoaches, useCompanies, useCreateAdminCampaign } from '@/hooks/admin';
+import { useAdminCampaigns, useCoaches, useCompanies, useCreateAdminCampaign } from '@/hooks/admin';
 import { parseAdminJwtClaims } from '@/lib/auth';
 import { useTablePagination } from '@/lib/useTablePagination';
 
@@ -54,7 +54,6 @@ export function CampaignsListPage({ scope }: CampaignsListPageProps) {
     const { data: campaigns = [], isLoading: campaignsLoading } = useAdminCampaigns();
     const { data: coaches = [], isLoading: coachesLoading } = useCoaches();
     const { data: companies = [] } = useCompanies();
-    const { data: dashboard, isLoading: dashboardLoading } = useAdminDashboard();
     const createCampaign = useCreateAdminCampaign();
     const claims = parseAdminJwtClaims();
     const lockedCoachId = !isAdmin && claims?.scope === 'coach' ? claims.coachId : undefined;
@@ -63,7 +62,6 @@ export function CampaignsListPage({ scope }: CampaignsListPageProps) {
     const companyName = (id: number) => companies.find(c => c.id === id)?.name ?? '–';
     const coachName = (id: number) => coaches.find(c => c.id === id)?.displayName ?? '–';
     const questionnairesUsed = new Set(campaigns.map(c => c.questionnaireId).filter(Boolean)).size;
-    const activeCount = campaigns.filter(c => c.status === 'active').length;
 
     const filtered = React.useMemo(() => {
         const q = search.toLowerCase();
@@ -84,9 +82,11 @@ export function CampaignsListPage({ scope }: CampaignsListPageProps) {
 
     const emptyMessage = search ? 'Aucune campagne ne correspond à la recherche.' : 'Aucune campagne pour le moment.';
 
+    const displayFrom = filtered.length === 0 ? 0 : page * rowsPerPage + 1;
+    const displayTo = filtered.length === 0 ? 0 : Math.min((page + 1) * rowsPerPage, filtered.length);
+
     const listViews = (
         <CampaignListViews
-            variant={scope}
             campaigns={paged}
             isLoading={isLoading}
             isEmpty={filtered.length === 0}
@@ -132,57 +132,18 @@ export function CampaignsListPage({ scope }: CampaignsListPageProps) {
         />
     ) : null;
 
-    if (isAdmin) {
-        return (
-            <Stack spacing={4}>
-                {drawer}
-                <AdminPageHeader
-                    title={labels.title}
-                    subtitle={labels.subtitle}
-                    action={{ label: 'Nouvelle campagne', onClick: () => setDrawerOpen(true) }}
-                />
-                <KpiGrid columns={4}>
-                    <KpiCard
-                        label={labels.statsLabel}
-                        value={campaignsLoading ? '–' : campaigns.length}
-                        helper={labels.statsHelper}
-                        icon={ClipboardList}
-                    />
-                    <KpiCard
-                        label="Actives"
-                        value={campaignsLoading ? '–' : activeCount}
-                        helper="en cours"
-                        icon={Target}
-                    />
-                    <KpiCard
-                        label="Participants"
-                        value={dashboardLoading ? '–' : (dashboard?.total_participants ?? '–')}
-                        helper="rattachés"
-                        icon={Users}
-                    />
-                    <KpiCard
-                        label="Questionnaires"
-                        value={campaignsLoading ? '–' : questionnairesUsed}
-                        helper="B / F / S"
-                        icon={Sparkles}
-                    />
-                </KpiGrid>
-                <ListPanel
-                    title="Liste des campagnes"
-                    headerBorder
-                    headerActions={
-                        <SearchField value={search} onChange={setSearch} placeholder="Rechercher une campagne…" />
-                    }
-                >
-                    {listViews}
-                </ListPanel>
-            </Stack>
-        );
-    }
-
     return (
         <Stack spacing={3}>
-            <PageHeroCard eyebrow={labels.eyebrow} title={labels.title} subtitle={labels.subtitle} />
+            {isAdmin ? drawer : null}
+            <AdminPageHeader
+                title={labels.title}
+                subtitle={labels.subtitle}
+                action={isAdmin ? {
+                    label: 'Nouvelle campagne',
+                    onClick: () => setDrawerOpen(true),
+                    icon: ClipboardList,
+                } : undefined}
+            />
             <KpiGrid columns={4}>
                 <KpiCard
                     label={labels.statsLabel}
@@ -213,20 +174,33 @@ export function CampaignsListPage({ scope }: CampaignsListPageProps) {
                     loading={campaignsLoading}
                 />
             </KpiGrid>
-            <CoachScopedListCard
+            <ListPanel
                 title="Liste des campagnes"
-                search={
-                    <TextField
-                        size="small"
-                        placeholder="Rechercher…"
-                        value={search}
-                        onChange={e => setSearch(e.target.value)}
-                        sx={{ minWidth: 260 }}
-                    />
+                headerBorder
+                headerActions={
+                    <Stack direction="row" alignItems="center" spacing={2} sx={{ width: { xs: '100%', sm: 'auto' } }}>
+                        <SearchField value={search} onChange={setSearch} placeholder="Rechercher une campagne…" />
+                        {filtered.length > 0 ? (
+                            <>
+                                <Divider
+                                    orientation="vertical"
+                                    flexItem
+                                    sx={{ display: { xs: 'none', md: 'block' }, borderColor: 'surface.lavenderGrey' }}
+                                />
+                                <Typography
+                                    variant="caption"
+                                    color="text.secondary"
+                                    sx={{ display: { xs: 'none', md: 'block' }, whiteSpace: 'nowrap' }}
+                                >
+                                    Affichage {displayFrom}–{displayTo} sur {filtered.length}
+                                </Typography>
+                            </>
+                        ) : null}
+                    </Stack>
                 }
             >
                 {listViews}
-            </CoachScopedListCard>
+            </ListPanel>
         </Stack>
     );
 }

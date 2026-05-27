@@ -1,4 +1,4 @@
-import type { AdminCampaign, Company } from '@aor/types';
+import type { Coach } from '@aor/types';
 import {
     Box,
     Card,
@@ -7,40 +7,43 @@ import {
     Table,
     TableBody,
     TableCell,
-    TableSortLabel,
     Typography,
 } from '@mui/material';
 import { Link } from '@tanstack/react-router';
+
 import { SkeletonCards, SkeletonTableRows } from '@/components/common/SkeletonRows';
-import { CompanyListStatusChip, resolveCompanyListStatus } from '@/components/common/chips';
+import { ActiveStatusChip, AdminBadge } from '@/components/common/chips';
 import {
     ClickableTableRow,
     EmptyTableRow,
-    TablePagination,
     ListTableHead,
     RowNavigateHint,
+    TablePagination,
 } from '@/components/common/data-table';
 import type { ListTableColumn } from '@/components/common/data-table';
 import { MobileListEmptyMessage, ResponsiveListViews } from '@/components/common/layout';
-import { companyInitial } from '@/lib/companyInitial';
 
 const ADMIN_EDGE_X = 5;
 const ADMIN_CELL_PY = 3;
 const ADMIN_TABLE_MIN_WIDTH = 760;
-const TABLE_COLUMNS = 4;
+const TABLE_COLUMNS = 5;
 
-export type CompanySortKey = 'name' | 'contact_name' | 'participant_count';
-export type CompanySortOrder = 'asc' | 'desc';
-export type CompanyListViewsProps = {
-    companies: Company[];
-    campaigns: AdminCampaign[];
+function formatCreatedAt(createdAt: string | null | undefined): string {
+    return createdAt ? new Date(createdAt).toLocaleDateString('fr-FR') : '–';
+}
+
+function coachInitial(displayName: string): string {
+    const trimmed = displayName.trim();
+    return trimmed ? trimmed.charAt(0).toUpperCase() : '?';
+}
+
+export type CoachListViewsProps = {
+    coaches: Coach[];
+    campaignCountByCoach: ReadonlyMap<number, number>;
     isLoading: boolean;
     isEmpty: boolean;
     emptyMessage: string;
     detailPathPrefix: string;
-    sortKey: CompanySortKey;
-    sortOrder: CompanySortOrder;
-    onSort: (key: CompanySortKey) => void;
     page: number;
     rowsPerPage: number;
     totalCount: number;
@@ -48,22 +51,19 @@ export type CompanyListViewsProps = {
     onRowsPerPageChange: (rowsPerPage: number) => void;
 };
 
-export function CompanyListViews({
-    companies,
-    campaigns,
+export function CoachListViews({
+    coaches,
+    campaignCountByCoach,
     isLoading,
     isEmpty,
     emptyMessage,
     detailPathPrefix,
-    sortKey,
-    sortOrder,
-    onSort,
     page,
     rowsPerPage,
     totalCount,
     onPageChange,
     onRowsPerPageChange,
-}: CompanyListViewsProps) {
+}: CoachListViewsProps) {
     const pagination =
         totalCount > 0 ? (
             <TablePagination
@@ -75,21 +75,15 @@ export function CompanyListViews({
                 edgePadding={ADMIN_EDGE_X}
             />
         ) : null;
-    const sortLabel = (key: CompanySortKey, label: string) => (
-        <TableSortLabel
-            active={sortKey === key}
-            direction={sortKey === key ? sortOrder : 'asc'}
-            onClick={() => onSort(key)}
-        >
-            {label}
-        </TableSortLabel>
-    );
+
     const adminColumns: ListTableColumn[] = [
-        { key: 'name', label: sortLabel('name', 'Entreprise'), sx: { pl: ADMIN_EDGE_X } },
-        { key: 'contact', label: sortLabel('contact_name', 'Contact principal') },
-        { key: 'participants', label: sortLabel('participant_count', 'Participants') },
+        { key: 'coach', label: 'Coach', sx: { pl: ADMIN_EDGE_X } },
+        { key: 'username', label: 'Username' },
+        { key: 'campaigns', label: 'Campagnes' },
+        { key: 'createdAt', label: 'Créé le' },
         { key: 'status', label: 'Statut', sx: { pr: ADMIN_EDGE_X } },
     ];
+
     return (
         <ResponsiveListViews
             desktop={
@@ -101,11 +95,11 @@ export function CompanyListViews({
                                 {isLoading ? (
                                     <SkeletonTableRows rows={4} columns={TABLE_COLUMNS} />
                                 ) : (
-                                    companies.map(company => (
-                                        <CompanyTableRow
-                                            key={company.id}
-                                            company={company}
-                                            campaigns={campaigns}
+                                    coaches.map(coach => (
+                                        <CoachTableRow
+                                            key={coach.id}
+                                            coach={coach}
+                                            campaignCount={campaignCountByCoach.get(coach.id) ?? 0}
                                             detailPathPrefix={detailPathPrefix}
                                         />
                                     ))
@@ -124,11 +118,11 @@ export function CompanyListViews({
                     {isLoading ? (
                         <SkeletonCards count={3} height={140} />
                     ) : (
-                        companies.map(company => (
-                            <CompanyMobileCard
-                                key={company.id}
-                                company={company}
-                                campaigns={campaigns}
+                        coaches.map(coach => (
+                            <CoachMobileCard
+                                key={coach.id}
+                                coach={coach}
+                                campaignCount={campaignCountByCoach.get(coach.id) ?? 0}
                                 detailPathPrefix={detailPathPrefix}
                             />
                         ))
@@ -140,16 +134,16 @@ export function CompanyListViews({
     );
 }
 
-type CompanyRowProps = {
-    company: Company;
-    campaigns: AdminCampaign[];
+type CoachRowProps = {
+    coach: Coach;
+    campaignCount: number;
     detailPathPrefix: string;
 };
 
-function CompanyTableRow({ company, campaigns, detailPathPrefix }: CompanyRowProps) {
-    const status = resolveCompanyListStatus(company.id, campaigns);
-    const detailTo = `${detailPathPrefix}/${company.id}`;
-    const rowLabel = `Ouvrir ${company.name}`;
+function CoachTableRow({ coach, campaignCount, detailPathPrefix }: CoachRowProps) {
+    const detailTo = `${detailPathPrefix}/${coach.id}`;
+    const rowLabel = `Ouvrir ${coach.displayName}`;
+
     return (
         <ClickableTableRow to={detailTo} ariaLabel={rowLabel}>
             <TableCell sx={{ pl: ADMIN_EDGE_X, py: ADMIN_CELL_PY }}>
@@ -166,50 +160,48 @@ function CompanyTableRow({ company, campaigns, detailPathPrefix }: CompanyRowPro
                             fontWeight: 800,
                             fontSize: '1.125rem',
                             flexShrink: 0,
-                            overflow: 'hidden',
                         }}
                     >
-                        {companyInitial(company.name)}
+                        {coachInitial(coach.displayName)}
                     </Box>
                     <Box>
-                        <Typography
-                            fontWeight={700}
-                            color="primary.main"
-                            lineHeight={1}
-                            sx={{ fontSize: '1.125rem' }}
-                        >
-                            {company.name}
-                        </Typography>
+                        <Stack direction="row" spacing={1} alignItems="center">
+                            <Typography
+                                fontWeight={700}
+                                color="primary.main"
+                                lineHeight={1}
+                                sx={{ fontSize: '1.125rem' }}
+                            >
+                                {coach.displayName}
+                            </Typography>
+                            {coach.isAdmin ? <AdminBadge /> : null}
+                        </Stack>
                     </Box>
                 </Stack>
             </TableCell>
             <TableCell sx={{ py: ADMIN_CELL_PY }}>
-                <Typography fontWeight={700} color="text.primary" lineHeight={1.2}>
-                    {company.contact_name ?? '–'}
+                <Typography color="text.secondary" fontWeight={600}>
+                    {coach.username}
                 </Typography>
-                {company.contact_email ? (
-                    <Typography
-                        variant="caption"
-                        color="text.secondary"
-                        sx={{ display: 'block', mt: 0.25, opacity: 0.6 }}
-                    >
-                        {company.contact_email}
-                    </Typography>
-                ) : null}
             </TableCell>
             <TableCell sx={{ py: ADMIN_CELL_PY }}>
                 <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 0.75 }}>
                     <Typography fontWeight={800} color="primary.main">
-                        {company.participant_count}
+                        {campaignCount}
                     </Typography>
                     <Typography variant="caption" color="text.secondary" sx={{ opacity: 0.6 }}>
-                        participants
+                        campagnes
                     </Typography>
                 </Box>
             </TableCell>
+            <TableCell sx={{ py: ADMIN_CELL_PY }}>
+                <Typography color="text.secondary" sx={{ opacity: 0.85 }}>
+                    {formatCreatedAt(coach.createdAt)}
+                </Typography>
+            </TableCell>
             <TableCell sx={{ py: ADMIN_CELL_PY, pr: ADMIN_EDGE_X }}>
                 <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={2}>
-                    <CompanyListStatusChip status={status} />
+                    <ActiveStatusChip isActive={coach.isActive} inactiveLabel="Pause" />
                     <RowNavigateHint />
                 </Stack>
             </TableCell>
@@ -217,9 +209,9 @@ function CompanyTableRow({ company, campaigns, detailPathPrefix }: CompanyRowPro
     );
 }
 
-function CompanyMobileCard({ company, campaigns, detailPathPrefix }: CompanyRowProps) {
-    const status = resolveCompanyListStatus(company.id, campaigns);
-    const detailTo = `${detailPathPrefix}/${company.id}`;
+function CoachMobileCard({ coach, campaignCount, detailPathPrefix }: CoachRowProps) {
+    const detailTo = `${detailPathPrefix}/${coach.id}`;
+
     return (
         <Card
             component={Link}
@@ -252,22 +244,25 @@ function CompanyMobileCard({ company, campaigns, detailPathPrefix }: CompanyRowP
                                     fontWeight: 800,
                                 }}
                             >
-                                {companyInitial(company.name)}
+                                {coachInitial(coach.displayName)}
                             </Box>
                             <Box>
-                                <Typography variant="h6" fontWeight={800} color="primary.main">
-                                    {company.name}
-                                </Typography>
+                                <Stack direction="row" spacing={1} alignItems="center">
+                                    <Typography variant="h6" fontWeight={800} color="primary.main">
+                                        {coach.displayName}
+                                    </Typography>
+                                    {coach.isAdmin ? <AdminBadge /> : null}
+                                </Stack>
                                 <Typography variant="body2" color="text.secondary">
-                                    {company.contact_name ?? '–'}
+                                    {coach.username}
                                 </Typography>
                             </Box>
                         </Stack>
-                        <CompanyListStatusChip status={status} />
+                        <ActiveStatusChip isActive={coach.isActive}  inactiveLabel="Pause" />
                     </Stack>
                     <Stack direction="row" alignItems="center" justifyContent="space-between">
                         <Typography variant="caption" color="text.secondary">
-                            {company.participant_count} participants
+                            {campaignCount} campagnes · Créé le {formatCreatedAt(coach.createdAt)}
                         </Typography>
                         <RowNavigateHint />
                     </Stack>
