@@ -183,7 +183,7 @@ export function CampaignParticipantsTable({
                                                     <Box>
                                                         {participantUrlPrefix ? (
                                                             <Link
-                                                                to={`${participantUrlPrefix}/${p.participantId}`}
+                                                                to={`${participantUrlPrefix}/${p.participantId}` as `/admin/participants` | `/coach/participants`}
                                                                 style={{ color: 'inherit', textDecoration: 'none' }}
                                                             >
                                                                 <Typography
