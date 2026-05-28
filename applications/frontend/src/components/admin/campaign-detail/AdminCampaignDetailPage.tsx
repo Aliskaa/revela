@@ -89,7 +89,7 @@ export function AdminCampaignDetailPage({ campaignId }: AdminCampaignDetailPageP
     }
 
     return (
-        <Stack spacing={3}>
+        <Stack spacing={3} sx={{ minWidth: 0 }}>
             <Box>
                 <Typography
                     variant="h3"
@@ -128,12 +128,17 @@ export function AdminCampaignDetailPage({ campaignId }: AdminCampaignDetailPageP
             <Box
                 sx={{
                     display: 'grid',
-                    gridTemplateColumns: { xs: '1fr', lg: '2fr 1fr' },
+                    gridTemplateColumns: {
+                        xs: '1fr',
+                        xl: 'minmax(0, 2fr) minmax(0, 1fr)',
+                    },
                     gap: 3,
                     alignItems: 'start',
+                    width: '100%',
+                    minWidth: 0,
                 }}
             >
-                <Stack spacing={3}>
+                <Stack spacing={3} sx={{ minWidth: 0 }}>
                     <CampaignSummaryCard
                         harmonized
                         campaign={campaign}
@@ -151,7 +156,7 @@ export function AdminCampaignDetailPage({ campaignId }: AdminCampaignDetailPageP
                     />
                 </Stack>
 
-                <Stack spacing={3}>
+                <Stack spacing={3} sx={{ minWidth: 0 }}>
                     <CampaignSynthesisCard harmonized campaignId={campaign.id} scope="admin" />
                     <CampaignStatusActions
                         harmonized

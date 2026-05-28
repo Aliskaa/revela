@@ -116,7 +116,7 @@ export function CampaignDetailPage({ scope, campaignId }: CampaignDetailPageProp
     }
 
     return (
-        <Stack spacing={3}>
+        <Stack spacing={3} sx={{ minWidth: 0 }}>
             <PageHeroCard
                 eyebrow="Détail campagne"
                 title={campaign.name}
@@ -148,12 +148,17 @@ export function CampaignDetailPage({ scope, campaignId }: CampaignDetailPageProp
             <Box
                 sx={{
                     display: 'grid',
-                    gridTemplateColumns: { xs: '1fr', lg: '1fr 1fr' },
+                    gridTemplateColumns: {
+                        xs: '1fr',
+                        xl: 'minmax(0, 2fr) minmax(0, 1fr)',
+                    },
                     gap: 3,
                     alignItems: 'start',
+                    width: '100%',
+                    minWidth: 0,
                 }}
             >
-                <Stack spacing={3}>
+                <Stack spacing={3} sx={{ minWidth: 0 }}>
                     <CampaignSummaryCard
                         campaign={campaign}
                         companyName={companyName}
@@ -170,7 +175,7 @@ export function CampaignDetailPage({ scope, campaignId }: CampaignDetailPageProp
                     />
                 </Stack>
 
-                <Stack spacing={3}>
+                <Stack spacing={3} sx={{ minWidth: 0 }}>
                     <CampaignSynthesisCard campaignId={campaign.id} scope={scope} />
                     <CampaignStatusActions campaign={campaign} participantsCount={participants.length} />
                     <CampaignManageParticipants

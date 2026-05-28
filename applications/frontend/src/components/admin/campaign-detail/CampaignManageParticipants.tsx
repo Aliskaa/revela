@@ -149,6 +149,8 @@ export function CampaignManageParticipants({
                           flexDirection: 'column',
                           minHeight: 400,
                           maxHeight: 400,
+                          minWidth: 0,
+                          width: '100%',
                       }
                     : undefined
             }
