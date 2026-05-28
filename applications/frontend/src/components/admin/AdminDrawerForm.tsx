@@ -38,8 +38,6 @@ export type AdminDrawerFormProps = {
      * par `useDrawerForm`.
      */
     dirty?: boolean;
-    /** Style aligné sur les pages admin harmonisées (Entreprises, Campagnes…). */
-    harmonized?: boolean;
 };
 
 export function AdminDrawerForm({
@@ -57,14 +55,13 @@ export function AdminDrawerForm({
     isSubmitDisabled = false,
     isSubmitting = false,
     dirty = false,
-    harmonized = false,
 }: AdminDrawerFormProps) {
     const { t } = useTranslation();
     const titleId = React.useId();
     const resolvedSubmitLabel = submitLabel ?? t('common.save');
     const resolvedCancelLabel = cancelLabel ?? t('common.cancel');
     const [confirmOpen, setConfirmOpen] = React.useState(false);
-    const resolvedWidth = width ?? (harmonized ? 448 : 560);
+    const resolvedWidth = width ?? 448;
 
     const requestClose = React.useCallback(() => {
         if (dirty) {
@@ -102,19 +99,15 @@ export function AdminDrawerForm({
                     flexDirection: 'column',
                 }}
             >
-                <Box sx={{ p: harmonized ? { xs: 2.5, sm: 3 } : 2.5 }}>
+                <Box sx={{ p: { xs: 2.5, sm: 3 } }}>
                     <Stack direction="row" justifyContent="space-between" alignItems="start" spacing={2}>
                         <Box sx={{ minWidth: 0 }}>
                             <Typography
                                 id={titleId}
-                                variant={harmonized ? 'h5' : 'h6'}
-                                fontWeight={harmonized ? 700 : 800}
-                                color={harmonized ? 'primary.main' : 'text.primary'}
-                                sx={
-                                    harmonized
-                                        ? { letterSpacing: -0.02, lineHeight: 1.2 }
-                                        : undefined
-                                }
+                                variant={'h5'}
+                                fontWeight={700}
+                                color={'primary.main'}
+                                sx={{ letterSpacing: -0.02, lineHeight: 1.2 }}
                             >
                                 {title}
                             </Typography>
@@ -125,7 +118,7 @@ export function AdminDrawerForm({
                                     sx={{
                                         mt: 0.75,
                                         lineHeight: 1.7,
-                                        maxWidth: harmonized ? 480 : undefined,
+                                        maxWidth: 480,
                                     }}
                                 >
                                     {subtitle}
@@ -137,17 +130,11 @@ export function AdminDrawerForm({
                             onClick={requestClose}
                             aria-label={t('drawer.closePanel')}
                             sx={
-                                harmonized
-                                    ? {
-                                          borderRadius: '50%',
-                                          color: 'text.secondary',
-                                          '&:hover': { bgcolor: 'surface.lavenderGrey' },
-                                      }
-                                    : {
-                                          border: '1px solid',
-                                          borderColor: 'border',
-                                          borderRadius: 1,
-                                      }
+                                {
+                                    borderRadius: '50%',
+                                    color: 'text.secondary',
+                                    '&:hover': { bgcolor: 'surface.lavenderGrey' },
+                                }
                             }
                         >
                             <X size={16} />
@@ -155,60 +142,30 @@ export function AdminDrawerForm({
                     </Stack>
                 </Box>
 
-                <Divider sx={harmonized ? { borderColor: 'surface.outlineVariantFaint' } : undefined} />
+                <Divider sx={{ borderColor: 'surface.outlineVariantFaint' }} />
 
-                <Box sx={{ flex: 1, overflowY: 'auto', p: harmonized ? 4 : 2.5 }}>{children}</Box>
+                <Box sx={{ flex: 1, overflowY: 'auto', p: 2.5 }}>{children}</Box>
 
-                <Divider sx={harmonized ? { borderColor: 'surface.outlineVariantFaint' } : undefined} />
+                <Divider sx={{ borderColor: 'surface.outlineVariantFaint' }} />
 
-                <Box sx={{ p: harmonized ? 3 : 2.5 }}>
-                    {harmonized ? (
-                        <Stack direction="row" spacing={2} sx={{ width: '100%' }}>
-                            {footerLeft}
-                            <Button appearance="secondary" onClick={requestClose} sx={{ flex: 1, py: 1.5 }}>
-                                {resolvedCancelLabel}
+                <Box sx={{ p: 3 }}>
+                    <Stack direction="row" spacing={2} sx={{ width: '100%' }}>
+                        {footerLeft}
+                        <Button appearance="secondary" onClick={requestClose} sx={{ flex: 1, py: 1.5 }}>
+                            {resolvedCancelLabel}
+                        </Button>
+                        {onSubmit ? (
+                            <Button
+                                appearance="primary"
+                                onClick={onSubmit}
+                                disabled={isSubmitDisabled || isSubmitting}
+                                sx={{ flex: 1, py: 1.5 }}
+                            >
+                                {isSubmitting ? t('common.saving') : resolvedSubmitLabel}
                             </Button>
-                            {onSubmit ? (
-                                <Button
-                                    appearance="primary"
-                                    onClick={onSubmit}
-                                    disabled={isSubmitDisabled || isSubmitting}
-                                    sx={{ flex: 1, py: 1.5 }}
-                                >
-                                    {isSubmitting ? t('common.saving') : resolvedSubmitLabel}
-                                </Button>
-                            ) : null}
-                            {footerRight}
-                        </Stack>
-                    ) : (
-                        <Stack
-                            direction="row"
-                            spacing={1.2}
-                            justifyContent="space-between"
-                            alignItems="center"
-                            flexWrap="wrap"
-                            useFlexGap
-                        >
-                            <Box>{footerLeft}</Box>
-
-                            <Stack direction="row" spacing={1.2} sx={{ ml: 'auto' }}>
-                                {footerRight}
-                                <Button appearance="secondary" onClick={requestClose}>
-                                    {resolvedCancelLabel}
-                                </Button>
-
-                                {onSubmit ? (
-                                    <Button
-                                        appearance="primary"
-                                        onClick={onSubmit}
-                                        disabled={isSubmitDisabled || isSubmitting}
-                                    >
-                                        {isSubmitting ? t('common.saving') : resolvedSubmitLabel}
-                                    </Button>
-                                ) : null}
-                            </Stack>
-                        </Stack>
-                    )}
+                        ) : null}
+                        {footerRight}
+                    </Stack>
                 </Box>
             </Box>
             <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)}>

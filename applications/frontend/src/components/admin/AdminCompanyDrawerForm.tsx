@@ -3,7 +3,7 @@
 import { Box, Stack, TextField, Typography } from '@mui/material';
 import { z } from 'zod';
 
-import { drawerFormFieldSlotProps, drawerFormFieldSx, drawerSectionTitleSx } from '@/components/common/styles/listSurfaces';
+import { drawerSectionTitleSx } from '@/components/common/styles/listSurfaces';
 import { useDrawerForm } from '@/lib/useDrawerForm';
 
 import { AdminDrawerForm } from './AdminDrawerForm';
@@ -43,7 +43,7 @@ const buildDefaults = (initial?: Partial<CompanyFormValues>): CompanyFormValues 
     contactEmail: initial?.contactEmail ?? '',
 });
 
-const COPY = {
+const MODE = {
     create: {
         title: 'Ajouter une entreprise',
         subtitle:
@@ -72,12 +72,11 @@ export function AdminCompanyDrawerForm({
         onSubmit,
     });
 
-    const copy = COPY[mode];
+    const copy = MODE[mode];
 
     return (
         <AdminDrawerForm
             open={open}
-            harmonized
             title={copy.title}
             subtitle={copy.subtitle}
             onClose={onClose}
@@ -99,8 +98,6 @@ export function AdminCompanyDrawerForm({
                         helperText={errors.name}
                         fullWidth
                         autoFocus
-                        slotProps={drawerFormFieldSlotProps}
-                        sx={drawerFormFieldSx}
                     />
                 </Box>
 
@@ -118,8 +115,6 @@ export function AdminCompanyDrawerForm({
                                 errors.contactName || 'Optionnel — affiché dans la liste des entreprises.'
                             }
                             fullWidth
-                            slotProps={drawerFormFieldSlotProps}
-                            sx={drawerFormFieldSx}
                         />
                         <TextField
                             label="Email du contact"
@@ -131,8 +126,6 @@ export function AdminCompanyDrawerForm({
                                 errors.contactEmail || 'Optionnel — sous-titre du contact dans le tableau.'
                             }
                             fullWidth
-                            slotProps={drawerFormFieldSlotProps}
-                            sx={drawerFormFieldSx}
                         />
                     </Stack>
                 </Box>

@@ -3,7 +3,6 @@
 import {
     Alert,
     Box,
-    Checkbox,
     FormControl,
     FormControlLabel,
     FormHelperText,
@@ -11,8 +10,9 @@ import {
     MenuItem,
     Select,
     Stack,
+    Switch,
     TextField,
-    Typography,
+    Typography
 } from '@mui/material';
 import { z } from 'zod';
 
@@ -20,6 +20,7 @@ import { useCoaches, useCompanies } from '@/hooks/admin';
 import { useAdminQuestionnaires } from '@/hooks/questionnaires';
 import { useDrawerForm } from '@/lib/useDrawerForm';
 
+import { drawerSectionTitleSx } from '../common/styles/listSurfaces';
 import { AdminDrawerForm } from './AdminDrawerForm';
 
 export type CampaignDrawerMode = 'create' | 'edit';
@@ -66,6 +67,20 @@ export type AdminCampaignDrawerFormProps = {
     lockedCoachId?: number;
 };
 
+const MODE = {
+    create: {
+        title: 'Nouvelle campagne',
+        subtitle:
+            'Créer une campagne et lui associer un questionnaire.',
+        submitLabel: 'Créer',
+    },
+    edit: {
+        title: 'Éditer la campagne',
+        subtitle: 'Mettre à jour les informations de la campagne.',
+        submitLabel: 'Mettre à jour',
+    },
+} as const;
+
 const buildDefaults = (initial?: Partial<CampaignFormValues>): CampaignFormValues => ({
     name: initial?.name ?? '',
     companyId: initial?.companyId ?? 0,
@@ -101,30 +116,26 @@ export function AdminCampaignDrawerForm({
         onSubmit,
     });
 
-    const title = mode === 'create' ? 'Nouvelle campagne' : 'Éditer la campagne';
-    const subtitle =
-        mode === 'create'
-            ? 'Créer une campagne et lui associer un questionnaire.'
-            : 'Mettre à jour les informations de la campagne.';
+    const copy = MODE[mode];
 
     const noCompanies = companies.length === 0;
 
     return (
         <AdminDrawerForm
             open={open}
-            title={title}
-            subtitle={subtitle}
+            title={copy.title}
+            subtitle={copy.subtitle}
             onClose={onClose}
             onSubmit={submit}
-            submitLabel={mode === 'create' ? 'Créer' : 'Enregistrer'}
+            submitLabel={copy.submitLabel}
             isSubmitting={isSubmitting || submitting}
             isSubmitDisabled={noCompanies}
             dirty={dirty}
         >
-            <Stack spacing={2.25}>
-                <Box>
-                    <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
-                        Identité
+            <Stack spacing={4}>
+                <Box component="section">
+                    <Typography component="h3" sx={drawerSectionTitleSx}>
+                        Nom
                     </Typography>
                     <TextField
                         label="Nom de la campagne"
@@ -138,7 +149,7 @@ export function AdminCampaignDrawerForm({
                 </Box>
 
                 <Box>
-                    <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
+                    <Typography component="h3" sx={drawerSectionTitleSx}>
                         Affectation
                     </Typography>
                     <Stack spacing={2}>
@@ -203,8 +214,8 @@ export function AdminCampaignDrawerForm({
                 </Box>
 
                 <Box>
-                    <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
-                        Dates et statut
+                    <Typography component="h3" sx={drawerSectionTitleSx}>
+                        Dates et Statut
                     </Typography>
                     <Stack spacing={2}>
                         <TextField
@@ -236,9 +247,6 @@ export function AdminCampaignDrawerForm({
                             >
                                 <MenuItem value="draft">Brouillon</MenuItem>
                                 <MenuItem value="active">Active</MenuItem>
-                                {/* `closed` et `archived` ne sont pas proposés à la création :
-                                    ces statuts sont des transitions appliquées sur une campagne
-                                    existante (cf. P02 du suivi produit). */}
                                 {mode === 'edit' && <MenuItem value="closed">Clôturée</MenuItem>}
                                 {mode === 'edit' && <MenuItem value="archived">Archivée</MenuItem>}
                             </Select>
@@ -253,12 +261,27 @@ export function AdminCampaignDrawerForm({
 
                 <FormControlLabel
                     control={
-                        <Checkbox
+                        <Switch
                             checked={values.allowTestWithoutManualInputs}
                             onChange={(_, checked) => setField('allowTestWithoutManualInputs', checked)}
+                            sx={{
+                                '& .MuiSwitch-track': {
+                                    bgcolor: 'surface.lavenderGrey',
+                                    opacity: 1,
+                                },
+                                '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                                    bgcolor: 'tint.primarySwitchTrack',
+                                    opacity: 1,
+                                },
+                            }}
                         />
                     }
-                    label="Autoriser le test sans inputs manuels"
+                    label={
+                        <Typography variant="body2" color="text.secondary">
+                            {values.allowTestWithoutManualInputs ? 'Autoriser le test sans inputs manuels' : 'Ne pas autoriser le test sans inputs manuels'}
+                        </Typography>
+                    }
+                    sx={{ m: 0, px: 0.5, py: 0.5 }}
                 />
 
                 {error ? <Alert severity="error">{error}</Alert> : null}

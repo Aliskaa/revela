@@ -103,7 +103,6 @@ export function AdminCoachDrawerForm({
     return (
         <AdminDrawerForm
             open={open}
-            harmonized
             title={copy.title}
             subtitle={copy.subtitle}
             onClose={onClose}
@@ -125,8 +124,6 @@ export function AdminCoachDrawerForm({
                         helperText={errors.displayName}
                         fullWidth
                         autoFocus
-                        slotProps={drawerFormFieldSlotProps}
-                        sx={drawerFormFieldSx}
                     />
                 </Box>
 
@@ -148,8 +145,6 @@ export function AdminCoachDrawerForm({
                             }
                             fullWidth
                             disabled={usernameLocked}
-                            slotProps={drawerFormFieldSlotProps}
-                            sx={drawerFormFieldSx}
                         />
                         <TextField
                             label={mode === 'create' ? 'Mot de passe initial' : 'Nouveau mot de passe (optionnel)'}
@@ -167,9 +162,7 @@ export function AdminCoachDrawerForm({
                             }
                             fullWidth
                             disabled={passwordLocked}
-                            sx={drawerFormFieldSx}
                             slotProps={{
-                                ...drawerFormFieldSlotProps,
                                 input: {
                                     endAdornment: passwordLocked ? null : (
                                         <InputAdornment position="end">
