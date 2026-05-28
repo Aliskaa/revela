@@ -1,11 +1,10 @@
 // Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
 
-import { Button, Card, CardContent, Skeleton, Stack, Typography } from '@mui/material';
+import { Box, Link as MuiLink, Skeleton, Stack, Typography } from '@mui/material';
 import { Link } from '@tanstack/react-router';
-import { ArrowLeft } from 'lucide-react';
 
 import { CampaignSynthesisMatrix } from '@/components/admin/campaign-detail/CampaignSynthesisMatrix';
-import { PageHeroCard } from '@/components/common/layout';
+import { useBreadcrumbs } from '@/components/layout/AppShellChromeContext';
 import { useAdminCampaignSynthesis } from '@/hooks/admin';
 
 export type CampaignSynthesisScope = 'admin' | 'coach';
@@ -15,22 +14,25 @@ export type CampaignSynthesisPageProps = {
     campaignId: number;
 };
 
+const SUBTITLE_SUFFIX =
+    'Vue agrégée du test scientifique : tous les participants côte à côte, avec mise en lumière des écarts forts.';
+
 const SCOPE_CFG: Record<
     CampaignSynthesisScope,
     {
-        backTo: '/admin/campaigns/$campaignId' | '/coach/campaigns/$campaignId';
-        backLabel: string;
+        campaignsListTo: '/admin/campaigns' | '/coach/campaigns';
+        campaignDetailTo: (campaignId: number) => string;
         notFound: string;
     }
 > = {
     admin: {
-        backTo: '/admin/campaigns/$campaignId',
-        backLabel: 'Retour à la campagne',
+        campaignsListTo: '/admin/campaigns',
+        campaignDetailTo: campaignId => `/admin/campaigns/${campaignId}`,
         notFound: 'Campagne introuvable.',
     },
     coach: {
-        backTo: '/coach/campaigns/$campaignId',
-        backLabel: 'Retour à la campagne',
+        campaignsListTo: '/coach/campaigns',
+        campaignDetailTo: campaignId => `/coach/campaigns/${campaignId}`,
         notFound: 'Campagne introuvable ou hors de votre périmètre.',
     },
 };
@@ -42,23 +44,39 @@ const SCOPE_CFG: Record<
  */
 export function CampaignSynthesisPage({ scope, campaignId }: CampaignSynthesisPageProps) {
     const cfg = SCOPE_CFG[scope];
+    const isAdmin = scope === 'admin';
     const { data: matrix, isLoading } = useAdminCampaignSynthesis(campaignId);
 
-    const backButton = (
-        <Link to={cfg.backTo} params={{ campaignId: campaignId.toString() }}>
-            <Button
-                variant="outlined"
-                startIcon={<ArrowLeft size={16} />}
-            >
-                {cfg.backLabel}
-            </Button>
-        </Link>
+    useBreadcrumbs(
+        isAdmin
+            ? matrix
+                ? [
+                      { label: 'Administration' },
+                      { label: 'Campagnes', to: cfg.campaignsListTo },
+                      {
+                          label: matrix.campaignName,
+                          to: cfg.campaignDetailTo(campaignId),
+                      },
+                      { label: 'Synthèse Élément B' },
+                  ]
+                : [{ label: 'Administration' }, { label: 'Campagnes', to: cfg.campaignsListTo }]
+            : matrix
+              ? [
+                    { label: 'Campagnes', to: cfg.campaignsListTo },
+                    {
+                        label: matrix.campaignName,
+                        to: cfg.campaignDetailTo(campaignId),
+                    },
+                    { label: 'Synthèse Élément B' },
+                ]
+              : [{ label: 'Campagnes', to: cfg.campaignsListTo }]
     );
 
     if (isLoading) {
         return (
-            <Stack spacing={3}>
-                <Skeleton variant="rounded" height={140} />
+            <Stack spacing={3} role="status" aria-live="polite" aria-busy="true" aria-label="Chargement de la synthèse">
+                <Skeleton variant="text" width={280} height={28} />
+                <Skeleton variant="text" width="60%" height={48} />
                 <Skeleton variant="rounded" height={420} />
             </Stack>
         );
@@ -66,27 +84,42 @@ export function CampaignSynthesisPage({ scope, campaignId }: CampaignSynthesisPa
 
     if (!matrix) {
         return (
-            <Stack spacing={2}>
-                <Card variant="outlined">
-                    <CardContent sx={{ p: 4, textAlign: 'center' }}>
-                        <Typography variant="h6" color="text.secondary">
-                            {cfg.notFound}
-                        </Typography>
-                    </CardContent>
-                </Card>
-                {backButton}
+            <Stack spacing={2} sx={{ py: 6, textAlign: 'center' }}>
+                <Typography variant="h6" color="text.secondary">
+                    {cfg.notFound}
+                </Typography>
+                <MuiLink
+                    component={Link}
+                    to={cfg.campaignsListTo}
+                    underline="hover"
+                    sx={{ fontWeight: 600 }}
+                >
+                    Retour aux campagnes
+                </MuiLink>
             </Stack>
         );
     }
 
     return (
-        <Stack spacing={3}>
-            <PageHeroCard
-                eyebrow="Synthèse Élément B"
-                title={matrix.campaignName}
-                subtitle="Vue agrégée du test scientifique : tous les participants côte à côte, avec mise en lumière des écarts forts (>4)."
-                actions={backButton}
-            />
+        <Stack spacing={3} sx={{ minWidth: 0 }}>
+            <Box>
+                <Typography
+                    variant="h3"
+                    sx={{
+                        color: 'primary.main',
+                        fontWeight: 900,
+                        letterSpacing: -0.03,
+                        lineHeight: 1.1,
+                        mb: 1,
+                    }}
+                >
+                    Synthèse Élément B
+                </Typography>
+                <Typography variant="body1" color="text.secondary" sx={{ maxWidth: 720, lineHeight: 1.7 }}>
+                    {matrix.campaignName} — {SUBTITLE_SUFFIX}
+                </Typography>
+            </Box>
+
             <CampaignSynthesisMatrix matrix={matrix} />
         </Stack>
     );
