@@ -10,5 +10,5 @@ export const Route = createFileRoute('/admin/campaigns/$campaignId/')({
 
 function AdminCampaignDetailRoute() {
     const { campaignId } = Route.useParams();
-    return <CampaignDetailPage campaignId={Number(campaignId)} />;
+    return <CampaignDetailPage scope="admin" campaignId={Number(campaignId)} />;
 }

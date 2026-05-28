@@ -23,6 +23,36 @@ const SKELETON_KEYS = ['stat-1', 'stat-2', 'stat-3', 'stat-4'] as const;
 const SUBTITLE =
     'Cockpit opérationnel de la campagne : questionnaire assigné, participants, invitations, réponses et pilotage.';
 
+export type CampaignDetailScope = 'admin' | 'coach';
+
+export type CampaignDetailPageProps = {
+    scope: CampaignDetailScope;
+    campaignId: number;
+};
+
+const SCOPE_CFG: Record<
+    CampaignDetailScope,
+    {
+        campaignsListTo: '/admin/campaigns' | '/coach/campaigns';
+        participantUrlPrefix: '/admin/participants' | '/coach/participants';
+        campaignUrlPrefix: '/admin/campaigns' | '/coach/campaigns';
+        notFound: string;
+    }
+> = {
+    admin: {
+        campaignsListTo: '/admin/campaigns',
+        participantUrlPrefix: '/admin/participants',
+        campaignUrlPrefix: '/admin/campaigns',
+        notFound: 'Campagne introuvable.',
+    },
+    coach: {
+        campaignsListTo: '/coach/campaigns',
+        participantUrlPrefix: '/coach/participants',
+        campaignUrlPrefix: '/coach/campaigns',
+        notFound: 'Campagne introuvable ou hors de votre périmètre.',
+    },
+};
+
 function statusHelper(status: CampaignStatus): string {
     if (status === 'active') {
         return 'en cours';
@@ -33,11 +63,9 @@ function statusHelper(status: CampaignStatus): string {
     return 'brouillon';
 }
 
-export type CampaignDetailPageProps = {    
-    campaignId: number;
-};
-
-export function CampaignDetailPage({ campaignId }: CampaignDetailPageProps) {
+export function CampaignDetailPage({ scope, campaignId }: CampaignDetailPageProps) {
+    const cfg = SCOPE_CFG[scope];
+    const isAdmin = scope === 'admin';
     const { data: detail, isLoading } = useAdminCampaign(campaignId);
     const { data: companies = [] } = useCompanies();
     const { data: coaches = [] } = useCoaches();
@@ -52,13 +80,17 @@ export function CampaignDetailPage({ campaignId }: CampaignDetailPageProps) {
     const progress = computeProgress(participants);
 
     useBreadcrumbs(
-        campaign
-            ? [
-                { label: 'Administration' },
-                { label: 'Campagnes', to: '/admin/campaigns' },
-                { label: campaign.name },
-            ]
-            : [{ label: 'Campagnes', to: '/admin/campaigns' }]
+        isAdmin
+            ? campaign
+                ? [
+                      { label: 'Administration' },
+                      { label: 'Campagnes', to: cfg.campaignsListTo },
+                      { label: campaign.name },
+                  ]
+                : [{ label: 'Administration' }, { label: 'Campagnes', to: cfg.campaignsListTo }]
+            : campaign
+              ? [{ label: 'Campagnes', to: cfg.campaignsListTo }, { label: campaign.name }]
+              : [{ label: 'Campagnes', to: cfg.campaignsListTo }]
     );
 
     if (isLoading) {
@@ -80,9 +112,9 @@ export function CampaignDetailPage({ campaignId }: CampaignDetailPageProps) {
         return (
             <Stack spacing={2} sx={{ py: 6, textAlign: 'center' }}>
                 <Typography variant="h6" color="text.secondary">
-                    Campagne introuvable.
+                    {cfg.notFound}
                 </Typography>
-                <MuiLink component={Link} to="/admin/campaigns" underline="hover" sx={{ fontWeight: 600 }}>
+                <MuiLink component={Link} to={cfg.campaignsListTo} underline="hover" sx={{ fontWeight: 600 }}>
                     Retour aux campagnes
                 </MuiLink>
             </Stack>
@@ -151,14 +183,14 @@ export function CampaignDetailPage({ campaignId }: CampaignDetailPageProps) {
                     <CampaignParticipantsTable
                         campaignId={campaign.id}
                         participants={participants}
-                        participantUrlPrefix="/admin/participants"
-                        matrixUrlPrefix="/admin/campaigns"
-                        transparencyUrlPrefix="/admin/campaigns"
+                        participantUrlPrefix={cfg.participantUrlPrefix}
+                        matrixUrlPrefix={cfg.campaignUrlPrefix}
+                        transparencyUrlPrefix={cfg.campaignUrlPrefix}
                     />
                 </Stack>
 
                 <Stack spacing={3} sx={{ minWidth: 0 }}>
-                    <CampaignSynthesisCard campaignId={campaign.id} scope="admin" />
+                    <CampaignSynthesisCard campaignId={campaign.id} scope={scope} />
                     <CampaignStatusActions
                         campaign={campaign}
                         participantsCount={participants.length}
