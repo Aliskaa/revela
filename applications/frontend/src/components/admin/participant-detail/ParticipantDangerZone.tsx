@@ -5,11 +5,11 @@ import { Trash2 } from 'lucide-react';
 
 import { surfaceCardSx } from '@/components/common/styles/listSurfaces';
 
-export type CompanyDangerZoneProps = {
+export type ParticipantDangerZoneProps = {
     onDeleteClick: () => void;
 };
 
-export function CompanyDangerZone({ onDeleteClick }: CompanyDangerZoneProps) {
+export function ParticipantDangerZone({ onDeleteClick }: ParticipantDangerZoneProps) {
     return (
         <Card variant="outlined" sx={{ ...surfaceCardSx, borderColor: 'tint.dangerBorder' }}>
             <CardContent sx={{ p: 3 }}>
@@ -18,7 +18,7 @@ export function CompanyDangerZone({ onDeleteClick }: CompanyDangerZoneProps) {
                         Zone dangereuse
                     </Typography>
                     <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.7 }}>
-                        Actions irréversibles — RGPD.
+                        Suppression définitive du collaborateur, de ses réponses et de ses invitations — RGPD.
                     </Typography>
                 </Box>
                 <Button
@@ -29,7 +29,7 @@ export function CompanyDangerZone({ onDeleteClick }: CompanyDangerZoneProps) {
                     onClick={onDeleteClick}
                     sx={{ borderRadius: 2 }}
                 >
-                    Supprimer l'entreprise
+                    Supprimer le collaborateur
                 </Button>
             </CardContent>
         </Card>

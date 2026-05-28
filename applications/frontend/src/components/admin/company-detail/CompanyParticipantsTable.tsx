@@ -8,29 +8,35 @@ import {
     Table,
     TableBody,
     TableCell,
-    TableHead,
-    TableRow,
-    TextField,
     Typography,
 } from '@mui/material';
-import { Trash2, UserPlus } from 'lucide-react';
+import { UserPlus } from 'lucide-react';
 import * as React from 'react';
 
 import { AddParticipantToCampaignDrawerForm } from '@/components/admin/AddParticipantToCampaignDrawerForm';
-import { SectionTitle } from '@/components/common/SectionTitle';
+import { SearchField } from '@/components/common/forms/SearchField';
 import { SkeletonTableRows } from '@/components/common/SkeletonRows';
+import {
+    harmonizedTableCellSx,
+    surfaceCardSx,
+} from '@/components/common/styles/listSurfaces';
 import { ParticipantStatusChip } from '@/components/common/chips';
 import {
+    ClickableTableRow,
     EmptyTableRow,
+    ListTableHead,
+    RowNavigateHint,
     StandardTablePagination,
-    stickyActionCellSx,
-    stickyActionHeadSx,
+    type ListTableColumn,
 } from '@/components/common/data-table';
 import { useAddParticipantToCompany } from '@/hooks/admin';
 import type { Participant } from '@aor/types';
 
 import { CompanyImportCsv } from './CompanyImportCsv';
 import { Button } from '@/components/common/Button';
+
+const EDGE_X = 3;
+const TABLE_MIN_WIDTH = 560;
 
 export type CompanyParticipantsTableProps = {
     companyId: number;
@@ -43,16 +49,8 @@ export type CompanyParticipantsTableProps = {
     onPageChange: (next: number) => void;
     onRowsPerPageChange: (next: number) => void;
     participantPathPrefix: string;
-    onDeleteClick: (participant: Participant) => void;
     /** Si `true`, affiche les contrôles d'import CSV (réservés à l'admin, cf. P08). */
     showCsvImport?: boolean;
-    /**
-     * `null` en scope admin (suppression toujours autorisée). En scope coach, le `coachId`
-     * du coach connecté : la colonne « Supprimer » n'apparaît que sur les lignes dont
-     * `created_by_coach_id` correspond — un coach ne peut effacer que les participants
-     * qu'il a ajoutés unitairement (cf. PDF AOR §coach delete).
-     */
-    currentCoachId: number | null;
     /**
      * Texte courant de la barre de recherche (saisie brute, non debouncée). La valeur
      * effectivement envoyée au backend est gérée par le parent (cf. CompanyDetailPage).
@@ -72,20 +70,24 @@ export function CompanyParticipantsTable({
     onPageChange,
     onRowsPerPageChange,
     participantPathPrefix,
-    onDeleteClick,
     showCsvImport = true,
-    currentCoachId,
     search,
     onSearchChange,
 }: CompanyParticipantsTableProps) {
     const [addDrawerOpen, setAddDrawerOpen] = React.useState(false);
     const addParticipant = useAddParticipantToCompany();
-    const canDelete = (p: Participant) =>
-        currentCoachId === null || p.created_by_coach_id === currentCoachId;
+
+    const columns: ListTableColumn[] = [
+        { key: 'status', sx: { pl: EDGE_X, width: 48 } },
+        { key: 'participant', label: 'Participant' },
+        { key: 'organisation', label: 'Organisation' },
+        { key: 'navigate', align: 'right', sx: { pr: EDGE_X, width: 48 } },
+    ];
+    const colSpan = columns.length;
 
     return (
-        <Card variant="outlined">
-            <CardContent sx={{ p: 2.5 }}>
+        <Card variant="outlined" sx={{ ...surfaceCardSx, overflow: 'hidden' }}>
+            <CardContent sx={{ p: 0 }}>
                 <AddParticipantToCampaignDrawerForm
                     open={addDrawerOpen}
                     isSubmitting={addParticipant.isPending}
@@ -116,40 +118,57 @@ export function CompanyParticipantsTable({
                     }}
                 />
 
-                <Stack
-                    direction={{ xs: 'column', sm: 'row' }}
-                    justifyContent="space-between"
-                    alignItems={{ xs: 'flex-start', sm: 'center' }}
-                    spacing={1.5}
-                    sx={{ mb: 1 }}
+                <Box
+                    sx={{
+                        px: { xs: 2.5, md: 3 },
+                        pt: 3,
+                        pb: 2,
+                        display: 'flex',
+                        flexDirection: { xs: 'column', sm: 'row' },
+                        alignItems: { sm: 'center' },
+                        justifyContent: 'space-between',
+                        gap: 2,
+                        borderBottom: '1px solid',
+                        borderColor: 'surface.lavenderGrey',
+                    }}
                 >
-                    <SectionTitle title="Collaborateurs" subtitle={`Les participants rattachés à ${companyName}.`} />
+                    <Box>
+                        <Typography variant="h6" fontWeight={700} color="primary.main" sx={{ mb: 0.5 }}>
+                            Collaborateurs
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.7 }}>
+                            Les participants rattachés à {companyName}.
+                        </Typography>
+                    </Box>
                     <Stack
                         direction={{ xs: 'column', sm: 'row' }}
                         spacing={1.2}
                         alignItems={{ xs: 'stretch', sm: 'center' }}
                         sx={{ flexShrink: 0, width: { xs: '100%', sm: 'auto' } }}
                     >
-                        <TextField
-                            size="small"
-                            placeholder="Rechercher un collaborateur…"
+                        <SearchField
                             value={search}
-                            onChange={e => onSearchChange(e.target.value)}
-                            sx={{ minWidth: { xs: '100%', sm: 260 } }}
+                            onChange={onSearchChange}
+                            placeholder="Rechercher un collaborateur…"
+                            sx={{ width: { xs: '100%', sm: 260 } }}
                         />
                         <Button
                             appearance="primary"
-                            startIcon={<UserPlus size={16} />}
+                            startIcon={<UserPlus size={14} />}
                             onClick={() => setAddDrawerOpen(true)}
                         >
-                            Ajouter un participant
+                            Nouveau
                         </Button>
                         {showCsvImport && <CompanyImportCsv companyId={companyId} companyName={companyName} />}
                     </Stack>
-                </Stack>
+                </Box>
 
                 {showCsvImport && (
-                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
+                    <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        sx={{ display: 'block', px: { xs: 2.5, md: 3 }, pt: 1.5, pb: 0.5 }}
+                    >
                         CSV (séparateur « ; ») avec colonnes : <code>first_name</code>, <code>last_name</code>,{' '}
                         <code>email</code> (obligatoires), puis <code>organisation</code>, <code>direction</code>,{' '}
                         <code>service</code>, <code>function_level</code> (optionnels). Tous les participants seront
@@ -157,70 +176,57 @@ export function CompanyParticipantsTable({
                     </Typography>
                 )}
 
-                <Box sx={{ overflowX: 'auto' }}>
-                    <Table sx={{ minWidth: 600 }}>
-                        <TableHead>
-                            <TableRow>
-                                <TableCell></TableCell>
-                                <TableCell>Participant</TableCell>
-                                <TableCell>Organisation</TableCell>
-                                <TableCell sx={stickyActionHeadSx} />
-                            </TableRow>
-                        </TableHead>
+                <Box sx={{ overflowX: 'auto', px: { xs: 1, md: 0 } }}>
+                    <Table sx={{ minWidth: TABLE_MIN_WIDTH }}>
+                        <ListTableHead columns={columns} />
                         <TableBody>
                             {loading ? (
-                                <SkeletonTableRows rows={4} columns={4} />
+                                <SkeletonTableRows rows={4} columns={colSpan} />
                             ) : (
-                                participants.map(p => (
-                                    <TableRow hover key={p.id}>
-                                    <TableCell>
-                                        <ParticipantStatusChip participant={p} />
-                                    </TableCell>
-                                        <TableCell>
-                                            <a
-                                                href={`${participantPathPrefix}/${p.id}`}
-                                                style={{ color: 'inherit', textDecoration: 'none' }}
-                                            >
+                                participants.map(p => {
+                                    const detailTo = `${participantPathPrefix}/${p.id}`;
+                                    return (
+                                        <ClickableTableRow
+                                            key={p.id}
+                                            to={detailTo}
+                                            ariaLabel={`Ouvrir ${p.full_name}`}
+                                        >
+                                            <TableCell sx={{ pl: EDGE_X, ...harmonizedTableCellSx }}>
+                                                <ParticipantStatusChip participant={p} />
+                                            </TableCell>
+                                            <TableCell sx={harmonizedTableCellSx}>
                                                 <Typography
                                                     fontWeight={700}
                                                     color="primary.main"
-                                                    sx={{ '&:hover': { textDecoration: 'underline' } }}
+                                                    lineHeight={1.2}
+                                                    sx={{ fontSize: '1.0625rem' }}
                                                 >
                                                     {p.full_name}
                                                 </Typography>
-                                            </a>
-                                            <Typography variant="caption" color="text.secondary">
-                                                {p.email}
-                                            </Typography>
-                                        </TableCell>
-                                        <TableCell>
-                                            <Typography
-                                                fontWeight={700}
-                                            >
-                                                {p.organisation ?? '–'}
-                                            </Typography>
-                                            <Typography variant="caption" color="text.secondary">
-                                                {p.direction}
-                                            </Typography>
-                                        </TableCell>
-                                        <TableCell align="right" sx={stickyActionCellSx}>
-                                            {canDelete(p) && (
-                                                <Button
-                                                    size="small"
-                                                    appearance="secondary"
-                                                    startIcon={<Trash2 size={14} />}
-                                                    onClick={() => onDeleteClick(p)}
+                                                <Typography
+                                                    variant="caption"
+                                                    color="text.secondary"
+                                                    sx={{ display: 'block', mt: 0.25, opacity: 0.7 }}
                                                 >
-                                                    Supprimer
-                                                </Button>
-                                            )}
-                                        </TableCell>
-                                    </TableRow>
-                                ))
+                                                    {p.email}
+                                                </Typography>
+                                            </TableCell>
+                                            <TableCell sx={harmonizedTableCellSx}>
+                                                <Typography fontWeight={700}>{p.organisation ?? '–'}</Typography>
+                                                <Typography variant="caption" color="text.secondary">
+                                                    {p.direction}
+                                                </Typography>
+                                            </TableCell>
+                                            <TableCell align="right" sx={{ pr: EDGE_X, ...harmonizedTableCellSx }}>
+                                                <RowNavigateHint />
+                                            </TableCell>
+                                        </ClickableTableRow>
+                                    );
+                                })
                             )}
                             {!loading && participants.length === 0 && (
                                 <EmptyTableRow
-                                    colSpan={4}
+                                    colSpan={colSpan}
                                     message={
                                         search.trim().length > 0
                                             ? `Aucun collaborateur ne correspond à « ${search.trim()} ».`
@@ -233,16 +239,18 @@ export function CompanyParticipantsTable({
                 </Box>
 
                 {totalCount > 0 && (
-                    <StandardTablePagination
-                        count={totalCount}
-                        page={page}
-                        rowsPerPage={rowsPerPage}
-                        onPageChange={onPageChange}
-                        onRowsPerPageChange={next => {
-                            onRowsPerPageChange(next);
-                            onPageChange(0);
-                        }}
-                    />
+                    <Box sx={{ px: { xs: 2.5, md: 3 }, pb: 2 }}>
+                        <StandardTablePagination
+                            count={totalCount}
+                            page={page}
+                            rowsPerPage={rowsPerPage}
+                            onPageChange={onPageChange}
+                            onRowsPerPageChange={next => {
+                                onRowsPerPageChange(next);
+                                onPageChange(0);
+                            }}
+                        />
+                    </Box>
                 )}
             </CardContent>
         </Card>

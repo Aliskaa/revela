@@ -1,23 +1,10 @@
 // Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
 
-import { SectionTitle } from '@/components/common/SectionTitle';
-import { KpiCard, StatCard } from '@/components/common/cards';
-import { CampaignStatusChip } from '@/components/common/chips';
-import { stickyActionCellSx, stickyActionHeadSx } from '@/components/common/data-table';
-import { useParticipant, useUpdateParticipant } from '@/hooks/admin';
-import type {
-    CampaignStatus,
-    ParticipantCampaignAssignment,
-    ParticipantFunctionLevel,
-    UpdateParticipantProfileBody,
-} from '@aor/types';
 import {
     Alert,
     Box,
-    Button,
     Card,
     CardContent,
-    Chip,
     FormControl,
     InputLabel,
     MenuItem,
@@ -27,24 +14,50 @@ import {
     Table,
     TableBody,
     TableCell,
-    TableHead,
-    TableRow,
     TextField,
     Typography,
 } from '@mui/material';
-import { Link, useRouter } from '@tanstack/react-router';
+import { Link as MuiLink, Link, useNavigate } from '@tanstack/react-router';
 import {
-    ArrowLeft,
-    Building2,
     ClipboardList,
-    LayoutPanelLeft,
     Mail,
     MessageSquareText,
     PencilLine,
-    Save,
-    X,
 } from 'lucide-react';
 import * as React from 'react';
+
+import { SummaryField } from '@/components/admin/campaign-detail/SummaryField';
+import { DeleteCompanyParticipantDialog } from '@/components/admin/company-detail/DeleteCompanyParticipantDialog';
+import { KpiCard, StatCard } from '@/components/common/cards';
+import { Button } from '@/components/common/Button';
+import { CampaignStatusChip } from '@/components/common/chips';
+import {
+    ClickableTableRow,
+    EmptyTableRow,
+    ListTableHead,
+    RowNavigateHint,
+    type ListTableColumn,
+} from '@/components/common/data-table';
+import { KpiGrid } from '@/components/common/layout';
+import {
+    harmonizedTableCellSx,
+    surfaceCardSx,
+} from '@/components/common/styles/listSurfaces';
+import { useBreadcrumbs } from '@/components/layout/AppShellChromeContext';
+import { useParticipant, useUpdateParticipant } from '@/hooks/admin';
+import { useAuthStore } from '@/stores/authStore';
+import type {
+    CampaignStatus,
+    ParticipantCampaignAssignment,
+    ParticipantFunctionLevel,
+    UpdateParticipantProfileBody,
+} from '@aor/types';
+
+import { ParticipantDangerZone } from './ParticipantDangerZone';
+
+const SKELETON_KEYS = ['stat-1', 'stat-2', 'stat-3'] as const;
+const EDGE_X = 3;
+const CAMPAIGNS_TABLE_MIN_WIDTH = 640;
 
 const FUNCTION_LEVEL_LABELS: Record<ParticipantFunctionLevel, string> = {
     direction: 'Direction',
@@ -56,18 +69,47 @@ function functionLevelLabel(level: ParticipantFunctionLevel | null): string {
     return level ? FUNCTION_LEVEL_LABELS[level] : 'Non renseigné';
 }
 
+export type ParticipantDetailScope = 'admin' | 'coach';
+
 export type ParticipantDetailViewProps = {
     participantId: number;
     /** Préfixe d'URL — `/admin` ou `/coach`. Utilisé pour les liens internes. */
     scopePrefix: '/admin' | '/coach';
 };
 
+const SCOPE_CFG: Record<
+    ParticipantDetailScope,
+    {
+        companiesListTo: '/admin/companies' | '/coach/companies';
+        companyDetailTo: (companyId: number) => string;
+        notFound: string;
+    }
+> = {
+    admin: {
+        companiesListTo: '/admin/companies',
+        companyDetailTo: companyId => `/admin/companies/${companyId}`,
+        notFound: 'Collaborateur introuvable.',
+    },
+    coach: {
+        companiesListTo: '/coach/companies',
+        companyDetailTo: companyId => `/coach/companies/${companyId}`,
+        notFound: 'Collaborateur introuvable ou hors de votre périmètre.',
+    },
+};
+
 export function ParticipantDetailView({ participantId, scopePrefix }: ParticipantDetailViewProps) {
-    const router = useRouter();
+    const scope: ParticipantDetailScope = scopePrefix === '/admin' ? 'admin' : 'coach';
+    const cfg = SCOPE_CFG[scope];
+    const isAdmin = scope === 'admin';
+    const navigate = useNavigate();
+    const adminMe = useAuthStore(s => s.adminMe);
+    const currentCoachId = isAdmin ? null : (adminMe?.coachId ?? null);
+
     const { data, isLoading, isError } = useParticipant(participantId);
     const updateParticipant = useUpdateParticipant();
 
     const [editing, setEditing] = React.useState(false);
+    const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
     const [organisation, setOrganisation] = React.useState('');
     const [direction, setDirection] = React.useState('');
     const [service, setService] = React.useState('');
@@ -84,6 +126,39 @@ export function ParticipantDetailView({ participantId, scopePrefix }: Participan
             setFunctionLevel(participant.function_level ?? '');
         }
     }, [participant]);
+
+    useBreadcrumbs(
+        isAdmin
+            ? participant
+                ? participant.company
+                    ? [
+                          { label: 'Administration' },
+                          { label: 'Entreprises', to: cfg.companiesListTo },
+                          {
+                              label: participant.company.name,
+                              to: cfg.companyDetailTo(participant.company.id),
+                          },
+                          { label: participant.full_name },
+                      ]
+                    : [
+                          { label: 'Administration' },
+                          { label: 'Entreprises', to: cfg.companiesListTo },
+                          { label: participant.full_name },
+                      ]
+                : [{ label: 'Administration' }, { label: 'Entreprises', to: cfg.companiesListTo }]
+            : participant
+              ? participant.company
+                  ? [
+                        { label: 'Entreprises', to: cfg.companiesListTo },
+                        {
+                            label: participant.company.name,
+                            to: cfg.companyDetailTo(participant.company.id),
+                        },
+                        { label: participant.full_name },
+                    ]
+                  : [{ label: 'Entreprises', to: cfg.companiesListTo }, { label: participant.full_name }]
+              : [{ label: 'Entreprises', to: cfg.companiesListTo }]
+    );
 
     const handleStartEdit = () => setEditing(true);
     const handleCancelEdit = () => {
@@ -107,84 +182,95 @@ export function ParticipantDetailView({ participantId, scopePrefix }: Participan
         setEditing(false);
     };
 
+    const canDelete =
+        participant &&
+        (currentCoachId === null || participant.created_by_coach_id === currentCoachId);
+
+    const campaignColumns: ListTableColumn[] = [
+        { key: 'status', sx: { pl: EDGE_X, width: 48 } },
+        { key: 'campaign', label: 'Campagne' },
+        { key: 'company', label: 'Entreprise' },
+        { key: 'joined', label: 'Rejoint le' },
+        { key: 'navigate', align: 'right', sx: { pr: EDGE_X, width: 48 } },
+    ];
+    const campaignColSpan = campaignColumns.length;
+
     if (isLoading) {
         return (
-            <Stack spacing={3}>
-                <Skeleton variant="rounded" height={140} />
-                <Skeleton variant="rounded" height={100} />
-                <Skeleton variant="rounded" height={300} />
+            <Stack
+                spacing={3}
+                role="status"
+                aria-live="polite"
+                aria-busy="true"
+                aria-label="Chargement du collaborateur"
+            >
+                <Skeleton variant="text" width={280} height={28} />
+                <Skeleton variant="text" width="60%" height={48} />
+                <KpiGrid columns={3}>
+                    {SKELETON_KEYS.map(k => (
+                        <Skeleton key={k} variant="rounded" height={140} />
+                    ))}
+                </KpiGrid>
+                <Skeleton variant="rounded" height={400} />
             </Stack>
         );
     }
 
     if (isError || !participant) {
         return (
-            <Card variant="outlined">
-                <CardContent sx={{ p: 4, textAlign: 'center' }}>
-                    <Typography variant="h6" color="text.secondary">
-                        Participant introuvable ou hors de votre périmètre.
-                    </Typography>
-                    <Button
-                        onClick={() => router.history.back()}
-                        variant="outlined"
-                        sx={{ mt: 2, borderRadius: 3 }}
-                        startIcon={<ArrowLeft size={16} />}
-                    >
-                        Retour
-                    </Button>
-                </CardContent>
-            </Card>
+            <Stack spacing={2} sx={{ py: 6, textAlign: 'center' }}>
+                <Typography variant="h6" color="text.secondary">
+                    {cfg.notFound}
+                </Typography>
+                <MuiLink component={Link} to={cfg.companiesListTo} underline="hover" sx={{ fontWeight: 600 }}>
+                    Retour aux entreprises
+                </MuiLink>
+            </Stack>
         );
     }
 
     const inviteCount = Object.keys(participant.invite_status).length;
+    const subtitleParts = [participant.email];
+    if (participant.company) {
+        subtitleParts.push(participant.company.name);
+    }
+
+    const handleDeleted = () => {
+        setDeleteDialogOpen(false);
+        if (participant.company) {
+            navigate({ to: cfg.companyDetailTo(participant.company.id) });
+        } else {
+            navigate({ to: cfg.companiesListTo });
+        }
+    };
 
     return (
-        <Stack spacing={3}>
-            <Button
-                onClick={() => router.history.back()}
-                startIcon={<ArrowLeft size={18} />}
-                sx={{
-                    alignSelf: 'flex-start',
-                    fontWeight: 600,
-                    color: 'text.secondary',
-                    '&:hover': { bgcolor: 'transparent', color: 'primary.main' },
-                }}
-                disableRipple
-            >
-                Retour
-            </Button>
+        <Stack spacing={3} sx={{ minWidth: 0 }}>
+            <DeleteCompanyParticipantDialog
+                participant={deleteDialogOpen ? participant : null}
+                onClose={() => setDeleteDialogOpen(false)}
+                onDeleted={handleDeleted}
+            />
 
-            <Card variant="outlined">
-                <CardContent sx={{ p: { xs: 2.5, md: 3 } }}>
-                    <Stack
-                        spacing={2.5}
-                        direction={{ xs: 'column', lg: 'row' }}
-                        justifyContent="space-between"
-                        alignItems={{ xs: 'start', lg: 'start' }}
-                    >
-                        <Box>
-                            <Chip
-                                label="Détail participant"
-                                sx={{ borderRadius: 99, bgcolor: 'tint.primaryBg', color: 'primary.main', mb: 1.5 }}
-                            />
-                            <Typography variant="h4" fontWeight={800} color="text.primary" sx={{ letterSpacing: -0.5 }}>
-                                {participant.full_name}
-                            </Typography>
-                            <Typography
-                                variant="body1"
-                                color="text.secondary"
-                                sx={{ mt: 1, lineHeight: 1.7, maxWidth: 860 }}
-                            >
-                                {participant.email}
-                                {participant.company ? ` — ${participant.company.name}` : ''}
-                            </Typography>
-                        </Box>
-                    </Stack>
-                </CardContent>
-            </Card>
+            <Box>
+                <Typography
+                    variant="h3"
+                    sx={{
+                        color: 'primary.main',
+                        fontWeight: 900,
+                        letterSpacing: -0.03,
+                        lineHeight: 1.1,
+                        mb: 1,
+                    }}
+                >
+                    {participant.full_name}
+                </Typography>
+                <Typography variant="body1" color="text.secondary" sx={{ maxWidth: 720, lineHeight: 1.7 }}>
+                    {subtitleParts.join(' — ')}. Profil organisationnel et campagnes rattachées.
+                </Typography>
+            </Box>
 
-            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(3, minmax(0, 1fr))' }, gap: 2 }}>
+            <KpiGrid columns={3}>
                 <KpiCard
                     label="Réponses"
                     value={participant.response_count}
@@ -193,41 +279,49 @@ export function ParticipantDetailView({ participantId, scopePrefix }: Participan
                 />
                 <KpiCard label="Invitations" value={inviteCount} helper="par questionnaire" icon={Mail} />
                 <KpiCard label="Campagnes" value={campaigns.length} helper="rattachées" icon={ClipboardList} />
-            </Box>
+            </KpiGrid>
 
             <Box
                 sx={{
                     display: 'grid',
-                    gridTemplateColumns: { xs: '1fr', xl: '0.8fr 1.2fr' },
+                    gridTemplateColumns: { xs: '1fr', xl: 'minmax(0, 0.85fr) minmax(0, 1.15fr)' },
                     gap: 3,
                     alignItems: 'start',
                 }}
             >
-                <Card variant="outlined">
-                    <CardContent sx={{ p: 2.5 }}>
-                        <SectionTitle
-                            title="Informations"
-                            subtitle={
-                                editing
-                                    ? 'Modifiez les champs de profil. Identité et entreprise ne sont pas modifiables ici.'
-                                    : 'Profil organisationnel du participant.'
-                            }
-                            action={
-                                editing ? null : (
-                                    <Button
-                                        onClick={handleStartEdit}
-                                        size="small"
-                                        startIcon={<PencilLine size={14} />}
-                                        sx={{ borderRadius: 99 }}
-                                    >
-                                        Modifier
-                                    </Button>
-                                )
-                            }
-                        />
+                <Card variant="outlined" sx={{ ...surfaceCardSx, overflow: 'hidden' }}>
+                    <CardContent sx={{ p: { xs: 2.5, md: 3 } }}>
+                        <Stack
+                            direction="row"
+                            justifyContent="space-between"
+                            alignItems="flex-start"
+                            spacing={2}
+                            sx={{ mb: 2 }}
+                        >
+                            <Box>
+                                <Typography variant="h6" fontWeight={700} color="primary.main" sx={{ mb: 0.5 }}>
+                                    Informations
+                                </Typography>
+                                <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.7 }}>
+                                    {editing
+                                        ? 'Modifiez les champs de profil. Identité et entreprise ne sont pas modifiables ici.'
+                                        : 'Profil organisationnel du collaborateur.'}
+                                </Typography>
+                            </Box>
+                            {!editing ? (
+                                <Button
+                                    appearance="secondary"
+                                    size="small"
+                                    startIcon={<PencilLine size={14} />}
+                                    onClick={handleStartEdit}
+                                >
+                                    Modifier
+                                </Button>
+                            ) : null}
+                        </Stack>
 
                         {editing ? (
-                            <Stack spacing={2} sx={{ mt: 2 }}>
+                            <Stack spacing={2}>
                                 <Stack spacing={1.2}>
                                     <StatCard variant="mini" label="Prénom" value={participant.first_name} />
                                     <StatCard variant="mini" label="Nom" value={participant.last_name} />
@@ -279,121 +373,118 @@ export function ParticipantDetailView({ participantId, scopePrefix }: Participan
                                     </Select>
                                 </FormControl>
 
-                                {updateParticipant.isError && (
+                                {updateParticipant.isError ? (
                                     <Alert severity="error">{updateParticipant.error?.message}</Alert>
-                                )}
+                                ) : null}
 
-                                <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
+                                <Stack direction="row" spacing={1.5}>
                                     <Button
-                                        variant="contained"
-                                        disableElevation
-                                        startIcon={<Save size={16} />}
+                                        appearance="primary"
                                         onClick={handleSave}
                                         disabled={updateParticipant.isPending}
-                                        sx={{ borderRadius: 3 }}
                                     >
                                         {updateParticipant.isPending ? 'Enregistrement…' : 'Enregistrer'}
                                     </Button>
                                     <Button
-                                        variant="text"
-                                        startIcon={<X size={16} />}
+                                        appearance="secondary"
                                         onClick={handleCancelEdit}
                                         disabled={updateParticipant.isPending}
-                                        sx={{ borderRadius: 3 }}
                                     >
                                         Annuler
                                     </Button>
                                 </Stack>
                             </Stack>
                         ) : (
-                            <Stack spacing={1.2} sx={{ mt: 2 }}>
-                                <StatCard variant="mini" label="Prénom" value={participant.first_name} />
-                                <StatCard variant="mini" label="Nom" value={participant.last_name} />
-                                <StatCard variant="mini" label="Email" value={participant.email} />
-                                <StatCard
-                                    variant="mini"
+                            <Box
+                                sx={{
+                                    display: 'grid',
+                                    gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))' },
+                                    gap: 2,
+                                }}
+                            >
+                                <SummaryField label="Prénom" value={participant.first_name} />
+                                <SummaryField label="Nom" value={participant.last_name} />
+                                <SummaryField label="Email" value={participant.email} />
+                                <SummaryField
                                     label="Entreprise"
                                     value={participant.company?.name ?? 'Non renseignée'}
                                 />
-                                <StatCard variant="mini" label="Organisation" value={participant.organisation ?? '–'} />
-                                <StatCard
-                                    variant="mini"
-                                    label="Entité (Direction)"
-                                    value={participant.direction ?? '–'}
-                                />
-                                <StatCard variant="mini" label="Service" value={participant.service ?? '–'} />
-                                <StatCard
-                                    variant="mini"
+                                <SummaryField label="Organisation" value={participant.organisation ?? '–'} />
+                                <SummaryField label="Entité (Direction)" value={participant.direction ?? '–'} />
+                                <SummaryField label="Service" value={participant.service ?? '–'} />
+                                <SummaryField
                                     label="Niveau de fonction"
                                     value={functionLevelLabel(participant.function_level)}
                                 />
-                            </Stack>
+                            </Box>
                         )}
                     </CardContent>
                 </Card>
 
-                <Card variant="outlined">
-                    <CardContent sx={{ p: 2.5 }}>
-                        <SectionTitle title="Campagnes" subtitle="Campagnes auxquelles ce participant est rattaché." />
+                <Card variant="outlined" sx={{ ...surfaceCardSx, overflow: 'hidden' }}>
+                    <CardContent sx={{ p: 0 }}>
+                        <Box sx={{ px: { xs: 2.5, md: 3 }, pt: 3, pb: 2 }}>
+                            <Typography variant="h6" fontWeight={700} color="primary.main" sx={{ mb: 0.5 }}>
+                                Campagnes
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.7 }}>
+                                Campagnes auxquelles ce collaborateur est rattaché.
+                            </Typography>
+                        </Box>
 
-                        <Box sx={{ overflowX: 'auto' }}>
-                            <Table sx={{ minWidth: 520 }}>
-                                <TableHead>
-                                    <TableRow>
-                                        <TableCell></TableCell>
-                                        <TableCell>Campagne</TableCell>
-                                        <TableCell>Entreprise</TableCell>
-                                        <TableCell>Rejoint le</TableCell>
-                                        <TableCell sx={stickyActionHeadSx} />
-                                    </TableRow>
-                                </TableHead>
+                        <Box sx={{ overflowX: 'auto', px: { xs: 1, md: 0 } }}>
+                            <Table sx={{ minWidth: CAMPAIGNS_TABLE_MIN_WIDTH }}>
+                                <ListTableHead columns={campaignColumns} />
                                 <TableBody>
                                     {campaigns.length === 0 ? (
-                                        <TableRow>
-                                            <TableCell colSpan={4} align="center" sx={{ py: 4 }}>
-                                                <Stack spacing={1} alignItems="center">
-                                                    <Building2 size={28} color="rgb(148,163,184)" />
-                                                    <Typography variant="body2" color="text.secondary">
-                                                        Aucune campagne rattachée.
-                                                    </Typography>
-                                                </Stack>
-                                            </TableCell>
-                                        </TableRow>
+                                        <EmptyTableRow
+                                            colSpan={campaignColSpan}
+                                            message="Aucune campagne rattachée."
+                                        />
                                     ) : (
-                                        campaigns.map(c => (
-                                            <TableRow hover key={c.campaign_id}>
-                                                <TableCell>
-                                                    <CampaignStatusChip status={c.status as CampaignStatus} />
-                                                </TableCell>
-                                                <TableCell>
-                                                    <Link
-                                                        to={`${scopePrefix}/campaigns/${c.campaign_id}`}
-                                                        style={{ color: 'inherit', textDecoration: 'none' }}
-                                                    >
+                                        campaigns.map(c => {
+                                            const detailTo = `${scopePrefix}/campaigns/${c.campaign_id}`;
+                                            return (
+                                                <ClickableTableRow
+                                                    key={c.campaign_id}
+                                                    to={detailTo}
+                                                    ariaLabel={`Ouvrir ${c.campaign_name}`}
+                                                >
+                                                    <TableCell sx={{ pl: EDGE_X, ...harmonizedTableCellSx }}>
+                                                        <CampaignStatusChip status={c.status as CampaignStatus} />
+                                                    </TableCell>
+                                                    <TableCell sx={harmonizedTableCellSx}>
                                                         <Typography
                                                             fontWeight={700}
                                                             color="primary.main"
-                                                            sx={{ '&:hover': { textDecoration: 'underline' } }}
+                                                            lineHeight={1.2}
+                                                            sx={{ fontSize: '1.0625rem' }}
                                                         >
                                                             {c.campaign_name}
                                                         </Typography>
-                                                    </Link>
-                                                </TableCell>
-                                                <TableCell>{c.company_name ?? '–'}</TableCell>
-                                                <TableCell>{c.joined_at ? new Date(c.joined_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' }) : '–'}</TableCell>
-                                                <TableCell align="right" sx={stickyActionCellSx}>
-                                                    <Button
-                                                        size="small"
-                                                        variant="outlined"
-                                                        startIcon={<LayoutPanelLeft size={14} />}
-                                                        href={`${scopePrefix}/campaigns/${c.campaign_id}/participants/${participantId}/matrix`}
-                                                        sx={{ borderRadius: 99 }}
-                                                    >
-                                                        Matrice
-                                                    </Button>
-                                                </TableCell>
-                                            </TableRow>
-                                        ))
+                                                    </TableCell>
+                                                    <TableCell sx={harmonizedTableCellSx}>
+                                                        <Typography fontWeight={600} color="text.primary">
+                                                            {c.company_name ?? '–'}
+                                                        </Typography>
+                                                    </TableCell>
+                                                    <TableCell sx={harmonizedTableCellSx}>
+                                                        <Typography color="text.secondary" fontWeight={600}>
+                                                            {c.joined_at
+                                                                ? new Date(c.joined_at).toLocaleDateString('fr-FR', {
+                                                                      day: '2-digit',
+                                                                      month: 'long',
+                                                                      year: 'numeric',
+                                                                  })
+                                                                : '–'}
+                                                        </Typography>
+                                                    </TableCell>
+                                                    <TableCell align="right" sx={{ pr: EDGE_X, ...harmonizedTableCellSx }}>
+                                                        <RowNavigateHint />
+                                                    </TableCell>
+                                                </ClickableTableRow>
+                                            );
+                                        })
                                     )}
                                 </TableBody>
                             </Table>
@@ -401,6 +492,10 @@ export function ParticipantDetailView({ participantId, scopePrefix }: Participan
                     </CardContent>
                 </Card>
             </Box>
+
+            {canDelete ? (
+                <ParticipantDangerZone onDeleteClick={() => setDeleteDialogOpen(true)} />
+            ) : null}
         </Stack>
     );
 }
