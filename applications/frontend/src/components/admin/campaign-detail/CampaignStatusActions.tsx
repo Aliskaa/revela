@@ -12,33 +12,25 @@ import { surfaceCardSx } from '@/components/common/styles/listSurfaces';
 export type CampaignStatusActionsProps = {
     campaign: AdminCampaign;
     participantsCount: number;
-    harmonized?: boolean;
 };
 
-export function CampaignStatusActions({ campaign, participantsCount, harmonized = false }: CampaignStatusActionsProps) {
+export function CampaignStatusActions({ campaign, participantsCount }: CampaignStatusActionsProps) {
     const updateStatus = useUpdateAdminCampaignStatus();
 
     const isPending = updateStatus.isPending;
     const cannotLaunch = participantsCount === 0;
 
     return (
-        <Card variant="outlined" sx={harmonized ? surfaceCardSx : undefined}>
-            <CardContent sx={{ p: harmonized ? 3 : 2.5 }}>
-                {harmonized ? (
-                    <Box sx={{ mb: 2 }}>
-                        <Typography variant="h6" fontWeight={700} color="primary.main" sx={{ mb: 0.5 }}>
-                            Statut de la campagne
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.875rem' }}>
-                            Les participants ne peuvent commencer que si la campagne est active.
-                        </Typography>
-                    </Box>
-                ) : (
-                    <SectionTitle
-                        title="Statut de la campagne"
-                        subtitle="Les participants ne peuvent commencer que si la campagne est active."
-                    />
-                )}
+        <Card variant="outlined" sx={surfaceCardSx}>
+            <CardContent sx={{ p: 3 }}>
+                <Box sx={{ mb: 2 }}>
+                    <Typography variant="h6" fontWeight={700} color="primary.main" sx={{ mb: 0.5 }}>
+                        Statut de la campagne
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.875rem' }}>
+                        Les participants ne peuvent commencer que si la campagne est active.
+                    </Typography>
+                </Box>
                 <Stack spacing={1.2} sx={{ mt: 2 }}>
                     {campaign.status === 'draft' && cannotLaunch && (
                         <Alert severity="warning">
@@ -64,20 +56,12 @@ export function CampaignStatusActions({ campaign, participantsCount, harmonized 
                                             align_starts_at_to_now: true,
                                         })
                                     }
-                                    sx={
-                                        harmonized
-                                            ? {
-                                                  borderRadius: 2,
-                                                  bgcolor: 'tint.successText',
-                                                  fontWeight: 700,
-                                                  '&:hover': { bgcolor: 'tint.successTextHover' },
-                                              }
-                                            : {
-                                                  borderRadius: 3,
-                                                  bgcolor: 'tint.successText',
-                                                  '&:hover': { bgcolor: 'tint.successTextHover' },
-                                              }
-                                    }
+                                    sx={{
+                                        borderRadius: 2,
+                                        bgcolor: 'tint.successText',
+                                        fontWeight: 700,
+                                        '&:hover': { bgcolor: 'tint.successTextHover' },
+                                    }}
                                 >
                                     {isPending ? 'En cours…' : 'Lancer la campagne'}
                                 </Button>
@@ -91,22 +75,14 @@ export function CampaignStatusActions({ campaign, participantsCount, harmonized 
                             startIcon={<Square size={16} />}
                             disabled={isPending}
                             onClick={() => updateStatus.mutate({ campaignId: campaign.id, status: 'closed' })}
-                            sx={
-                                harmonized
-                                    ? {
-                                          borderRadius: 2,
-                                          bgcolor: 'secondary.main',
-                                          color: 'primary.main',
-                                          fontWeight: 700,
-                                          boxShadow: theme => theme.palette.shadow.secondaryLift,
-                                          '&:hover': { bgcolor: 'secondary.main', filter: 'brightness(0.95)' },
-                                      }
-                                    : {
-                                          borderRadius: 3,
-                                          bgcolor: 'tint.secondaryText',
-                                          '&:hover': { bgcolor: 'tint.secondaryTextHover' },
-                                      }
-                            }
+                            sx={{
+                                borderRadius: 2,
+                                bgcolor: 'secondary.main',
+                                color: 'primary.main',
+                                fontWeight: 700,
+                                boxShadow: theme => theme.palette.shadow.secondaryLift,
+                                '&:hover': { bgcolor: 'secondary.main', filter: 'brightness(0.95)' },
+                            }}
                         >
                             {isPending ? 'En cours…' : 'Clôturer la campagne'}
                         </Button>

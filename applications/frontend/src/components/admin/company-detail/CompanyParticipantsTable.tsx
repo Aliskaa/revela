@@ -2,7 +2,6 @@
 
 import {
     Box,
-    Button,
     Card,
     CardContent,
     Stack,
@@ -31,6 +30,7 @@ import { useAddParticipantToCompany } from '@/hooks/admin';
 import type { Participant } from '@aor/types';
 
 import { CompanyImportCsv } from './CompanyImportCsv';
+import { Button } from '@/components/common/Button';
 
 export type CompanyParticipantsTableProps = {
     companyId: number;
@@ -138,11 +138,9 @@ export function CompanyParticipantsTable({
                             sx={{ minWidth: { xs: '100%', sm: 260 } }}
                         />
                         <Button
-                            variant="contained"
-                            disableElevation
+                            appearance="primary"
                             startIcon={<UserPlus size={16} />}
                             onClick={() => setAddDrawerOpen(true)}
-                            sx={{ borderRadius: 3, bgcolor: 'primary.main' }}
                         >
                             Ajouter un participant
                         </Button>
@@ -209,7 +207,7 @@ export function CompanyParticipantsTable({
                                             {canDelete(p) && (
                                                 <Button
                                                     size="small"
-                                                    color="error"
+                                                    appearance="secondary"
                                                     startIcon={<Trash2 size={14} />}
                                                     onClick={() => onDeleteClick(p)}
                                                 >

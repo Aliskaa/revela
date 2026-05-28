@@ -1,5 +1,6 @@
 // Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
 
+import { Button as CommonButton } from '@/components/common/Button';
 import {
     Box,
     Button,
@@ -22,7 +23,6 @@ import { Send, Upload, UserPlus } from 'lucide-react';
 import * as React from 'react';
 
 import { AddParticipantToCampaignDrawerForm } from '@/components/admin/AddParticipantToCampaignDrawerForm';
-import { SectionTitle } from '@/components/common/SectionTitle';
 import {
     useAddParticipantToCampaign,
     useImportParticipantsToCampaign,
@@ -35,7 +35,6 @@ import { surfaceCardSx } from '@/components/common/styles/listSurfaces';
 
 export type CampaignManageParticipantsProps = {
     campaign: AdminCampaign;
-    harmonized?: boolean;
     /**
      * Set des participantId déjà invités (ou ayant rejoint) cette campagne. Calculé par
      * le parent à partir de `participant_progress` pour pré-griser les checkboxes.
@@ -46,7 +45,6 @@ export type CampaignManageParticipantsProps = {
 export function CampaignManageParticipants({
     campaign,
     alreadyInvitedIds,
-    harmonized = false,
 }: CampaignManageParticipantsProps) {
     const inviteParticipants = useInviteCampaignParticipants();
     const importParticipants = useImportParticipantsToCampaign();
@@ -141,18 +139,15 @@ export function CampaignManageParticipants({
     return (
         <Card
             variant="outlined"
-            sx={
-                harmonized
-                    ? {
-                          ...surfaceCardSx,
-                          display: 'flex',
-                          flexDirection: 'column',
-                          minHeight: 400,
-                          maxHeight: 400,
-                          minWidth: 0,
-                          width: '100%',
-                      }
-                    : undefined
+            sx={{
+                ...surfaceCardSx,
+                display: 'flex',
+                flexDirection: 'column',
+                minHeight: 400,
+                maxHeight: 400,
+                minWidth: 0,
+                width: '100%',
+            }
             }
         >
             <CardContent
@@ -162,7 +157,6 @@ export function CampaignManageParticipants({
                     display: 'flex',
                     flexDirection: 'column',
                     minHeight: 0,
-                    ...(harmonized ? {} : { p: 2.5 }),
                 }}
             >
                 <AddParticipantToCampaignDrawerForm
@@ -195,10 +189,10 @@ export function CampaignManageParticipants({
 
                 <Box
                     sx={{
-                        px: harmonized ? 2.5 : 0,
-                        pt: harmonized ? 2.5 : 0,
-                        pb: harmonized ? 1.5 : 0,
-                        borderBottom: harmonized ? '1px solid' : 'none',
+                        px: 2.5,
+                        pt: 2.5,
+                        pb: 1.5,
+                        borderBottom: '1px solid',
                         borderColor: 'border',
                     }}
                 >
@@ -207,75 +201,34 @@ export function CampaignManageParticipants({
                         justifyContent="space-between"
                         alignItems="flex-start"
                         spacing={1.5}
-                        sx={{ mb: harmonized ? 1 : 0 }}
+                        sx={{ mb: 1 }}
                     >
-                        {harmonized ? (
-                            <Box>
-                                <Typography variant="h6" fontWeight={700} color="primary.main">
-                                    Inviter des participants
-                                </Typography>
-                                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
-                                    Sélectionnez les participants à inviter.
-                                </Typography>
-                            </Box>
-                        ) : (
-                            <SectionTitle
-                                title="Inviter des participants"
-                                subtitle="Sélectionnez les participants de l'entreprise à inviter, ou ajoutez-en un nouveau."
-                            />
-                        )}
-                        <Button
-                            variant="contained"
-                            disableElevation
-                            startIcon={<UserPlus size={harmonized ? 14 : 16} />}
+                        <Box>
+                            <Typography variant="h6" fontWeight={700} color="primary.main">
+                                Inviter des participants
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
+                                Sélectionnez les participants à inviter.
+                            </Typography>
+                        </Box>
+                        <CommonButton
+                            appearance="primary"
+                            startIcon={<UserPlus size={14} />}
                             disabled={isArchived}
                             onClick={() => setAddDrawerOpen(true)}
-                            sx={{
-                                borderRadius: 2,
-                                bgcolor: 'primary.main',
-                                flexShrink: 0,
-                                fontSize: harmonized ? '0.75rem' : undefined,
-                                px: harmonized ? 1.5 : undefined,
-                                minWidth: harmonized ? 'auto' : undefined,
-                            }}
                         >
-                            {harmonized ? 'Nouveau' : 'Ajouter un participant'}
-                        </Button>
+                            Nouveau
+                        </CommonButton>
                     </Stack>
-
-                    {!harmonized ? null : (
-                        <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mt: 1 }}>
-                            <FormControlLabel
-                                control={
-                                    <Checkbox
-                                        size="small"
-                                        checked={allSelected}
-                                        indeterminate={someSelected}
-                                        onChange={toggleAll}
-                                        disabled={invitableIds.size === 0 || isArchived}
-                                    />
-                                }
-                                label={
-                                    <Typography variant="caption" fontWeight={600}>
-                                        Tout sélectionner
-                                    </Typography>
-                                }
-                            />
-                            <Typography variant="caption" color="text.secondary">
-                                {selectedIds.size} / {items.length}
-                            </Typography>
-                        </Stack>
-                    )}
                 </Box>
 
                 <Stack
                     spacing={1.5}
                     sx={{
-                        mt: harmonized ? 0 : 1,
                         flex: 1,
                         minHeight: 0,
-                        px: harmonized ? 1 : 0,
-                        py: harmonized ? 0.5 : 0,
+                        px: 1,
+                        py: 0.5,
                         overflow: 'hidden',
                     }}
                 >
@@ -293,46 +246,37 @@ export function CampaignManageParticipants({
                         </Box>
                     ) : (
                         <>
-                            {!harmonized ? (
-                                <Stack
-                                    direction="row"
-                                    alignItems="center"
-                                    justifyContent="space-between"
-                                    sx={{ pl: 0.5 }}
-                                >
-                                    <FormControlLabel
-                                        control={
-                                            <Checkbox
-                                                size="small"
-                                                checked={allSelected}
-                                                indeterminate={someSelected}
-                                                onChange={toggleAll}
-                                                disabled={invitableIds.size === 0 || isArchived}
-                                            />
-                                        }
-                                        label={
-                                            <Typography variant="body2" fontWeight={600}>
-                                                {allSelected ? 'Tout désélectionner' : 'Tout sélectionner'}
-                                            </Typography>
-                                        }
-                                    />
-                                    <Typography variant="caption" color="text.secondary">
-                                        {selectedIds.size} sélectionné{selectedIds.size > 1 ? 's' : ''} /{' '}
-                                        {invitableIds.size} disponible{invitableIds.size > 1 ? 's' : ''}
-                                    </Typography>
-                                </Stack>
-                            ) : null}
+                            <Stack
+                                direction="row"
+                                alignItems="center"
+                                justifyContent="space-between"
+                                sx={{ pl: 0.5 }}
+                            >
+                                <FormControlLabel
+                                    control={
+                                        <Checkbox
+                                            size="small"
+                                            checked={allSelected}
+                                            indeterminate={someSelected}
+                                            onChange={toggleAll}
+                                            disabled={invitableIds.size === 0 || isArchived}
+                                        />
+                                    }
+                                    label={<Typography variant="caption" color="text.secondary">{selectedIds.size} sélectionné{selectedIds.size > 1 ? 's' : ''} /{' '}
+                                        {invitableIds.size} disponible{invitableIds.size > 1 ? 's' : ''}</Typography>}
+                                />
+                            </Stack>
 
                             <List
                                 dense
                                 disablePadding
                                 sx={{
                                     flex: 1,
-                                    maxHeight: harmonized ? 'none' : 320,
+                                    maxHeight: 'none',
                                     overflowY: 'auto',
-                                    border: harmonized ? 'none' : '1px solid',
+                                    border: 'none',
                                     borderColor: 'border',
-                                    borderRadius: harmonized ? 0 : 3,
+                                    borderRadius: 3,
                                 }}
                             >
                                 {items.map(p => {
@@ -351,16 +295,16 @@ export function CampaignManageParticipants({
                                             secondaryAction={
                                                 alreadyInvited ? (
                                                     <Chip
-                                                        label={harmonized ? 'Invité' : 'Déjà invité'}
+                                                        label={'Invité'}
                                                         size="small"
                                                         sx={{
                                                             borderRadius: 99,
                                                             bgcolor: 'tint.successBg',
                                                             color: 'tint.successText',
                                                             fontWeight: 600,
-                                                            fontSize: harmonized ? '0.5625rem' : undefined,
-                                                            letterSpacing: harmonized ? '0.06em' : undefined,
-                                                            textTransform: harmonized ? 'uppercase' : 'none',
+                                                            fontSize: '0.5625rem',
+                                                            letterSpacing: '0.06em',
+                                                            textTransform: 'uppercase',
                                                         }}
                                                     />
                                                 ) : null
@@ -403,12 +347,12 @@ export function CampaignManageParticipants({
 
                     <Box
                         sx={{
-                            px: harmonized ? 2 : 0,
-                            py: harmonized ? 2 : 0,
-                            borderTop: harmonized ? '1px solid' : 'none',
+                            px: 2,
+                            py: 2,
+                            borderTop: '1px solid',
                             borderColor: 'border',
-                            bgcolor: harmonized ? 'surface.footerWash' : 'transparent',
-                            mt: harmonized ? 'auto' : 0,
+                            bgcolor: 'surface.footerWash',
+                            mt: 'auto',
                         }}
                     >
                         <Button
@@ -420,41 +364,35 @@ export function CampaignManageParticipants({
                             onClick={handleInvite}
                             sx={{
                                 borderRadius: 2,
-                                ...(harmonized && selectedIds.size === 0
+                                ...(selectedIds.size === 0
                                     ? {
-                                          bgcolor: 'tint.mutedBg',
-                                          color: 'text.secondary',
-                                          boxShadow: 'none',
-                                      }
+                                        bgcolor: 'tint.mutedBg',
+                                        color: 'text.secondary',
+                                        boxShadow: 'none',
+                                    }
                                     : {}),
                             }}
                         >
                             {inviteParticipants.isPending
                                 ? 'Envoi…'
                                 : selectedIds.size === 0
-                                  ? 'Inviter les sélectionnés'
-                                  : harmonized
-                                    ? `Inviter les sélectionnés (${selectedIds.size})`
-                                    : `Inviter (${selectedIds.size})`}
+                                    ? 'Inviter les sélectionnés'
+                                    : `Inviter les sélectionnés (${selectedIds.size})`}
                         </Button>
 
-                        {!harmonized ? (
-                            <>
-                                <input ref={fileInputRef} type="file" accept=".csv" hidden onChange={handleFileChange} />
-                                <Button
-                                    variant="outlined"
-                                    startIcon={<Upload size={16} />}
-                                    disabled={isImporting || isArchived}
-                                    onClick={() => fileInputRef.current?.click()}
-                                    sx={{ borderRadius: 3, mt: 1.5 }}
-                                    fullWidth
-                                >
-                                    {isImporting ? 'Import en cours…' : 'Importer un CSV'}
-                                </Button>
-                            </>
-                        ) : (
+                        <>
                             <input ref={fileInputRef} type="file" accept=".csv" hidden onChange={handleFileChange} />
-                        )}
+                            <Button
+                                variant="outlined"
+                                startIcon={<Upload size={16} />}
+                                disabled={isImporting || isArchived}
+                                onClick={() => fileInputRef.current?.click()}
+                                sx={{ borderRadius: 3, mt: 1.5 }}
+                                fullWidth
+                            >
+                                {isImporting ? 'Import en cours…' : 'Importer un CSV'}
+                            </Button>
+                        </>
                     </Box>
                     {isImporting && csvFileName && (
                         // biome-ignore lint/a11y/useSemanticElements: role="status" sur Box volontaire — pas de progress numérique à exposer via <output>.

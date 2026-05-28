@@ -1,8 +1,10 @@
 // Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
 
-import { Box, Button, Card, CardContent, Skeleton, Stack, Typography } from '@mui/material';
+import { Box, Link as MuiLink, Skeleton, Stack, Typography } from '@mui/material';
 import { Link } from '@tanstack/react-router';
-import { ArrowLeft, BadgeCheck, MessageSquareText, Target, Users } from 'lucide-react';
+import { BadgeCheck, MessageSquareText, Target, Users } from 'lucide-react';
+
+import { useBreadcrumbs } from '@/components/layout/AppShellChromeContext';
 
 import { CampaignManageParticipants } from '@/components/admin/campaign-detail/CampaignManageParticipants';
 import { CampaignParticipantsTable } from '@/components/admin/campaign-detail/CampaignParticipantsTable';
@@ -10,59 +12,32 @@ import { CampaignStatusActions } from '@/components/admin/campaign-detail/Campai
 import { CampaignSummaryCard } from '@/components/admin/campaign-detail/CampaignSummaryCard';
 import { CampaignSynthesisCard } from '@/components/admin/campaign-detail/CampaignSynthesisCard';
 import { KpiCard } from '@/components/common/cards';
-import { KpiGrid, PageHeroCard } from '@/components/common/layout';
+import { KpiGrid } from '@/components/common/layout';
 import { useAdminCampaign, useCoaches, useCompanies } from '@/hooks/admin';
 import { computeProgress, statusText } from '@/lib/admin/campaignDetailView';
 import { questionnaireLabel } from '@/lib/labels';
-
-export type CampaignDetailScope = 'admin' | 'coach';
-
-export type CampaignDetailPageProps = {
-    scope: CampaignDetailScope;
-    campaignId: number;
-};
+import type { CampaignStatus } from '@aor/types';
 
 const SKELETON_KEYS = ['stat-1', 'stat-2', 'stat-3', 'stat-4'] as const;
 
-const SCOPE_CFG: Record<
-    CampaignDetailScope,
-    {
-        backTo: '/admin/campaigns' | '/coach/campaigns';
-        backLabel: string;
-        subtitle: string;
-        notFound: string;
-        participantUrlPrefix: string;
-        matrixUrlPrefix: string;
-        transparencyUrlPrefix: string;
+const SUBTITLE =
+    'Cockpit opérationnel de la campagne : questionnaire assigné, participants, invitations, réponses et pilotage.';
+
+function statusHelper(status: CampaignStatus): string {
+    if (status === 'active') {
+        return 'en cours';
     }
-> = {
-    admin: {
-        backTo: '/admin/campaigns',
-        backLabel: 'Retour aux campagnes',
-        subtitle:
-            'Cockpit opérationnel de la campagne : questionnaire assigné, participants, invitations, réponses et pilotage.',
-        notFound: 'Campagne introuvable.',
-        participantUrlPrefix: '/admin/participants',
-        matrixUrlPrefix: '/admin/campaigns',
-        transparencyUrlPrefix: '/admin/campaigns',
-    },
-    coach: {
-        backTo: '/coach/campaigns',
-        backLabel: 'Retour à mes campagnes',
-        subtitle: 'Cockpit opérationnel : questionnaire assigné, participants, invitations, réponses et pilotage.',
-        notFound: 'Campagne introuvable ou hors de votre périmètre.',
-        participantUrlPrefix: '/coach/participants',
-        matrixUrlPrefix: '/coach/campaigns',
-        transparencyUrlPrefix: '/coach/campaigns',
-    },
+    if (status === 'closed' || status === 'archived') {
+        return 'archivée';
+    }
+    return 'brouillon';
+}
+
+export type CampaignDetailPageProps = {    
+    campaignId: number;
 };
 
-/**
- * Détail d'une campagne — partagé entre admin et coach. La sécurité repose sur le filtrage
- * backend (`useAdminCampaign` retourne `null` pour une campagne hors périmètre du coach).
- */
-export function CampaignDetailPage({ scope, campaignId }: CampaignDetailPageProps) {
-    const cfg = SCOPE_CFG[scope];
+export function CampaignDetailPage({ campaignId }: CampaignDetailPageProps) {
     const { data: detail, isLoading } = useAdminCampaign(campaignId);
     const { data: companies = [] } = useCompanies();
     const { data: coaches = [] } = useCoaches();
@@ -74,73 +49,79 @@ export function CampaignDetailPage({ scope, campaignId }: CampaignDetailPageProp
     const companyName = campaign ? (companies.find(c => c.id === campaign.companyId)?.name ?? '–') : '–';
     const coachName = campaign ? (coaches.find(c => c.id === campaign.coachId)?.displayName ?? '–') : '–';
     const qLabel = questionnaireLabel(campaign?.questionnaireId);
-
     const progress = computeProgress(participants);
+
+    useBreadcrumbs(
+        campaign
+            ? [
+                { label: 'Administration' },
+                { label: 'Campagnes', to: '/admin/campaigns' },
+                { label: campaign.name },
+            ]
+            : [{ label: 'Campagnes', to: '/admin/campaigns' }]
+    );
 
     if (isLoading) {
         return (
-            // biome-ignore lint/a11y/useSemanticElements: role="status" sur un Stack est volontaire — on n'a pas de progress numérique à exposer via <output>.
             <Stack spacing={3} role="status" aria-live="polite" aria-busy="true" aria-label="Chargement de la campagne">
-                <Skeleton variant="rounded" height={140} />
+                <Skeleton variant="text" width={280} height={28} />
+                <Skeleton variant="text" width="60%" height={48} />
                 <KpiGrid columns={4}>
                     {SKELETON_KEYS.map(k => (
-                        <Skeleton key={k} variant="rounded" height={110} />
+                        <Skeleton key={k} variant="rounded" height={140} />
                     ))}
                 </KpiGrid>
-                <Skeleton variant="rounded" height={300} />
+                <Skeleton variant="rounded" height={400} />
             </Stack>
         );
     }
 
     if (!campaign) {
         return (
-            <Stack spacing={2}>
-                <Card variant="outlined">
-                    <CardContent sx={{ p: 4, textAlign: 'center' }}>
-                        <Typography variant="h6" color="text.secondary">
-                            {cfg.notFound}
-                        </Typography>
-                    </CardContent>
-                </Card>
-                <Button
-                    component={Link}
-                    to={cfg.backTo}
-                    variant="outlined"
-                    startIcon={<ArrowLeft size={16} />}
-                    sx={{ alignSelf: 'flex-start' }}
-                >
-                    {cfg.backLabel}
-                </Button>
+            <Stack spacing={2} sx={{ py: 6, textAlign: 'center' }}>
+                <Typography variant="h6" color="text.secondary">
+                    Campagne introuvable.
+                </Typography>
+                <MuiLink component={Link} to="/admin/campaigns" underline="hover" sx={{ fontWeight: 600 }}>
+                    Retour aux campagnes
+                </MuiLink>
             </Stack>
         );
     }
 
     return (
         <Stack spacing={3} sx={{ minWidth: 0 }}>
-            <PageHeroCard
-                eyebrow="Détail campagne"
-                title={campaign.name}
-                subtitle={cfg.subtitle}
-                actions={
-                    <Button
-                        component={Link}
-                        to={cfg.backTo}
-                        variant="outlined"
-                        startIcon={<ArrowLeft size={16} />}
-                    >
-                        {cfg.backLabel}
-                    </Button>
-                }
-            />
+            <Box>
+                <Typography
+                    variant="h3"
+                    sx={{
+                        color: 'primary.main',
+                        fontWeight: 900,
+                        letterSpacing: -0.03,
+                        lineHeight: 1.1,
+                        mb: 1,
+                    }}
+                >
+                    {campaign.name}
+                </Typography>
+                <Typography variant="body1" color="text.secondary" sx={{ maxWidth: 720, lineHeight: 1.7 }}>
+                    {SUBTITLE}
+                </Typography>
+            </Box>
 
             <KpiGrid columns={4}>
                 <KpiCard label="Participants" value={participants.length} helper="rattachés" icon={Users} />
-                <KpiCard label="Réponses" value={responsesTotal} helper="collectées" icon={MessageSquareText} />
+                <KpiCard
+                    label="Réponses"
+                    value={responsesTotal}
+                    helper="collectées"
+                    icon={MessageSquareText}
+                />
                 <KpiCard label="Progression" value={`${progress}%`} helper="parcours global" icon={Target} />
                 <KpiCard
                     label="Statut"
                     value={statusText(campaign.status)}
-                    helper={campaign.status}
+                    helper={statusHelper(campaign.status)}
                     icon={BadgeCheck}
                 />
             </KpiGrid>
@@ -160,6 +141,7 @@ export function CampaignDetailPage({ scope, campaignId }: CampaignDetailPageProp
             >
                 <Stack spacing={3} sx={{ minWidth: 0 }}>
                     <CampaignSummaryCard
+                        harmonized
                         campaign={campaign}
                         companyName={companyName}
                         coachName={coachName}
@@ -169,15 +151,18 @@ export function CampaignDetailPage({ scope, campaignId }: CampaignDetailPageProp
                     <CampaignParticipantsTable
                         campaignId={campaign.id}
                         participants={participants}
-                        participantUrlPrefix={cfg.participantUrlPrefix}
-                        matrixUrlPrefix={cfg.matrixUrlPrefix}
-                        transparencyUrlPrefix={cfg.transparencyUrlPrefix}
+                        participantUrlPrefix="/admin/participants"
+                        matrixUrlPrefix="/admin/campaigns"
+                        transparencyUrlPrefix="/admin/campaigns"
                     />
                 </Stack>
 
                 <Stack spacing={3} sx={{ minWidth: 0 }}>
-                    <CampaignSynthesisCard campaignId={campaign.id} scope={scope} />
-                    <CampaignStatusActions campaign={campaign} participantsCount={participants.length} />
+                    <CampaignSynthesisCard campaignId={campaign.id} scope="admin" />
+                    <CampaignStatusActions
+                        campaign={campaign}
+                        participantsCount={participants.length}
+                    />
                     <CampaignManageParticipants
                         campaign={campaign}
                         alreadyInvitedIds={new Set(participants.map(p => p.participantId))}
