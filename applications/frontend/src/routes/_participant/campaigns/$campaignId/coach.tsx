@@ -152,7 +152,7 @@ function ParticipantCoachRoute() {
                                 sx={{
                                     width: 48,
                                     height: 48,
-                                    borderRadius: 2,
+                                    borderRadius: '50%',
                                     display: 'grid',
                                     placeItems: 'center',
                                     bgcolor: 'primary.main',

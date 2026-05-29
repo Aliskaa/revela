@@ -11,6 +11,23 @@ export const surfaceCardSx: SxProps<Theme> = {
     bgcolor: 'background.paper',
 };
 
+/** Surface cliquable — même rayon, bordure et ombre que `surfaceCardSx` / `KpiCard`. */
+export const interactiveSurfaceCardSx: SxProps<Theme> = {
+    ...surfaceCardSx,
+    transition: 'box-shadow 0.3s ease, transform 0.3s ease, border-color 0.15s ease',
+    '&:hover': {
+        boxShadow: theme => theme.palette.shadow.brandSubtle,
+        transform: 'translateY(-4px)',
+        borderColor: 'primary.main',
+    },
+    '&:focus-visible': {
+        borderColor: 'primary.main',
+        outline: '2px solid',
+        outlineColor: 'primary.main',
+        outlineOffset: 2,
+    },
+};
+
 export const listPanelSurfaceSx: SxProps<Theme> = {
     ...surfaceCardSx,
     borderRadius: 4,

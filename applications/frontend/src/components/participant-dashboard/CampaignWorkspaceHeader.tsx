@@ -4,6 +4,8 @@ import { Box, ButtonBase, Card, CardContent, Chip, Stack, Typography } from '@mu
 import { Link } from '@tanstack/react-router';
 import { ArrowRight, Sparkles } from 'lucide-react';
 
+import { interactiveSurfaceCardSx } from '@/components/common/styles/listSurfaces';
+
 export type CampaignCoachProfileLinkProps = {
     campaignId: number;
     coachName: string;
@@ -17,41 +19,37 @@ export function CampaignCoachProfileLink({ campaignId, coachName }: CampaignCoac
                 sx={{
                     width: { xs: '100%', sm: 340 },
                     textAlign: 'left',
-                    borderRadius: 4,
-                    border: '1px solid',
-                    borderColor: 'border',
-                    bgcolor: 'background.paper',
-                    transition: 'border-color 0.15s, box-shadow 0.15s',
-                    '&:hover': {
-                        borderColor: 'primary.main',
-                        boxShadow: theme => theme.palette.shadow.brandPaper,
-                    },
+                    display: 'block',
+                    ...interactiveSurfaceCardSx,
                 }}
             >
-                <Box sx={{ p: 2, width: '100%' }}>
+                <Box sx={{ p: 2.5, width: '100%' }}>
                     <Stack direction="row" spacing={1.5} alignItems="center">
                         <Box
                             sx={{
                                 width: 48,
                                 height: 48,
-                                borderRadius: 4,
+                                borderRadius: '50%',
                                 bgcolor: 'primary.main',
                                 color: 'primary.contrastText',
                                 display: 'grid',
                                 placeItems: 'center',
+                                flexShrink: 0,
                             }}
                         >
                             <Sparkles size={20} />
                         </Box>
                         <Box sx={{ minWidth: 0, flex: 1 }}>
-                            <Typography variant="caption" color="text.secondary">
+                            <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
                                 Mon coach
                             </Typography>
-                            <Typography fontWeight={800} color="text.primary">
+                            <Typography fontWeight={800} color="text.primary" sx={{ lineHeight: 1.3 }}>
                                 {coachName}
                             </Typography>
                         </Box>
-                        <ArrowRight size={16} />
+                        <Box sx={{ color: 'primary.main', display: 'flex', flexShrink: 0 }}>
+                            <ArrowRight size={16} />
+                        </Box>
                     </Stack>
                 </Box>
             </ButtonBase>
