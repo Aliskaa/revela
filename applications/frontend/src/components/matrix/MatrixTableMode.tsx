@@ -1,20 +1,29 @@
+// Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
+
 import type { ParticipantQuestionnaireMatrix, ParticipantQuestionnaireMatrixRow } from '@aor/types';
 import {
-    Paper,
+    Box,
     Stack,
     Table,
     TableBody,
     TableCell,
-    TableContainer,
-    TableHead,
     TableRow,
     Tooltip,
     Typography,
 } from '@mui/material';
 import { MessageSquareText } from 'lucide-react';
-import { Fragment } from 'react';
+import { Fragment, useMemo } from 'react';
+
+import { ListTableHead, type ListTableColumn } from '@/components/common/data-table';
+import {
+    harmonizedTableCellSx,
+    listRowSx,
+    surfaceCardSx,
+} from '@/components/common/styles/listSurfaces';
 
 import { type PairBlock, absDiff, buildDimensionBlocks } from './pairBuilder';
+
+const EDGE_X = 5;
 
 type MatrixTableModeProps = {
     matrix: ParticipantQuestionnaireMatrix;
@@ -22,20 +31,43 @@ type MatrixTableModeProps = {
 };
 
 export function MatrixTableMode({ matrix, showInterpretations = true }: MatrixTableModeProps) {
-    const peerHeaders = matrix.peer_columns.map(c => c.label);
     const blocks = buildDimensionBlocks(matrix);
-    const totalCols = 2 + peerHeaders.length + 1;
+    const totalCols = 2 + matrix.peer_columns.length + 1;
+
+    const columns = useMemo<ListTableColumn[]>(
+        () => [
+            { key: 'dimension', label: 'Dimensions évaluées', sx: { pl: EDGE_X, minWidth: 250 } },
+            { key: 'self', label: 'Regard sur soi', align: 'center', sx: { color: 'primary.main' } },
+            ...matrix.peer_columns.map((col, i) => ({
+                key: `peer-${col.response_id ?? i}`,
+                label: col.label,
+                align: 'center' as const,
+            })),
+            {
+                key: 'scientific',
+                label: 'Scientifique',
+                align: 'center',
+                sx: { color: 'tint.scientific', pr: EDGE_X },
+            },
+        ],
+        [matrix.peer_columns]
+    );
 
     const renderRow = (row: ParticipantQuestionnaireMatrixRow) => (
-        <TableRow key={`row-${row.score_key}`} hover>
-            <TableCell sx={{ py: 1.6 }}>
+        <TableRow key={`row-${row.score_key}`} hover sx={listRowSx}>
+            <TableCell sx={{ pl: EDGE_X, ...harmonizedTableCellSx }}>
                 <Typography variant="body2" fontWeight={700} color="text.primary">
                     {row.label}
                 </Typography>
             </TableCell>
             <TableCell
                 align="center"
-                sx={{ fontWeight: 700, color: 'primary.main', bgcolor: 'tint.primaryGhost' }}
+                sx={{
+                    ...harmonizedTableCellSx,
+                    fontWeight: 700,
+                    color: 'primary.main',
+                    bgcolor: 'tint.primaryGhost',
+                }}
             >
                 {row.self ?? '—'}
             </TableCell>
@@ -63,13 +95,22 @@ export function MatrixTableMode({ matrix, showInterpretations = true }: MatrixTa
                     <TableCell
                         key={`${row.score_key}-${matrix.peer_columns[i]?.response_id ?? i}`}
                         align="center"
-                        sx={{ fontWeight: 500, color: 'text.secondary' }}
+                        sx={{ ...harmonizedTableCellSx, fontWeight: 500, color: 'text.secondary' }}
                     >
                         {cellContent}
                     </TableCell>
                 );
             })}
-            <TableCell align="center" sx={{ fontWeight: 700, color: 'tint.scientific', bgcolor: 'tint.scientificBg' }}>
+            <TableCell
+                align="center"
+                sx={{
+                    pr: EDGE_X,
+                    ...harmonizedTableCellSx,
+                    fontWeight: 700,
+                    color: 'tint.scientific',
+                    bgcolor: 'tint.scientificBg',
+                }}
+            >
                 {row.scientific ?? '—'}
             </TableCell>
         </TableRow>
@@ -92,7 +133,7 @@ export function MatrixTableMode({ matrix, showInterpretations = true }: MatrixTa
             sx: Record<string, unknown>,
             key: string
         ) => (
-            <TableCell key={key} align="center" sx={{ verticalAlign: 'top', ...sx }}>
+            <TableCell key={key} align="center" sx={{ verticalAlign: 'top', ...harmonizedTableCellSx, ...sx }}>
                 <Stack spacing={0.5} alignItems="center">
                     <span>{fmt(value)}</span>
                     {showInterpretations && label !== null && (
@@ -108,16 +149,13 @@ export function MatrixTableMode({ matrix, showInterpretations = true }: MatrixTa
             </TableCell>
         );
         return (
-            <TableRow
-                key={`gap-${pair.eRow.score_key}-${pair.wRow.score_key}`}
-                sx={{ bgcolor: 'tint.subtleRow' }}
-            >
-                <TableCell sx={{ py: 1.2, verticalAlign: 'top' }}>
+            <TableRow key={`gap-${pair.eRow.score_key}-${pair.wRow.score_key}`} sx={{ bgcolor: 'tint.subtleRow' }}>
+                <TableCell sx={{ pl: EDGE_X, py: 1.5, verticalAlign: 'top' }}>
                     <Typography
                         variant="caption"
                         fontWeight={800}
                         color="text.secondary"
-                        sx={{ textTransform: 'uppercase', letterSpacing: 0.6 }}
+                        sx={{ textTransform: 'uppercase', letterSpacing: '0.1em' }}
                     >
                         Écart
                     </Typography>
@@ -139,7 +177,7 @@ export function MatrixTableMode({ matrix, showInterpretations = true }: MatrixTa
                 {renderGapCell(
                     sciGap,
                     pickGapLabel(pair.eRow.scientific, pair.wRow.scientific),
-                    { fontWeight: 800, color: 'tint.scientific' },
+                    { fontWeight: 800, color: 'tint.scientific', pr: EDGE_X },
                     `gap-${pair.eRow.score_key}-sci`
                 )}
             </TableRow>
@@ -149,12 +187,12 @@ export function MatrixTableMode({ matrix, showInterpretations = true }: MatrixTa
     const renderDimensionHeader = (name: string) =>
         name.length === 0 ? null : (
             <TableRow key={`dim-${name}`} sx={{ bgcolor: 'tint.primaryWash' }}>
-                <TableCell colSpan={totalCols} sx={{ py: 1.2 }}>
+                <TableCell colSpan={totalCols} sx={{ py: 1.5, pl: EDGE_X }}>
                     <Typography
                         variant="caption"
                         fontWeight={800}
                         color="primary.main"
-                        sx={{ textTransform: 'uppercase', letterSpacing: 0.8 }}
+                        sx={{ textTransform: 'uppercase', letterSpacing: '0.1em' }}
                     >
                         {name}
                     </Typography>
@@ -163,63 +201,9 @@ export function MatrixTableMode({ matrix, showInterpretations = true }: MatrixTa
         );
 
     return (
-        <TableContainer component={Paper} variant="outlined" sx={{ borderRadius: 2.5, boxShadow: 'none' }}>
+        <Box sx={{ overflowX: 'auto', width: '100%', ...surfaceCardSx }}>
             <Table size="medium" sx={{ minWidth: 720 }}>
-                <TableHead sx={{ bgcolor: 'background.default' }}>
-                    <TableRow>
-                        <TableCell
-                            sx={{
-                                fontWeight: 800,
-                                minWidth: 250,
-                                textTransform: 'uppercase',
-                                fontSize: '0.75rem',
-                                color: 'text.secondary',
-                                py: 2,
-                            }}
-                        >
-                            Dimensions évaluées
-                        </TableCell>
-                        <TableCell
-                            align="center"
-                            sx={{
-                                fontWeight: 800,
-                                textTransform: 'uppercase',
-                                fontSize: '0.75rem',
-                                color: 'primary.main',
-                                py: 2,
-                            }}
-                        >
-                            Regard sur soi
-                        </TableCell>
-                        {peerHeaders.map((label, i) => (
-                            <TableCell
-                                key={matrix.peer_columns[i]?.response_id ?? i}
-                                align="center"
-                                sx={{
-                                    fontWeight: 800,
-                                    textTransform: 'uppercase',
-                                    fontSize: '0.75rem',
-                                    color: 'text.secondary',
-                                    py: 2,
-                                }}
-                            >
-                                {label}
-                            </TableCell>
-                        ))}
-                        <TableCell
-                            align="center"
-                            sx={{
-                                fontWeight: 800,
-                                textTransform: 'uppercase',
-                                fontSize: '0.75rem',
-                                color: 'tint.scientific',
-                                py: 2,
-                            }}
-                        >
-                            Scientifique
-                        </TableCell>
-                    </TableRow>
-                </TableHead>
+                <ListTableHead columns={columns} />
                 <TableBody>
                     {blocks.map(block => (
                         <Fragment key={`block-${block.name || 'noname'}`}>
@@ -234,6 +218,6 @@ export function MatrixTableMode({ matrix, showInterpretations = true }: MatrixTa
                     ))}
                 </TableBody>
             </Table>
-        </TableContainer>
+        </Box>
     );
-}
+};

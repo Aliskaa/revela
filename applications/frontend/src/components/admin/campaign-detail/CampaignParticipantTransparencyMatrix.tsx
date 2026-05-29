@@ -29,6 +29,8 @@ export type CampaignParticipantTransparencyMatrixProps = {
     matrix: ParticipantQuestionnaireMatrix;
     peerCount: number;
     snapshot: TransparencySnapshot | null;
+    /** Masque les pastilles d’initiales (ex. vue participant avec pairs anonymisés). */
+    showPeerAvatars?: boolean;
 };
 
 type RowComputation = {
@@ -99,15 +101,35 @@ function participantInitials(fullName: string): string {
     return `${parts[0][0] ?? ''}${parts[parts.length - 1][0] ?? ''}`.toUpperCase();
 }
 
+const ecartLabelSx: SxProps<Theme> = {
+    fontSize: '0.5625rem',
+    textTransform: 'uppercase',
+    letterSpacing: '0.06em',
+    color: 'text.secondary',
+    lineHeight: 1,
+};
+
+const peerLabelSx: SxProps<Theme> = {
+    display: 'block',
+    maxWidth: 72,
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+    color: 'text.primary',
+    lineHeight: 1.2,
+};
+
 function PeerColumnHeader({
     label,
     fallbackLabel,
     showEcartLabel = false,
+    showAvatar = true,
     bgcolor,
 }: {
     label: string;
     fallbackLabel: string;
     showEcartLabel?: boolean;
+    showAvatar?: boolean;
     bgcolor: string;
 }) {
     const displayName = label.length > 0 ? label : fallbackLabel;
@@ -120,58 +142,49 @@ function PeerColumnHeader({
                 bgcolor,
             }}
         >
-            <Tooltip title={displayName} placement="top">
-                <Stack spacing={0.5} alignItems="center" sx={{ minWidth: 0 }}>
-                    {showEcartLabel ? (
-                        <Typography
-                            variant="caption"
-                            fontWeight={800}
+            {showAvatar ? (
+                <Tooltip title={displayName} placement="top">
+                    <Stack spacing={0.5} alignItems="center" sx={{ minWidth: 0 }}>
+                        {showEcartLabel ? (
+                            <Typography variant="caption" fontWeight={800} sx={ecartLabelSx}>
+                                Écart
+                            </Typography>
+                        ) : null}
+                        <Box
                             sx={{
-                                fontSize: '0.5625rem',
-                                textTransform: 'uppercase',
-                                letterSpacing: '0.06em',
-                                color: 'text.secondary',
-                                lineHeight: 1,
+                                width: 32,
+                                height: 32,
+                                borderRadius: 2,
+                                display: 'grid',
+                                placeItems: 'center',
+                                fontWeight: 800,
+                                fontSize: '0.625rem',
+                                flexShrink: 0,
+                                bgcolor: showEcartLabel ? 'surface.containerLow' : 'tint.primaryBg',
+                                color: showEcartLabel ? 'text.secondary' : 'primary.main',
+                                border: '1px solid',
+                                borderColor: showEcartLabel ? 'border' : 'tint.primaryRail',
                             }}
                         >
+                            {participantInitials(displayName)}
+                        </Box>
+                        <Typography variant="caption" fontWeight={700} sx={peerLabelSx}>
+                            {displayName}
+                        </Typography>
+                    </Stack>
+                </Tooltip>
+            ) : (
+                <Stack spacing={0.5} alignItems="center" sx={{ minWidth: 0 }}>
+                    {showEcartLabel ? (
+                        <Typography variant="caption" fontWeight={800} sx={ecartLabelSx}>
                             Écart
                         </Typography>
                     ) : null}
-                    <Box
-                        sx={{
-                            width: 32,
-                            height: 32,
-                            borderRadius: 2,
-                            display: 'grid',
-                            placeItems: 'center',
-                            fontWeight: 800,
-                            fontSize: '0.625rem',
-                            flexShrink: 0,
-                            bgcolor: showEcartLabel ? 'surface.containerLow' : 'tint.primaryBg',
-                            color: showEcartLabel ? 'text.secondary' : 'primary.main',
-                            border: '1px solid',
-                            borderColor: showEcartLabel ? 'border' : 'tint.primaryRail',
-                        }}
-                    >
-                        {participantInitials(displayName)}
-                    </Box>
-                    <Typography
-                        variant="caption"
-                        fontWeight={700}
-                        sx={{
-                            display: 'block',
-                            maxWidth: 72,
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            whiteSpace: 'nowrap',
-                            color: 'text.primary',
-                            lineHeight: 1.2,
-                        }}
-                    >
+                    <Typography variant="caption" fontWeight={700} sx={peerLabelSx}>
                         {displayName}
                     </Typography>
                 </Stack>
-            </Tooltip>
+            )}
         </TableCell>
     );
 }
@@ -180,6 +193,7 @@ export function CampaignParticipantTransparencyMatrix({
     matrix,
     peerCount,
     snapshot,
+    showPeerAvatars = true,
 }: CampaignParticipantTransparencyMatrixProps) {
     const hasSnapshot = snapshot !== null;
     const rows = React.useMemo<RowComputation[]>(() => {
@@ -301,6 +315,7 @@ export function CampaignParticipantTransparencyMatrix({
                                             key={`peer-${col.response_id}`}
                                             label={col.label}
                                             fallbackLabel={`Pair #${i + 1}`}
+                                            showAvatar={showPeerAvatars}
                                             bgcolor="surface.lavenderGrey"
                                         />
                                     ))}
@@ -310,6 +325,7 @@ export function CampaignParticipantTransparencyMatrix({
                                             label={col.label}
                                             fallbackLabel={`#${i + 1}`}
                                             showEcartLabel
+                                            showAvatar={showPeerAvatars}
                                             bgcolor="tint.subtleRow"
                                         />
                                     ))}
