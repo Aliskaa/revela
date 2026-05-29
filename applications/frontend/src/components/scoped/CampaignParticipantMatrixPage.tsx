@@ -7,7 +7,7 @@ import * as React from 'react';
 
 import { KpiCard } from '@/components/common/cards';
 import { EmptyState } from '@/components/common/EmptyState';
-import { AdminPageHeader, KpiGrid, ListPanel } from '@/components/common/layout';
+import { PageHeader, KpiGrid, ListPanel } from '@/components/common/layout';
 import { LoadingCard } from '@/components/common/LoadingCard';
 import { useBreadcrumbs } from '@/components/layout/AppShellChromeContext';
 import { QuestionnaireMatrixDisplay } from '@/components/matrix/QuestionnaireMatrixDisplay';
@@ -169,7 +169,7 @@ export function CampaignParticipantMatrixPage({
     return (
         <Stack spacing={3} sx={{ minWidth: 0 }}>
             <Box>
-                <AdminPageHeader title="Matrice des scores" subtitle={MATRIX_SUBTITLE} />
+                <PageHeader title="Matrice des scores" subtitle={MATRIX_SUBTITLE} />
                 <Stack direction="row" spacing={0.75} alignItems="center" sx={{ mt: 1 }}>
                     <Typography variant="caption" color="text.secondary">
                         {participantName} · {campaignName} · Coach {coachName}

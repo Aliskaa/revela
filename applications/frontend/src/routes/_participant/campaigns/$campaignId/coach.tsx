@@ -6,7 +6,7 @@ import { Sparkles, UserRound, Users } from 'lucide-react';
 import * as React from 'react';
 
 import { EmptyState } from '@/components/common/EmptyState';
-import { AdminPageHeader, ListPanel } from '@/components/common/layout';
+import { PageHeader, ListPanel } from '@/components/common/layout';
 import { LoadingCard } from '@/components/common/LoadingCard';
 import { surfaceCardSx } from '@/components/common/styles/listSurfaces';
 import { useBreadcrumbs } from '@/components/layout/AppShellChromeContext';
@@ -125,7 +125,7 @@ function ParticipantCoachRoute() {
     return (
         <Stack spacing={3} sx={{ minWidth: 0 }}>
             <Box>
-                <AdminPageHeader title="Mon coach" subtitle={COACH_SUBTITLE} />
+                <PageHeader title="Mon coach" subtitle={COACH_SUBTITLE} />
                 <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
                     {campaignName} · {coachView.company}
                 </Typography>

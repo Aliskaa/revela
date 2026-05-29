@@ -86,7 +86,7 @@ function BrandMark({ brandIcon: Icon, brandLabel, brandEyebrow }: BrandMarkProps
                     height: 44,
                     borderRadius: 3,
                     bgcolor: 'primary.main',
-                    color: '#fff',
+                    color: 'common.white',
                     display: 'grid',
                     placeItems: 'center',
                     boxShadow: theme => theme.palette.shadow.brandHero,
@@ -149,7 +149,7 @@ function Sidebar({ nav, pathname, onLogout, ...brand }: SidebarProps) {
                                 py: 1.35,
                                 px: 2,
                                 bgcolor: active ? 'primary.main' : 'transparent',
-                                color: active ? '#fff' : 'text.secondary',
+                                color: active ? 'common.white' : 'text.secondary',
                                 boxShadow: theme => (active ? theme.palette.shadow.brandActive : 'none'),
                                 '&:hover': {
                                     bgcolor: active ? 'primary.dark' : 'tint.neutralHover',
@@ -204,7 +204,7 @@ function MobileTopBar({ nav, pathname, onLogout, avatarInitial, ...brand }: Mobi
                 elevation={0}
                 sx={{
                     display: { xs: 'block', lg: 'none' },
-                    bgcolor: 'rgba(248,250,252,0.92)',
+                    bgcolor: 'surface.slateWash',
                     backdropFilter: 'blur(10px)',
                     color: 'text.primary',
                     borderBottom: '1px solid',
@@ -227,7 +227,7 @@ function MobileTopBar({ nav, pathname, onLogout, avatarInitial, ...brand }: Mobi
                                 height: 38,
                                 borderRadius: 3,
                                 bgcolor: 'primary.main',
-                                color: '#fff',
+                                color: 'common.white',
                                 display: 'grid',
                                 placeItems: 'center',
                             }}
@@ -275,7 +275,7 @@ function MobileTopBar({ nav, pathname, onLogout, avatarInitial, ...brand }: Mobi
                                     borderRadius: 3,
                                     mb: 0.5,
                                     bgcolor: active ? 'primary.main' : 'transparent',
-                                    color: active ? '#fff' : 'text.secondary',
+                                    color: active ? 'common.white' : 'text.secondary',
                                     '&:hover': { bgcolor: active ? 'primary.dark' : 'tint.neutralHover' },
                                 }}
                             >
@@ -353,7 +353,7 @@ export function ScopedAppShell({
         };
 
         return (
-            <Box sx={{ minHeight: '100vh', bgcolor: '#FAFAFA' }}>
+            <Box sx={{ minHeight: '100vh', bgcolor: 'surface.softWhite' }}>
                 <AppShellMobileChrome {...sidebarProps} avatarInitial={avatarInitial} />
                 <AppShellSidebar {...sidebarProps} />
                 <Box

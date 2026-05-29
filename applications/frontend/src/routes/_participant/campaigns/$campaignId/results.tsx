@@ -7,7 +7,7 @@ import * as React from 'react';
 
 import { KpiCard } from '@/components/common/cards';
 import { EmptyState } from '@/components/common/EmptyState';
-import { AdminPageHeader, KpiGrid, ListPanel } from '@/components/common/layout';
+import { PageHeader, KpiGrid, ListPanel } from '@/components/common/layout';
 import { LoadingCard } from '@/components/common/LoadingCard';
 import { useBreadcrumbs } from '@/components/layout/AppShellChromeContext';
 import { QuestionnaireMatrixDisplay } from '@/components/matrix/QuestionnaireMatrixDisplay';
@@ -123,7 +123,7 @@ function ParticipantResultsRoute() {
     return (
         <Stack spacing={3} sx={{ minWidth: 0 }}>
             <Box>
-                <AdminPageHeader
+                <PageHeader
                     title="Résultats"
                     subtitle={RESULTS_SUBTITLE}
                     action={

@@ -10,12 +10,11 @@ import { KpiCard } from '@/components/common/cards';
 import { RowNavigateHint } from '@/components/common/data-table';
 import { EmptyState } from '@/components/common/EmptyState';
 import { SearchField } from '@/components/common/forms/SearchField';
-import { AdminPageHeader, KpiGrid, ListPanel } from '@/components/common/layout';
+import { PageHeader, KpiGrid, ListPanel } from '@/components/common/layout';
 import { LoadingCard } from '@/components/common/LoadingCard';
 import { listRowSx } from '@/components/common/styles/listSurfaces';
 import { useBreadcrumbs } from '@/components/layout/AppShellChromeContext';
 import { useConfirmCampaignParticipation, useParticipantSession } from '@/hooks/participantSession';
-import { useCampaignStore } from '@/stores/campaignStore';
 import type { ParticipantSession } from '@aor/types';
 
 export const Route = createFileRoute('/_participant/campaigns/')({
@@ -109,16 +108,10 @@ const statusChip = (campaign: Campaign) => {
 };
 
 function CampaignListRow({ campaign }: { campaign: Campaign }) {
-    const selectCampaign = useCampaignStore(s => s.select);
     const confirmParticipation = useConfirmCampaignParticipation();
     const status = statusChip(campaign);
     const needsConfirmation = campaign.status === 'active' && !campaign.invitationConfirmed;
     const detailTo = campaign.campaignId != null ? `/campaigns/${campaign.campaignId}` : undefined;
-
-    const handleOpen = () => {
-        if (campaign.campaignId == null) return;
-        selectCampaign(campaign.campaignId);
-    };
 
     const handleConfirm = (event: React.MouseEvent) => {
         event.preventDefault();
@@ -214,7 +207,6 @@ function CampaignListRow({ campaign }: { campaign: Campaign }) {
             component={Link}
             to={detailTo}
             aria-label={`Ouvrir ${campaign.name}`}
-            onClick={handleOpen}
             sx={{ ...rowSx, cursor: 'pointer' }}
         >
             {rowContent}
@@ -285,7 +277,7 @@ function ParticipantCampaignsRoute() {
 
     return (
         <Stack spacing={3}>
-            <AdminPageHeader
+            <PageHeader
                 title="Mes campagnes"
                 subtitle="Toutes les campagnes auxquelles vous êtes rattaché. Une campagne correspond à un questionnaire unique."
             />

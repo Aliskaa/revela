@@ -18,7 +18,6 @@ const SCALE_LABELS: Record<number, string> = {
 export function ScaleInput({ value, onChange, labels = ["Pas d'accord", "D'accord"] }: ScaleInputProps) {
     return (
         <Box>
-            {/* Légende */}
             <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                 <Typography variant="caption" color="text.secondary">
                     {labels[0]}
@@ -28,7 +27,6 @@ export function ScaleInput({ value, onChange, labels = ["Pas d'accord", "D'accor
                 </Typography>
             </Box>
 
-            {/* Boutons 0-5 */}
             <Box sx={{ display: 'flex', gap: { xs: 1, sm: 1.5 }, justifyContent: 'center' }}>
                 {[0, 1, 2, 3, 4, 5].map(v => {
                     const selected = value === v;

@@ -1,6 +1,6 @@
 // Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
 
-import { AppBar, Avatar, Box, Drawer, IconButton, Stack, type Theme, Toolbar, Typography } from '@mui/material';
+import { AppBar, Avatar, Box, Drawer, IconButton, Stack, type Theme, Toolbar, Typography, useTheme } from '@mui/material';
 import { Link } from '@tanstack/react-router';
 import { Bell, ChevronRight, LineChart, LogOut, Menu, Settings, X } from 'lucide-react';
 import * as React from 'react';
@@ -23,7 +23,7 @@ const SIDEBAR_SX = {
     height: '100vh',
     zIndex: (theme: Theme) => theme.zIndex.drawer + 1,
     py: 4,
-    boxShadow: '0 25px 50px -12px rgba(15, 24, 152, 0.25)',
+    boxShadow: (theme: Theme) => theme.palette.shadow.sidebar,
     overflow: 'hidden',
 } as const;
 
@@ -45,7 +45,7 @@ export function AppShellBrandMark({ brandLabel, brandEyebrow, onDark = true }: A
                     color: 'primary.main',
                     display: 'grid',
                     placeItems: 'center',
-                    boxShadow: '0 10px 15px -3px rgba(255, 204, 0, 0.3)',
+                    boxShadow: theme => theme.palette.shadow.secondaryGlowSm,
                     flexShrink: 0,
                 }}
             >
@@ -56,7 +56,7 @@ export function AppShellBrandMark({ brandLabel, brandEyebrow, onDark = true }: A
                     fontWeight={900}
                     lineHeight={1}
                     sx={{
-                        color: onDark ? '#FAFAFA' : 'text.primary',
+                        color: onDark ? 'surface.softWhite' : 'text.primary',
                         fontSize: '1.25rem',
                         letterSpacing: '-0.02em',
                     }}
@@ -102,16 +102,16 @@ function AppShellNavLink({ item, active, onClick }: AppShellNavLinkProps) {
                 py: 2,
                 mx: 1,
                 textDecoration: 'none',
-                color: active ? 'secondary.main' : 'rgba(250, 250, 250, 0.7)',
-                bgcolor: active ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
+                color: active ? 'secondary.main' : 'tint.onDarkMuted',
+                bgcolor: active ? 'tint.onPrimarySurface' : 'transparent',
                 borderRadius: active ? '0 999px 999px 0' : 2,
-                boxShadow: active ? '4px 0 12px rgba(255, 204, 0, 0.2)' : 'none',
+                boxShadow: active ? (theme => theme.palette.shadow.navActive) : 'none',
                 fontWeight: 600,
                 fontSize: '0.9375rem',
                 transition: 'all 0.3s ease',
                 '&:hover': {
-                    color: active ? 'secondary.main' : '#FAFAFA',
-                    bgcolor: active ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.05)',
+                    color: active ? 'secondary.main' : 'surface.softWhite',
+                    bgcolor: active ? 'tint.onPrimarySurface' : 'tint.onPrimarySurfaceFaint',
                     transform: active ? 'none' : 'translateX(4px)',
                 },
             }}
@@ -159,7 +159,7 @@ export function AppShellSidebar({
             </Box>
 
             <Box sx={{ px: 1, mt: 'auto' }}>
-                <Box sx={{ height: '1px', bgcolor: 'rgba(255,255,255,0.1)', mx: 3, mb: 3 }} />
+                <Box sx={{ height: '1px', bgcolor: 'tint.onPrimarySurface', mx: 3, mb: 3 }} />
                 {footerNav.map(item => (
                     <AppShellNavLink key={item.label} item={item} active={isActive(item, pathname)} />
                 ))}
@@ -178,14 +178,14 @@ export function AppShellSidebar({
                         border: 'none',
                         cursor: 'pointer',
                         bgcolor: 'transparent',
-                        color: 'rgba(239, 68, 68, 0.85)',
+                        color: 'tint.onDarkDangerText',
                         borderRadius: 2,
                         fontWeight: 600,
                         fontSize: '0.9375rem',
                         fontFamily: 'inherit',
                         transition: 'all 0.3s ease',
                         '&:hover': {
-                            bgcolor: 'rgba(239, 68, 68, 0.08)',
+                            bgcolor: 'tint.dangerHover',
                             color: 'error.main',
                         },
                     }}
@@ -204,6 +204,7 @@ type AppShellTopBarProps = {
 
 export function AppShellTopBar({ avatarInitial }: AppShellTopBarProps) {
     const { breadcrumbs } = useAppShellChrome();
+    const theme = useTheme();
 
     return (
         <Box
@@ -217,9 +218,9 @@ export function AppShellTopBar({ avatarInitial }: AppShellTopBarProps) {
                 justifyContent: 'space-between',
                 px: 5,
                 py: 2,
-                bgcolor: 'rgba(250, 250, 250, 0.8)',
+                bgcolor: 'surface.footerWash',
                 backdropFilter: 'blur(12px)',
-                boxShadow: '0 4px 6px -1px rgba(15, 24, 152, 0.05)',
+                boxShadow: theme => theme.palette.shadow.topbar,
             }}
         >
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 0 }}>
@@ -227,7 +228,9 @@ export function AppShellTopBar({ avatarInitial }: AppShellTopBarProps) {
                     const isLast = index === breadcrumbs.length - 1;
                     return (
                         <React.Fragment key={`${segment.label}-${index}`}>
-                            {index > 0 ? <ChevronRight size={14} color="rgba(107, 114, 128, 0.6)" aria-hidden /> : null}
+                            {index > 0 ? (
+                                <ChevronRight size={14} color={theme.palette.tint.iconMutedFaint} aria-hidden />
+                            ) : null}
                             {segment.to && !isLast ? (
                                 <Typography
                                     component={Link}
@@ -266,7 +269,7 @@ export function AppShellTopBar({ avatarInitial }: AppShellTopBarProps) {
                         aria-label="Notifications"
                         sx={{
                             color: 'primary.main',
-                            '&:hover': { bgcolor: '#F5F5FB' },
+                            '&:hover': { bgcolor: 'surface.lavenderGrey' },
                         }}
                     >
                         <Bell size={22} />
@@ -275,7 +278,7 @@ export function AppShellTopBar({ avatarInitial }: AppShellTopBarProps) {
                         aria-label="Paramètres"
                         sx={{
                             color: 'primary.main',
-                            '&:hover': { bgcolor: '#F5F5FB' },
+                            '&:hover': { bgcolor: 'surface.lavenderGrey' },
                         }}
                     >
                         <Settings size={22} />
@@ -286,7 +289,8 @@ export function AppShellTopBar({ avatarInitial }: AppShellTopBarProps) {
                         width: 40,
                         height: 40,
                         bgcolor: 'primary.main',
-                        border: '2px solid #FAFAFA',
+                        border: '2px solid',
+                        borderColor: 'surface.softWhite',
                         boxShadow: theme => theme.palette.shadow.cardSoft,
                     }}
                 >
@@ -320,10 +324,10 @@ export function AppShellMobileChrome({
                 elevation={0}
                 sx={{
                     display: { xs: 'block', lg: 'none' },
-                    bgcolor: 'rgba(250, 250, 250, 0.92)',
+                    bgcolor: 'surface.drawerWash',
                     backdropFilter: 'blur(12px)',
                     color: 'text.primary',
-                    boxShadow: '0 4px 6px -1px rgba(15, 24, 152, 0.05)',
+                    boxShadow: theme => theme.palette.shadow.topbar,
                 }}
             >
                 <Toolbar sx={{ minHeight: 64, px: 2 }}>
@@ -346,14 +350,14 @@ export function AppShellMobileChrome({
                         sx: {
                             width: APP_SHELL_SIDEBAR_WIDTH,
                             bgcolor: 'primary.main',
-                            color: '#FAFAFA',
+                            color: 'surface.softWhite',
                         },
                     },
                 }}
             >
                 <Stack direction="row" justifyContent="space-between" alignItems="start" sx={{ px: 2, pt: 3, pb: 1 }}>
                     <AppShellBrandMark brandLabel={brandLabel} brandEyebrow={brandEyebrow} />
-                    <IconButton onClick={close} aria-label="Fermer le menu" sx={{ color: 'rgba(255,255,255,0.8)' }}>
+                    <IconButton onClick={close} aria-label="Fermer le menu" sx={{ color: 'tint.onPrimaryIcon' }}>
                         <X size={20} />
                     </IconButton>
                 </Stack>
@@ -368,7 +372,7 @@ export function AppShellMobileChrome({
                     ))}
                 </Box>
                 <Box sx={{ pb: 3 }}>
-                    <Box sx={{ height: '1px', bgcolor: 'rgba(255,255,255,0.1)', mx: 4, mb: 2 }} />
+                    <Box sx={{ height: '1px', bgcolor: 'tint.onPrimarySurface', mx: 4, mb: 2 }} />
                     {footerNav.map(item => (
                         <AppShellNavLink
                             key={item.label}
@@ -395,7 +399,7 @@ export function AppShellMobileChrome({
                             border: 'none',
                             cursor: 'pointer',
                             bgcolor: 'transparent',
-                            color: 'rgba(239, 68, 68, 0.85)',
+                            color: 'tint.onDarkDangerText',
                             borderRadius: 2,
                             fontWeight: 600,
                             fontSize: '0.9375rem',

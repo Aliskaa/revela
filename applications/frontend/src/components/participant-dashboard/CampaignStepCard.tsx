@@ -134,7 +134,7 @@ export function CampaignStepCard({
                     ...(step.state === 'completed'
                         ? { bgcolor: 'tint.successBg', color: 'tint.successText' }
                         : step.state === 'current'
-                          ? { bgcolor: 'rgba(255,204,0,0.14)', color: 'tint.secondaryText' }
+                          ? { bgcolor: 'tint.secondarySoft', color: 'tint.secondaryText' }
                           : { bgcolor: 'tint.mutedBg', color: 'tint.mutedText' }),
                 }}
             >
@@ -234,11 +234,11 @@ export function CampaignStepCard({
                     borderColor: 'border',
                     borderRadius: 4,
                     p: 2,
-                    bgcolor: '#fff',
+                    bgcolor: 'background.paper',
                     transition: 'border-color 0.15s, box-shadow 0.15s, transform 0.15s',
                     '&:hover': {
                         borderColor: 'primary.main',
-                        boxShadow: '0 6px 18px -10px rgba(15,23,42,0.18)',
+                        boxShadow: theme => theme.palette.shadow.cardHoverLift,
                     },
                     '&:focus-visible': {
                         borderColor: 'primary.main',
@@ -260,7 +260,7 @@ export function CampaignStepCard({
                 borderColor: 'border',
                 borderRadius: 4,
                 p: 2,
-                bgcolor: step.state === 'locked' ? 'tint.mutedBg' : '#fff',
+                bgcolor: step.state === 'locked' ? 'tint.mutedBg' : 'background.paper',
                 opacity: step.state === 'locked' ? 0.85 : 1,
             }}
         >

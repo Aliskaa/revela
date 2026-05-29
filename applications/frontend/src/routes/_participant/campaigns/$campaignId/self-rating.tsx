@@ -3,7 +3,7 @@
 import { Button } from '@/components/common/Button';
 import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingCard } from '@/components/common/LoadingCard';
-import { AdminPageHeader, ListPanel } from '@/components/common/layout';
+import { PageHeader, ListPanel } from '@/components/common/layout';
 import { useBreadcrumbs } from '@/components/layout/AppShellChromeContext';
 import { CampaignNotActiveBlock } from '@/components/participant-dashboard/CampaignNotActiveBlock';
 import { StepCompletedBanner } from '@/components/participant-dashboard/StepCompletedBanner';
@@ -208,7 +208,7 @@ function ParticipantSelfRatingRoute() {
             )}
 
             <Box>
-                <AdminPageHeader title="Regard sur soi" subtitle={PAGE_SUBTITLE} />
+                <PageHeader title="Regard sur soi" subtitle={PAGE_SUBTITLE} />
                 <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
                     {campaignName} · {questionnaireTitle}
                     {questionnaireCode ? ` (${questionnaireCode})` : ''}

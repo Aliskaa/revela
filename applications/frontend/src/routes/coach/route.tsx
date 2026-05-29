@@ -26,9 +26,10 @@ function SuperAdminBanner() {
     return (
         <Box
             sx={{
-                bgcolor: 'rgb(254,243,199)',
-                borderBottom: '1px solid rgb(252,211,77)',
-                color: 'rgb(120,53,15)',
+                bgcolor: 'tint.adminBadgeBg',
+                borderBottom: '1px solid',
+                borderColor: 'tint.adminBadgeBorder',
+                color: 'tint.adminBadgeText',
                 px: { xs: 2, sm: 3, lg: 4 },
                 py: 1.25,
             }}

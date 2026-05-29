@@ -25,6 +25,8 @@ declare module '@mui/material/styles' {
             listTableHead: string;
             listTableRowBorder: string;
             progressGradient: string;
+            drawerWash: string; // fond drawer mobile (sidebar repliée)
+            slateWash: string; // fond topbar scoped (slate translucide)
         };
         tint: {
             // Bleu primary (`#0F1898` / rgb(15,24,152)) à différentes opacités.
@@ -68,12 +70,24 @@ declare module '@mui/material/styles' {
             iconMuted: string;
             adminBadgeBg: string;
             adminBadgeText: string;
+            adminBadgeBorder: string; // bordure ambre du bandeau super-admin
             successTextHover: string;
             onPrimaryText: string;
             onPrimaryBorder: string;
             onPrimaryBorderHover: string;
             onPrimarySurface: string;
             onPrimarySurfaceHover: string;
+            onPrimarySurfaceFaint: string; // 0.05 — item nav mobile inactif
+            onPrimarySurfaceStrong: string; // 0.16 — badge sur panneau brand
+            onPrimaryTextMuted: string; // 0.72 — sous-titres sur fond brand
+            onPrimaryTextFaint: string; // 0.6 — mentions discrètes sur fond brand
+            onPrimaryIcon: string; // 0.8 — icônes sur fond brand
+            onDarkMuted: string; // texte nav inactif (off-white) sur sidebar sombre
+            onDarkDangerText: string; // libellé déconnexion sur sidebar sombre
+            secondaryGlow: string; // 0.18 — halo jaune sur fond brand
+            secondarySoft: string; // 0.14 — chip jaune doux
+            iconMutedFaint: string; // 0.6 — séparateur de breadcrumb
+            subtleGhost: string; // 0.02 — fond de ligne très discret
             onPrimarySheen: string;
             secondaryTextHover: string;
         };
@@ -93,6 +107,11 @@ declare module '@mui/material/styles' {
             buttonLiftHover: string;
             stickyAction: string;
             secondaryLift: string;
+            sidebar: string; // ombre portée de la sidebar sombre
+            secondaryGlowSm: string; // glow jaune (badge marque)
+            navActive: string; // ombre item nav actif (rail jaune)
+            topbar: string; // ombre basse de la topbar
+            cardHoverLift: string; // lift au survol des cartes participant
         };
     }
     interface PaletteOptions {
@@ -142,6 +161,8 @@ export const theme = createTheme({
             listTableHead: 'rgba(79, 112, 229, 0.06)',
             listTableRowBorder: 'rgba(79, 112, 229, 0.08)',
             progressGradient: 'linear-gradient(90deg, #4F70E5 0%, #0F1898 100%)',
+            drawerWash: 'rgba(250, 250, 250, 0.92)',
+            slateWash: 'rgba(248, 250, 252, 0.92)',
         },
         tint: {
             primaryBg: 'rgba(15,24,152,0.08)',
@@ -177,6 +198,7 @@ export const theme = createTheme({
             iconMuted: 'rgba(107, 114, 128, 0.7)',
             adminBadgeBg: 'rgb(254,243,199)',
             adminBadgeText: 'rgb(120,53,15)',
+            adminBadgeBorder: 'rgb(252,211,77)',
             successTextHover: 'rgb(3,100,70)',
             secondaryTextHover: 'rgb(150,100,0)',
             onPrimaryText: 'rgba(255,255,255,0.85)',
@@ -184,6 +206,17 @@ export const theme = createTheme({
             onPrimaryBorderHover: 'rgba(255,255,255,0.4)',
             onPrimarySurface: 'rgba(255,255,255,0.1)',
             onPrimarySurfaceHover: 'rgba(255,255,255,0.2)',
+            onPrimarySurfaceFaint: 'rgba(255,255,255,0.05)',
+            onPrimarySurfaceStrong: 'rgba(255,255,255,0.16)',
+            onPrimaryTextMuted: 'rgba(255,255,255,0.72)',
+            onPrimaryTextFaint: 'rgba(255,255,255,0.6)',
+            onPrimaryIcon: 'rgba(255,255,255,0.8)',
+            onDarkMuted: 'rgba(250,250,250,0.7)',
+            onDarkDangerText: 'rgba(239,68,68,0.85)',
+            secondaryGlow: 'rgba(255,204,0,0.18)',
+            secondarySoft: 'rgba(255,204,0,0.14)',
+            iconMutedFaint: 'rgba(107,114,128,0.6)',
+            subtleGhost: 'rgba(15,23,42,0.02)',
             onPrimarySheen: 'linear-gradient(135deg, rgba(255,255,255,0.12) 0%, transparent 55%)',
         },
         shadow: {
@@ -202,6 +235,11 @@ export const theme = createTheme({
             buttonLiftHover: '0 14px 30px -5px rgba(15, 24, 152, 0.3)',
             stickyAction: '-8px 0 16px -8px rgba(15, 24, 152, 0.1)',
             secondaryLift: '0 8px 24px rgba(255, 204, 0, 0.25)',
+            sidebar: '0 25px 50px -12px rgba(15, 24, 152, 0.25)',
+            secondaryGlowSm: '0 10px 15px -3px rgba(255, 204, 0, 0.3)',
+            navActive: '4px 0 12px rgba(255, 204, 0, 0.2)',
+            topbar: '0 4px 6px -1px rgba(15, 24, 152, 0.05)',
+            cardHoverLift: '0 6px 18px -10px rgba(15, 23, 42, 0.18)',
         },
     },
     typography: {

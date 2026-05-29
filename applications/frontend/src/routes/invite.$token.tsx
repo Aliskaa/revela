@@ -2,7 +2,7 @@
 
 import { ScaleInput } from '@/components/common/ScaleInput';
 import { Button } from '@/components/common/Button';
-import { AdminPageHeader } from '@/components/common/layout';
+import { PageHeader } from '@/components/common/layout';
 import { surfaceCardSx } from '@/components/common/styles/listSurfaces';
 import { PublicRevelaPageShell } from '@/components/layout/PublicRevelaPageShell';
 import { useActivateInvite, useConfirmInviteParticipation, useInvite, useSubmitInvite } from '@/hooks/invitations';
@@ -139,7 +139,7 @@ function InvitePage() {
             <PublicRevelaPageShell>
                 <Container maxWidth="sm" sx={{ py: { xs: 3, md: 5 } }}>
                     <Stack spacing={3}>
-                        <AdminPageHeader
+                        <PageHeader
                             title="Confirmation"
                             subtitle="Prenez connaissance du cadre de confidentialité avant de rejoindre votre parcours."
                         />
@@ -296,7 +296,7 @@ function InvitePage() {
             <PublicRevelaPageShell>
                 <Container maxWidth="sm" sx={{ py: { xs: 3, md: 5 } }}>
                     <Stack spacing={3}>
-                        <AdminPageHeader
+                        <PageHeader
                             title="Sécuriser votre compte"
                             subtitle="Choisissez un mot de passe pour vos prochaines connexions à Révéla."
                         />
@@ -368,7 +368,7 @@ function InvitePage() {
             <PublicRevelaPageShell>
                 <Container maxWidth="sm" sx={{ py: { xs: 3, md: 5 } }}>
                     <Stack spacing={3}>
-                        <AdminPageHeader
+                        <PageHeader
                             title="Campagne en préparation"
                             subtitle={`Bonjour ${waitInvite.participant.name}, votre participation est validée.`}
                         />
@@ -524,7 +524,7 @@ function InvitePage() {
 
                     {step === 'welcome' && (
                         <InviteStepCard>
-                            <AdminPageHeader
+                            <PageHeader
                                 title={`Bonjour, ${firstName}`}
                                 subtitle="Bienvenue dans votre Parcours Élément Humain."
                             />

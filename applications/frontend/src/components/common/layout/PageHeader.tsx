@@ -4,7 +4,7 @@ import type { LucideIcon } from 'lucide-react';
 
 import { Button } from '@/components/common/Button';
 
-export type AdminPageHeaderProps = {
+export type PageHeaderProps = {
     title: string;
     subtitle: string;
     action?: {
@@ -14,8 +14,8 @@ export type AdminPageHeaderProps = {
     };
 };
 
-/** En-tête de page admin harmonisé : titre H3 + sous-titre + CTA primaire optionnel. */
-export function AdminPageHeader({ title, subtitle, action }: AdminPageHeaderProps) {
+/** En-tête de page harmonisé (admin, coach, participant, pages publiques) : titre H3 + sous-titre + CTA primaire optionnel. */
+export function PageHeader({ title, subtitle, action }: PageHeaderProps) {
     const ActionIcon = action?.icon ?? Plus;
 
     return (

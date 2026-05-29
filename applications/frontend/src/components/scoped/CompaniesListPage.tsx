@@ -7,7 +7,7 @@ import * as React from 'react';
 import { AdminCompanyDrawerForm } from '@/components/admin/AdminCompanyDrawerForm';
 import { KpiCard } from '@/components/common/cards';
 import { SearchField } from '@/components/common/forms/SearchField';
-import { AdminPageHeader, KpiGrid, ListPanel } from '@/components/common/layout';
+import { PageHeader, KpiGrid, ListPanel } from '@/components/common/layout';
 import { useBreadcrumbs } from '@/components/layout/AppShellChromeContext';
 import {
     CompanyListViews,
@@ -152,7 +152,7 @@ export function CompaniesListPage({ scope }: CompaniesListPageProps) {
     return (
         <Stack spacing={3}>
             { isAdmin ? drawer : null}
-            <AdminPageHeader
+            <PageHeader
                 title={labels.title}
                 subtitle={labels.subtitle}
                 action={isAdmin ? {

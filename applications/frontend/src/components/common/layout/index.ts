@@ -1,14 +1,10 @@
-export { AdminPageHeader } from './AdminPageHeader';
-export type { AdminPageHeaderProps } from './AdminPageHeader';
-export { CoachScopedListCard } from './CoachScopedListCard';
-export type { CoachScopedListCardProps } from './CoachScopedListCard';
+export { PageHeader } from './PageHeader';
+export type { PageHeaderProps } from './PageHeader';
 export { KpiGrid } from './KpiGrid';
 export type { KpiGridProps } from './KpiGrid';
 export { ListPanel } from './ListPanel';
 export type { ListPanelProps } from './ListPanel';
 export { MobileListEmptyMessage } from './MobileListEmptyMessage';
 export type { MobileListEmptyMessageProps } from './MobileListEmptyMessage';
-export { PageHeroCard } from './PageHeroCard';
-export type { PageHeroCardProps } from './PageHeroCard';
 export { ResponsiveListViews } from './ResponsiveListViews';
 export type { ResponsiveListViewsProps } from './ResponsiveListViews';

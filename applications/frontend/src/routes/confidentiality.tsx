@@ -1,6 +1,6 @@
 // Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
 
-import { AdminPageHeader } from '@/components/common/layout';
+import { PageHeader } from '@/components/common/layout';
 import { surfaceCardSx } from '@/components/common/styles/listSurfaces';
 import { PublicRevelaPageShell } from '@/components/layout/PublicRevelaPageShell';
 import { Box, Card, CardContent, Container, Divider, Link as MuiLink, Stack, Typography } from '@mui/material';
@@ -46,7 +46,7 @@ function PrivacyPolicyPage() {
                             </Typography>
                         </MuiLink>
 
-                        <AdminPageHeader
+                        <PageHeader
                             title="Politique de confidentialité"
                             subtitle={`Parcours Élément Humain — dernière mise à jour : {{DATE_DERNIERE_MAJ}}`}
                         />

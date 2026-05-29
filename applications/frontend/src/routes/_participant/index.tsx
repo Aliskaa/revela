@@ -7,7 +7,7 @@ import { ArrowRight, CheckCircle2, ClipboardList, Hourglass, Sparkles, Target } 
 import { KpiCard } from '@/components/common/cards';
 import { RowNavigateHint } from '@/components/common/data-table';
 import { EmptyState } from '@/components/common/EmptyState';
-import { AdminPageHeader, KpiGrid, ListPanel } from '@/components/common/layout';
+import { PageHeader, KpiGrid, ListPanel } from '@/components/common/layout';
 import { LoadingCard } from '@/components/common/LoadingCard';
 import { listRowSx } from '@/components/common/styles/listSurfaces';
 import { useBreadcrumbs } from '@/components/layout/AppShellChromeContext';
@@ -162,7 +162,7 @@ export function ParticipantDashboardRoute() {
 
     return (
         <Stack spacing={3}>
-            <AdminPageHeader
+            <PageHeader
                 title={`Bonjour ${participantFirstName}`}
                 subtitle="Voici un aperçu rapide de vos parcours et de leur avancement."
                 action={{

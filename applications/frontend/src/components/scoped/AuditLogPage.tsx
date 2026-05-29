@@ -5,7 +5,7 @@ import { List, ScrollText } from 'lucide-react';
 import * as React from 'react';
 
 import { KpiCard } from '@/components/common/cards';
-import { AdminPageHeader, KpiGrid, ListPanel } from '@/components/common/layout';
+import { PageHeader, KpiGrid, ListPanel } from '@/components/common/layout';
 import { useBreadcrumbs } from '@/components/layout/AppShellChromeContext';
 import { AuditLogListViews } from '@/components/scoped/audit-log/AuditLogListViews';
 import { useAdminAuditEvents } from '@/hooks/admin';
@@ -29,7 +29,7 @@ export function AuditLogPage() {
 
     return (
         <Stack spacing={3}>
-            <AdminPageHeader
+            <PageHeader
                 title="Audit log"
                 subtitle="Traçabilité G6 RGPD : actions sensibles (auth, suppressions, modifications RGPD). Les lectures ne sont pas tracées en V1."
             />

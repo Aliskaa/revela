@@ -103,8 +103,8 @@ export function CampaignTransparencyCard({ snapshot, onClick }: CampaignTranspar
                     borderColor: 'border',
                     borderRadius: 4,
                     p: 2,
-                    bgcolor: locked ? 'tint.mutedBg' : '#fff',
-                    opacity: locked ? 0.85 : 1,
+                bgcolor: locked ? 'tint.mutedBg' : 'background.paper',
+                opacity: locked ? 0.85 : 1,
                 }}
             >
                 {content}
@@ -125,11 +125,11 @@ export function CampaignTransparencyCard({ snapshot, onClick }: CampaignTranspar
                 borderColor: 'border',
                 borderRadius: 4,
                 p: 2,
-                bgcolor: '#fff',
+                bgcolor: 'background.paper',
                 transition: 'border-color 0.15s, box-shadow 0.15s',
                 '&:hover': {
                     borderColor: 'primary.main',
-                    boxShadow: '0 6px 18px -10px rgba(15,23,42,0.18)',
+                    boxShadow: theme => theme.palette.shadow.cardHoverLift,
                 },
                 '&:focus-visible': {
                     borderColor: 'primary.main',

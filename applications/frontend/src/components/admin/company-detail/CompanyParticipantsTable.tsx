@@ -25,8 +25,8 @@ import {
     ClickableTableRow,
     EmptyTableRow,
     ListTableHead,
+    ListTablePagination,
     RowNavigateHint,
-    StandardTablePagination,
     type ListTableColumn,
 } from '@/components/common/data-table';
 import { useAddParticipantToCompany } from '@/hooks/admin';
@@ -239,18 +239,16 @@ export function CompanyParticipantsTable({
                 </Box>
 
                 {totalCount > 0 && (
-                    <Box sx={{ px: { xs: 2.5, md: 3 }, pb: 2 }}>
-                        <StandardTablePagination
-                            count={totalCount}
-                            page={page}
-                            rowsPerPage={rowsPerPage}
-                            onPageChange={onPageChange}
-                            onRowsPerPageChange={next => {
-                                onRowsPerPageChange(next);
-                                onPageChange(0);
-                            }}
-                        />
-                    </Box>
+                    <ListTablePagination
+                        count={totalCount}
+                        page={page}
+                        rowsPerPage={rowsPerPage}
+                        onPageChange={onPageChange}
+                        onRowsPerPageChange={next => {
+                            onRowsPerPageChange(next);
+                            onPageChange(0);
+                        }}
+                    />
                 )}
             </CardContent>
         </Card>

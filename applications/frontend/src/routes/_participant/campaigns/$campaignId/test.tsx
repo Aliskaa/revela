@@ -2,13 +2,13 @@
 
 import { Button } from '@/components/common/Button';
 import { LoadingCard } from '@/components/common/LoadingCard';
-import { AdminPageHeader } from '@/components/common/layout';
-import { surfaceCardSx } from '@/components/common/styles/listSurfaces';
+import { PageHeader } from '@/components/common/layout';
 import { useBreadcrumbs } from '@/components/layout/AppShellChromeContext';
 import { CampaignNotActiveBlock } from '@/components/participant-dashboard/CampaignNotActiveBlock';
 import { StepCompletedBanner } from '@/components/participant-dashboard/StepCompletedBanner';
+import { ElementHumainQuestionCard } from '@/components/questionnaire/ElementHumainQuestionCard';
 import { QuestionnaireProgress } from '@/components/questionnaire/QuestionnaireProgress';
-import { RatingScale } from '@/components/questionnaire/RatingScale';
+import { type AnswersMap, answerKey } from '@/components/questionnaire/elementHumainAnswers';
 import { ELEMENT_HUMAIN_LIKERT } from '@/components/questionnaire/questionnaireScales';
 import { useParticipantSession } from '@/hooks/participantSession';
 import {
@@ -18,30 +18,17 @@ import {
     useUpsertElementBDraft,
 } from '@/hooks/questionnaires';
 import { useToast } from '@/lib/toast';
-import type { ElementBDraft, Question } from '@aor/types';
-import { Alert, Box, Card, CardContent, Chip, Link as MuiLink, Stack, Typography } from '@mui/material';
+import type { ElementBDraft } from '@aor/types';
+import { Alert, Box, Link as MuiLink, Stack, Typography } from '@mui/material';
 import { Link, createFileRoute, useNavigate } from '@tanstack/react-router';
-import { ArrowLeft, ArrowRight, Save, Send } from 'lucide-react';
 import * as React from 'react';
 
 export const Route = createFileRoute('/_participant/campaigns/$campaignId/test')({
     component: ParticipantTestSessionRoute,
 });
 
-const ANSWER_MIN = ELEMENT_HUMAIN_LIKERT.min;
-const ANSWER_MAX = ELEMENT_HUMAIN_LIKERT.max;
-
 const PAGE_SUBTITLE =
     'Répondez aux deux séries de questions : comment vous vous comportez aujourd’hui, puis comment vous souhaiteriez vous comporter.';
-
-type AnswersMap = Record<string, number | null>;
-
-/**
- * Construit une clé `"series-question"` pour stocker une réponse dans la map.
- * Choisi pour rester sérialisable et permettre une hydratation directe depuis
- * un brouillon (`series0[i]` → clé `"0-i"`).
- */
-const answerKey = (seriesIndex: number, questionIndex: number) => `${String(seriesIndex)}-${String(questionIndex)}`;
 
 /**
  * Extrait toutes les réponses d'une série depuis la map. Retourne `null` si
@@ -73,187 +60,6 @@ const computeResumePosition = (
     }
     return { seriesIndex: 0, questionIndex: 0 };
 };
-
-function QuestionCard({
-    seriesIndex,
-    questionIndex,
-    onSeriesIndexChange,
-    onQuestionIndexChange,
-    seriesLabels,
-    questions,
-    answers,
-    onAnswer,
-    onSubmit,
-    isSubmitting,
-    submitError,
-    isAutosaving,
-}: {
-    seriesIndex: number;
-    questionIndex: number;
-    onSeriesIndexChange: (next: number) => void;
-    onQuestionIndexChange: (next: number) => void;
-    seriesLabels: string[];
-    questions: Question[][];
-    answers: AnswersMap;
-    onAnswer: (key: string, value: number) => void;
-    onSubmit: () => void;
-    isSubmitting: boolean;
-    submitError: boolean;
-    isAutosaving: boolean;
-}) {
-    const seriesCount = questions.length;
-    const questionCount = questions[0]?.length ?? 0;
-    const totalQuestions = seriesCount * questionCount;
-
-    const currentQuestion = questions[seriesIndex]?.[questionIndex];
-    const currentLabel = seriesLabels[seriesIndex] ?? `Série ${String(seriesIndex + 1)}`;
-    const currentStep = seriesIndex * questionCount + questionIndex + 1;
-    const prevDisabled = seriesIndex === 0 && questionIndex === 0;
-    const isLastQuestion = seriesIndex === seriesCount - 1 && questionIndex === questionCount - 1;
-
-    const currentKey = answerKey(seriesIndex, questionIndex);
-    const currentAnswer = answers[currentKey] ?? null;
-
-    const answeredCount = Object.values(answers).filter(v => v !== null).length;
-    const allAnswered = answeredCount === totalQuestions;
-    const canGoNext = currentAnswer !== null;
-
-    const goNext = () => {
-        if (questionIndex < questionCount - 1) {
-            onQuestionIndexChange(questionIndex + 1);
-            return;
-        }
-        if (seriesIndex < seriesCount - 1) {
-            onSeriesIndexChange(seriesIndex + 1);
-            onQuestionIndexChange(0);
-        }
-    };
-
-    const goPrev = () => {
-        if (questionIndex > 0) {
-            onQuestionIndexChange(questionIndex - 1);
-            return;
-        }
-        if (seriesIndex > 0) {
-            onSeriesIndexChange(seriesIndex - 1);
-            onQuestionIndexChange(questionCount - 1);
-        }
-    };
-
-    if (!currentQuestion) {
-        return null;
-    }
-
-    return (
-        <Card variant="outlined" sx={surfaceCardSx}>
-            <CardContent sx={{ p: { xs: 2.5, md: 3 } }}>
-                <Stack spacing={2.5}>
-                    <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={2}>
-                        <Box sx={{ minWidth: 0 }}>
-                            <Typography
-                                variant="caption"
-                                color="text.secondary"
-                                sx={{ textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700 }}
-                            >
-                                Série {seriesIndex + 1} / {seriesCount} · {currentLabel}
-                            </Typography>
-                            <Typography variant="h6" fontWeight={800} color="primary.main" sx={{ mt: 0.35 }}>
-                                Question {currentStep} / {totalQuestions}
-                            </Typography>
-                        </Box>
-                        {isAutosaving && (
-                            <Chip
-                                icon={<Save size={14} />}
-                                label="Sauvegarde…"
-                                size="small"
-                                sx={{
-                                    borderRadius: 99,
-                                    bgcolor: 'tint.secondaryBg',
-                                    color: 'tint.secondaryText',
-                                    fontWeight: 700,
-                                    flex: 'none',
-                                }}
-                            />
-                        )}
-                    </Stack>
-
-                    <Box sx={{ borderRadius: 2, bgcolor: 'surface.lavenderGrey', p: { xs: 2, md: 2.5 } }}>
-                        <Typography variant="h6" fontWeight={700} color="text.primary" sx={{ lineHeight: 1.55 }}>
-                            {currentQuestion.question}
-                        </Typography>
-                    </Box>
-
-                    <Box sx={{ border: '1px solid', borderColor: 'border', borderRadius: 2, p: 2 }}>
-                        <Stack spacing={1.2}>
-                            <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={2}>
-                                <Typography variant="body2" fontWeight={700} color="text.primary">
-                                    Échelle {ELEMENT_HUMAIN_LIKERT.rangeLabel}
-                                </Typography>
-                                <Chip
-                                    label={currentAnswer ?? '—'}
-                                    size="small"
-                                    sx={{
-                                        borderRadius: 99,
-                                        fontWeight: 700,
-                                        bgcolor: currentAnswer !== null ? 'tint.primaryBg' : 'tint.secondaryBg',
-                                        color: currentAnswer !== null ? 'primary.main' : 'tint.secondaryText',
-                                    }}
-                                />
-                            </Stack>
-                            <RatingScale
-                                value={currentAnswer}
-                                onChange={v => {
-                                    if (v !== null) onAnswer(currentKey, v);
-                                }}
-                                max={ANSWER_MAX}
-                                min={ANSWER_MIN}
-                                endpointLabels={ELEMENT_HUMAIN_LIKERT.endpointLabels}
-                                ariaLabel={currentQuestion.question}
-                            />
-                        </Stack>
-                    </Box>
-
-                    {submitError && (
-                        <Alert severity="error" sx={{ borderRadius: 2 }}>
-                            Une erreur est survenue lors de la soumission. Veuillez réessayer.
-                        </Alert>
-                    )}
-
-                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
-                        <Button
-                            appearance="secondary"
-                            startIcon={<ArrowLeft size={16} />}
-                            disabled={prevDisabled}
-                            onClick={goPrev}
-                        >
-                            Précédent
-                        </Button>
-                        <Box sx={{ flex: 1 }} />
-                        {isLastQuestion ? (
-                            <Button
-                                appearance="primary"
-                                startIcon={<Send size={16} />}
-                                disabled={!allAnswered || isSubmitting}
-                                onClick={onSubmit}
-                            >
-                                {isSubmitting ? 'Envoi en cours…' : 'Terminer et envoyer'}
-                            </Button>
-                        ) : (
-                            <Button
-                                appearance="primary"
-                                endIcon={<ArrowRight size={16} />}
-                                disabled={!canGoNext}
-                                onClick={goNext}
-                            >
-                                Suivant
-                            </Button>
-                        )}
-                    </Stack>
-                </Stack>
-            </CardContent>
-        </Card>
-    );
-}
 
 function ParticipantTestSessionRoute() {
     const { campaignId: campaignIdParam } = Route.useParams();
@@ -361,7 +167,7 @@ function ParticipantTestSessionRoute() {
         const filled: Record<string, number> = {};
         for (let s = 0; s < seriesCount; s++) {
             for (let q = 0; q < questionCount; q++) {
-                filled[answerKey(s, q)] = Math.floor(Math.random() * ANSWER_MAX);
+                filled[answerKey(s, q)] = Math.floor(Math.random() * ELEMENT_HUMAIN_LIKERT.max);
             }
         }
         setAnswers(filled);
@@ -435,7 +241,7 @@ function ParticipantTestSessionRoute() {
     return (
         <Stack spacing={3} sx={{ minWidth: 0, pb: { xs: 4, md: 0 } }}>
             <Box>
-                <AdminPageHeader title="Test Élément Humain" subtitle={detail.description || PAGE_SUBTITLE} />
+                <PageHeader title="Test Élément Humain" subtitle={detail.description || PAGE_SUBTITLE} />
                 <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
                     {campaignName} · {detail.title}
                     {qid ? ` (${qid})` : ''}
@@ -459,7 +265,7 @@ function ParticipantTestSessionRoute() {
                 </Alert>
             )}
 
-            <QuestionCard
+            <ElementHumainQuestionCard
                 seriesIndex={seriesIndex}
                 questionIndex={questionIndex}
                 onSeriesIndexChange={handleSeriesIndexChange}

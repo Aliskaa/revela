@@ -36,7 +36,7 @@ export function ParticipantTokensRow({ participantId, campaignId, colSpan }: Par
 
     return (
         <TableRow>
-            <TableCell colSpan={colSpan} sx={{ py: 0, bgcolor: 'rgba(15,23,42,0.02)' }}>
+            <TableCell colSpan={colSpan} sx={{ py: 0, bgcolor: 'tint.subtleGhost' }}>
                 <Collapse in unmountOnExit>
                     <Box sx={{ py: 2, px: 1 }}>
                         {isLoading ? (
@@ -85,11 +85,8 @@ export function ParticipantTokensRow({ participantId, campaignId, colSpan }: Par
                                             size="small"
                                             sx={{
                                                 borderRadius: 99,
-                                                bgcolor:
-                                                    t.status === 'active'
-                                                        ? 'rgba(16,185,129,0.12)'
-                                                        : 'rgba(148,163,184,0.16)',
-                                                color: t.status === 'active' ? 'rgb(4,120,87)' : 'rgb(100,116,139)',
+                                                bgcolor: t.status === 'active' ? 'tint.successBg' : 'tint.mutedBg',
+                                                color: t.status === 'active' ? 'tint.successText' : 'tint.mutedText',
                                             }}
                                         />
                                         <Typography

@@ -7,8 +7,9 @@ import * as React from 'react';
 
 import { LoadingCard } from '@/components/common/LoadingCard';
 import { KpiCard } from '@/components/common/cards';
-import { AdminPageHeader, KpiGrid, ListPanel } from '@/components/common/layout';
+import { PageHeader, KpiGrid, ListPanel } from '@/components/common/layout';
 import { useBreadcrumbs } from '@/components/layout/AppShellChromeContext';
+import { CampaignCoachProfileLink } from '@/components/participant-dashboard/CampaignCoachProfileLink';
 import { CampaignResultCard } from '@/components/participant-dashboard/CampaignResultCard';
 import {
     CampaignStepCard,
@@ -16,7 +17,6 @@ import {
     buildCampaignSteps,
 } from '@/components/participant-dashboard/CampaignStepCard';
 import { CampaignTransparencyCard } from '@/components/participant-dashboard/CampaignTransparencyCard';
-import { CampaignCoachProfileLink } from '@/components/participant-dashboard/CampaignWorkspaceHeader';
 import { useConfirmPeerFeedback, useParticipantSession } from '@/hooks/participantSession';
 import { useParticipantOwnTransparency } from '@/hooks/transparency';
 import type { ParticipantSession } from '@aor/types';
@@ -119,7 +119,10 @@ function ParticipantCampaignWorkspaceRoute() {
                 });
                 return;
             }
-            navigate({ to: `/${routeKind}` });
+            navigate({
+                to: '/campaigns/$campaignId/peer-feedback',
+                params: { campaignId: String(campaignId) },
+            });
         },
         [navigate, campaignId]
     );
@@ -161,7 +164,7 @@ function ParticipantCampaignWorkspaceRoute() {
                     gap: 3,
                 }}
             >
-                <AdminPageHeader title={campaignName} subtitle={`${company} · ${questionnaire}`} />
+                <PageHeader title={campaignName} subtitle={`${company} · ${questionnaire}`} />
                 <CampaignCoachProfileLink campaignId={campaignId} coachName={coachName} />
             </Box>
 

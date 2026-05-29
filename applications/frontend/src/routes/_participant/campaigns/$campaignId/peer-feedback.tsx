@@ -1,5 +1,9 @@
+// Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
+
 import { LoadingCard } from '@/components/common/LoadingCard';
+import { useBreadcrumbs } from '@/components/layout/AppShellChromeContext';
 import { CampaignNotActiveBlock } from '@/components/participant-dashboard/CampaignNotActiveBlock';
+import { PeerSelectCard } from '@/components/participant-dashboard/PeerSelectCard';
 import { StepCompletedBanner } from '@/components/participant-dashboard/StepCompletedBanner';
 import { QuestionnaireProgress } from '@/components/questionnaire/QuestionnaireProgress';
 import { RatingDimensionAccordion } from '@/components/questionnaire/RatingDimensionAccordion';
@@ -12,119 +16,65 @@ import {
 } from '@/hooks/participantSession';
 import { useSubmitParticipantQuestionnaire } from '@/hooks/questionnaires';
 import { useBuildDimensions } from '@/hooks/useBuildDimensions';
-import { useSelectedAssignment } from '@/hooks/useSelectedAssignment';
 import { useToast } from '@/lib/toast';
 import type { CampaignPeerChoice } from '@aor/types';
-import { Alert, Box, Button, Card, CardContent, Chip, Stack, Typography } from '@mui/material';
-import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import { Alert, Box, Button, Card, CardContent, Chip, Link as MuiLink, Stack, Typography } from '@mui/material';
+import { Link, createFileRoute, useNavigate } from '@tanstack/react-router';
 import { BadgeCheck, CheckCircle2, CircleUserRound, Sparkles, Users } from 'lucide-react';
 import * as React from 'react';
 
-export const Route = createFileRoute('/_participant/peer-feedback')({
+export const Route = createFileRoute('/_participant/campaigns/$campaignId/peer-feedback')({
     component: ParticipantPeerFeedbackRoute,
 });
 
 const MAX_PEERS = 5;
 
-function PeerCard({
-    peer,
-    alreadyRated,
-    selected,
-    onClick,
-}: {
-    peer: CampaignPeerChoice;
-    alreadyRated: boolean;
-    selected: boolean;
-    onClick: () => void;
-}) {
-    return (
-        <Stack
-            direction="row"
-            spacing={1.3}
-            alignItems="center"
-            onClick={alreadyRated ? undefined : onClick}
-            sx={{
-                border: '1px solid',
-                borderColor: selected ? 'primary.main' : 'border',
-                borderRadius: 4,
-                p: 1.8,
-                cursor: alreadyRated ? 'default' : 'pointer',
-                bgcolor: selected ? 'tint.primaryHover' : '#fff',
-                opacity: alreadyRated ? 0.7 : 1,
-                transition: 'all 0.15s ease',
-                ...(!alreadyRated ? { '&:hover': { borderColor: 'primary.main', bgcolor: 'tint.primaryGhost' } } : {}),
-            }}
-        >
-            <Box
-                sx={{
-                    width: 38,
-                    height: 38,
-                    borderRadius: 3,
-                    bgcolor: selected ? 'tint.primaryActive' : 'tint.primaryBg',
-                    color: 'primary.main',
-                    display: 'grid',
-                    placeItems: 'center',
-                    flex: 'none',
-                }}
-            >
-                <CircleUserRound size={16} />
-            </Box>
-            <Box sx={{ minWidth: 0, flex: 1 }}>
-                <Typography variant="body2" fontWeight={700} color="text.primary">
-                    {peer.full_name}
-                </Typography>
-            </Box>
-            {alreadyRated ? (
-                <Chip
-                    label="Noté"
-                    size="small"
-                    sx={{ borderRadius: 99, bgcolor: 'tint.successBg', color: 'tint.successText' }}
-                />
-            ) : selected ? (
-                <Chip
-                    label="Sélectionné"
-                    size="small"
-                    sx={{ borderRadius: 99, bgcolor: 'tint.primaryBg', color: 'primary.main' }}
-                />
-            ) : (
-                <Chip
-                    label="À noter"
-                    size="small"
-                    sx={{ borderRadius: 99, bgcolor: 'tint.secondaryBg', color: 'tint.secondaryText' }}
-                />
-            )}
-        </Stack>
-    );
-}
-
 function ParticipantPeerFeedbackRoute() {
+    const { campaignId: campaignIdParam } = Route.useParams();
+    const campaignId = Number(campaignIdParam);
     const { data: session, isLoading: sessionLoading, isError } = useParticipantSession();
     const navigate = useNavigate();
     const toast = useToast();
 
-    const { assignment: activeAssignment } = useSelectedAssignment(session);
-    const qid = activeAssignment?.questionnaire_id ?? '';
-    const campaignId = activeAssignment?.campaign_id ?? undefined;
+    const assignment = React.useMemo(() => {
+        if (!session || !Number.isFinite(campaignId)) return undefined;
+        return session.assignments.find(a => a.campaign_id === campaignId);
+    }, [session, campaignId]);
 
-    const { data: matrix, isLoading: matrixLoading } = useParticipantSessionMatrix(qid.length > 0, qid, campaignId);
-    const { data: availablePeers = [] } = useParticipantCampaignPeers(campaignId ?? null);
-    const submitMutation = useSubmitParticipantQuestionnaire(qid.toUpperCase(), campaignId);
+    const qid = assignment?.questionnaire_id ?? '';
+    const safeCampaignId = Number.isFinite(campaignId) ? campaignId : undefined;
+
+    const { data: matrix, isLoading: matrixLoading } = useParticipantSessionMatrix(
+        qid.length > 0,
+        qid,
+        safeCampaignId
+    );
+    const { data: availablePeers = [] } = useParticipantCampaignPeers(safeCampaignId ?? null);
+    const submitMutation = useSubmitParticipantQuestionnaire(qid.toUpperCase(), safeCampaignId);
     const confirmMutation = useConfirmPeerFeedback();
 
     const [selectedPeer, setSelectedPeer] = React.useState<CampaignPeerChoice | null>(null);
     const [scores, setScores] = React.useState<Record<string, number | null>>({});
     const [comments, setComments] = React.useState<Record<string, string>>({});
 
+    const campaignName = assignment?.campaign_name ?? 'Campagne';
+    const campaignPath = Number.isFinite(campaignId) ? `/campaigns/${campaignId}` : '/campaigns';
+
+    useBreadcrumbs([
+        { label: 'Mes campagnes', to: '/campaigns' },
+        { label: campaignName, to: campaignPath },
+        { label: 'Feedback des pairs' },
+    ]);
+
     const isLoading = sessionLoading || matrixLoading;
-    const campaignActive = activeAssignment?.campaign_status === 'active';
+    const campaignActive = assignment?.campaign_status === 'active';
     const stepAvailable =
-        activeAssignment?.progression?.peer_feedback_status === 'pending' ||
-        activeAssignment?.progression?.peer_feedback_status === 'completed' ||
-        !activeAssignment?.progression;
+        assignment?.progression?.peer_feedback_status === 'pending' ||
+        assignment?.progression?.peer_feedback_status === 'completed' ||
+        !assignment?.progression;
     const canInteract = campaignActive && stepAvailable;
 
-    const questionnaireTitle =
-        matrix?.questionnaire_title ?? activeAssignment?.questionnaire_title ?? 'Feedback des pairs';
+    const questionnaireTitle = matrix?.questionnaire_title ?? assignment?.questionnaire_title ?? 'Feedback des pairs';
     const peerColumns = matrix?.peer_columns ?? [];
 
     const ratedPeerIds = React.useMemo(() => {
@@ -192,18 +142,18 @@ function ParticipantPeerFeedbackRoute() {
 
         // Auto-complete au 5e feedback (cf. P12/P13) → cohérent avec P10 : on redirige
         // sur la fiche campagne pour matérialiser la fin de l'étape.
-        if (campaignId !== undefined && ratedCount + 1 >= MAX_PEERS) {
+        if (safeCampaignId !== undefined && ratedCount + 1 >= MAX_PEERS) {
             setTimeout(() => {
-                navigate({ to: '/campaigns/$campaignId', params: { campaignId: String(campaignId) } });
+                navigate({ to: '/campaigns/$campaignId', params: { campaignId: String(safeCampaignId) } });
             }, 1500);
         }
     };
 
     const handleConfirmDone = async () => {
-        if (campaignId === undefined) return;
+        if (safeCampaignId === undefined) return;
         try {
-            await confirmMutation.mutateAsync(campaignId);
-            navigate({ to: '/campaigns/$campaignId', params: { campaignId: String(campaignId) } });
+            await confirmMutation.mutateAsync(safeCampaignId);
+            navigate({ to: '/campaigns/$campaignId', params: { campaignId: String(safeCampaignId) } });
         } catch {
             // Toast émis par le hook ; on garde l'utilisateur sur la page.
         }
@@ -217,7 +167,20 @@ function ParticipantPeerFeedbackRoute() {
         return <Alert severity="error">Impossible de charger le feedback des pairs pour le moment.</Alert>;
     }
 
-    if (activeAssignment?.progression?.peer_feedback_status === 'completed') {
+    if (!assignment) {
+        return (
+            <Stack spacing={2} sx={{ py: 6, textAlign: 'center' }}>
+                <Typography variant="h6" color="text.secondary">
+                    Aucune campagne trouvée pour cet identifiant.
+                </Typography>
+                <MuiLink component={Link} to="/campaigns" underline="hover" sx={{ fontWeight: 600 }}>
+                    Retour aux campagnes
+                </MuiLink>
+            </Stack>
+        );
+    }
+
+    if (assignment.progression?.peer_feedback_status === 'completed') {
         return (
             <StepCompletedBanner
                 title="Feedback des pairs déjà soumis"
@@ -226,8 +189,8 @@ function ParticipantPeerFeedbackRoute() {
         );
     }
 
-    if (activeAssignment && !campaignActive) {
-        return <CampaignNotActiveBlock campaignId={activeAssignment.campaign_id} />;
+    if (!campaignActive) {
+        return <CampaignNotActiveBlock campaignId={assignment.campaign_id} />;
     }
 
     return (
@@ -275,7 +238,7 @@ function ParticipantPeerFeedbackRoute() {
                                             height: 48,
                                             borderRadius: 4,
                                             bgcolor: 'primary.main',
-                                            color: '#fff',
+                                            color: 'common.white',
                                             display: 'grid',
                                             placeItems: 'center',
                                         }}
@@ -305,7 +268,6 @@ function ParticipantPeerFeedbackRoute() {
                     alignItems: 'start',
                 }}
             >
-                {/* Peer list sidebar */}
                 <Card variant="outlined">
                     <CardContent sx={{ p: 2.5 }}>
                         <Typography variant="h6" fontWeight={800} color="text.primary">
@@ -325,7 +287,7 @@ function ParticipantPeerFeedbackRoute() {
                                     const alreadyRated = ratedPeerIds.has(peer.participant_id);
                                     const isSelected = selectedPeer?.participant_id === peer.participant_id;
                                     return (
-                                        <PeerCard
+                                        <PeerSelectCard
                                             key={peer.participant_id}
                                             peer={peer}
                                             alreadyRated={alreadyRated}
@@ -372,7 +334,6 @@ function ParticipantPeerFeedbackRoute() {
                     </CardContent>
                 </Card>
 
-                {/* Rating form */}
                 {selectedPeer ? (
                     <Card variant="outlined">
                         <CardContent sx={{ p: 2.5 }}>
@@ -383,7 +344,7 @@ function ParticipantPeerFeedbackRoute() {
                                         height: 44,
                                         borderRadius: 4,
                                         bgcolor: 'primary.main',
-                                        color: '#fff',
+                                        color: 'common.white',
                                         display: 'grid',
                                         placeItems: 'center',
                                     }}

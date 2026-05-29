@@ -5,7 +5,7 @@ import { createFileRoute } from '@tanstack/react-router';
 import { ClipboardList, MessageSquareText, Target, Users } from 'lucide-react';
 
 import { KpiCard } from '@/components/common/cards';
-import { AdminPageHeader, KpiGrid } from '@/components/common/layout';
+import { PageHeader, KpiGrid } from '@/components/common/layout';
 import { useBreadcrumbs } from '@/components/layout/AppShellChromeContext';
 import { useAdminCampaigns, useAdminResponses, useParticipants } from '@/hooks/admin';
 import { parseAdminJwtClaims } from '@/lib/auth';
@@ -43,7 +43,7 @@ function CoachDashboardRoute() {
 
     return (
         <Stack spacing={3}>
-            <AdminPageHeader title={title} subtitle={subtitle} />
+            <PageHeader title={title} subtitle={subtitle} />
 
             <KpiGrid columns={4}>
                 <KpiCard

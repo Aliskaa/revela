@@ -7,7 +7,7 @@ import * as React from 'react';
 import { AdminCampaignDrawerForm } from '@/components/admin/AdminCampaignDrawerForm';
 import { KpiCard } from '@/components/common/cards';
 import { SearchField } from '@/components/common/forms/SearchField';
-import { AdminPageHeader, KpiGrid, ListPanel } from '@/components/common/layout';
+import { PageHeader, KpiGrid, ListPanel } from '@/components/common/layout';
 import { useBreadcrumbs } from '@/components/layout/AppShellChromeContext';
 import { CampaignListViews } from '@/components/scoped/campaigns-list/CampaignListViews';
 import { useAdminCampaigns, useCoaches, useCompanies, useCreateAdminCampaign } from '@/hooks/admin';
@@ -135,7 +135,7 @@ export function CampaignsListPage({ scope }: CampaignsListPageProps) {
     return (
         <Stack spacing={3}>
             {isAdmin ? drawer : null}
-            <AdminPageHeader
+            <PageHeader
                 title={labels.title}
                 subtitle={labels.subtitle}
                 action={isAdmin ? {

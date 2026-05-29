@@ -7,7 +7,7 @@ import * as React from 'react';
 
 import { Button } from '@/components/common/Button';
 import { KpiCard } from '@/components/common/cards';
-import { AdminPageHeader, KpiGrid, ListPanel } from '@/components/common/layout';
+import { PageHeader, KpiGrid, ListPanel } from '@/components/common/layout';
 import { useBreadcrumbs } from '@/components/layout/AppShellChromeContext';
 import { AdminDashboardRecentCampaigns } from '@/components/scoped/admin-dashboard/AdminDashboardRecentCampaigns';
 import { useAdminCampaigns, useAdminDashboard, useCoaches, useCompanies } from '@/hooks/admin';
@@ -46,7 +46,7 @@ export function AdminDashboardPage() {
 
     return (
         <Stack spacing={3}>
-            <AdminPageHeader
+            <PageHeader
                 title="Tableau de bord"
                 subtitle="Visualisez l'état des campagnes, des participants, des coachs et des entreprises en un coup d'œil."
                 action={{

@@ -6,7 +6,7 @@ import * as React from 'react';
 
 import { KpiCard } from '@/components/common/cards';
 import { SearchField } from '@/components/common/forms/SearchField';
-import { AdminPageHeader, KpiGrid, ListPanel } from '@/components/common/layout';
+import { PageHeader, KpiGrid, ListPanel } from '@/components/common/layout';
 import { useBreadcrumbs } from '@/components/layout/AppShellChromeContext';
 import { QuestionnaireListViews } from '@/components/scoped/questionnaires-list/QuestionnaireListViews';
 import { useAdminQuestionnaires } from '@/hooks/questionnaires';
@@ -47,7 +47,7 @@ export function QuestionnairesListPage() {
 
     return (
         <Stack spacing={3}>
-            <AdminPageHeader
+            <PageHeader
                 title="Questionnaires"
                 subtitle="Référentiel des questionnaires, avec les dimensions, le volume de questions et l'état de publication."
             />

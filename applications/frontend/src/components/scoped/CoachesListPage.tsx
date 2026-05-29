@@ -7,7 +7,7 @@ import * as React from 'react';
 import { AdminCoachDrawerForm } from '@/components/admin/AdminCoachDrawerForm';
 import { KpiCard } from '@/components/common/cards';
 import { SearchField } from '@/components/common/forms/SearchField';
-import { AdminPageHeader, KpiGrid, ListPanel } from '@/components/common/layout';
+import { PageHeader, KpiGrid, ListPanel } from '@/components/common/layout';
 import { useBreadcrumbs } from '@/components/layout/AppShellChromeContext';
 import { CoachListViews } from '@/components/scoped/coaches-list/CoachListViews';
 import { useAdminCampaigns, useCoaches, useCreateCoach } from '@/hooks/admin';
@@ -76,7 +76,7 @@ export function CoachesListPage() {
                 }}
             />
 
-            <AdminPageHeader
+            <PageHeader
                 title="Coachs"
                 subtitle="Référentiel des coachs et des campagnes qui leur sont associées."
                 action={{ label: 'Ajouter un coach', onClick: () => setCreateOpen(true), icon: UserRound }}

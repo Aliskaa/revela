@@ -15,7 +15,7 @@ import {
 import { Link } from '@tanstack/react-router';
 import { ScanEye } from 'lucide-react';
 
-import { CampaignParticipantTransparencyMatrix } from '@/components/admin/campaign-detail/CampaignParticipantTransparencyMatrix';
+import { CampaignParticipantTransparencyMatrix } from '@/components/transparency/CampaignParticipantTransparencyMatrix';
 import { Button } from '@/components/common/Button';
 import { surfaceCardSx } from '@/components/common/styles/listSurfaces';
 import { useBreadcrumbs } from '@/components/layout/AppShellChromeContext';

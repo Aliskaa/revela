@@ -89,7 +89,6 @@ export const drawerFormFieldSlotProps = {
 
 export const drawerFormFieldSx: SxProps<Theme> = {
     '& .MuiOutlinedInput-root': {
-        // borderRadius: 3,
         bgcolor: 'background.paper',
         '& fieldset': {
             borderColor: 'surface.outlineVariant',

@@ -5,9 +5,9 @@ import { Link, createFileRoute } from '@tanstack/react-router';
 import { ScanEye } from 'lucide-react';
 import * as React from 'react';
 
-import { CampaignParticipantTransparencyMatrix } from '@/components/admin/campaign-detail/CampaignParticipantTransparencyMatrix';
+import { CampaignParticipantTransparencyMatrix } from '@/components/transparency/CampaignParticipantTransparencyMatrix';
 import { EmptyState } from '@/components/common/EmptyState';
-import { AdminPageHeader, ListPanel } from '@/components/common/layout';
+import { PageHeader, ListPanel } from '@/components/common/layout';
 import { LoadingCard } from '@/components/common/LoadingCard';
 import { surfaceCardSx } from '@/components/common/styles/listSurfaces';
 import { useBreadcrumbs } from '@/components/layout/AppShellChromeContext';
@@ -109,7 +109,7 @@ function ParticipantTransparencyRoute() {
     return (
         <Stack spacing={3} sx={{ minWidth: 0 }}>
             <Box>
-                <AdminPageHeader title="Repère de transparence" subtitle={TRANSPARENCY_SUBTITLE} />
+                <PageHeader title="Repère de transparence" subtitle={TRANSPARENCY_SUBTITLE} />
             </Box>
 
             {!hasSnapshot ? (
