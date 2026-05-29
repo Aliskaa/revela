@@ -1,3 +1,5 @@
+// Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
+
 import type { Coach } from '@aor/types';
 import {
     Box,
