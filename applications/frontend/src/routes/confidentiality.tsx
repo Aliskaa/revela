@@ -2,10 +2,10 @@
 
 import { AdminPageHeader } from '@/components/common/layout';
 import { surfaceCardSx } from '@/components/common/styles/listSurfaces';
-import { FooterLayout } from '@/components/layout/FooterLayout';
+import { PublicRevelaPageShell } from '@/components/layout/PublicRevelaPageShell';
 import { Box, Card, CardContent, Container, Divider, Link as MuiLink, Stack, Typography } from '@mui/material';
 import { Link, createFileRoute } from '@tanstack/react-router';
-import { ArrowLeft, Sparkles } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 
 export const Route = createFileRoute('/confidentiality')({
     component: PrivacyPolicyPage,
@@ -24,52 +24,8 @@ export const Route = createFileRoute('/confidentiality')({
  */
 function PrivacyPolicyPage() {
     return (
-        <Box
-            sx={{
-                minHeight: '100vh',
-                display: 'flex',
-                flexDirection: 'column',
-                bgcolor: 'background.default',
-            }}
-        >
-            <Box
-                component="header"
-                sx={{
-                    px: { xs: 2, md: 4 },
-                    py: 2,
-                    bgcolor: 'background.paper',
-                    borderBottom: '1px solid',
-                    borderColor: 'surface.outlineVariantFaint',
-                }}
-            >
-                <Stack direction="row" spacing={1.25} alignItems="center">
-                    <Box
-                        sx={{
-                            width: 36,
-                            height: 36,
-                            borderRadius: 2,
-                            bgcolor: 'tint.primaryBg',
-                            color: 'primary.main',
-                            display: 'grid',
-                            placeItems: 'center',
-                            flexShrink: 0,
-                        }}
-                    >
-                        <Sparkles size={18} strokeWidth={2} aria-hidden />
-                    </Box>
-                    <Box>
-                        <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, lineHeight: 1.2 }}>
-                            Plateforme
-                        </Typography>
-                        <Typography variant="subtitle1" fontWeight={800} color="primary.main" sx={{ lineHeight: 1.2 }}>
-                            Révéla
-                        </Typography>
-                    </Box>
-                </Stack>
-            </Box>
-
-            <Box component="main" sx={{ flex: 1, py: { xs: 3, md: 5 } }}>
-                <Container maxWidth="md">
+        <PublicRevelaPageShell>
+            <Container maxWidth="md" sx={{ py: { xs: 3, md: 5 }, flex: 1 }}>
                     <Stack spacing={3} sx={{ minWidth: 0 }}>
                         <MuiLink
                             component={Link}
@@ -326,11 +282,8 @@ function PrivacyPolicyPage() {
                             </CardContent>
                         </Card>
                     </Stack>
-                </Container>
-            </Box>
-
-            <FooterLayout />
-        </Box>
+            </Container>
+        </PublicRevelaPageShell>
     );
 }
 

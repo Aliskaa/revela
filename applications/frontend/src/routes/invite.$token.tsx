@@ -1,26 +1,29 @@
+// Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
+
 import { ScaleInput } from '@/components/common/ScaleInput';
+import { Button } from '@/components/common/Button';
+import { AdminPageHeader } from '@/components/common/layout';
+import { surfaceCardSx } from '@/components/common/styles/listSurfaces';
+import { PublicRevelaPageShell } from '@/components/layout/PublicRevelaPageShell';
 import { useActivateInvite, useConfirmInviteParticipation, useInvite, useSubmitInvite } from '@/hooks/invitations';
 import { useQuestionnaire } from '@/hooks/questionnaires';
 import { parseParticipantJwtParticipantId, userParticipant } from '@/lib/auth';
 import {
     Alert,
     Box,
-    Button,
+    Card,
+    CardContent,
     Checkbox,
     Chip,
     CircularProgress,
     Container,
     FormControlLabel,
-    List,
-    ListItem,
     Link as MuiLink,
-    Paper,
     Stack,
-    type SxProps,
     TextField,
-    type Theme,
     Typography,
-    useTheme,
+    type SxProps,
+    type Theme,
 } from '@mui/material';
 import { Link, createFileRoute, useNavigate } from '@tanstack/react-router';
 import { ArrowLeft, ArrowRight, CheckCircle, Lock, ShieldCheck, Sparkles, UserCheck } from 'lucide-react';
@@ -32,28 +35,9 @@ export const Route = createFileRoute('/invite/$token')({
 
 type Step = 'welcome' | 'series0' | 'transition' | 'series1' | 'submitting';
 
-// Styles réutilisables pour la page d'invitation
-const aorBtnSx: SxProps<Theme> = (theme) => ({
-    py: 1.2,
-    px: 3,
-    borderRadius: 2,
-    fontWeight: 700,
-    boxShadow: theme.palette.shadow.brandMd,
-});
-
-const aorPaperSx: SxProps<Theme> = (theme) => ({
-    p: { xs: 3, md: 5 },
-    borderRadius: 3,
-    border: '1px solid',
-    borderColor: 'divider',
-    boxShadow: theme.palette.shadow.brandPaper,
-    bgcolor: 'background.paper',
-});
-
 function InvitePage() {
     const { token } = Route.useParams();
     const navigate = useNavigate();
-    const theme = useTheme();
     const { data: invite, isLoading: loadingInvite, error: inviteError } = useInvite(token);
 
     const qid = invite?.questionnaire_id ?? '';
@@ -84,21 +68,14 @@ function InvitePage() {
     const [series1, setSeries1] = useState<(number | null)[]>([]);
     const [currentQ, setCurrentQ] = useState(0);
 
-    // Formulaires
     const [password, setPassword] = useState('');
     const [passwordConfirm, setPasswordConfirm] = useState('');
     const [activationError, setActivationError] = useState('');
     const [confirmError, setConfirmError] = useState('');
-    /**
-     * Consentement RGPD avant traitement (Art. 13 + Art. 7). Doit être coché explicitement
-     * pour pouvoir confirmer la participation. Ne déverrouille rien d'autre — c'est une
-     * obligation légale, pas une option opt-in commerciale.
-     */
     const [privacyConsent, setPrivacyConsent] = useState(false);
 
     const isLoading = loadingInvite || (canShowQuestionnaire && loadingQ);
 
-    /** Participation campagne déjà confirmée : ne plus montrer le flux invite, renvoyer vers l'accueil. */
     useEffect(() => {
         if (loadingInvite || inviteError || !invite) return;
         const alreadyConfirmedCampaign =
@@ -114,9 +91,11 @@ function InvitePage() {
 
     if (loadingInvite) {
         return (
-            <Box sx={{ pt: 12, textAlign: 'center' }}>
-                <CircularProgress size={48} thickness={4} />
-            </Box>
+            <PublicRevelaPageShell>
+                <InviteCenteredState>
+                    <CircularProgress size={48} thickness={4} />
+                </InviteCenteredState>
+            </PublicRevelaPageShell>
         );
     }
 
@@ -125,15 +104,16 @@ function InvitePage() {
             (inviteError as { response?: { data?: { error?: string } } })?.response?.data?.error ??
             'Lien invalide ou expiré.';
         return (
-            <Container maxWidth="sm" sx={{ pt: 10 }}>
-                <Alert severity="error" sx={{ borderRadius: 2 }}>
-                    {msg}
-                </Alert>
-            </Container>
+            <PublicRevelaPageShell>
+                <Container maxWidth="sm" sx={{ py: { xs: 3, md: 5 } }}>
+                    <Alert severity="error" sx={{ borderRadius: 2 }}>
+                        {msg}
+                    </Alert>
+                </Container>
+            </PublicRevelaPageShell>
         );
     }
 
-    // ── ÉTAPE 1 : CONFIRMATION DE PARTICIPATION ──────────────────────────────
     if (needsParticipationConfirmation) {
         const confirmInvite = invite;
         async function handleConfirmParticipation(e: React.FormEvent) {
@@ -156,132 +136,130 @@ function InvitePage() {
         }
 
         return (
-            <Container maxWidth="sm" sx={{ py: { xs: 6, md: 10 } }}>
-                <Paper sx={aorPaperSx} elevation={0}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
-                        <Box
-                            sx={{
-                                p: 1.5,
-                                bgcolor: 'tint.primaryBg',
-                                borderRadius: 2,
-                                color: 'primary.main',
-                                display: 'flex',
-                            }}
-                        >
-                            <UserCheck size={24} />
-                        </Box>
-                        <Typography variant="h5" fontWeight={800} color="primary.main">
-                            Confirmation
-                        </Typography>
-                    </Box>
+            <PublicRevelaPageShell>
+                <Container maxWidth="sm" sx={{ py: { xs: 3, md: 5 } }}>
+                    <Stack spacing={3}>
+                        <AdminPageHeader
+                            title="Confirmation"
+                            subtitle="Prenez connaissance du cadre de confidentialité avant de rejoindre votre parcours."
+                        />
 
-                    <Stack
-                        spacing={0.5}
-                        mb={3}
-                        p={2}
-                        bgcolor="background.default"
-                        borderRadius={2}
-                        border="1px solid"
-                        borderColor="divider"
-                    >
-                        <Typography variant="subtitle2" fontWeight={700}>
-                            {confirmInvite.participant.name}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                            {confirmInvite.participant.email}
-                        </Typography>
-                        {confirmInvite.participant.organisation && (
-                            <Typography
-                                variant="caption"
-                                color="text.disabled"
-                                fontWeight={600}
-                                textTransform="uppercase"
-                                mt={0.5}
-                            >
-                                {confirmInvite.participant.organisation}
-                            </Typography>
-                        )}
-                    </Stack>
+                        <InviteStepCard>
+                            <Stack direction="row" spacing={1.25} alignItems="center" sx={{ mb: 2.5 }}>
+                                <Box
+                                    sx={{
+                                        width: 40,
+                                        height: 40,
+                                        borderRadius: 2,
+                                        bgcolor: 'tint.primaryBg',
+                                        color: 'primary.main',
+                                        display: 'grid',
+                                        placeItems: 'center',
+                                        flexShrink: 0,
+                                    }}
+                                >
+                                    <UserCheck size={20} aria-hidden />
+                                </Box>
+                                <Typography variant="h6" fontWeight={700} color="primary.main">
+                                    Votre invitation
+                                </Typography>
+                            </Stack>
 
-                    <Typography variant="body1" color="text.secondary" mb={3} lineHeight={1.6}>
-                        Cet espace vous est proposé par le Cabinet AOR dans le cadre de votre parcours de formation
-                        manager. Il vous permet de réaliser un travail de conscience de soi en trois étapes : un regard sur
-                        vous-même, des feedbacks de vos pairs, et le questionnaire Élément Humain.
-                    </Typography>
-
-                    <Alert
-                        severity="info"
-                        icon={<ShieldCheck size={20} />}
-                        sx={{ mb: 3, borderRadius: 2, '& .MuiAlert-message': { lineHeight: 1.6 } }}
-                    >
-                        <Typography variant="body2" fontWeight={700} sx={{ mb: 0.5 }}>
-                            Vos données vous appartiennent.
-                        </Typography>
-                        <Typography variant="body2">
-                            Vos réponses sont strictement confidentielles et exclusivement destinées au formateur mandaté qui vous accompagne.
-                            <ul>
-                                <li>
-                                    Elles ne sont jamais transmises à votre employeur de manière nominative
-                                </li>
-                                <li>
-                                    Vous pouvez à tout moment demander leur consultation, leur modification ou leur suppression définitive.
-                                </li>
-                            </ul>
-                            Consultez notre{' '}
-                            <MuiLink component={Link} to="/confidentiality" target="_blank" rel="noopener" underline="always">
-                                politique de confidentialité
-                            </MuiLink>{' '}
-                            pour le détail des finalités, durée de conservation et de vos droits (accès, export, rectification, suppression).
-                            En cliquant sur « Je participe », vous confirmez avoir pris connaissance des modalités de traitement de vos données personnelles et consentez librement à votre participation.
-                        </Typography>
-                    </Alert>
-
-                    <FormControlLabel
-                        control={
-                            <Checkbox
-                                checked={privacyConsent}
-                                onChange={e => setPrivacyConsent(e.target.checked)}
-                                sx={{ alignSelf: 'flex-start', pt: 0 }}
+                            <InviteParticipantSummary
+                                name={confirmInvite.participant.name}
+                                email={confirmInvite.participant.email}
+                                organisation={confirmInvite.participant.organisation}
                             />
-                        }
-                        label={
-                            <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.6 }}>
-                                Je confirme ma participation à ce parcours.
+
+                            <Typography variant="body1" color="text.secondary" sx={{ mb: 3, lineHeight: 1.7 }}>
+                                Cet espace vous est proposé par le Cabinet AOR dans le cadre de votre parcours de
+                                formation manager. Il vous permet de réaliser un travail de conscience de soi en trois
+                                étapes : un regard sur vous-même, des feedbacks de vos pairs, et le questionnaire Élément
+                                Humain.
                             </Typography>
-                        }
-                        sx={{ alignItems: 'flex-start', mb: 3, mr: 0 }}
-                    />
 
-                    {confirmError && (
-                        <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>
-                            {confirmError}
-                        </Alert>
-                    )}
+                            <Alert
+                                severity="info"
+                                icon={<ShieldCheck size={20} />}
+                                sx={{ mb: 3, borderRadius: 2, '& .MuiAlert-message': { lineHeight: 1.7 } }}
+                            >
+                                <Typography variant="body2" fontWeight={700} sx={{ mb: 0.5 }}>
+                                    Vos données vous appartiennent.
+                                </Typography>
+                                <Typography variant="body2" component="div">
+                                    Vos réponses sont strictement confidentielles et exclusivement destinées au formateur
+                                    mandaté qui vous accompagne.
+                                    <Box component="ul" sx={{ pl: 3, my: 1 }}>
+                                        <li>Elles ne sont jamais transmises à votre employeur de manière nominative</li>
+                                        <li>
+                                            Vous pouvez à tout moment demander leur consultation, leur modification ou
+                                            leur suppression définitive.
+                                        </li>
+                                    </Box>
+                                    Consultez notre{' '}
+                                    <MuiLink
+                                        component={Link}
+                                        to="/confidentiality"
+                                        target="_blank"
+                                        rel="noopener"
+                                        underline="always"
+                                    >
+                                        politique de confidentialité
+                                    </MuiLink>{' '}
+                                    pour le détail des finalités, durée de conservation et de vos droits (accès, export,
+                                    rectification, suppression). En cliquant sur « Je confirme ma participation », vous
+                                    confirmez avoir pris connaissance des modalités de traitement de vos données
+                                    personnelles et consentez librement à votre participation.
+                                </Typography>
+                            </Alert>
 
-                    <Box component="form" onSubmit={handleConfirmParticipation}>
-                        <Button
-                            type="submit"
-                            variant="contained"
-                            fullWidth
-                            disabled={confirmParticipation.isPending || !privacyConsent}
-                            endIcon={
-                                confirmParticipation.isPending ? (
-                                    <CircularProgress size={18} color="inherit" />
-                                ) : (
-                                    <ArrowRight size={18} />
-                                )
-                            }
-                            sx={aorBtnSx}
-                        >
-                            {confirmParticipation.isPending ? 'Traitement…' : 'Je confirme ma participation'}
-                        </Button>
-                    </Box>
-                </Paper>
-            </Container>
+                            <FormControlLabel
+                                control={
+                                    <Checkbox
+                                        checked={privacyConsent}
+                                        onChange={e => setPrivacyConsent(e.target.checked)}
+                                        sx={{ alignSelf: 'flex-start', pt: 0 }}
+                                    />
+                                }
+                                label={
+                                    <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.7 }}>
+                                        Je confirme ma participation à ce parcours.
+                                    </Typography>
+                                }
+                                sx={{ alignItems: 'flex-start', mb: 3, mr: 0 }}
+                            />
+
+                            {confirmError ? (
+                                <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>
+                                    {confirmError}
+                                </Alert>
+                            ) : null}
+
+                            <Box component="form" onSubmit={handleConfirmParticipation}>
+                                <Button
+                                    type="submit"
+                                    appearance="primary"
+                                    fullWidth
+                                    disabled={confirmParticipation.isPending || !privacyConsent}
+                                    endIcon={
+                                        confirmParticipation.isPending ? (
+                                            <CircularProgress size={18} color="inherit" />
+                                        ) : (
+                                            <ArrowRight size={18} />
+                                        )
+                                    }
+                                    sx={{ py: 1.5 }}
+                                >
+                                    {confirmParticipation.isPending ? 'Traitement…' : 'Je confirme ma participation'}
+                                </Button>
+                            </Box>
+                        </InviteStepCard>
+                    </Stack>
+                </Container>
+            </PublicRevelaPageShell>
         );
     }
 
-    // ── ÉTAPE 2 : CRÉATION DU MOT DE PASSE ──────────────────────────────────
     if (needsActivation) {
         const activationInvite = invite;
         async function handleActivate(e: React.FormEvent) {
@@ -297,9 +275,6 @@ function InvitePage() {
             }
             try {
                 await activateInvite.mutateAsync({ password });
-                // Après activation, le participant arrive systématiquement sur son dashboard
-                // (cf. P09 du suivi produit 2026-05-02). De là il peut démarrer son parcours
-                // (Regard sur soi, feedback pairs, test) selon l'état de ses campagnes.
                 navigate({ to: '/', replace: true });
             } catch (err) {
                 const ax = err as { response?: { status?: number; data?: { error?: string } } };
@@ -318,148 +293,133 @@ function InvitePage() {
         }
 
         return (
-            <Container maxWidth="sm" sx={{ py: { xs: 6, md: 10 } }}>
-                <Paper sx={aorPaperSx} elevation={0}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
-                        <Box
-                            sx={{
-                                p: 1.5,
-                                bgcolor: 'tint.primaryBg',
-                                borderRadius: 2,
-                                color: 'primary.main',
-                                display: 'flex',
-                            }}
-                        >
-                            <ShieldCheck size={24} />
-                        </Box>
-                        <Typography variant="h5" fontWeight={800} color="primary.main">
-                            Sécuriser le compte
-                        </Typography>
-                    </Box>
+            <PublicRevelaPageShell>
+                <Container maxWidth="sm" sx={{ py: { xs: 3, md: 5 } }}>
+                    <Stack spacing={3}>
+                        <AdminPageHeader
+                            title="Sécuriser votre compte"
+                            subtitle="Choisissez un mot de passe pour vos prochaines connexions à Révéla."
+                        />
 
-                    <Stack
-                        spacing={0.5}
-                        mb={3}
-                        p={2}
-                        bgcolor="background.default"
-                        borderRadius={2}
-                        border="1px solid"
-                        borderColor="divider"
-                    >
-                        <Typography variant="subtitle2" fontWeight={700}>
-                            {activationInvite.participant.name}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                            {activationInvite.participant.email}
-                        </Typography>
+                        <InviteStepCard>
+                            <InviteParticipantSummary
+                                name={activationInvite.participant.name}
+                                email={activationInvite.participant.email}
+                            />
+
+                            <Typography variant="body2" color="text.secondary" sx={{ mb: 3, lineHeight: 1.7 }}>
+                                Ce lien d'invitation ne sera plus valide après cette étape.
+                            </Typography>
+
+                            {activationError ? (
+                                <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>
+                                    {activationError}
+                                </Alert>
+                            ) : null}
+
+                            <Box
+                                component="form"
+                                onSubmit={handleActivate}
+                                sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}
+                            >
+                                <TextField
+                                    label="Créer un mot de passe"
+                                    type="password"
+                                    value={password}
+                                    onChange={e => setPassword(e.target.value)}
+                                    fullWidth
+                                    autoComplete="new-password"
+                                />
+                                <TextField
+                                    label="Confirmer le mot de passe"
+                                    type="password"
+                                    value={passwordConfirm}
+                                    onChange={e => setPasswordConfirm(e.target.value)}
+                                    fullWidth
+                                    autoComplete="new-password"
+                                />
+                                <Button
+                                    type="submit"
+                                    appearance="primary"
+                                    fullWidth
+                                    disabled={activateInvite.isPending}
+                                    endIcon={
+                                        activateInvite.isPending ? (
+                                            <CircularProgress size={18} color="inherit" />
+                                        ) : (
+                                            <ArrowRight size={18} />
+                                        )
+                                    }
+                                    sx={{ py: 1.5, mt: 0.5 }}
+                                >
+                                    {activateInvite.isPending ? 'Activation en cours…' : 'Activer et accéder à mon espace'}
+                                </Button>
+                            </Box>
+                        </InviteStepCard>
                     </Stack>
-
-                    <Typography variant="body2" color="text.secondary" mb={4} lineHeight={1.6}>
-                        Choisissez un mot de passe pour vos prochaines connexions. Ce lien d'invitation ne sera plus
-                        valide après cette étape.
-                    </Typography>
-
-                    {activationError && (
-                        <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>
-                            {activationError}
-                        </Alert>
-                    )}
-
-                    <Box
-                        component="form"
-                        onSubmit={handleActivate}
-                        sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}
-                    >
-                        <TextField
-                            label="Créer un mot de passe"
-                            type="password"
-                            value={password}
-                            onChange={e => setPassword(e.target.value)}
-                            fullWidth
-                            autoComplete="new-password"
-                            sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
-                        />
-                        <TextField
-                            label="Confirmer le mot de passe"
-                            type="password"
-                            value={passwordConfirm}
-                            onChange={e => setPasswordConfirm(e.target.value)}
-                            fullWidth
-                            autoComplete="new-password"
-                            sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
-                        />
-                        <Button
-                            type="submit"
-                            variant="contained"
-                            fullWidth
-                            disabled={activateInvite.isPending}
-                            endIcon={
-                                activateInvite.isPending ? (
-                                    <CircularProgress size={18} color="inherit" />
-                                ) : (
-                                    <ArrowRight size={18} />
-                                )
-                            }
-                            sx={{ ...aorBtnSx, mt: 1 }}
-                        >
-                            {activateInvite.isPending ? 'Activation en cours…' : 'Activer et accéder à mon espace'}
-                        </Button>
-                    </Box>
-                </Paper>
-            </Container>
+                </Container>
+            </PublicRevelaPageShell>
         );
     }
 
-    // ── ÉTAPE 3 : CAMPAGNE NON DÉMARRÉE ──────────────────────────────────────
     if (campaignBlocksFilling) {
         const waitInvite = invite;
         return (
-            <Container maxWidth="sm" sx={{ py: { xs: 6, md: 10 } }}>
-                <Paper sx={aorPaperSx} elevation={0}>
-                    <Box sx={{ textAlign: 'center', mb: 4 }}>
-                        <Box
-                            sx={{
-                                width: 64,
-                                height: 64,
-                                bgcolor: 'background.default',
-                                borderRadius: '50%',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                mx: 'auto',
-                                mb: 2,
-                            }}
-                        >
-                            <Lock size={28} style={{ color: theme.palette.text.disabled }} />
-                        </Box>
-                        <Typography variant="h5" fontWeight={800} color="text.primary" mb={1}>
-                            Campagne en préparation
-                        </Typography>
-                        <Typography color="text.secondary">
-                            Bonjour <strong>{waitInvite.participant.name}</strong>, votre participation est validée.
-                        </Typography>
-                    </Box>
-                    <Alert
-                        severity="info"
-                        sx={{ borderRadius: 2, '& .MuiAlert-message': { fontWeight: 500, lineHeight: 1.6 } }}
-                    >
-                        Cette campagne n'est pas encore ouverte aux réponses. Vous recevrez une notification ou pourrez
-                        vous connecter lorsque votre coach l'aura activée.
-                    </Alert>
-                </Paper>
-            </Container>
+            <PublicRevelaPageShell>
+                <Container maxWidth="sm" sx={{ py: { xs: 3, md: 5 } }}>
+                    <Stack spacing={3}>
+                        <AdminPageHeader
+                            title="Campagne en préparation"
+                            subtitle={`Bonjour ${waitInvite.participant.name}, votre participation est validée.`}
+                        />
+
+                        <InviteStepCard>
+                            <Stack alignItems="center" spacing={2} sx={{ textAlign: 'center', py: 1 }}>
+                                <Box
+                                    sx={{
+                                        width: 64,
+                                        height: 64,
+                                        borderRadius: '50%',
+                                        bgcolor: 'surface.lavenderGrey',
+                                        color: 'text.disabled',
+                                        display: 'grid',
+                                        placeItems: 'center',
+                                    }}
+                                >
+                                    <Lock size={28} aria-hidden />
+                                </Box>
+                                <Alert
+                                    severity="info"
+                                    sx={{
+                                        borderRadius: 2,
+                                        textAlign: 'left',
+                                        width: '100%',
+                                        '& .MuiAlert-message': { fontWeight: 500, lineHeight: 1.7 },
+                                    }}
+                                >
+                                    Cette campagne n'est pas encore ouverte aux réponses. Vous recevrez une notification
+                                    ou pourrez vous connecter lorsque votre coach l'aura activée.
+                                </Alert>
+                            </Stack>
+                        </InviteStepCard>
+                    </Stack>
+                </Container>
+            </PublicRevelaPageShell>
         );
     }
 
-    if (isLoading)
+    if (isLoading) {
         return (
-            <Box sx={{ pt: 12, textAlign: 'center' }}>
-                <CircularProgress size={48} thickness={4} />
-            </Box>
+            <PublicRevelaPageShell>
+                <InviteCenteredState>
+                    <CircularProgress size={48} thickness={4} />
+                </InviteCenteredState>
+            </PublicRevelaPageShell>
         );
+    }
+
     if (!q) return null;
 
-    // ── LOGIQUE DU QUESTIONNAIRE SCIENTIFIQUE ────────────────────────────────
     const totalQuestions = q.questions.series[0].length;
     const activeSeries = step === 'series0' ? series0 : series1;
     const setActiveSeries = step === 'series0' ? setSeries0 : setSeries1;
@@ -467,17 +427,16 @@ function InvitePage() {
     const currentQuestion =
         step === 'series0' || step === 'series1' ? q.questions.series[step === 'series0' ? 0 : 1][currentQ] : null;
 
-    // Calcul de la progression globale
     const progress =
         step === 'series0'
             ? 10 + (currentQ / totalQuestions) * 40
             : step === 'series1'
-                ? 52 + (currentQ / totalQuestions) * 46
-                : step === 'transition'
-                    ? 50
-                    : step === 'submitting'
-                        ? 100
-                        : 5;
+              ? 52 + (currentQ / totalQuestions) * 46
+              : step === 'transition'
+                ? 50
+                : step === 'submitting'
+                  ? 100
+                  : 5;
 
     function handleAnswer(value: number) {
         const updated = [...activeSeries];
@@ -518,200 +477,277 @@ function InvitePage() {
         }
     }
 
+    const firstName = invite.participant.name.split(' ')[0];
+
     return (
-        <Container maxWidth="sm" sx={{ py: { xs: 4, md: 8 } }}>
-            {/* Header du questionnaire */}
-            <Box sx={{ mb: 4, textAlign: 'center' }}>
-                <Chip
-                    label={`Type : ${q.id}`}
-                    size="small"
-                    sx={{ bgcolor: 'tint.primaryBg', color: 'primary.main', fontWeight: 800, mb: 1.5 }}
-                />
-                <Typography variant="h5" fontWeight={800} color="text.primary">
-                    {q.title}
-                </Typography>
-
-                {/* Barre de progression avec dégradé AOR */}
-                <Box
-                    sx={{
-                        width: '100%',
-                        height: 6,
-                        borderRadius: 3,
-                        bgcolor: 'rgba(0,0,0,0.05)',
-                        mt: 3,
-                        overflow: 'hidden',
-                    }}
-                >
-                    <Box
-                        sx={{
-                            height: '100%',
-                            width: `${progress}%`,
-                            borderRadius: 3,
-                            transition: 'width 0.3s ease',
-                            background: `linear-gradient(90deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
-                        }}
-                    />
-                </Box>
-            </Box>
-
-            {/* Écran de lancement */}
-            {step === 'welcome' && (
-                <Paper sx={aorPaperSx} elevation={0}>
-                    <Typography variant="h5" fontWeight={800} color="primary.main" mb={1}>
-                        Bonjour, {invite.participant.name.split(' ')[0]}
-                    </Typography>
-                    <Typography variant="body1" color="text.secondary" mb={4}>
-                        Bienvenue dans votre Parcours Élément Humain.
-                    </Typography>
-                    <Typography
-                        variant="body1"
-                        mb={4}
-                        sx={{
-                            p: 2.5,
-                            bgcolor: 'background.default',
-                            borderRadius: 2,
-                            border: '1px solid',
-                            borderColor: 'divider',
-                            lineHeight: 1.6,
-                        }}
-                    >
-                        {q.description}
-                    </Typography>
-                    <Button
-                        variant="contained"
-                        fullWidth
-                        endIcon={<ArrowRight size={18} />}
-                        onClick={() => {
-                            setSeries0(Array(totalQuestions).fill(null));
-                            setSeries1(Array(totalQuestions).fill(null));
-                            setCurrentQ(0);
-                            setStep('series0');
-                        }}
-                        sx={aorBtnSx}
-                    >
-                        Commencer le parcours
-                    </Button>
-                </Paper>
-            )}
-
-            {/* Les Questions */}
-            {(step === 'series0' || step === 'series1') && currentQuestion && (
-                <Paper sx={aorPaperSx} elevation={0}>
-                    <Box sx={{ mb: 4, textAlign: 'center' }}>
+        <PublicRevelaPageShell>
+            <Container maxWidth="sm" sx={{ py: { xs: 3, md: 5 } }}>
+                <Stack spacing={3}>
+                    <Box sx={{ textAlign: 'center' }}>
+                        <Chip
+                            label={`Type : ${q.id}`}
+                            size="small"
+                            sx={{ bgcolor: 'tint.primaryBg', color: 'primary.main', fontWeight: 700, mb: 1.5 }}
+                        />
                         <Typography
-                            variant="overline"
-                            color="secondary.main"
-                            sx={{ fontWeight: 800, letterSpacing: '0.1em' }}
-                        >
-                            {q.questions.series_labels[step === 'series0' ? 0 : 1]}
-                        </Typography>
-                        <Typography variant="caption" color="text.disabled" fontWeight={700} display="block" mt={-0.5}>
-                            Question {currentQ + 1} sur {totalQuestions}
-                        </Typography>
-                    </Box>
-
-                    <Typography
-                        variant="h5"
-                        fontWeight={700}
-                        color="text.primary"
-                        textAlign="center"
-                        mb={5}
-                        lineHeight={1.4}
-                    >
-                        {currentQuestion.question}
-                    </Typography>
-
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1, px: 1 }}>
-                        <Typography variant="caption" color="text.secondary" fontWeight={600}>
-                            Pas d'accord
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary" fontWeight={600}>
-                            D'accord
-                        </Typography>
-                    </Box>
-
-                    <ScaleInput value={currentAnswer ?? null} onChange={handleAnswer} />
-
-                    <Box sx={{ mt: 5, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <Button
-                            startIcon={<ArrowLeft size={16} />}
-                            onClick={handlePrev}
-                            disabled={step === 'series0' && currentQ === 0}
+                            variant="h3"
                             sx={{
-                                color: 'text.secondary',
-                                fontWeight: 600,
-                                '&:hover': { bgcolor: 'background.default' },
+                                color: 'primary.main',
+                                fontWeight: 900,
+                                letterSpacing: -0.03,
+                                lineHeight: 1.1,
                             }}
                         >
-                            Précédent
-                        </Button>
-                        <Button
-                            variant="contained"
-                            color="primary"
-                            endIcon={
-                                currentQ === totalQuestions - 1 && step === 'series1' ? (
-                                    <Sparkles size={16} />
-                                ) : (
-                                    <ArrowRight size={16} />
-                                )
-                            }
-                            onClick={handleNext}
-                            disabled={currentAnswer === null || currentAnswer === undefined}
-                            sx={{ borderRadius: 2, fontWeight: 700, px: 3 }}
+                            {q.title}
+                        </Typography>
+                        <Box
+                            sx={{
+                                width: '100%',
+                                height: 6,
+                                borderRadius: 3,
+                                bgcolor: 'surface.lavenderGrey',
+                                mt: 3,
+                                overflow: 'hidden',
+                            }}
                         >
-                            {currentQ === totalQuestions - 1 && step === 'series1' ? 'Terminer' : 'Suivant'}
-                        </Button>
+                            <Box
+                                sx={{
+                                    height: '100%',
+                                    width: `${progress}%`,
+                                    borderRadius: 3,
+                                    transition: 'width 0.3s ease',
+                                    background: theme => theme.palette.surface.progressGradient,
+                                }}
+                            />
+                        </Box>
                     </Box>
-                </Paper>
-            )}
 
-            {/* Transition entre les deux séries */}
-            {step === 'transition' && (
-                <Paper sx={{ ...aorPaperSx, textAlign: 'center' }} elevation={0}>
-                    <Box
-                        sx={{
-                            display: 'inline-flex',
-                            p: 2,
-                            bgcolor: 'rgba(34, 197, 94, 0.1)',
-                            borderRadius: '50%',
-                            color: 'success.main',
-                            mb: 2,
-                        }}
-                    >
-                        <CheckCircle size={40} />
-                    </Box>
-                    <Typography variant="h5" fontWeight={800} color="text.primary" mb={1.5}>
-                        Première série terminée
-                    </Typography>
-                    <Typography variant="body1" color="text.secondary" mb={4}>
-                        Passons à la deuxième partie : <strong>{q.questions.series_labels[1]}</strong>
-                    </Typography>
-                    <Button
-                        variant="contained"
-                        endIcon={<ArrowRight size={18} />}
-                        onClick={() => {
-                            setCurrentQ(0);
-                            setStep('series1');
-                        }}
-                        sx={aorBtnSx}
-                    >
-                        Continuer
-                    </Button>
-                </Paper>
-            )}
+                    {step === 'welcome' && (
+                        <InviteStepCard>
+                            <AdminPageHeader
+                                title={`Bonjour, ${firstName}`}
+                                subtitle="Bienvenue dans votre Parcours Élément Humain."
+                            />
+                            <Typography
+                                variant="body1"
+                                color="text.secondary"
+                                sx={{
+                                    p: 2.5,
+                                    mb: 3,
+                                    bgcolor: 'surface.lavenderGrey',
+                                    borderRadius: 2,
+                                    border: '1px solid',
+                                    borderColor: 'surface.outlineVariantFaint',
+                                    lineHeight: 1.7,
+                                }}
+                            >
+                                {q.description}
+                            </Typography>
+                            <Button
+                                appearance="primary"
+                                fullWidth
+                                endIcon={<ArrowRight size={18} />}
+                                onClick={() => {
+                                    setSeries0(Array(totalQuestions).fill(null));
+                                    setSeries1(Array(totalQuestions).fill(null));
+                                    setCurrentQ(0);
+                                    setStep('series0');
+                                }}
+                                sx={{ py: 1.5 }}
+                            >
+                                Commencer le parcours
+                            </Button>
+                        </InviteStepCard>
+                    )}
 
-            {/* Traitement final */}
-            {step === 'submitting' && (
-                <Paper sx={{ ...aorPaperSx, textAlign: 'center', py: 8 }} elevation={0}>
-                    <CircularProgress size={48} thickness={4} sx={{ mb: 3 }} />
-                    <Typography variant="h6" fontWeight={700} color="primary.main">
-                        Analyse de vos réponses…
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary" mt={1}>
-                        Génération de votre profil en cours.
-                    </Typography>
-                </Paper>
-            )}
-        </Container>
+                    {(step === 'series0' || step === 'series1') && currentQuestion && (
+                        <InviteStepCard>
+                            <Box sx={{ mb: 4, textAlign: 'center' }}>
+                                <Typography
+                                    variant="overline"
+                                    color="secondary.main"
+                                    sx={{ fontWeight: 800, letterSpacing: '0.1em' }}
+                                >
+                                    {q.questions.series_labels[step === 'series0' ? 0 : 1]}
+                                </Typography>
+                                <Typography
+                                    variant="caption"
+                                    color="text.secondary"
+                                    fontWeight={700}
+                                    display="block"
+                                    sx={{ mt: -0.5 }}
+                                >
+                                    Question {currentQ + 1} sur {totalQuestions}
+                                </Typography>
+                            </Box>
+
+                            <Typography
+                                variant="h5"
+                                fontWeight={700}
+                                color="text.primary"
+                                textAlign="center"
+                                sx={{ mb: 5, lineHeight: 1.4 }}
+                            >
+                                {currentQuestion.question}
+                            </Typography>
+
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1, px: 1 }}>
+                                <Typography variant="caption" color="text.secondary" fontWeight={600}>
+                                    Pas d'accord
+                                </Typography>
+                                <Typography variant="caption" color="text.secondary" fontWeight={600}>
+                                    D'accord
+                                </Typography>
+                            </Box>
+
+                            <ScaleInput value={currentAnswer ?? null} onChange={handleAnswer} />
+
+                            <Box
+                                sx={{
+                                    mt: 5,
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center',
+                                    gap: 2,
+                                }}
+                            >
+                                <Button
+                                    appearance="secondary"
+                                    startIcon={<ArrowLeft size={16} />}
+                                    onClick={handlePrev}
+                                    disabled={step === 'series0' && currentQ === 0}
+                                >
+                                    Précédent
+                                </Button>
+                                <Button
+                                    appearance="primary"
+                                    endIcon={
+                                        currentQ === totalQuestions - 1 && step === 'series1' ? (
+                                            <Sparkles size={16} />
+                                        ) : (
+                                            <ArrowRight size={16} />
+                                        )
+                                    }
+                                    onClick={handleNext}
+                                    disabled={currentAnswer === null || currentAnswer === undefined}
+                                >
+                                    {currentQ === totalQuestions - 1 && step === 'series1' ? 'Terminer' : 'Suivant'}
+                                </Button>
+                            </Box>
+                        </InviteStepCard>
+                    )}
+
+                    {step === 'transition' && (
+                        <InviteStepCard sx={{ textAlign: 'center' }}>
+                            <Box
+                                sx={{
+                                    display: 'inline-flex',
+                                    p: 2,
+                                    bgcolor: 'tint.successBg',
+                                    borderRadius: '50%',
+                                    color: 'success.main',
+                                    mb: 2,
+                                }}
+                            >
+                                <CheckCircle size={40} aria-hidden />
+                            </Box>
+                            <Typography variant="h5" fontWeight={800} color="text.primary" sx={{ mb: 1.5 }}>
+                                Première série terminée
+                            </Typography>
+                            <Typography variant="body1" color="text.secondary" sx={{ mb: 4, lineHeight: 1.7 }}>
+                                Passons à la deuxième partie : <strong>{q.questions.series_labels[1]}</strong>
+                            </Typography>
+                            <Button
+                                appearance="primary"
+                                endIcon={<ArrowRight size={18} />}
+                                onClick={() => {
+                                    setCurrentQ(0);
+                                    setStep('series1');
+                                }}
+                                sx={{ py: 1.5, px: 4 }}
+                            >
+                                Continuer
+                            </Button>
+                        </InviteStepCard>
+                    )}
+
+                    {step === 'submitting' && (
+                        <InviteStepCard sx={{ textAlign: 'center', py: 4 }}>
+                            <CircularProgress size={48} thickness={4} sx={{ mb: 3 }} />
+                            <Typography variant="h6" fontWeight={700} color="primary.main">
+                                Analyse de vos réponses…
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary" sx={{ mt: 1, lineHeight: 1.7 }}>
+                                Génération de votre profil en cours.
+                            </Typography>
+                        </InviteStepCard>
+                    )}
+                </Stack>
+            </Container>
+        </PublicRevelaPageShell>
+    );
+}
+
+function InviteCenteredState({ children }: { children: React.ReactNode }) {
+    return (
+        <Box
+            sx={{
+                flex: 1,
+                display: 'grid',
+                placeItems: 'center',
+                py: { xs: 8, md: 12 },
+            }}
+        >
+            {children}
+        </Box>
+    );
+}
+
+function InviteStepCard({ children, sx }: { children: React.ReactNode; sx?: SxProps<Theme> }) {
+    return (
+        <Card variant="outlined" sx={{ ...surfaceCardSx, ...sx }}>
+            <CardContent sx={{ p: { xs: 2.5, md: 4 } }}>{children}</CardContent>
+        </Card>
+    );
+}
+
+function InviteParticipantSummary({
+    name,
+    email,
+    organisation,
+}: {
+    name: string;
+    email: string;
+    organisation?: string | null;
+}) {
+    return (
+        <Box
+            sx={{
+                p: 2,
+                mb: 3,
+                borderRadius: 2,
+                bgcolor: 'surface.lavenderGrey',
+                border: '1px solid',
+                borderColor: 'surface.outlineVariantFaint',
+            }}
+        >
+            <Typography variant="subtitle2" fontWeight={700} color="text.primary">
+                {name}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+                {email}
+            </Typography>
+            {organisation ? (
+                <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    fontWeight={600}
+                    textTransform="uppercase"
+                    sx={{ display: 'block', mt: 0.5, letterSpacing: '0.06em' }}
+                >
+                    {organisation}
+                </Typography>
+            ) : null}
+        </Box>
     );
 }
