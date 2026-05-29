@@ -2,12 +2,11 @@
 
 import { Alert, Box, Card, CardContent, Link as MuiLink, Stack, Typography } from '@mui/material';
 import { Link, createFileRoute } from '@tanstack/react-router';
-import { BadgeCheck, ClipboardList, MessageSquareQuote, Sparkles, UserRound, Users } from 'lucide-react';
+import { Sparkles, UserRound, Users } from 'lucide-react';
 import * as React from 'react';
 
-import { KpiCard } from '@/components/common/cards';
 import { EmptyState } from '@/components/common/EmptyState';
-import { AdminPageHeader, KpiGrid, ListPanel } from '@/components/common/layout';
+import { AdminPageHeader, ListPanel } from '@/components/common/layout';
 import { LoadingCard } from '@/components/common/LoadingCard';
 import { surfaceCardSx } from '@/components/common/styles/listSurfaces';
 import { useBreadcrumbs } from '@/components/layout/AppShellChromeContext';
@@ -22,13 +21,6 @@ type ParticipantAssignment = ParticipantSession['assignments'][number];
 
 const COACH_SUBTITLE =
     'Votre coach référent accompagne la lecture des résultats et la préparation de la restitution de campagne.';
-
-const campaignStatusLabel = (status?: ParticipantAssignment['campaign_status']): string => {
-    if (status === 'active') return 'En cours';
-    if (status === 'closed') return 'Terminée';
-    if (status === 'archived') return 'Archivée';
-    return 'Brouillon';
-};
 
 const coachAvailabilityLabel = (status?: ParticipantAssignment['campaign_status']): string =>
     status === 'active' ? 'Disponible' : 'En attente';
@@ -102,7 +94,6 @@ function ParticipantCoachRoute() {
     const campaignName = assignment?.campaign_name ?? 'Campagne';
     const campaignPath = Number.isFinite(campaignId) ? `/campaigns/${campaignId}` : '/campaigns';
     const hasCoach = Boolean(assignment?.coach_name);
-    const hasFeedback = coachView.feedback != null;
 
     useBreadcrumbs([
         { label: 'Mes campagnes', to: '/campaigns' },
