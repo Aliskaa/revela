@@ -43,20 +43,32 @@ export function useQuestionnaireOrchestrator({ qid, type, campaignId }: UseQuest
             type === 'peer' &&
             (progression.self_rating_status !== 'completed' || progression.peer_feedback_status === 'completed')
         ) {
-            navigate({
-                to: progression.self_rating_status === 'completed' ? '/' : '/self-rating',
-                replace: true,
-            });
+            if (progression.self_rating_status === 'completed') {
+                navigate({ to: '/', replace: true });
+            } else if (resolvedCampaignId !== null) {
+                navigate({
+                    to: '/campaigns/$campaignId/self-rating',
+                    params: { campaignId: String(resolvedCampaignId) },
+                    replace: true,
+                });
+            } else {
+                navigate({ to: '/campaigns', replace: true });
+            }
             return;
         }
 
         if (type === 'scientific') {
             const canSkipManualInputs = assignment.allow_test_without_manual_inputs === true;
             if (!canSkipManualInputs && progression.self_rating_status !== 'completed') {
-                navigate({
-                    to: '/self-rating',
-                    replace: true,
-                });
+                if (resolvedCampaignId !== null) {
+                    navigate({
+                        to: '/campaigns/$campaignId/self-rating',
+                        params: { campaignId: String(resolvedCampaignId) },
+                        replace: true,
+                    });
+                } else {
+                    navigate({ to: '/campaigns', replace: true });
+                }
                 return;
             }
             if (!canSkipManualInputs && progression.peer_feedback_status !== 'completed') {
@@ -70,7 +82,7 @@ export function useQuestionnaireOrchestrator({ qid, type, campaignId }: UseQuest
                 navigate({ to: '/', replace: true });
             }
         }
-    }, [assignment, navigate, progression, session, type]);
+    }, [assignment, navigate, progression, resolvedCampaignId, session, type]);
 
     return {
         q,

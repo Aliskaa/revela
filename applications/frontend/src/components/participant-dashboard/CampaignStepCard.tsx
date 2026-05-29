@@ -37,8 +37,8 @@ const STEP_TEMPLATES: ReadonlyArray<Omit<CampaignStep, 'state'>> = [
     },
     {
         label: 'Feedback des pairs',
-        subtitle: 'Même logique de notation',
-        description: "Vous pouvez noter jusqu'à 5 de vos pairs.",
+        subtitle: 'Notes de 0 à 9 sur les short labels',
+        description: "Vous pouvez noter jusqu'à 5 de vos pairs sur la même échelle.",
         icon: Users,
         routeKind: 'peer-feedback',
     },

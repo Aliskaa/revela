@@ -2,6 +2,8 @@ import type { DimensionBlock } from '@/hooks/useBuildDimensions';
 import { Box, Card, CardContent, Chip, IconButton, Stack, TextField, Tooltip, Typography } from '@mui/material';
 import { Minus, Plus } from 'lucide-react';
 import * as React from 'react';
+
+import { LIKERT_SHORT_LABEL } from './questionnaireScales';
 import { RatingScale } from './RatingScale';
 
 const MAX_COMMENT_LENGTH = 150;
@@ -80,8 +82,14 @@ export const RatingDimensionCard = ({
                                                 size="small"
                                                 sx={{
                                                     borderRadius: 99,
-                                                    bgcolor: 'tint.secondaryBg',
-                                                    color: 'tint.secondaryText',
+                                                    bgcolor:
+                                                        scores[key] !== null && scores[key] !== undefined
+                                                            ? 'tint.primaryBg'
+                                                            : 'tint.secondaryBg',
+                                                    color:
+                                                        scores[key] !== null && scores[key] !== undefined
+                                                            ? 'primary.main'
+                                                            : 'tint.secondaryText',
                                                 }}
                                             />
                                         </Stack>
@@ -90,6 +98,8 @@ export const RatingDimensionCard = ({
                                             onChange={v => {
                                                 if (v !== null) onScoreChange(key, v);
                                             }}
+                                            min={LIKERT_SHORT_LABEL.min}
+                                            max={LIKERT_SHORT_LABEL.max}
                                             ariaLabel={item.label}
                                         />
                                         {commentsEnabled && (

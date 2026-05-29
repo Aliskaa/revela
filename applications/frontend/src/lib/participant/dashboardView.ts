@@ -173,12 +173,14 @@ export const buildJourney = (assignment?: ParticipantAssignment): JourneyStep[] 
     const testRoute = qCode ? `/test/${qCode}` : undefined;
 
     const campaignId = assignment?.campaign_id ?? null;
+    const selfRatingTo =
+        campaignId !== null ? `/campaigns/${String(campaignId)}/self-rating` : '/campaigns';
     const resultsTo = campaignId !== null ? `/campaigns/${String(campaignId)}/results` : '/campaigns';
     const coachTo = campaignId !== null ? `/campaigns/${String(campaignId)}/coach` : '/campaigns';
     if (!assignment?.progression) {
         const manualInputState: StepState = assignment ? 'current' : 'locked';
         return [
-            { ...journeyTemplate[0], state: manualInputState, to: '/self-rating' },
+            { ...journeyTemplate[0], state: manualInputState, to: selfRatingTo },
             { ...journeyTemplate[1], state: manualInputState, to: '/peer-feedback' },
             {
                 ...journeyTemplate[2],
@@ -203,7 +205,7 @@ export const buildJourney = (assignment?: ParticipantAssignment): JourneyStep[] 
         {
             ...journeyTemplate[0],
             state: stepStateFromStatus(assignment.progression.self_rating_status),
-            to: '/self-rating',
+            to: selfRatingTo,
         },
         {
             ...journeyTemplate[1],

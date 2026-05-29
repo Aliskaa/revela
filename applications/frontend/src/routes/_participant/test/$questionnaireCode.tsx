@@ -3,6 +3,7 @@ import * as React from 'react';
 import { CampaignNotActiveBlock } from '@/components/participant-dashboard/CampaignNotActiveBlock';
 import { StepCompletedBanner } from '@/components/participant-dashboard/StepCompletedBanner';
 import { RatingScale } from '@/components/questionnaire/RatingScale';
+import { ELEMENT_HUMAIN_LIKERT } from '@/components/questionnaire/questionnaireScales';
 import { useParticipantSession } from '@/hooks/participantSession';
 import {
     useElementBDraft,
@@ -21,8 +22,8 @@ export const Route = createFileRoute('/_participant/test/$questionnaireCode')({
     component: ParticipantTestSessionRoute,
 });
 
-const ANSWER_MIN = 0;
-const ANSWER_MAX = 5;
+const ANSWER_MIN = ELEMENT_HUMAIN_LIKERT.min;
+const ANSWER_MAX = ELEMENT_HUMAIN_LIKERT.max;
 
 function normalizeCode(value: string | undefined): string {
     return value?.trim().toUpperCase() || 'B';
@@ -258,7 +259,7 @@ function QuestionCard({
                         <Stack spacing={1.2}>
                             <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={2}>
                                 <Typography variant="body2" fontWeight={700} color="text.primary">
-                                    Pas d'accord → D'accord
+                                    Échelle {ELEMENT_HUMAIN_LIKERT.rangeLabel}
                                 </Typography>
                                 <Chip
                                     label={currentAnswer ?? '—'}
@@ -277,6 +278,8 @@ function QuestionCard({
                                 }}
                                 max={ANSWER_MAX}
                                 min={ANSWER_MIN}
+                                endpointLabels={ELEMENT_HUMAIN_LIKERT.endpointLabels}
+                                ariaLabel={currentQuestion.question}
                             />
                         </Stack>
                     </Box>

@@ -108,6 +108,13 @@ function ParticipantCampaignWorkspaceRoute() {
                 });
                 return;
             }
+            if (routeKind === 'self-rating') {
+                navigate({
+                    to: '/campaigns/$campaignId/self-rating',
+                    params: { campaignId: String(campaignId) },
+                });
+                return;
+            }
             if (routeKind === 'test') {
                 const qCode = assignment?.questionnaire_id?.toUpperCase();
                 if (!qCode) return;

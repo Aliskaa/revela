@@ -259,7 +259,7 @@ function ParticipantPeerFeedbackRoute() {
                                 color="text.secondary"
                                 sx={{ mt: 1, lineHeight: 1.7, maxWidth: 860 }}
                             >
-                                Sélectionnez un pair puis notez chaque item de 1 à 9. Vous pouvez évaluer jusqu'à{' '}
+                                Sélectionnez un pair puis notez chaque item de 0 à 9. Vous pouvez évaluer jusqu'à{' '}
                                 {MAX_PEERS} pairs.
                             </Typography>
                         </Box>
