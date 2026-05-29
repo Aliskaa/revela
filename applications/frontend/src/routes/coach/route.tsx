@@ -2,20 +2,20 @@
 
 import { Box, Stack, Typography } from '@mui/material';
 import { Outlet, createFileRoute, redirect, useNavigate } from '@tanstack/react-router';
-import { ArrowLeft, Building2, ClipboardList, Gauge, ShieldAlert, UserRound } from 'lucide-react';
+import { ArrowLeft, Building2, ClipboardList, LayoutDashboard, ShieldAlert, UserRound } from 'lucide-react';
 
+import { AppShellChromeProvider } from '@/components/layout/AppShellChromeContext';
 import { ScopedAppShell, type ScopedNavItem } from '@/components/layout/ScopedAppShell';
 import { parseAdminJwtClaims, userAdmin } from '@/lib/auth';
 
-const coachNavBase: ScopedNavItem[] = [
-    { label: 'Tableau de bord', to: '/coach', icon: Gauge, exact: true },
+const coachNav: ScopedNavItem[] = [
+    { label: 'Tableau de bord', to: '/coach', icon: LayoutDashboard, exact: true },
     { label: 'Mes campagnes', to: '/coach/campaigns', icon: ClipboardList },
     { label: 'Mes entreprises', to: '/coach/companies', icon: Building2 },
 ];
 
-const coachNavForSuperAdmin: ScopedNavItem[] = [
+const coachFooterNavForSuperAdmin: ScopedNavItem[] = [
     { label: 'Retour mode admin', to: '/admin', icon: ArrowLeft, exact: true },
-    ...coachNavBase,
 ];
 
 /**
@@ -54,17 +54,21 @@ function CoachRouteLayout() {
     };
 
     return (
-        <ScopedAppShell
-            brandIcon={UserRound}
-            brandLabel="Révéla"
-            brandEyebrow={isSuperAdmin ? 'Vue coach (admin)' : 'Espace coach'}
-            avatarInitial={isSuperAdmin ? 'A' : 'C'}
-            nav={isSuperAdmin ? coachNavForSuperAdmin : coachNavBase}
-            onLogout={handleLogout}
-            topBanner={isSuperAdmin ? <SuperAdminBanner /> : undefined}
-        >
-            <Outlet />
-        </ScopedAppShell>
+        <AppShellChromeProvider>
+            <ScopedAppShell
+                variant="harmonized"
+                brandIcon={UserRound}
+                brandLabel="Révéla"
+                brandEyebrow={isSuperAdmin ? 'Vue coach (admin)' : 'Espace coach'}
+                avatarInitial={isSuperAdmin ? 'A' : 'C'}
+                nav={coachNav}
+                footerNav={isSuperAdmin ? coachFooterNavForSuperAdmin : []}
+                onLogout={handleLogout}
+                topBanner={isSuperAdmin ? <SuperAdminBanner /> : undefined}
+            >
+                <Outlet />
+            </ScopedAppShell>
+        </AppShellChromeProvider>
     );
 }
 
