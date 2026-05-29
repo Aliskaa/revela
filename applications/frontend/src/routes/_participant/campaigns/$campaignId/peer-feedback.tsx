@@ -1,6 +1,9 @@
 // Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
 
+import { Button } from '@/components/common/Button';
+import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingCard } from '@/components/common/LoadingCard';
+import { ListPanel, PageHeader } from '@/components/common/layout';
 import { useBreadcrumbs } from '@/components/layout/AppShellChromeContext';
 import { CampaignNotActiveBlock } from '@/components/participant-dashboard/CampaignNotActiveBlock';
 import { PeerSelectCard } from '@/components/participant-dashboard/PeerSelectCard';
@@ -18,9 +21,9 @@ import { useSubmitParticipantQuestionnaire } from '@/hooks/questionnaires';
 import { useBuildDimensions } from '@/hooks/useBuildDimensions';
 import { useToast } from '@/lib/toast';
 import type { CampaignPeerChoice } from '@aor/types';
-import { Alert, Box, Button, Card, CardContent, Chip, Link as MuiLink, Stack, Typography } from '@mui/material';
+import { Alert, Box, Chip, LinearProgress, Link as MuiLink, Stack, Typography } from '@mui/material';
 import { Link, createFileRoute, useNavigate } from '@tanstack/react-router';
-import { BadgeCheck, CheckCircle2, CircleUserRound, Sparkles, Users } from 'lucide-react';
+import { BadgeCheck, CheckCircle2, Sparkles, Users } from 'lucide-react';
 import * as React from 'react';
 
 export const Route = createFileRoute('/_participant/campaigns/$campaignId/peer-feedback')({
@@ -28,6 +31,8 @@ export const Route = createFileRoute('/_participant/campaigns/$campaignId/peer-f
 });
 
 const MAX_PEERS = 5;
+
+const PAGE_SUBTITLE = `Sélectionnez un pair puis notez chaque item de ${LIKERT_SHORT_LABEL.rangeLabel}. Vous pouvez évaluer jusqu'à ${MAX_PEERS} pairs.`;
 
 function ParticipantPeerFeedbackRoute() {
     const { campaignId: campaignIdParam } = Route.useParams();
@@ -75,6 +80,7 @@ function ParticipantPeerFeedbackRoute() {
     const canInteract = campaignActive && stepAvailable;
 
     const questionnaireTitle = matrix?.questionnaire_title ?? assignment?.questionnaire_title ?? 'Feedback des pairs';
+    const questionnaireCode = matrix?.questionnaire_id ?? qid;
     const peerColumns = matrix?.peer_columns ?? [];
 
     const ratedPeerIds = React.useMemo(() => {
@@ -93,6 +99,7 @@ function ParticipantPeerFeedbackRoute() {
     const totalItems = matrix?.rows.length ?? 0;
     const filledCount = Object.values(scores).filter(v => v !== null).length;
     const allFilled = totalItems > 0 && filledCount === totalItems;
+    const progressPct = totalItems > 0 ? Math.round((filledCount / totalItems) * 100) : 0;
 
     const handleScoreChange = (key: string, value: number) => {
         setScores(prev => ({ ...prev, [key]: value }));
@@ -193,72 +200,93 @@ function ParticipantPeerFeedbackRoute() {
         return <CampaignNotActiveBlock campaignId={assignment.campaign_id} />;
     }
 
+    const submitButton = (
+        <Button
+            appearance="primary"
+            startIcon={<CheckCircle2 size={16} />}
+            onClick={handleSubmit}
+            disabled={!canInteract || !allFilled || submitMutation.isPending}
+            sx={{ width: { xs: '100%', sm: 'auto' } }}
+        >
+            {submitMutation.isPending
+                ? 'Enregistrement…'
+                : selectedPeer
+                  ? `Valider le feedback pour ${selectedPeer.first_name}`
+                  : 'Valider le feedback'}
+        </Button>
+    );
+
+    const cancelButton = (
+        <Button
+            appearance="secondary"
+            onClick={() => {
+                setSelectedPeer(null);
+                setScores({});
+                setComments({});
+            }}
+            sx={{ width: { xs: '100%', sm: 'auto' } }}
+        >
+            Annuler
+        </Button>
+    );
+
     return (
-        <Stack spacing={3}>
+        <Stack spacing={3} sx={{ minWidth: 0, pb: { xs: selectedPeer ? 12 : 0, md: 0 } }}>
+            {selectedPeer && totalItems > 0 && (
+                <Box
+                    sx={{
+                        display: { xs: 'block', md: 'none' },
+                        position: 'sticky',
+                        top: 64,
+                        zIndex: 5,
+                        mx: -2,
+                        mt: -2,
+                        px: 2,
+                        py: 1.2,
+                        bgcolor: 'surface.footerWash',
+                        backdropFilter: 'blur(12px)',
+                        borderBottom: '1px solid',
+                        borderBottomColor: 'surface.lavenderGrey',
+                    }}
+                >
+                    <Stack direction="row" alignItems="center" spacing={1.5}>
+                        <Typography variant="caption" fontWeight={700} color="text.primary">
+                            {filledCount} / {totalItems}
+                        </Typography>
+                        <LinearProgress
+                            variant="determinate"
+                            value={progressPct}
+                            aria-label={`Progression du feedback pour ${selectedPeer.first_name}`}
+                            sx={{
+                                flex: 1,
+                                height: 6,
+                                borderRadius: 99,
+                                bgcolor: 'tint.subtleBg',
+                                '& .MuiLinearProgress-bar': { bgcolor: 'primary.main' },
+                            }}
+                        />
+                        <Typography variant="caption" color="text.secondary">
+                            {progressPct}%
+                        </Typography>
+                    </Stack>
+                </Box>
+            )}
+
+            <Box>
+                <PageHeader title="Feedback des pairs" subtitle={PAGE_SUBTITLE} />
+                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
+                    {campaignName} · {questionnaireTitle}
+                    {questionnaireCode ? ` (${questionnaireCode})` : ''}
+                </Typography>
+            </Box>
+
             {!canInteract && (
-                <Alert severity="warning">
+                <Alert severity="warning" sx={{ borderRadius: 2 }}>
                     {!campaignActive
                         ? "La campagne n'est pas active. Le feedback des pairs sera disponible une fois la campagne lancée."
                         : "Cette étape n'est pas encore accessible. Vérifiez l'état de votre parcours."}
                 </Alert>
             )}
-
-            <Card variant="outlined">
-                <CardContent sx={{ p: { xs: 2.5, md: 3 } }}>
-                    <Stack
-                        spacing={2.5}
-                        direction={{ xs: 'column', lg: 'row' }}
-                        justifyContent="space-between"
-                        alignItems={{ xs: 'start', lg: 'start' }}
-                    >
-                        <Box>
-                            <Chip
-                                label="Feedback des pairs"
-                                sx={{ borderRadius: 99, bgcolor: 'tint.primaryBg', color: 'primary.main', mb: 1.5 }}
-                            />
-                            <Typography variant="h4" fontWeight={800} color="text.primary" sx={{ letterSpacing: -0.5 }}>
-                                {questionnaireTitle}
-                            </Typography>
-                            <Typography
-                                variant="body1"
-                                color="text.secondary"
-                                sx={{ mt: 1, lineHeight: 1.7, maxWidth: 860 }}
-                            >
-                                Sélectionnez un pair puis notez chaque item de 0 à 9. Vous pouvez évaluer jusqu'à{' '}
-                                {MAX_PEERS} pairs.
-                            </Typography>
-                        </Box>
-
-                        <Card variant="outlined" sx={{ width: { xs: '100%', sm: 340 } }}>
-                            <CardContent sx={{ p: 2 }}>
-                                <Stack direction="row" spacing={1.5} alignItems="center">
-                                    <Box
-                                        sx={{
-                                            width: 48,
-                                            height: 48,
-                                            borderRadius: 4,
-                                            bgcolor: 'primary.main',
-                                            color: 'common.white',
-                                            display: 'grid',
-                                            placeItems: 'center',
-                                        }}
-                                    >
-                                        <Users size={20} />
-                                    </Box>
-                                    <Box>
-                                        <Typography fontWeight={800} color="text.primary">
-                                            {ratedCount} / {MAX_PEERS}
-                                        </Typography>
-                                        <Typography variant="body2" color="text.secondary">
-                                            pairs évalués
-                                        </Typography>
-                                    </Box>
-                                </Stack>
-                            </CardContent>
-                        </Card>
-                    </Stack>
-                </CardContent>
-            </Card>
 
             <Box
                 sx={{
@@ -266,21 +294,30 @@ function ParticipantPeerFeedbackRoute() {
                     gridTemplateColumns: { xs: '1fr', xl: '0.35fr 0.65fr' },
                     gap: 3,
                     alignItems: 'start',
+                    minWidth: 0,
                 }}
             >
-                <Card variant="outlined">
-                    <CardContent sx={{ p: 2.5 }}>
-                        <Typography variant="h6" fontWeight={800} color="text.primary">
-                            Pairs de la campagne
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, mb: 2, lineHeight: 1.7 }}>
-                            Sélectionnez un pair à évaluer.
-                        </Typography>
-
+                <ListPanel
+                    title="Pairs de la campagne"
+                    subtitle="Sélectionnez un pair à évaluer."
+                    headerBorder
+                    headerActions={
+                        <Chip
+                            icon={<Users size={14} />}
+                            label={`${ratedCount} / ${MAX_PEERS} évalués`}
+                            sx={{ borderRadius: 99, bgcolor: 'tint.primaryBg', color: 'primary.main', fontWeight: 700 }}
+                        />
+                    }
+                >
+                    <Box sx={{ px: { xs: 2.5, md: 4 }, py: 3 }}>
                         {availablePeers.length === 0 ? (
-                            <Typography variant="body2" color="text.secondary">
-                                Aucun pair disponible dans cette campagne.
-                            </Typography>
+                            <EmptyState
+                                icon={Users}
+                                variant="muted"
+                                title="Aucun pair disponible"
+                                description="Aucun pair n'est rattaché à cette campagne pour le moment."
+                                boxed={false}
+                            />
                         ) : (
                             <Stack spacing={1}>
                                 {availablePeers.map(peer => {
@@ -302,7 +339,7 @@ function ParticipantPeerFeedbackRoute() {
                         )}
 
                         {!canRateMore && (
-                            <Alert severity="info" sx={{ mt: 2 }}>
+                            <Alert severity="info" sx={{ mt: 2, borderRadius: 2 }}>
                                 Vous avez atteint le maximum de {MAX_PEERS} pairs évalués. L'étape se termine
                                 automatiquement.
                             </Alert>
@@ -311,10 +348,8 @@ function ParticipantPeerFeedbackRoute() {
                         {ratedCount >= 1 && canRateMore && (
                             <Box sx={{ mt: 2 }}>
                                 <Button
-                                    variant="contained"
-                                    color="primary"
+                                    appearance="primary"
                                     fullWidth
-                                    disableElevation
                                     startIcon={<BadgeCheck size={16} />}
                                     onClick={handleConfirmDone}
                                     disabled={!canInteract || confirmMutation.isPending}
@@ -331,36 +366,16 @@ function ParticipantPeerFeedbackRoute() {
                                 </Typography>
                             </Box>
                         )}
-                    </CardContent>
-                </Card>
+                    </Box>
+                </ListPanel>
 
                 {selectedPeer ? (
-                    <Card variant="outlined">
-                        <CardContent sx={{ p: 2.5 }}>
-                            <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 2 }}>
-                                <Box
-                                    sx={{
-                                        width: 44,
-                                        height: 44,
-                                        borderRadius: 4,
-                                        bgcolor: 'primary.main',
-                                        color: 'common.white',
-                                        display: 'grid',
-                                        placeItems: 'center',
-                                    }}
-                                >
-                                    <CircleUserRound size={20} />
-                                </Box>
-                                <Box>
-                                    <Typography variant="h6" fontWeight={800} color="text.primary">
-                                        {selectedPeer.full_name}
-                                    </Typography>
-                                    <Typography variant="body2" color="text.secondary">
-                                        Notez chaque item de {LIKERT_SHORT_LABEL.rangeLabel}.
-                                    </Typography>
-                                </Box>
-                            </Stack>
-
+                    <ListPanel
+                        title={selectedPeer.full_name}
+                        subtitle={`Notez chaque item de ${LIKERT_SHORT_LABEL.rangeLabel}.`}
+                        headerBorder
+                    >
+                        <Box sx={{ px: { xs: 2.5, md: 4 }, py: 3 }}>
                             <Box sx={{ mb: 2 }}>
                                 <QuestionnaireProgress
                                     filled={filledCount}
@@ -379,59 +394,54 @@ function ParticipantPeerFeedbackRoute() {
                                 onCommentChange={handleCommentChange}
                             />
 
-                            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.2} sx={{ mt: 3 }}>
-                                <Button
-                                    variant="contained"
-                                    disableElevation
-                                    startIcon={<CheckCircle2 size={16} />}
-                                    onClick={handleSubmit}
-                                    disabled={!canInteract || !allFilled || submitMutation.isPending}
-                                >
-                                    {submitMutation.isPending
-                                        ? 'Enregistrement…'
-                                        : `Valider le feedback pour ${selectedPeer.first_name}`}
-                                </Button>
-                                <Button
-                                    variant="outlined"
-                                    onClick={() => {
-                                        setSelectedPeer(null);
-                                        setScores({});
-                                        setComments({});
-                                    }}
-                                >
-                                    Annuler
-                                </Button>
-                            </Stack>
-                        </CardContent>
-                    </Card>
-                ) : (
-                    <Card variant="outlined">
-                        <CardContent sx={{ p: 4, textAlign: 'center' }}>
-                            <Box
-                                sx={{
-                                    width: 56,
-                                    height: 56,
-                                    borderRadius: 4,
-                                    bgcolor: 'tint.primaryBg',
-                                    color: 'primary.main',
-                                    display: 'grid',
-                                    placeItems: 'center',
-                                    mx: 'auto',
-                                    mb: 2,
-                                }}
+                            <Stack
+                                direction={{ xs: 'column', sm: 'row' }}
+                                spacing={1.2}
+                                sx={{ mt: 3, display: { xs: 'none', md: 'flex' } }}
                             >
-                                <Sparkles size={24} />
-                            </Box>
-                            <Typography variant="h6" fontWeight={800} color="text.primary">
-                                Sélectionnez un pair
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary" sx={{ mt: 1, lineHeight: 1.7 }}>
-                                Cliquez sur un pair dans la liste à gauche pour commencer à remplir le feedback.
-                            </Typography>
-                        </CardContent>
-                    </Card>
+                                {submitButton}
+                                {cancelButton}
+                            </Stack>
+                        </Box>
+                    </ListPanel>
+                ) : (
+                    <ListPanel title="Sélectionnez un pair" subtitle="Commencez par choisir un pair à évaluer." headerBorder>
+                        <Box sx={{ px: { xs: 2.5, md: 4 }, py: 4 }}>
+                            <EmptyState
+                                icon={Sparkles}
+                                variant="primary"
+                                title="Aucun pair sélectionné"
+                                description="Cliquez sur un pair dans la liste à gauche pour commencer à remplir le feedback."
+                                boxed={false}
+                            />
+                        </Box>
+                    </ListPanel>
                 )}
             </Box>
+
+            {selectedPeer && dimensions.length > 0 && (
+                <Box
+                    sx={{
+                        display: { xs: 'block', md: 'none' },
+                        position: 'fixed',
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        zIndex: 6,
+                        bgcolor: 'surface.footerWash',
+                        backdropFilter: 'blur(12px)',
+                        borderTop: '1px solid',
+                        borderTopColor: 'surface.lavenderGrey',
+                        px: 2,
+                        py: 1.5,
+                    }}
+                >
+                    <Stack direction="row" spacing={1.2}>
+                        {submitButton}
+                        {cancelButton}
+                    </Stack>
+                </Box>
+            )}
         </Stack>
     );
 }
