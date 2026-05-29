@@ -9,6 +9,7 @@ import { KpiCard } from '@/components/common/cards';
 import { AdminPageHeader, KpiGrid, ListPanel } from '@/components/common/layout';
 import { LoadingCard } from '@/components/common/LoadingCard';
 import { useBreadcrumbs } from '@/components/layout/AppShellChromeContext';
+import { CampaignCoachProfileLink } from '@/components/participant-dashboard/CampaignWorkspaceHeader';
 import { CampaignResultCard } from '@/components/participant-dashboard/CampaignResultCard';
 import {
     CampaignStepCard,
@@ -149,10 +150,18 @@ function ParticipantCampaignWorkspaceRoute() {
 
     return (
         <Stack spacing={3} sx={{ minWidth: 0 }}>
-            <AdminPageHeader
-                title={campaignName}
-                subtitle={`${company} · ${questionnaire} · Coach ${coachName}`}
-            />
+            <Box
+                sx={{
+                    display: 'flex',
+                    flexDirection: { xs: 'column', lg: 'row' },
+                    alignItems: { lg: 'flex-end' },
+                    justifyContent: 'space-between',
+                    gap: 3,
+                }}
+            >
+                <AdminPageHeader title={campaignName} subtitle={`${company} · ${questionnaire}`} />
+                <CampaignCoachProfileLink campaignId={campaignId} coachName={coachName} />
+            </Box>
 
             <KpiGrid columns={4}>
                 <KpiCard label="Progression" value={`${progress}%`} helper="du parcours" icon={Target} />

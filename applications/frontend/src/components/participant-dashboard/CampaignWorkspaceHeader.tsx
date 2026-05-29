@@ -4,6 +4,61 @@ import { Box, ButtonBase, Card, CardContent, Chip, Stack, Typography } from '@mu
 import { Link } from '@tanstack/react-router';
 import { ArrowRight, Sparkles } from 'lucide-react';
 
+export type CampaignCoachProfileLinkProps = {
+    campaignId: number;
+    coachName: string;
+};
+
+export function CampaignCoachProfileLink({ campaignId, coachName }: CampaignCoachProfileLinkProps) {
+    return (
+        <Link to="/campaigns/$campaignId/coach" params={{ campaignId: String(campaignId) }}>
+            <ButtonBase
+                focusRipple
+                sx={{
+                    width: { xs: '100%', sm: 340 },
+                    textAlign: 'left',
+                    borderRadius: 4,
+                    border: '1px solid',
+                    borderColor: 'border',
+                    bgcolor: 'background.paper',
+                    transition: 'border-color 0.15s, box-shadow 0.15s',
+                    '&:hover': {
+                        borderColor: 'primary.main',
+                        boxShadow: theme => theme.palette.shadow.brandPaper,
+                    },
+                }}
+            >
+                <Box sx={{ p: 2, width: '100%' }}>
+                    <Stack direction="row" spacing={1.5} alignItems="center">
+                        <Box
+                            sx={{
+                                width: 48,
+                                height: 48,
+                                borderRadius: 4,
+                                bgcolor: 'primary.main',
+                                color: 'primary.contrastText',
+                                display: 'grid',
+                                placeItems: 'center',
+                            }}
+                        >
+                            <Sparkles size={20} />
+                        </Box>
+                        <Box sx={{ minWidth: 0, flex: 1 }}>
+                            <Typography variant="caption" color="text.secondary">
+                                Mon coach
+                            </Typography>
+                            <Typography fontWeight={800} color="text.primary">
+                                {coachName}
+                            </Typography>
+                        </Box>
+                        <ArrowRight size={16} />
+                    </Stack>
+                </Box>
+            </ButtonBase>
+        </Link>
+    );
+}
+
 export type CampaignWorkspaceHeaderProps = {
     campaignId: number;
     campaignName: string;
@@ -45,51 +100,7 @@ export function CampaignWorkspaceHeader({
                         </Typography>
                     </Box>
 
-                    <Link to="/campaigns/$campaignId/coach" params={{ campaignId: String(campaignId) }}>
-                        <ButtonBase
-                            focusRipple
-                            sx={{
-                                width: { xs: '100%', sm: 340 },
-                                textAlign: 'left',
-                                borderRadius: 4,
-                                border: '1px solid',
-                                borderColor: 'border',
-                                bgcolor: '#fff',
-                                transition: 'border-color 0.15s, box-shadow 0.15s',
-                                '&:hover': {
-                                    borderColor: 'primary.main',
-                                    boxShadow: '0 6px 18px -10px rgba(15,23,42,0.18)',
-                                },
-                            }}
-                        >
-                            <Box sx={{ p: 2, width: '100%' }}>
-                                <Stack direction="row" spacing={1.5} alignItems="center">
-                                    <Box
-                                        sx={{
-                                            width: 48,
-                                            height: 48,
-                                            borderRadius: 4,
-                                            bgcolor: 'primary.main',
-                                            color: '#fff',
-                                            display: 'grid',
-                                            placeItems: 'center',
-                                        }}
-                                    >
-                                        <Sparkles size={20} />
-                                    </Box>
-                                    <Box sx={{ minWidth: 0, flex: 1 }}>
-                                        <Typography variant="caption" color="text.secondary">
-                                            Mon coach
-                                        </Typography>
-                                        <Typography fontWeight={800} color="text.primary">
-                                            {coachName}
-                                        </Typography>
-                                    </Box>
-                                    <ArrowRight size={16} />
-                                </Stack>
-                            </Box>
-                        </ButtonBase>
-                    </Link>
+                    <CampaignCoachProfileLink campaignId={campaignId} coachName={coachName} />
                 </Stack>
             </CardContent>
         </Card>
