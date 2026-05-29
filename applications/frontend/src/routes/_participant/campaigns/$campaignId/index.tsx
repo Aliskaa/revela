@@ -5,11 +5,10 @@ import { Link, createFileRoute, useNavigate } from '@tanstack/react-router';
 import { BadgeCheck, CheckCircle2, MessageSquareQuote, Radar, Target, Users } from 'lucide-react';
 import * as React from 'react';
 
+import { LoadingCard } from '@/components/common/LoadingCard';
 import { KpiCard } from '@/components/common/cards';
 import { AdminPageHeader, KpiGrid, ListPanel } from '@/components/common/layout';
-import { LoadingCard } from '@/components/common/LoadingCard';
 import { useBreadcrumbs } from '@/components/layout/AppShellChromeContext';
-import { CampaignCoachProfileLink } from '@/components/participant-dashboard/CampaignWorkspaceHeader';
 import { CampaignResultCard } from '@/components/participant-dashboard/CampaignResultCard';
 import {
     CampaignStepCard,
@@ -17,6 +16,7 @@ import {
     buildCampaignSteps,
 } from '@/components/participant-dashboard/CampaignStepCard';
 import { CampaignTransparencyCard } from '@/components/participant-dashboard/CampaignTransparencyCard';
+import { CampaignCoachProfileLink } from '@/components/participant-dashboard/CampaignWorkspaceHeader';
 import { useConfirmPeerFeedback, useParticipantSession } from '@/hooks/participantSession';
 import { useParticipantOwnTransparency } from '@/hooks/transparency';
 import type { ParticipantSession } from '@aor/types';
@@ -71,10 +71,7 @@ function ParticipantCampaignWorkspaceRoute() {
 
     const campaignName = assignment?.campaign_name ?? 'Campagne';
 
-    useBreadcrumbs([
-        { label: 'Mes campagnes', to: '/campaigns' },
-        { label: campaignName },
-    ]);
+    useBreadcrumbs([{ label: 'Mes campagnes', to: '/campaigns' }, { label: campaignName }]);
 
     const steps = React.useMemo(() => buildCampaignSteps(assignment), [assignment]);
     const peerRatingsCount = assignment?.progression?.peer_ratings_count ?? 0;
@@ -116,17 +113,15 @@ function ParticipantCampaignWorkspaceRoute() {
                 return;
             }
             if (routeKind === 'test') {
-                const qCode = assignment?.questionnaire_id?.toUpperCase();
-                if (!qCode) return;
                 navigate({
-                    to: '/test/$questionnaireCode',
-                    params: { questionnaireCode: qCode },
+                    to: '/campaigns/$campaignId/test',
+                    params: { campaignId: String(campaignId) },
                 });
                 return;
             }
             navigate({ to: `/${routeKind}` });
         },
-        [navigate, campaignId, assignment]
+        [navigate, campaignId]
     );
 
     if (isLoading) {
@@ -184,12 +179,7 @@ function ParticipantCampaignWorkspaceRoute() {
                     helper={campaignStatusHelper(assignment.campaign_status)}
                     icon={BadgeCheck}
                 />
-                <KpiCard
-                    label="Feedbacks pairs"
-                    value={peerRatingsCount}
-                    helper="saisis"
-                    icon={Users}
-                />
+                <KpiCard label="Feedbacks pairs" value={peerRatingsCount} helper="saisis" icon={Users} />
             </KpiGrid>
 
             {campaignNotActive && (
