@@ -30,18 +30,18 @@ const SCOPE_CFG: Record<
     {
         backTo: '/admin/companies' | '/coach/companies';
         notFound: string;
-        participantPathPrefix: string;
+        participantPathForCompany: (companyId: number) => string;
     }
 > = {
     admin: {
         backTo: '/admin/companies',
         notFound: 'Entreprise introuvable.',
-        participantPathPrefix: '/admin/participants',
+        participantPathForCompany: companyId => `/admin/companies/${companyId}/participants`,
     },
     coach: {
         backTo: '/coach/companies',
         notFound: 'Entreprise introuvable ou hors de votre périmètre.',
-        participantPathPrefix: '/coach/participants',
+        participantPathForCompany: companyId => `/coach/companies/${companyId}/participants`,
     },
 };
 
@@ -177,7 +177,7 @@ export function CompanyDetailPage({ scope, companyId }: CompanyDetailPageProps) 
                     rowsPerPage={rowsPerPage}
                     onPageChange={setPage}
                     onRowsPerPageChange={setRowsPerPage}
-                    participantPathPrefix={cfg.participantPathPrefix}
+                    participantPathPrefix={cfg.participantPathForCompany(company.id)}
                     showCsvImport={isAdmin}
                     search={search}
                     onSearchChange={setSearch}

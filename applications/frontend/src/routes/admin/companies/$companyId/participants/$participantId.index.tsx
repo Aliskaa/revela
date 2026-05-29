@@ -3,11 +3,11 @@
 import { ParticipantDetailView } from '@/components/admin/participant-detail/ParticipantDetailView';
 import { createFileRoute } from '@tanstack/react-router';
 
-export const Route = createFileRoute('/admin/participants/$participantId/')({
-    component: AdminParticipantDetailRoute,
+export const Route = createFileRoute('/admin/companies/$companyId/participants/$participantId/')({
+    component: AdminCompanyParticipantDetailRoute,
 });
 
-function AdminParticipantDetailRoute() {
+function AdminCompanyParticipantDetailRoute() {
     const { participantId } = Route.useParams();
     return <ParticipantDetailView participantId={Number(participantId)} scopePrefix="/admin" />;
 }

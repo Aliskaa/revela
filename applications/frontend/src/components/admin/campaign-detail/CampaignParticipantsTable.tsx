@@ -50,8 +50,8 @@ export type CampaignParticipantsTableProps = {
     campaignId: number;
     participants: CampaignParticipantProgress[];
     /**
-     * Préfixe d'URL pour la fiche participant (e.g. `/admin/participants` ou
-     * `/coach/participants`). Si non fourni, les liens vers la fiche et la matrix
+     * Préfixe d'URL pour la fiche participant (e.g. `/admin/companies/1/participants`).
+     * Si non fourni, les liens vers la fiche et la matrix
      * sont masqués.
      */
     participantUrlPrefix?: string;
@@ -183,7 +183,7 @@ export function CampaignParticipantsTable({
                                                     <Box>
                                                         {participantUrlPrefix ? (
                                                             <Link
-                                                                to={`${participantUrlPrefix}/${p.participantId}` as `/admin/participants` | `/coach/participants`}
+                                                                to={`${participantUrlPrefix}/${p.participantId}`}
                                                                 style={{ color: 'inherit', textDecoration: 'none' }}
                                                             >
                                                                 <Typography

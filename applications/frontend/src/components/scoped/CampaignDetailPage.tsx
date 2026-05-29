@@ -34,20 +34,20 @@ const SCOPE_CFG: Record<
     CampaignDetailScope,
     {
         campaignsListTo: '/admin/campaigns' | '/coach/campaigns';
-        participantUrlPrefix: '/admin/participants' | '/coach/participants';
+        participantPathForCompany: (companyId: number) => string;
         campaignUrlPrefix: '/admin/campaigns' | '/coach/campaigns';
         notFound: string;
     }
 > = {
     admin: {
         campaignsListTo: '/admin/campaigns',
-        participantUrlPrefix: '/admin/participants',
+        participantPathForCompany: companyId => `/admin/companies/${companyId}/participants`,
         campaignUrlPrefix: '/admin/campaigns',
         notFound: 'Campagne introuvable.',
     },
     coach: {
         campaignsListTo: '/coach/campaigns',
-        participantUrlPrefix: '/coach/participants',
+        participantPathForCompany: companyId => `/coach/companies/${companyId}/participants`,
         campaignUrlPrefix: '/coach/campaigns',
         notFound: 'Campagne introuvable ou hors de votre périmètre.',
     },
@@ -183,7 +183,7 @@ export function CampaignDetailPage({ scope, campaignId }: CampaignDetailPageProp
                     <CampaignParticipantsTable
                         campaignId={campaign.id}
                         participants={participants}
-                        participantUrlPrefix={cfg.participantUrlPrefix}
+                        participantUrlPrefix={cfg.participantPathForCompany(campaign.companyId)}
                         matrixUrlPrefix={cfg.campaignUrlPrefix}
                         transparencyUrlPrefix={cfg.campaignUrlPrefix}
                     />
