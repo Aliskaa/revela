@@ -2,6 +2,7 @@
 
 import {
     Box,
+    Button,
     Card,
     CardContent,
     Skeleton,
@@ -11,8 +12,8 @@ import {
     TableCell,
     Typography,
 } from '@mui/material';
-import { Link as MuiLink, Link, useNavigate } from '@tanstack/react-router';
-import { ClipboardList, Mail, MessageSquareText } from 'lucide-react';
+import { Link, useNavigate } from '@tanstack/react-router';
+import { ArrowLeft, ClipboardList, Mail, MessageSquareText } from 'lucide-react';
 import * as React from 'react';
 
 import { AddParticipantToCampaignDrawerForm } from '@/components/admin/AddParticipantToCampaignDrawerForm';
@@ -165,9 +166,11 @@ export function ParticipantDetailView({ participantId, scopePrefix }: Participan
                 <Typography variant="h6" color="text.secondary">
                     {cfg.notFound}
                 </Typography>
-                <MuiLink component={Link} to={cfg.companiesListTo} underline="hover" sx={{ fontWeight: 600 }}>
-                    Retour aux entreprises
-                </MuiLink>
+                <Link to={cfg.companiesListTo}>
+                    <Button variant="outlined" startIcon={<ArrowLeft size={16} />}>
+                        Retour aux entreprises
+                    </Button>
+                </Link>
             </Stack>
         );
     }
