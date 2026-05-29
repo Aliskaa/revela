@@ -51,13 +51,18 @@ export function ParticipantInfoCard({ participant, companyDetailTo, onEdit }: Pa
                 <Box
                     sx={{
                         px: { xs: 2.5, md: 3 },
-                        pt: { xs: 2.5, md: 3 },
+                        pt: 3,
                         pb: 2,
                         borderBottom: '1px solid',
-                        borderColor: 'border',
+                        borderColor: 'surface.lavenderGrey',
                     }}
                 >
-                    <Stack direction="row" justifyContent="space-between" alignItems="flex-start" spacing={2}>
+                    <Stack
+                        direction={{ xs: 'column', sm: 'row' }}
+                        justifyContent="space-between"
+                        alignItems={{ sm: 'center' }}
+                        spacing={2}
+                    >
                         <Box sx={{ minWidth: 0 }}>
                             <Typography variant="h6" fontWeight={700} color="primary.main" sx={{ mb: 0.5 }}>
                                 Informations
@@ -71,7 +76,7 @@ export function ParticipantInfoCard({ participant, companyDetailTo, onEdit }: Pa
                             size="small"
                             startIcon={<PencilLine size={14} />}
                             onClick={onEdit}
-                            sx={{ flexShrink: 0 }}
+                            sx={{ flexShrink: 0, width: { xs: '100%', sm: 'auto' } }}
                         >
                             Modifier
                         </Button>

@@ -1,7 +1,8 @@
 // Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
 
-import { ParticipantDetailView } from '@/components/admin/participant-detail/ParticipantDetailView';
 import { createFileRoute } from '@tanstack/react-router';
+
+import { ParticipantDetailPage } from '@/components/scoped/ParticipantDetailPage';
 
 export const Route = createFileRoute('/coach/companies/$companyId/participants/$participantId/')({
     component: CoachCompanyParticipantDetailRoute,
@@ -9,5 +10,5 @@ export const Route = createFileRoute('/coach/companies/$companyId/participants/$
 
 function CoachCompanyParticipantDetailRoute() {
     const { participantId } = Route.useParams();
-    return <ParticipantDetailView participantId={Number(participantId)} scopePrefix="/coach" />;
+    return <ParticipantDetailPage scope="coach" participantId={Number(participantId)} />;
 }
