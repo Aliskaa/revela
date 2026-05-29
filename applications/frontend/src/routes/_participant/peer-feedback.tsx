@@ -1,7 +1,9 @@
 import { LoadingCard } from '@/components/common/LoadingCard';
 import { CampaignNotActiveBlock } from '@/components/participant-dashboard/CampaignNotActiveBlock';
 import { StepCompletedBanner } from '@/components/participant-dashboard/StepCompletedBanner';
-import { RatingDimensionCard } from '@/components/questionnaire/RatingDimensionCard';
+import { QuestionnaireProgress } from '@/components/questionnaire/QuestionnaireProgress';
+import { RatingDimensionAccordion } from '@/components/questionnaire/RatingDimensionAccordion';
+import { LIKERT_SHORT_LABEL } from '@/components/questionnaire/questionnaireScales';
 import {
     useConfirmPeerFeedback,
     useParticipantCampaignPeers,
@@ -13,9 +15,9 @@ import { useBuildDimensions } from '@/hooks/useBuildDimensions';
 import { useSelectedAssignment } from '@/hooks/useSelectedAssignment';
 import { useToast } from '@/lib/toast';
 import type { CampaignPeerChoice } from '@aor/types';
-import { Alert, Box, Button, Card, CardContent, Chip, Divider, Stack, Typography } from '@mui/material';
+import { Alert, Box, Button, Card, CardContent, Chip, Stack, Typography } from '@mui/material';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { BadgeCheck, CheckCircle2, CircleUserRound, Save, Sparkles, Users } from 'lucide-react';
+import { BadgeCheck, CheckCircle2, CircleUserRound, Sparkles, Users } from 'lucide-react';
 import * as React from 'react';
 
 export const Route = createFileRoute('/_participant/peer-feedback')({
@@ -393,41 +395,40 @@ function ParticipantPeerFeedbackRoute() {
                                         {selectedPeer.full_name}
                                     </Typography>
                                     <Typography variant="body2" color="text.secondary">
-                                        {filledCount} / {totalItems} items complétés
+                                        Notez chaque item de {LIKERT_SHORT_LABEL.rangeLabel}.
                                     </Typography>
                                 </Box>
                             </Stack>
 
-                            <Divider sx={{ mb: 2 }} />
+                            <Box sx={{ mb: 2 }}>
+                                <QuestionnaireProgress
+                                    filled={filledCount}
+                                    total={totalItems}
+                                    ariaLabel={`Progression du feedback pour ${selectedPeer.first_name}`}
+                                />
+                            </Box>
 
-                            <Stack spacing={2}>
-                                {dimensions.map(block => (
-                                    <RatingDimensionCard
-                                        key={block.dimension}
-                                        block={block}
-                                        scores={scores}
-                                        onScoreChange={handleScoreChange}
-                                        chipLabel="Pair"
-                                        chipVariant="secondary"
-                                        comments={comments}
-                                        onCommentChange={handleCommentChange}
-                                    />
-                                ))}
-                            </Stack>
+                            <RatingDimensionAccordion
+                                dimensions={dimensions}
+                                scores={scores}
+                                onScoreChange={handleScoreChange}
+                                min={LIKERT_SHORT_LABEL.min}
+                                max={LIKERT_SHORT_LABEL.max}
+                                comments={comments}
+                                onCommentChange={handleCommentChange}
+                            />
 
                             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.2} sx={{ mt: 3 }}>
                                 <Button
                                     variant="contained"
                                     disableElevation
-                                    startIcon={allFilled ? <CheckCircle2 size={16} /> : <Save size={16} />}
+                                    startIcon={<CheckCircle2 size={16} />}
                                     onClick={handleSubmit}
-                                    disabled={!canInteract || filledCount === 0 || submitMutation.isPending}
+                                    disabled={!canInteract || !allFilled || submitMutation.isPending}
                                 >
                                     {submitMutation.isPending
                                         ? 'Enregistrement…'
-                                        : allFilled
-                                          ? `Valider le feedback pour ${selectedPeer.first_name}`
-                                          : `Enregistrer (${filledCount}/${totalItems})`}
+                                        : `Valider le feedback pour ${selectedPeer.first_name}`}
                                 </Button>
                                 <Button
                                     variant="outlined"

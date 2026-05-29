@@ -1,14 +1,14 @@
 // Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
 
 import { Button } from '@/components/common/Button';
-import { KpiCard } from '@/components/common/cards';
 import { EmptyState } from '@/components/common/EmptyState';
-import { AdminPageHeader, KpiGrid, ListPanel } from '@/components/common/layout';
 import { LoadingCard } from '@/components/common/LoadingCard';
+import { AdminPageHeader, ListPanel } from '@/components/common/layout';
 import { useBreadcrumbs } from '@/components/layout/AppShellChromeContext';
 import { CampaignNotActiveBlock } from '@/components/participant-dashboard/CampaignNotActiveBlock';
 import { StepCompletedBanner } from '@/components/participant-dashboard/StepCompletedBanner';
-import { RatingDimensionCard } from '@/components/questionnaire/RatingDimensionCard';
+import { QuestionnaireProgress } from '@/components/questionnaire/QuestionnaireProgress';
+import { RatingDimensionAccordion } from '@/components/questionnaire/RatingDimensionAccordion';
 import { LIKERT_SHORT_LABEL } from '@/components/questionnaire/questionnaireScales';
 import { useParticipantSession, useParticipantSessionMatrix } from '@/hooks/participantSession';
 import { useSubmitParticipantQuestionnaire } from '@/hooks/questionnaires';
@@ -17,7 +17,7 @@ import { useToast } from '@/lib/toast';
 import type { ParticipantQuestionnaireMatrix } from '@aor/types';
 import { Alert, Box, LinearProgress, Link as MuiLink, Stack, Typography } from '@mui/material';
 import { Link, createFileRoute, useNavigate } from '@tanstack/react-router';
-import { BadgeCheck, CheckCircle2, ClipboardList, Hash, Save, Target } from 'lucide-react';
+import { CheckCircle2, ClipboardList } from 'lucide-react';
 import * as React from 'react';
 
 export const Route = createFileRoute('/_participant/campaigns/$campaignId/self-rating')({
@@ -58,6 +58,10 @@ function ParticipantSelfRatingRoute() {
     const [scores, setScores] = React.useState<Record<string, number | null>>({});
     const [initialized, setInitialized] = React.useState(false);
 
+    // Réinitialise la saisie quand on change de campagne (même instance de composant
+    // réutilisée par le routeur). `campaignId` n'est pas lu dans le corps mais sert
+    // volontairement de déclencheur de reset.
+    // biome-ignore lint/correctness/useExhaustiveDependencies: campaignId est le déclencheur de reset.
     React.useEffect(() => {
         setInitialized(false);
         setScores({});
@@ -152,16 +156,12 @@ function ParticipantSelfRatingRoute() {
     const submitButton = (
         <Button
             appearance="primary"
-            startIcon={allFilled ? <CheckCircle2 size={16} /> : <Save size={16} />}
+            startIcon={<CheckCircle2 size={16} />}
             onClick={handleSubmit}
-            disabled={!canSubmit || filledCount === 0 || submitMutation.isPending}
+            disabled={!canSubmit || !allFilled || submitMutation.isPending}
             sx={{ width: { xs: '100%', md: 'auto' } }}
         >
-            {submitMutation.isPending
-                ? 'Enregistrement…'
-                : allFilled
-                  ? 'Valider le Regard sur soi'
-                  : `Enregistrer (${filledCount}/${totalItems})`}
+            {submitMutation.isPending ? 'Enregistrement…' : 'Valider le Regard sur soi'}
         </Button>
     );
 
@@ -215,27 +215,13 @@ function ParticipantSelfRatingRoute() {
                 </Typography>
             </Box>
 
-            <KpiGrid columns={4}>
-                <KpiCard
-                    label="Questionnaire"
-                    value={questionnaireCode || '–'}
-                    helper="référence"
-                    icon={ClipboardList}
+            <Box sx={{ display: { xs: 'none', md: 'block' } }}>
+                <QuestionnaireProgress
+                    filled={filledCount}
+                    total={totalItems}
+                    ariaLabel="Progression du Regard sur soi"
                 />
-                <KpiCard label="Type" value="Regard sur soi" helper="auto-évaluation" icon={BadgeCheck} />
-                <KpiCard
-                    label="Échelle"
-                    value={LIKERT_SHORT_LABEL.rangeLabel}
-                    helper="par item"
-                    icon={Hash}
-                />
-                <KpiCard
-                    label="Progression"
-                    value={`${filledCount}/${totalItems}`}
-                    helper="items complétés"
-                    icon={Target}
-                />
-            </KpiGrid>
+            </Box>
 
             {!canSubmit && (
                 <Alert severity="warning" sx={{ borderRadius: 2 }}>
@@ -262,17 +248,15 @@ function ParticipantSelfRatingRoute() {
                     </Box>
                 ) : (
                     <>
-                        <Stack spacing={2} sx={{ px: { xs: 2.5, md: 4 }, py: 3 }}>
-                            {dimensions.map(block => (
-                                <RatingDimensionCard
-                                    key={block.dimension}
-                                    block={block}
-                                    scores={scores}
-                                    onScoreChange={handleScoreChange}
-                                    chipLabel="Regard sur soi"
-                                />
-                            ))}
-                        </Stack>
+                        <Box sx={{ px: { xs: 2.5, md: 4 }, py: 3 }}>
+                            <RatingDimensionAccordion
+                                dimensions={dimensions}
+                                scores={scores}
+                                onScoreChange={handleScoreChange}
+                                min={LIKERT_SHORT_LABEL.min}
+                                max={LIKERT_SHORT_LABEL.max}
+                            />
+                        </Box>
 
                         <Box
                             sx={{
