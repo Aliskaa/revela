@@ -11,17 +11,30 @@ import {
     type ListTableColumn,
 } from '@/components/common/data-table';
 import { harmonizedTableCellSx, surfaceCardSx } from '@/components/common/styles/listSurfaces';
-import type { CampaignStatus, ParticipantCampaignAssignment } from '@aor/types';
+import type { CampaignStatus } from '@aor/types';
 
 const EDGE_X = 3;
 const TABLE_MIN_WIDTH = 640;
 
-export type ParticipantCampaignsTableProps = {
-    campaigns: ParticipantCampaignAssignment[];
-    scopePrefix: '/admin' | '/coach';
+export type ParticipantCampaignsTableRow = {
+    campaign_id: number;
+    campaign_name: string;
+    company_name?: string | null;
+    status: string;
+    joined_at?: string | null;
 };
 
-export function ParticipantCampaignsTable({ campaigns, scopePrefix }: ParticipantCampaignsTableProps) {
+export type ParticipantCampaignsTableProps = {
+    campaigns: ParticipantCampaignsTableRow[];
+    getDetailTo: (campaignId: number) => string;
+    subtitle?: string;
+};
+
+export function ParticipantCampaignsTable({
+    campaigns,
+    getDetailTo,
+    subtitle = 'Campagnes auxquelles ce collaborateur est rattaché.',
+}: ParticipantCampaignsTableProps) {
     const columns: ListTableColumn[] = [
         { key: 'status', sx: { pl: EDGE_X, width: 48 } },
         { key: 'campaign', label: 'Campagne' },
@@ -47,7 +60,7 @@ export function ParticipantCampaignsTable({ campaigns, scopePrefix }: Participan
                         Campagnes
                     </Typography>
                     <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.7 }}>
-                        Campagnes auxquelles ce collaborateur est rattaché.
+                        {subtitle}
                     </Typography>
                 </Box>
 
@@ -59,7 +72,7 @@ export function ParticipantCampaignsTable({ campaigns, scopePrefix }: Participan
                                 <EmptyTableRow colSpan={colSpan} message="Aucune campagne rattachée." />
                             ) : (
                                 campaigns.map(c => {
-                                    const detailTo = `${scopePrefix}/campaigns/${c.campaign_id}`;
+                                    const detailTo = getDetailTo(c.campaign_id);
                                     return (
                                         <ClickableTableRow
                                             key={c.campaign_id}

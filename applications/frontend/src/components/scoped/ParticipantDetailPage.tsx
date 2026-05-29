@@ -240,7 +240,10 @@ export function ParticipantDetailPage({ scope, participantId }: ParticipantDetai
                     onEdit={() => setEditDrawerOpen(true)}
                 />
 
-                <ParticipantCampaignsTable campaigns={campaigns} scopePrefix={cfg.scopePrefix} />
+                <ParticipantCampaignsTable
+                    campaigns={campaigns}
+                    getDetailTo={campaignId => `${cfg.scopePrefix}/campaigns/${campaignId}`}
+                />
             </Box>
 
             {canDelete ? (
