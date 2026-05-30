@@ -144,7 +144,7 @@ export function CampaignManageParticipants({
                 display: 'flex',
                 flexDirection: 'column',
                 minHeight: 400,
-                maxHeight: 400,
+                maxHeight: 650,
                 minWidth: 0,
                 width: '100%',
             }
