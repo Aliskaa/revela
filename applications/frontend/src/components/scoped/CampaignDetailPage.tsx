@@ -173,7 +173,6 @@ export function CampaignDetailPage({ scope, campaignId }: CampaignDetailPageProp
             >
                 <Stack spacing={3} sx={{ minWidth: 0 }}>
                     <CampaignSummaryCard
-                        harmonized
                         campaign={campaign}
                         companyName={companyName}
                         coachName={coachName}

@@ -18,7 +18,7 @@ import {
     RowNavigateHint,
     type ListTableColumn,
 } from '@/components/common/data-table';
-import { harmonizedTableCellSx, surfaceCardSx } from '@/components/common/styles/listSurfaces';
+import { tableCellSx, surfaceCardSx } from '@/components/common/styles/listSurfaces';
 import type { AdminCoachLinkedCampaign, CampaignStatus } from '@aor/types';
 
 const EDGE_X = 3;
@@ -80,10 +80,10 @@ export function CoachCampaignsTable({
                                             to={detailTo}
                                             ariaLabel={`Ouvrir ${campaign.name}`}
                                         >
-                                            <TableCell sx={{ pl: EDGE_X, ...harmonizedTableCellSx }}>
+                                            <TableCell sx={{ pl: EDGE_X, ...tableCellSx }}>
                                                 <CampaignStatusChip status={campaign.status as CampaignStatus} />
                                             </TableCell>
-                                            <TableCell sx={harmonizedTableCellSx}>
+                                            <TableCell sx={tableCellSx}>
                                                 <Typography
                                                     fontWeight={700}
                                                     color="primary.main"
@@ -93,13 +93,13 @@ export function CoachCampaignsTable({
                                                     {campaign.name}
                                                 </Typography>
                                             </TableCell>
-                                            <TableCell sx={harmonizedTableCellSx}>
+                                            <TableCell sx={tableCellSx}>
                                                 <Typography fontWeight={600} color="text.primary">
                                                     {companyNameById.get(campaign.companyId) ??
                                                         `Entreprise #${campaign.companyId}`}
                                                 </Typography>
                                             </TableCell>
-                                            <TableCell sx={harmonizedTableCellSx}>
+                                            <TableCell sx={tableCellSx}>
                                                 <Typography color="text.secondary" fontWeight={600}>
                                                     {campaign.createdAt
                                                         ? new Date(campaign.createdAt).toLocaleDateString('fr-FR', {
@@ -110,7 +110,7 @@ export function CoachCampaignsTable({
                                                         : '–'}
                                                 </Typography>
                                             </TableCell>
-                                            <TableCell align="right" sx={{ pr: EDGE_X, ...harmonizedTableCellSx }}>
+                                            <TableCell align="right" sx={{ pr: EDGE_X, ...tableCellSx }}>
                                                 <RowNavigateHint />
                                             </TableCell>
                                         </ClickableTableRow>

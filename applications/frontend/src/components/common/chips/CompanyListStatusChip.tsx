@@ -18,7 +18,7 @@ export function resolveCompanyListStatus(companyId: number, campaigns: AdminCamp
 
 export type CompanyListStatusChipProps = {
     status: CompanyListStatus;
-    /** Pill compact sans point — aligné sur le tableau Stitch. */
+    /** Pill compact sans point — aligné sur le tableau. */
     compact?: boolean;
 };
 

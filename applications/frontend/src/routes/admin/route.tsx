@@ -48,8 +48,6 @@ function AdminRoot() {
     return (
         <AppShellChromeProvider>
             <ScopedAppShell
-                variant="harmonized"
-                brandIcon={Shield}
                 brandLabel="Révéla"
                 brandEyebrow="Operational Cockpit"
                 avatarInitial="A"

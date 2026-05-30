@@ -9,7 +9,7 @@ export type StatusChipTone = {
 };
 
 export type BaseStatusChipProps = StatusChipTone & {
-    /** Affiche le point de statut. Désactivé pour les pills compacts type Stitch. */
+    /** Affiche le point de statut. Désactivé pour les pills compacts. */
     showDot?: boolean;
 };
 

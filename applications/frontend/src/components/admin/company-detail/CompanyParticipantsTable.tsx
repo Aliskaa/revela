@@ -17,7 +17,7 @@ import { AddParticipantToCampaignDrawerForm } from '@/components/admin/AddPartic
 import { SearchField } from '@/components/common/forms/SearchField';
 import { SkeletonTableRows } from '@/components/common/SkeletonRows';
 import {
-    harmonizedTableCellSx,
+    tableCellSx,
     surfaceCardSx,
 } from '@/components/common/styles/listSurfaces';
 import { ParticipantStatusChip } from '@/components/common/chips';
@@ -191,10 +191,10 @@ export function CompanyParticipantsTable({
                                             to={detailTo}
                                             ariaLabel={`Ouvrir ${p.full_name}`}
                                         >
-                                            <TableCell sx={{ pl: EDGE_X, ...harmonizedTableCellSx }}>
+                                            <TableCell sx={{ pl: EDGE_X, ...tableCellSx }}>
                                                 <ParticipantStatusChip participant={p} />
                                             </TableCell>
-                                            <TableCell sx={harmonizedTableCellSx}>
+                                            <TableCell sx={tableCellSx}>
                                                 <Typography
                                                     fontWeight={700}
                                                     color="primary.main"
@@ -211,13 +211,13 @@ export function CompanyParticipantsTable({
                                                     {p.email}
                                                 </Typography>
                                             </TableCell>
-                                            <TableCell sx={harmonizedTableCellSx}>
+                                            <TableCell sx={tableCellSx}>
                                                 <Typography fontWeight={700}>{p.organisation ?? '–'}</Typography>
                                                 <Typography variant="caption" color="text.secondary">
                                                     {p.direction}
                                                 </Typography>
                                             </TableCell>
-                                            <TableCell align="right" sx={{ pr: EDGE_X, ...harmonizedTableCellSx }}>
+                                            <TableCell align="right" sx={{ pr: EDGE_X, ...tableCellSx }}>
                                                 <RowNavigateHint />
                                             </TableCell>
                                         </ClickableTableRow>

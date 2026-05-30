@@ -9,7 +9,7 @@ export const BRAND_PRIMARY_RGB = [15, 24, 152] as const;
 declare module '@mui/material/styles' {
     interface Palette {
         border: string;
-        /** Surfaces Stitch (lavande, outline, fonds neutres). */
+        /** Surfaces (lavande, outline, fonds neutres). */
         surface: {
             lavenderGrey: string;
             lavenderGreyHover: string;

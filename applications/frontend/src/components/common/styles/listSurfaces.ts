@@ -46,14 +46,14 @@ export const listTableHeadCellSx: SxProps<Theme> = {
     borderBottom: 'none',
 };
 
-/** Survol et bordures de ligne harmonisés pour les tables de liste admin. */
+/** Survol et bordures de ligne pour les tables de liste admin. */
 export const listRowSx: SxProps<Theme> = {
     '&:hover': { bgcolor: 'surface.lavenderGreyHover' },
     '& td': { borderColor: 'surface.lavenderGreyHover' },
 };
 
-/** Boutons compacts des colonnes d'action dans les tableaux harmonisés. */
-export const harmonizedTableActionButtonSx: SxProps<Theme> = {
+/** Boutons compacts des colonnes d'action dans les tableaux. */
+export const tableActionButtonSx: SxProps<Theme> = {
     borderRadius: 2,
     fontSize: '0.6875rem',
     fontWeight: 700,
@@ -66,13 +66,13 @@ export const harmonizedTableActionButtonSx: SxProps<Theme> = {
     borderColor: 'border',
 };
 
-/** Cellule de données harmonisée (padding + alignement vertical). */
-export const harmonizedTableCellSx: SxProps<Theme> = {
+/** Cellule de données (padding + alignement vertical). */
+export const tableCellSx: SxProps<Theme> = {
     py: 2,
     verticalAlign: 'middle',
 };
 
-/** Libellé de section dans les drawers admin harmonisés (Stitch : IDENTITÉ, ACCÈS…). */
+/** Libellé de section dans les drawers admin. */
 export const drawerSectionTitleSx: SxProps<Theme> = {
     fontSize: '0.875rem',
     fontWeight: 600,
@@ -82,7 +82,7 @@ export const drawerSectionTitleSx: SxProps<Theme> = {
     mb: 2,
 };
 
-/** Champs outlined du drawer Stitch (fond blanc, label uppercase flottant). */
+/** Champs outlined du drawer (fond blanc, label uppercase flottant). */
 export const drawerFormFieldSlotProps = {
     inputLabel: { shrink: true },
 } as const;

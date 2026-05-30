@@ -21,8 +21,8 @@ import { ProgressChip } from '@/components/common/chips';
 import type { ListTableColumn } from '@/components/common/data-table';
 import { EmptyTableRow, ListTableHead, ListTablePagination } from '@/components/common/data-table';
 import {
-    harmonizedTableActionButtonSx,
-    harmonizedTableCellSx,
+    tableActionButtonSx,
+    tableCellSx,
     listRowSx,
     surfaceCardSx,
 } from '@/components/common/styles/listSurfaces';
@@ -140,7 +140,7 @@ export function CampaignParticipantsTable({
                                             sx={{ cursor: 'pointer', ...listRowSx }}
                                             onClick={() => toggleExpanded(p.participantId)}
                                         >
-                                            <TableCell padding="checkbox" sx={{ pl: EDGE_X, ...harmonizedTableCellSx }}>
+                                            <TableCell padding="checkbox" sx={{ pl: EDGE_X, ...tableCellSx }}>
                                                 <IconButton
                                                     size="small"
                                                     aria-label={
@@ -162,7 +162,7 @@ export function CampaignParticipantsTable({
                                                     />
                                                 </IconButton>
                                             </TableCell>
-                                            <TableCell onClick={e => e.stopPropagation()} sx={harmonizedTableCellSx}>
+                                            <TableCell onClick={e => e.stopPropagation()} sx={tableCellSx}>
                                                 <Stack direction="row" spacing={1.5} alignItems="center">
                                                     <Box
                                                         sx={{
@@ -183,7 +183,7 @@ export function CampaignParticipantsTable({
                                                     <Box>
                                                         {participantUrlPrefix ? (
                                                             <Link
-                                                                to={`${participantUrlPrefix}/${p.participantId}`}
+                                                                to={`${participantUrlPrefix}/${p.participantId.toString()}` as any}
                                                                 style={{ color: 'inherit', textDecoration: 'none' }}
                                                             >
                                                                 <Typography
@@ -213,20 +213,20 @@ export function CampaignParticipantsTable({
                                                     </Box>
                                                 </Stack>
                                             </TableCell>
-                                            <TableCell align="center" sx={harmonizedTableCellSx}>
+                                            <TableCell align="center" sx={tableCellSx}>
                                                 <ProgressChip status={p.selfRatingStatus} />
                                             </TableCell>
-                                            <TableCell align="center" sx={harmonizedTableCellSx}>
+                                            <TableCell align="center" sx={tableCellSx}>
                                                 <ProgressChip status={p.peerFeedbackStatus} />
                                             </TableCell>
-                                            <TableCell align="center" sx={harmonizedTableCellSx}>
+                                            <TableCell align="center" sx={tableCellSx}>
                                                 <ProgressChip status={p.elementHumainStatus} />
                                             </TableCell>
                                             {hasActions ? (
                                                 <TableCell
                                                     align="right"
                                                     onClick={e => e.stopPropagation()}
-                                                    sx={{ ...harmonizedTableCellSx, pr: EDGE_X }}
+                                                    sx={{ ...tableCellSx, pr: EDGE_X }}
                                                 >
                                                     <Stack
                                                         direction="row"
@@ -240,7 +240,7 @@ export function CampaignParticipantsTable({
                                                             variant="outlined"
                                                             color="primary"
                                                             href={`${matrixUrlPrefix}/${campaignId}/participants/${p.participantId}/matrix`}
-                                                            sx={harmonizedTableActionButtonSx}
+                                                            sx={tableActionButtonSx}
                                                         >
                                                             Réponses
                                                         </Button>

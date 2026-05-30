@@ -7,7 +7,7 @@ export type SummaryFieldProps = {
     value: string;
 };
 
-/** Champ Entreprise / Coach / Questionnaire — maquette Stitch Résumé opérationnel. */
+/** Champ Entreprise / Coach / Questionnaire — Résumé opérationnel. */
 export function SummaryField({ label, value }: SummaryFieldProps) {
     return (
         <Box

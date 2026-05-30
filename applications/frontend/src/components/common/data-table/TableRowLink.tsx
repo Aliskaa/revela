@@ -7,7 +7,7 @@ export type TableRowLinkProps = {
     label?: string;
 };
 
-/** Lien « Ouvrir » harmonisé pour la dernière cellule d'une ligne de tableau admin. */
+/** Lien « Ouvrir » pour la dernière cellule d'une ligne de tableau admin. */
 export function TableRowLink({ to, label = 'Ouvrir' }: TableRowLinkProps) {
     return (
         <Typography

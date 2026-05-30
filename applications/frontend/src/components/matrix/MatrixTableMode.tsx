@@ -16,7 +16,7 @@ import { Fragment, useMemo } from 'react';
 
 import { ListTableHead, type ListTableColumn } from '@/components/common/data-table';
 import {
-    harmonizedTableCellSx,
+    tableCellSx,
     listRowSx,
     surfaceCardSx,
 } from '@/components/common/styles/listSurfaces';
@@ -55,7 +55,7 @@ export function MatrixTableMode({ matrix, showInterpretations = true }: MatrixTa
 
     const renderRow = (row: ParticipantQuestionnaireMatrixRow) => (
         <TableRow key={`row-${row.score_key}`} hover sx={listRowSx}>
-            <TableCell sx={{ pl: EDGE_X, ...harmonizedTableCellSx }}>
+            <TableCell sx={{ pl: EDGE_X, ...tableCellSx }}>
                 <Typography variant="body2" fontWeight={700} color="text.primary">
                     {row.label}
                 </Typography>
@@ -63,7 +63,7 @@ export function MatrixTableMode({ matrix, showInterpretations = true }: MatrixTa
             <TableCell
                 align="center"
                 sx={{
-                    ...harmonizedTableCellSx,
+                    ...tableCellSx,
                     fontWeight: 700,
                     color: 'primary.main',
                     bgcolor: 'tint.primaryGhost',
@@ -95,7 +95,7 @@ export function MatrixTableMode({ matrix, showInterpretations = true }: MatrixTa
                     <TableCell
                         key={`${row.score_key}-${matrix.peer_columns[i]?.response_id ?? i}`}
                         align="center"
-                        sx={{ ...harmonizedTableCellSx, fontWeight: 500, color: 'text.secondary' }}
+                        sx={{ ...tableCellSx, fontWeight: 500, color: 'text.secondary' }}
                     >
                         {cellContent}
                     </TableCell>
@@ -105,7 +105,7 @@ export function MatrixTableMode({ matrix, showInterpretations = true }: MatrixTa
                 align="center"
                 sx={{
                     pr: EDGE_X,
-                    ...harmonizedTableCellSx,
+                    ...tableCellSx,
                     fontWeight: 700,
                     color: 'tint.scientific',
                     bgcolor: 'tint.scientificBg',
@@ -133,7 +133,7 @@ export function MatrixTableMode({ matrix, showInterpretations = true }: MatrixTa
             sx: Record<string, unknown>,
             key: string
         ) => (
-            <TableCell key={key} align="center" sx={{ verticalAlign: 'top', ...harmonizedTableCellSx, ...sx }}>
+            <TableCell key={key} align="center" sx={{ verticalAlign: 'top', ...tableCellSx, ...sx }}>
                 <Stack spacing={0.5} alignItems="center">
                     <span>{fmt(value)}</span>
                     {showInterpretations && label !== null && (

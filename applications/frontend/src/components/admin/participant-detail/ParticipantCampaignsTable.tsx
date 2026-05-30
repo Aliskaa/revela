@@ -10,7 +10,7 @@ import {
     RowNavigateHint,
     type ListTableColumn,
 } from '@/components/common/data-table';
-import { harmonizedTableCellSx, surfaceCardSx } from '@/components/common/styles/listSurfaces';
+import { tableCellSx, surfaceCardSx } from '@/components/common/styles/listSurfaces';
 import type { CampaignStatus } from '@aor/types';
 
 const EDGE_X = 3;
@@ -79,10 +79,10 @@ export function ParticipantCampaignsTable({
                                             to={detailTo}
                                             ariaLabel={`Ouvrir ${c.campaign_name}`}
                                         >
-                                            <TableCell sx={{ pl: EDGE_X, ...harmonizedTableCellSx }}>
+                                            <TableCell sx={{ pl: EDGE_X, ...tableCellSx }}>
                                                 <CampaignStatusChip status={c.status as CampaignStatus} />
                                             </TableCell>
-                                            <TableCell sx={harmonizedTableCellSx}>
+                                            <TableCell sx={tableCellSx}>
                                                 <Typography
                                                     fontWeight={700}
                                                     color="primary.main"
@@ -92,12 +92,12 @@ export function ParticipantCampaignsTable({
                                                     {c.campaign_name}
                                                 </Typography>
                                             </TableCell>
-                                            <TableCell sx={harmonizedTableCellSx}>
+                                            <TableCell sx={tableCellSx}>
                                                 <Typography fontWeight={600} color="text.primary">
                                                     {c.company_name ?? '–'}
                                                 </Typography>
                                             </TableCell>
-                                            <TableCell sx={harmonizedTableCellSx}>
+                                            <TableCell sx={tableCellSx}>
                                                 <Typography color="text.secondary" fontWeight={600}>
                                                     {c.joined_at
                                                         ? new Date(c.joined_at).toLocaleDateString('fr-FR', {
@@ -108,7 +108,7 @@ export function ParticipantCampaignsTable({
                                                         : '–'}
                                                 </Typography>
                                             </TableCell>
-                                            <TableCell align="right" sx={{ pr: EDGE_X, ...harmonizedTableCellSx }}>
+                                            <TableCell align="right" sx={{ pr: EDGE_X, ...tableCellSx }}>
                                                 <RowNavigateHint />
                                             </TableCell>
                                         </ClickableTableRow>

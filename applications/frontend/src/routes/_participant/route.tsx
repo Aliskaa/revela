@@ -25,8 +25,6 @@ function ParticipantRouteLayout() {
     return (
         <AppShellChromeProvider>
             <ScopedAppShell
-                variant="harmonized"
-                brandIcon={Sparkles}
                 brandLabel="Révéla"
                 brandEyebrow="Espace participant"
                 avatarInitial="P"

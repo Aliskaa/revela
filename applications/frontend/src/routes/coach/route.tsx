@@ -57,8 +57,6 @@ function CoachRouteLayout() {
     return (
         <AppShellChromeProvider>
             <ScopedAppShell
-                variant="harmonized"
-                brandIcon={UserRound}
                 brandLabel="Révéla"
                 brandEyebrow={isSuperAdmin ? 'Vue coach (admin)' : 'Espace coach'}
                 avatarInitial={isSuperAdmin ? 'A' : 'C'}

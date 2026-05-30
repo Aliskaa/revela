@@ -6,7 +6,7 @@ export type ProgressStatus = CampaignParticipantProgress['selfRatingStatus'];
 
 export type ProgressChipProps = {
     status: ProgressStatus;
-    /** Pill compact sans point — aligné sur les tableaux Stitch. */
+    /** Pill compact sans point — aligné sur les tableaux. */
     compact?: boolean;
 };
 

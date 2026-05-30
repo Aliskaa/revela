@@ -13,10 +13,10 @@ export type ListPanelProps = {
     sx?: SxProps<Theme>;
 };
 
-/** Panneau de liste admin harmonisé : carte avec en-tête titre + actions (recherche, pagination). */
+/** Panneau de liste admin : carte avec en-tête titre + actions (recherche, pagination). */
 export function ListPanel({ title, subtitle, headerActions, headerBorder = false, children, sx }: ListPanelProps) {
     return (
-        <Card variant="outlined" sx={{ ...listPanelSurfaceSx, ...sx }}>
+        <Card variant="outlined" sx={{ ...listPanelSurfaceSx, ...sx } as SxProps<Theme>}>
             <Box
                 sx={{
                     px: { xs: 2.5, md: 4 },

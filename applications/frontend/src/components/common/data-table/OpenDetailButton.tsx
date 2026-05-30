@@ -9,7 +9,7 @@ export type OpenDetailButtonProps = {
     to: string;
     /**
      * `table` (défaut) : Button text + ChevronRight, pensé pour la dernière cellule d'une row.
-     * `outlined` : bouton borduré type Stitch pour les listes admin harmonisées.
+     * `outlined` : bouton borduré pour les listes admin.
      * `card` : Button contained primary + ChevronRight, pensé pour l'action principale d'une card mobile.
      */
     variant?: 'table' | 'outlined' | 'card';

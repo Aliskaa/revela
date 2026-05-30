@@ -2,7 +2,7 @@
 
 import { Button as MuiButton, type ButtonProps as MuiButtonProps, type SxProps, type Theme } from '@mui/material';
 
-/** CTA primaire admin — référence « Ajouter une entreprise » (Stitch). */
+/** CTA primaire admin — référence « Ajouter une entreprise ». */
 const primaryButtonSx: SxProps<Theme> = {
     bgcolor: 'primary.main',
     color: 'primary.contrastText',

@@ -4,7 +4,7 @@ import { Button, Tooltip } from '@mui/material';
 import { Link } from '@tanstack/react-router';
 import { ScanEye } from 'lucide-react';
 
-import { harmonizedTableActionButtonSx } from '@/components/common/styles/listSurfaces';
+import { tableActionButtonSx } from '@/components/common/styles/listSurfaces';
 import { useAdminCampaignParticipantTransparency } from '@/hooks/transparency';
 
 export type CampaignParticipantTransparencyButtonProps = {
@@ -52,7 +52,7 @@ export function CampaignParticipantTransparencyButton({
                     color="primary"
                     disabled={isLoading}
                     startIcon={<ScanEye size={14} />}
-                    sx={harmonizedTableActionButtonSx}
+                    sx={tableActionButtonSx}
                 >
                     {label}
                 </Button>

@@ -24,7 +24,7 @@ export type TablePaginationProps = {
 };
 
 /**
- * Pagination numérotée harmonisée (export Stitch) : sélecteur de lignes à gauche,
+ * Pagination numérotée : sélecteur de lignes à gauche,
  * pages cliquables et flèches à droite.
  */
 export function TablePagination({

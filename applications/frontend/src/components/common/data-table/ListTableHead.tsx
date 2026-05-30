@@ -21,7 +21,7 @@ export type ListTableHeadProps = {
 };
 
 /**
- * En-tête harmonisé des tables de liste admin : cellules sur fond lavande, libellés en
+ * En-tête des tables de liste admin. Cellules sur fond lavande, libellés en
  * capitales. Centralise le style auparavant recopié colonne par colonne dans chaque liste.
  */
 export function ListTableHead({ columns }: ListTableHeadProps) {

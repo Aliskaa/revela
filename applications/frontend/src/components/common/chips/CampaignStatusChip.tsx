@@ -4,7 +4,7 @@ import { BaseStatusChip, type StatusChipTone } from './BaseStatusChip';
 
 export type CampaignStatusChipProps = {
     status: CampaignStatus;
-    /** Pill compact sans point — aligné sur le tableau Stitch. */
+    /** Pill compact sans point — aligné sur le tableau. */
     compact?: boolean;
 };
 

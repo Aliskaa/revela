@@ -9,7 +9,7 @@ export type SearchFieldProps = {
     sx?: SxProps<Theme>;
 };
 
-/** Champ de recherche harmonisé (fond lavande, icône loupe, sans bordure au repos). */
+/** Champ de recherche (fond lavande, icône loupe, sans bordure au repos). */
 export function SearchField({ value, onChange, placeholder = 'Rechercher…', sx }: SearchFieldProps) {
     const theme = useTheme();
 

@@ -14,7 +14,7 @@ export type PageHeaderProps = {
     };
 };
 
-/** En-tête de page harmonisé (admin, coach, participant, pages publiques) : titre H3 + sous-titre + CTA primaire optionnel. */
+/** En-tête de page (admin, coach, participant, pages publiques) : titre H3 + sous-titre + CTA primaire optionnel. */
 export function PageHeader({ title, subtitle, action }: PageHeaderProps) {
     const ActionIcon = action?.icon ?? Plus;
 
