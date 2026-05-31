@@ -2,7 +2,9 @@
 
 import type { CampaignPeerChoice } from '@aor/types';
 import { Box, Chip, Stack, Typography } from '@mui/material';
-import { CircleUserRound } from 'lucide-react';
+
+import { AppShellUserAvatar } from '@/components/layout/AppShellChrome';
+import { personInitialsFromNames } from '@/lib/personInitials';
 
 export type PeerSelectCardProps = {
     peer: CampaignPeerChoice;
@@ -12,10 +14,12 @@ export type PeerSelectCardProps = {
 };
 
 /**
- * Carte de sélection d'un pair dans l'étape feedback des pairs : nom + statut
- * (à noter / sélectionné / noté). Désactivée une fois le pair évalué.
+ * Carte de sélection d'un pair dans l'étape feedback des pairs : avatar (ou initiales),
+ * nom + statut (à noter / sélectionné / noté). Désactivée une fois le pair évalué.
  */
 export function PeerSelectCard({ peer, alreadyRated, selected, onClick }: PeerSelectCardProps) {
+    const initials = personInitialsFromNames(peer.first_name, peer.last_name);
+
     return (
         <Stack
             direction="row"
@@ -34,20 +38,18 @@ export function PeerSelectCard({ peer, alreadyRated, selected, onClick }: PeerSe
                 ...(!alreadyRated ? { '&:hover': { borderColor: 'primary.main', bgcolor: 'tint.primaryGhost' } } : {}),
             }}
         >
-            <Box
+            <AppShellUserAvatar
+                src={peer.avatar_url}
+                initials={initials}
+                alt={peer.full_name}
+                size={38}
                 sx={{
-                    width: 38,
-                    height: 38,
                     borderRadius: 3,
                     bgcolor: selected ? 'tint.primaryActive' : 'tint.primaryBg',
                     color: 'primary.main',
-                    display: 'grid',
-                    placeItems: 'center',
-                    flex: 'none',
+                    flexShrink: 0,
                 }}
-            >
-                <CircleUserRound size={16} />
-            </Box>
+            />
             <Box sx={{ minWidth: 0, flex: 1 }}>
                 <Typography variant="body2" fontWeight={700} color="text.primary">
                     {peer.full_name}

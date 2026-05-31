@@ -10,6 +10,7 @@ import {
     companiesTable,
     desc,
     eq,
+    getTableColumns,
     ilike,
     inArray,
     inviteTokensTable,
@@ -25,6 +26,7 @@ import {
 import { Inject, Injectable } from '@nestjs/common';
 
 import { invitationTokenAdminStatus } from '@aor/domain';
+import { participantCampaignPeerAvatarPublicPath } from '@src/application/participant-session/upload-participant-avatar.usecase';
 import { Participant, type ParticipantFunctionLevel } from '@src/domain/participants';
 import type {
     CampaignParticipantInviteState,
@@ -50,10 +52,13 @@ type ParticipantRow = {
     direction: string | null;
     service: string | null;
     functionLevel: ParticipantFunctionLevel | null;
+    avatarMimeType: string | null | undefined;
     passwordHash: string | null;
     createdAt: Date | null;
     createdByCoachId: number | null;
 };
+
+const { avatarData: _avatarDataColumn, ...participantColumnsWithoutAvatarData } = getTableColumns(participantsTable);
 
 const hydrateParticipant = (row: ParticipantRow): Participant =>
     Participant.hydrate({
@@ -66,6 +71,7 @@ const hydrateParticipant = (row: ParticipantRow): Participant =>
         direction: row.direction,
         service: row.service,
         functionLevel: row.functionLevel,
+        avatarMimeType: row.avatarMimeType ?? null,
         passwordHash: row.passwordHash,
         createdAt: row.createdAt,
         createdByCoachId: row.createdByCoachId,
@@ -82,7 +88,7 @@ export class DrizzleParticipantsRepository implements IParticipantsRepositoryPor
 
     public async findByEmail(email: string): Promise<Participant | null> {
         const [row] = await this.db
-            .select()
+            .select(participantColumnsWithoutAvatarData)
             .from(participantsTable)
             .where(eq(participantsTable.email, email.toLowerCase()))
             .limit(1);
@@ -90,8 +96,48 @@ export class DrizzleParticipantsRepository implements IParticipantsRepositoryPor
     }
 
     public async findById(id: number): Promise<Participant | null> {
-        const [row] = await this.db.select().from(participantsTable).where(eq(participantsTable.id, id)).limit(1);
+        const [row] = await this.db
+            .select(participantColumnsWithoutAvatarData)
+            .from(participantsTable)
+            .where(eq(participantsTable.id, id))
+            .limit(1);
         return row ? hydrateParticipant(row) : null;
+    }
+
+    public async findUpdatedAt(id: number): Promise<Date | null> {
+        const [row] = await this.db
+            .select({ updatedAt: participantsTable.updatedAt })
+            .from(participantsTable)
+            .where(eq(participantsTable.id, id))
+            .limit(1);
+        return row?.updatedAt ?? null;
+    }
+
+    public async findAvatar(participantId: number): Promise<{ data: Buffer; mimeType: string } | null> {
+        const [row] = await this.db
+            .select({
+                avatarData: participantsTable.avatarData,
+                avatarMimeType: participantsTable.avatarMimeType,
+            })
+            .from(participantsTable)
+            .where(eq(participantsTable.id, participantId))
+            .limit(1);
+        if (!row?.avatarData || !row.avatarMimeType) {
+            return null;
+        }
+        const data = Buffer.isBuffer(row.avatarData) ? row.avatarData : Buffer.from(row.avatarData);
+        return { data, mimeType: row.avatarMimeType };
+    }
+
+    public async saveAvatar(participantId: number, data: Buffer, mimeType: string): Promise<void> {
+        await this.db
+            .update(participantsTable)
+            .set({
+                avatarData: data,
+                avatarMimeType: mimeType,
+                updatedAt: new Date(),
+            })
+            .where(eq(participantsTable.id, participantId));
     }
 
     public async listQuestionnaireIdsFromInvitesForParticipant(participantId: number): Promise<string[]> {
@@ -356,7 +402,7 @@ export class DrizzleParticipantsRepository implements IParticipantsRepositoryPor
                 passwordHash: snap.passwordHash,
                 createdByCoachId: snap.createdByCoachId,
             })
-            .returning();
+            .returning(participantColumnsWithoutAvatarData);
         return hydrateParticipant(row);
     }
 
@@ -379,7 +425,7 @@ export class DrizzleParticipantsRepository implements IParticipantsRepositoryPor
                 passwordHash: snap.passwordHash,
             })
             .where(eq(participantsTable.id, snap.id))
-            .returning();
+            .returning(participantColumnsWithoutAvatarData);
         return row ? hydrateParticipant(row) : null;
     }
 
@@ -434,7 +480,7 @@ export class DrizzleParticipantsRepository implements IParticipantsRepositoryPor
 
         const joinBase = this.db
             .select({
-                participant: participantsTable,
+                participant: participantColumnsWithoutAvatarData,
                 companyId: companiesTable.id,
                 companyName: companiesTable.name,
             })
@@ -579,7 +625,7 @@ export class DrizzleParticipantsRepository implements IParticipantsRepositoryPor
     public async findByIdEnriched(id: number, params: { coachId?: number }): Promise<ParticipantAdminListItem | null> {
         const [row] = await this.db
             .select({
-                participant: participantsTable,
+                participant: participantColumnsWithoutAvatarData,
                 companyId: companiesTable.id,
                 companyName: companiesTable.name,
             })
@@ -727,7 +773,7 @@ export class DrizzleParticipantsRepository implements IParticipantsRepositoryPor
 
     public async listByCompanyId(companyId: number): Promise<Participant[]> {
         const rows = await this.db
-            .select()
+            .select(participantColumnsWithoutAvatarData)
             .from(participantsTable)
             .where(eq(participantsTable.companyId, companyId))
             .orderBy(asc(participantsTable.lastName), asc(participantsTable.firstName));
@@ -784,6 +830,8 @@ export class DrizzleParticipantsRepository implements IParticipantsRepositoryPor
                 participantId: participantsTable.id,
                 firstName: participantsTable.firstName,
                 lastName: participantsTable.lastName,
+                avatarMimeType: participantsTable.avatarMimeType,
+                updatedAt: participantsTable.updatedAt,
             })
             .from(campaignParticipantsTable)
             .innerJoin(participantsTable, eq(campaignParticipantsTable.participantId, participantsTable.id))
@@ -803,6 +851,13 @@ export class DrizzleParticipantsRepository implements IParticipantsRepositoryPor
                 first_name: r.firstName,
                 last_name: r.lastName,
                 full_name: fullName.length > 0 ? fullName : `Participant #${String(r.participantId)}`,
+                avatar_url: r.avatarMimeType
+                    ? participantCampaignPeerAvatarPublicPath(
+                          campaignId,
+                          r.participantId,
+                          r.updatedAt?.getTime()
+                      )
+                    : null,
             };
         });
     }

@@ -6,6 +6,7 @@ import { ArrowLeft, Building2, ClipboardList, LayoutDashboard, ShieldAlert, User
 
 import { AppShellChromeProvider } from '@/components/layout/AppShellChromeContext';
 import { ScopedAppShell, type ScopedNavItem } from '@/components/layout/ScopedAppShell';
+import { useCoachAppShellUserAvatar } from '@/hooks/useAppShellUserAvatar';
 import { parseAdminJwtClaims, userAdmin } from '@/lib/auth';
 
 const coachNav: ScopedNavItem[] = [
@@ -48,6 +49,7 @@ function CoachRouteLayout() {
     const navigate = useNavigate();
     const claims = parseAdminJwtClaims();
     const isSuperAdmin = claims?.scope === 'super-admin';
+    const userAvatar = useCoachAppShellUserAvatar();
 
     const handleLogout = () => {
         userAdmin.removeToken();
@@ -59,7 +61,7 @@ function CoachRouteLayout() {
             <ScopedAppShell
                 brandLabel="Révéla"
                 brandEyebrow={isSuperAdmin ? 'Vue coach (admin)' : 'Espace coach'}
-                avatarInitial={isSuperAdmin ? 'A' : 'C'}
+                userAvatar={userAvatar}
                 nav={coachNav}
                 footerNav={isSuperAdmin ? coachFooterNavForSuperAdmin : []}
                 onLogout={handleLogout}

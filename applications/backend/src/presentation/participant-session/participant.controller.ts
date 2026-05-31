@@ -15,9 +15,12 @@ import {
     Req,
     Res,
     UnauthorizedException,
+    UploadedFile,
     UseFilters,
     UseGuards,
+    UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import type { Request, Response } from 'express';
@@ -35,6 +38,11 @@ import type { GetParticipantSessionQuestionnaireMatrixUseCase } from '@src/appli
 import type { GetParticipantSessionUseCase } from '@src/application/participant-session/get-participant-session.usecase';
 import type { ListParticipantCampaignPeersUseCase } from '@src/application/participant-session/list-participant-campaign-peers.usecase';
 import type { ParticipantLoginUseCase } from '@src/application/participant-session/participant-login.usecase';
+import type { GetParticipantCampaignPeerAvatarUseCase } from '@src/application/participant-session/get-participant-campaign-peer-avatar.usecase';
+import type {
+    GetParticipantAvatarUseCase,
+    UploadParticipantAvatarUseCase,
+} from '@src/application/participant-session/upload-participant-avatar.usecase';
 import type { GetParticipantElementBDraftUseCase } from '@src/application/responses/get-participant-element-b-draft.usecase';
 import type { GetParticipantOwnedResponseUseCase } from '@src/application/responses/get-participant-owned-response.usecase';
 import type { SubmitParticipantQuestionnaireUseCase } from '@src/application/responses/submit-participant-questionnaire.usecase';
@@ -56,6 +64,7 @@ import { ResponsesExceptionFilter } from '@src/presentation/responses/responses-
 
 import { CurrentParticipantId } from './current-participant-id.decorator';
 import { ParticipantAuthExceptionFilter } from './participant-auth-exception.filter';
+import { ParticipantAvatarExceptionFilter } from './participant-avatar-exception.filter';
 import { ParticipantJwtAuthGuard } from './participant-jwt-auth.guard';
 import { ParticipantSessionExceptionFilter } from './participant-session-exception.filter';
 import {
@@ -67,9 +76,12 @@ import {
     GET_PARTICIPANT_OWNED_RESPONSE_USE_CASE_SYMBOL,
     GET_PARTICIPANT_SESSION_QUESTIONNAIRE_MATRIX_USE_CASE_SYMBOL,
     GET_PARTICIPANT_SESSION_USE_CASE_SYMBOL,
+    GET_PARTICIPANT_AVATAR_USE_CASE_SYMBOL,
+    GET_PARTICIPANT_CAMPAIGN_PEER_AVATAR_USE_CASE_SYMBOL,
     LIST_PARTICIPANT_CAMPAIGN_PEERS_USE_CASE_SYMBOL,
     PARTICIPANT_LOGIN_USE_CASE_SYMBOL,
     SUBMIT_PARTICIPANT_QUESTIONNAIRE_USE_CASE_SYMBOL,
+    UPLOAD_PARTICIPANT_AVATAR_USE_CASE_SYMBOL,
     UPSERT_PARTICIPANT_ELEMENT_B_DRAFT_USE_CASE_SYMBOL,
 } from './participant.tokens';
 
@@ -108,6 +120,12 @@ export class ParticipantController {
         private readonly participantJwtSigner: IParticipantJwtSignerPort,
         @Inject(PARTICIPANTS_REPOSITORY_PORT_SYMBOL)
         private readonly participants: IParticipantsIdentityReaderPort & IParticipantsWriterPort,
+        @Inject(UPLOAD_PARTICIPANT_AVATAR_USE_CASE_SYMBOL)
+        private readonly uploadParticipantAvatar: UploadParticipantAvatarUseCase,
+        @Inject(GET_PARTICIPANT_AVATAR_USE_CASE_SYMBOL)
+        private readonly getParticipantAvatar: GetParticipantAvatarUseCase,
+        @Inject(GET_PARTICIPANT_CAMPAIGN_PEER_AVATAR_USE_CASE_SYMBOL)
+        private readonly getParticipantCampaignPeerAvatar: GetParticipantCampaignPeerAvatarUseCase,
         private readonly audit: AuditLoggerService
     ) {}
 
@@ -284,6 +302,33 @@ export class ParticipantController {
         return { ok: true };
     }
 
+    @Post('profile/avatar')
+    @UseGuards(ParticipantJwtAuthGuard)
+    @UseFilters(ParticipantSessionExceptionFilter, ParticipantAvatarExceptionFilter)
+    @UseInterceptors(
+        FileInterceptor('file', {
+            limits: { fileSize: 2 * 1024 * 1024 },
+        })
+    )
+    public async uploadAvatar(
+        @CurrentParticipantId() participantId: number,
+        @UploadedFile() file: Express.Multer.File | undefined
+    ) {
+        return this.uploadParticipantAvatar.execute(participantId, file);
+    }
+
+    @Get('avatars/me')
+    @UseGuards(ParticipantJwtAuthGuard)
+    @UseFilters(ParticipantSessionExceptionFilter, ParticipantAvatarExceptionFilter)
+    public async getOwnAvatar(@CurrentParticipantId() participantId: number, @Res() res: Response) {
+        const { buffer, mimeType } = await this.getParticipantAvatar.execute(participantId);
+        res.setHeader('Content-Type', mimeType);
+        // L'URL inclut un paramètre `?v=` (timestamp) renvoyé par la session — le navigateur
+        // ne réutilise pas une image obsolète après un nouvel upload.
+        res.setHeader('Cache-Control', 'private, max-age=86400');
+        res.send(buffer);
+    }
+
     @Get('campaigns/:campaignId/matrix')
     @UseGuards(ParticipantJwtAuthGuard)
     @UseFilters(ParticipantSessionExceptionFilter)
@@ -321,6 +366,25 @@ export class ParticipantController {
         @Param('campaignId', ParseIntPipe) campaignId: number
     ) {
         return this.listParticipantCampaignPeers.execute(participantId, campaignId);
+    }
+
+    @Get('campaigns/:campaignId/peers/:peerParticipantId/avatar')
+    @UseGuards(ParticipantJwtAuthGuard)
+    @UseFilters(ParticipantSessionExceptionFilter, ParticipantAvatarExceptionFilter)
+    public async getCampaignPeerAvatar(
+        @CurrentParticipantId() participantId: number,
+        @Param('campaignId', ParseIntPipe) campaignId: number,
+        @Param('peerParticipantId', ParseIntPipe) peerParticipantId: number,
+        @Res() res: Response
+    ) {
+        const { buffer, mimeType } = await this.getParticipantCampaignPeerAvatar.execute(
+            participantId,
+            campaignId,
+            peerParticipantId
+        );
+        res.setHeader('Content-Type', mimeType);
+        res.setHeader('Cache-Control', 'private, max-age=86400');
+        res.send(buffer);
     }
 
     /**

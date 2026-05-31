@@ -6,6 +6,7 @@ import { ClipboardList, LayoutDashboard, UserRound } from 'lucide-react';
 import { AppShellChromeProvider } from '@/components/layout/AppShellChromeContext';
 import { FooterLayout } from '@/components/layout/FooterLayout';
 import { ScopedAppShell, type ScopedNavItem } from '@/components/layout/ScopedAppShell';
+import { useParticipantAppShellUserAvatar } from '@/hooks/useAppShellUserAvatar';
 import { parseAdminJwtClaims, userAdmin, userParticipant } from '@/lib/auth';
 
 const participantNav: ScopedNavItem[] = [
@@ -17,6 +18,7 @@ const participantFooterNav: ScopedNavItem[] = [{ label: 'Mon profil', to: '/prof
 
 function ParticipantRouteLayout() {
     const navigate = useNavigate();
+    const userAvatar = useParticipantAppShellUserAvatar();
 
     const handleLogout = () => {
         userParticipant.removeToken();
@@ -28,7 +30,7 @@ function ParticipantRouteLayout() {
             <ScopedAppShell
                 brandLabel="Révéla"
                 brandEyebrow="Espace participant"
-                avatarInitial="P"
+                userAvatar={userAvatar}
                 nav={participantNav}
                 footerNav={participantFooterNav}
                 onLogout={handleLogout}

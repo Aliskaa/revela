@@ -2,6 +2,7 @@
 
 import { getQuestionnaireEntry } from '@aor/questionnaires';
 import type { ParticipantSession } from '@aor/types';
+import { participantAvatarPublicPath } from '@src/application/participant-session/upload-participant-avatar.usecase';
 import { ParticipantAccountNotFoundError } from '@src/domain/participant-session/participant-session.errors';
 import type { CampaignStatus, ICampaignsReadPort } from '@src/interfaces/campaigns/ICampaignsRepository.port';
 import type { ICoachesReadPort } from '@src/interfaces/coaches/ICoachesRepository.port';
@@ -110,6 +111,12 @@ export class GetParticipantSessionUseCase {
 
         const visibleAssignments = assignmentsWithProgress.filter(row => row.campaign_status !== 'archived');
 
+        let avatarUrl: string | null = null;
+        if (participant.hasAvatar()) {
+            const updatedAt = await this.ports.participants.findUpdatedAt(participantId);
+            avatarUrl = participantAvatarPublicPath(updatedAt?.getTime() ?? Date.now());
+        }
+
         return {
             participant_id: participant.id,
             email: participant.email,
@@ -119,6 +126,7 @@ export class GetParticipantSessionUseCase {
             direction: participant.direction ?? null,
             service: participant.service ?? null,
             function_level: participant.functionLevel ?? null,
+            avatar_url: avatarUrl,
             assignments: visibleAssignments,
         };
     }

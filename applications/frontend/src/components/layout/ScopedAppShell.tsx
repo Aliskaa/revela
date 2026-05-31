@@ -6,6 +6,7 @@ import {
     AppShellMobileChrome,
     AppShellSidebar,
     AppShellTopBar,
+    type AppShellUserAvatarProps,
 } from '@/components/layout/AppShellChrome';
 import {
     Box
@@ -25,8 +26,8 @@ export type ScopedAppShellProps = {
     brandLabel: string;
     /** Sous-titre du logo (ex. "Administration", "Espace coach", "Espace participant"). */
     brandEyebrow: string;
-    /** Initiale affichée dans l'avatar mobile. */
-    avatarInitial: string;
+    /** Avatar utilisateur (photo ou initiales). */
+    userAvatar: AppShellUserAvatarProps;
     nav: ScopedNavItem[];
     /** Liens bas de sidebar. (ex. Vue coach) */
     footerNav?: ScopedNavItem[];
@@ -59,7 +60,7 @@ export type ScopedAppShellProps = {
 export function ScopedAppShell({
     brandLabel,
     brandEyebrow,
-    avatarInitial,
+    userAvatar,
     nav,
     footerNav = [],
     onLogout,
@@ -80,7 +81,7 @@ export function ScopedAppShell({
 
     return (
         <Box sx={{ minHeight: '100vh', bgcolor: 'surface.softWhite' }}>
-            <AppShellMobileChrome {...sidebarProps} avatarInitial={avatarInitial} />
+            <AppShellMobileChrome {...sidebarProps} userAvatar={userAvatar} />
             <AppShellSidebar {...sidebarProps} />
             <Box
                 sx={{
@@ -91,7 +92,7 @@ export function ScopedAppShell({
                     minWidth: 0,
                 }}
             >
-                <AppShellTopBar avatarInitial={avatarInitial} />
+                <AppShellTopBar userAvatar={userAvatar} />
                 {topBanner}
                 <Box
                     component="main"

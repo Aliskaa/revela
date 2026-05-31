@@ -1,8 +1,9 @@
 // Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
 
-import { Avatar, Box, Card, CardContent, Chip, Stack, Typography } from '@mui/material';
+import { Avatar, Box, Card, CardContent, Chip, CircularProgress, Stack, Typography } from '@mui/material';
 import { Link } from '@tanstack/react-router';
-import { Building2, Mail, PencilLine, UserRound } from 'lucide-react';
+import { Building2, Camera, Mail, PencilLine, UserRound } from 'lucide-react';
+import * as React from 'react';
 
 import { Button } from '@/components/common/Button';
 import { drawerSectionTitleSx, surfaceCardSx } from '@/components/common/styles/listSurfaces';
@@ -30,9 +31,22 @@ export type ParticipantInfoCardProps = {
     participant: Participant;
     companyDetailTo?: string;
     onEdit: () => void;
+    avatarUrl?: string | null;
+    allowAvatarEdit?: boolean;
+    onAvatarUpload?: (file: File) => void | Promise<void>;
+    isAvatarUploading?: boolean;
 };
 
-export function ParticipantInfoCard({ participant, companyDetailTo, onEdit }: ParticipantInfoCardProps) {
+export function ParticipantInfoCard({
+    participant,
+    companyDetailTo,
+    onEdit,
+    avatarUrl = null,
+    allowAvatarEdit = false,
+    onAvatarUpload,
+    isAvatarUploading = false,
+}: ParticipantInfoCardProps) {
+    const fileInputRef = React.useRef<HTMLInputElement>(null);
     const initials = participantInitials(participant.first_name, participant.last_name);
     const functionLabel = participant.function_level
         ? FUNCTION_LEVEL_LABELS[participant.function_level]
@@ -93,20 +107,87 @@ export function ParticipantInfoCard({ participant, companyDetailTo, onEdit }: Pa
                     }}
                 >
                     <Stack direction="row" spacing={2} alignItems="center">
-                        <Avatar
+                        <Box
                             sx={{
-                                width: 56,
-                                height: 56,
-                                bgcolor: 'primary.main',
-                                fontWeight: 700,
-                                fontSize: '1.125rem',
-                                letterSpacing: '0.04em',
-                                boxShadow: theme => theme.palette.shadow.brandMd,
+                                position: 'relative',
                                 flexShrink: 0,
+                                ...(allowAvatarEdit
+                                    ? {
+                                          cursor: isAvatarUploading ? 'default' : 'pointer',
+                                          '&:hover .avatar-edit-overlay': { opacity: 1 },
+                                      }
+                                    : {}),
+                            }}
+                            onClick={() => {
+                                if (allowAvatarEdit && !isAvatarUploading) {
+                                    fileInputRef.current?.click();
+                                }
+                            }}
+                            role={allowAvatarEdit ? 'button' : undefined}
+                            tabIndex={allowAvatarEdit ? 0 : undefined}
+                            aria-label={allowAvatarEdit ? 'Changer la photo de profil' : undefined}
+                            onKeyDown={event => {
+                                if (!allowAvatarEdit || isAvatarUploading) return;
+                                if (event.key === 'Enter' || event.key === ' ') {
+                                    event.preventDefault();
+                                    fileInputRef.current?.click();
+                                }
                             }}
                         >
-                            {initials}
-                        </Avatar>
+                            <Avatar
+                                src={avatarUrl ?? undefined}
+                                alt={participant.full_name}
+                                sx={{
+                                    width: 56,
+                                    height: 56,
+                                    bgcolor: 'primary.main',
+                                    fontWeight: 700,
+                                    fontSize: '1.125rem',
+                                    letterSpacing: '0.04em',
+                                    boxShadow: theme => theme.palette.shadow.brandMd,
+                                }}
+                            >
+                                {initials}
+                            </Avatar>
+                            {allowAvatarEdit ? (
+                                <>
+                                    <Box
+                                        className="avatar-edit-overlay"
+                                        sx={{
+                                            position: 'absolute',
+                                            inset: 0,
+                                            borderRadius: '50%',
+                                            bgcolor: 'rgba(15, 23, 42, 0.45)',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            opacity: isAvatarUploading ? 1 : 0,
+                                            transition: 'opacity 0.2s ease',
+                                            color: 'common.white',
+                                        }}
+                                    >
+                                        {isAvatarUploading ? (
+                                            <CircularProgress size={22} sx={{ color: 'common.white' }} />
+                                        ) : (
+                                            <Camera size={20} strokeWidth={1.75} aria-hidden />
+                                        )}
+                                    </Box>
+                                    <input
+                                        ref={fileInputRef}
+                                        type="file"
+                                        accept="image/jpeg,image/png,image/webp"
+                                        hidden
+                                        onChange={event => {
+                                            const file = event.target.files?.[0];
+                                            event.target.value = '';
+                                            if (file && onAvatarUpload) {
+                                                void onAvatarUpload(file);
+                                            }
+                                        }}
+                                    />
+                                </>
+                            ) : null}
+                        </Box>
                         <Box sx={{ minWidth: 0, flex: 1 }}>
                             <Typography
                                 variant="subtitle1"

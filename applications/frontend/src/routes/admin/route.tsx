@@ -12,6 +12,7 @@ import {
 
 import { AppShellChromeProvider } from '@/components/layout/AppShellChromeContext';
 import { ScopedAppShell, type ScopedNavItem } from '@/components/layout/ScopedAppShell';
+import { useAdminAppShellUserAvatar } from '@/hooks/useAppShellUserAvatar';
 import { parseAdminJwtClaims, userAdmin } from '@/lib/auth';
 
 /**
@@ -36,6 +37,7 @@ const adminFooterNav: ScopedNavItem[] = [{ label: 'Vue coach', to: '/coach', ico
 function AdminRoot() {
     const location = useLocation();
     const navigate = useNavigate();
+    const userAvatar = useAdminAppShellUserAvatar();
     const isLogin = location.pathname === '/admin/login';
 
     if (isLogin) return <Outlet />;
@@ -50,7 +52,7 @@ function AdminRoot() {
             <ScopedAppShell
                 brandLabel="Révéla"
                 brandEyebrow="Operational Cockpit"
-                avatarInitial="A"
+                userAvatar={userAvatar}
                 nav={adminNav}
                 footerNav={adminFooterNav}
                 onLogout={handleLogout}

@@ -95,11 +95,14 @@ export type CampaignPeerChoiceItemDto = {
     first_name: string;
     last_name: string;
     full_name: string;
+    avatar_url: string | null;
 };
 
 export interface IParticipantsIdentityReaderPort {
     findByEmail(email: string): Promise<Participant | null>;
     findById(id: number): Promise<Participant | null>;
+    findUpdatedAt(id: number): Promise<Date | null>;
+    findAvatar(participantId: number): Promise<{ data: Buffer; mimeType: string } | null>;
 }
 
 export interface IParticipantsInviteAssignmentsReaderPort {
@@ -151,6 +154,8 @@ export interface IParticipantsWriterPort {
     create(participant: Participant): Promise<Participant>;
     /** Persiste les changements d'une entité existante. Retourne `null` si l'id n'existe pas. */
     save(participant: Participant): Promise<Participant | null>;
+    /** Enregistre l'avatar binaire en base pour le participant donné. */
+    saveAvatar(participantId: number, data: Buffer, mimeType: string): Promise<void>;
     /**
      * Effacement RGPD : supprime réponses (+ scores), jetons, puis participant.
      * Retourne les compteurs ou `null` si le participant n'existait pas.

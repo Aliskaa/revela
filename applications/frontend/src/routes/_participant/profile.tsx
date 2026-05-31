@@ -10,6 +10,7 @@ import {
     useFetchParticipantSelfDataExport,
     useParticipantSession,
     useUpdateParticipantProfile,
+    useUploadParticipantAvatar,
 } from '@/hooks/participantSession';
 import { downloadParticipantExportJson, downloadParticipantExportPdf } from '@/lib/exportParticipantData';
 import { useToast } from '@/lib/toast';
@@ -60,6 +61,7 @@ function participantFromSession(session: ParticipantSession): Participant {
         created_by_coach_id: null,
         invite_status: {},
         response_count: 0,
+        avatar_url: session.avatar_url,
     };
 }
 
@@ -68,6 +70,7 @@ function ParticipantProfileRoute() {
 
     const { data: session, isLoading, isError } = useParticipantSession();
     const updateProfile = useUpdateParticipantProfile();
+    const uploadAvatar = useUploadParticipantAvatar();
     const fetchExport = useFetchParticipantSelfDataExport();
     const toast = useToast();
 
@@ -217,7 +220,20 @@ function ParticipantProfileRoute() {
                     alignItems: 'start',
                 }}
             >
-                <ParticipantInfoCard participant={participant} onEdit={() => setEditDrawerOpen(true)} />
+                <ParticipantInfoCard
+                    participant={participant}
+                    avatarUrl={session.avatar_url}
+                    allowAvatarEdit
+                    isAvatarUploading={uploadAvatar.isPending}
+                    onAvatarUpload={async file => {
+                        try {
+                            await uploadAvatar.mutateAsync(file);
+                        } catch {
+                            // Toast émis par le hook.
+                        }
+                    }}
+                    onEdit={() => setEditDrawerOpen(true)}
+                />
 
                 <ParticipantCampaignsTable
                     campaigns={campaigns}

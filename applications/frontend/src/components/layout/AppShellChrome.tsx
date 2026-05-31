@@ -1,6 +1,6 @@
 // Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
 
-import { AppBar, Avatar, Box, Drawer, IconButton, Stack, type Theme, Toolbar, Typography, useTheme } from '@mui/material';
+import { AppBar, Avatar, Box, Drawer, IconButton, Stack, type SxProps, type Theme, Toolbar, Typography, useTheme } from '@mui/material';
 import { Link } from '@tanstack/react-router';
 import { Bell, ChevronRight, LineChart, LogOut, Menu, Settings, X } from 'lucide-react';
 import * as React from 'react';
@@ -198,11 +198,39 @@ export function AppShellSidebar({
     );
 }
 
-type AppShellTopBarProps = {
-    avatarInitial: string;
+export type AppShellUserAvatarProps = {
+    src?: string | null;
+    initials: string;
+    alt?: string;
+    size?: number;
+    sx?: SxProps<Theme>;
 };
 
-export function AppShellTopBar({ avatarInitial }: AppShellTopBarProps) {
+export function AppShellUserAvatar({ src, initials, alt, size = 40, sx }: AppShellUserAvatarProps) {
+    return (
+        <Avatar
+            src={src ?? undefined}
+            alt={alt ?? initials}
+            sx={{
+                width: size,
+                height: size,
+                bgcolor: 'primary.main',
+                fontWeight: 700,
+                fontSize: size <= 36 ? '0.875rem' : '1rem',
+                letterSpacing: '0.04em',
+                ...sx,
+            }}
+        >
+            {initials}
+        </Avatar>
+    );
+}
+
+type AppShellTopBarProps = {
+    userAvatar: AppShellUserAvatarProps;
+};
+
+export function AppShellTopBar({ userAvatar }: AppShellTopBarProps) {
     const { breadcrumbs } = useAppShellChrome();
     const theme = useTheme();
 
@@ -284,25 +312,22 @@ export function AppShellTopBar({ avatarInitial }: AppShellTopBarProps) {
                         <Settings size={22} />
                     </IconButton> */}
                 </Stack>
-                <Avatar
+                <AppShellUserAvatar
+                    {...userAvatar}
                     sx={{
-                        width: 40,
-                        height: 40,
-                        bgcolor: 'primary.main',
                         border: '2px solid',
                         borderColor: 'surface.softWhite',
                         boxShadow: theme => theme.palette.shadow.cardSoft,
+                        ...userAvatar.sx,
                     }}
-                >
-                    {avatarInitial}
-                </Avatar>
+                />
             </Stack>
         </Box>
     );
 }
 
 type AppShellMobileChromeProps = AppShellSidebarProps & {
-    avatarInitial: string;
+    userAvatar: AppShellUserAvatarProps;
 };
 
 export function AppShellMobileChrome({
@@ -312,7 +337,7 @@ export function AppShellMobileChrome({
     footerNav,
     pathname,
     onLogout,
-    avatarInitial,
+    userAvatar,
 }: AppShellMobileChromeProps) {
     const [open, setOpen] = React.useState(false);
     const close = () => setOpen(false);
@@ -337,7 +362,7 @@ export function AppShellMobileChrome({
                     <Box sx={{ flex: 1 }}>
                         <AppShellBrandMark brandLabel={brandLabel} brandEyebrow={brandEyebrow} onDark={false} />
                     </Box>
-                    <Avatar sx={{ width: 36, height: 36, bgcolor: 'primary.main' }}>{avatarInitial}</Avatar>
+                    <AppShellUserAvatar {...userAvatar} size={36} />
                 </Toolbar>
             </AppBar>
 
