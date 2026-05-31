@@ -1,7 +1,7 @@
 // Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
 
 import { Outlet, createFileRoute, redirect, useNavigate } from '@tanstack/react-router';
-import { ClipboardList, LayoutDashboard, Sparkles, UserRound } from 'lucide-react';
+import { ClipboardList, LayoutDashboard, UserRound } from 'lucide-react';
 
 import { AppShellChromeProvider } from '@/components/layout/AppShellChromeContext';
 import { FooterLayout } from '@/components/layout/FooterLayout';
@@ -11,8 +11,9 @@ import { parseAdminJwtClaims, userAdmin, userParticipant } from '@/lib/auth';
 const participantNav: ScopedNavItem[] = [
     { label: 'Tableau de bord', to: '/', icon: LayoutDashboard, exact: true },
     { label: 'Mes campagnes', to: '/campaigns', icon: ClipboardList },
-    { label: 'Mon profil', to: '/profile', icon: UserRound },
 ];
+
+const participantFooterNav: ScopedNavItem[] = [{ label: 'Mon profil', to: '/profile', icon: UserRound }];
 
 function ParticipantRouteLayout() {
     const navigate = useNavigate();
@@ -29,6 +30,7 @@ function ParticipantRouteLayout() {
                 brandEyebrow="Espace participant"
                 avatarInitial="P"
                 nav={participantNav}
+                footerNav={participantFooterNav}
                 onLogout={handleLogout}
                 footer={<FooterLayout />}
             >
