@@ -82,10 +82,10 @@ export function useGenerateAiRestitution() {
             qc.invalidateQueries({ queryKey: aiRestitutionKeys.participantOwn(vars.campaignId) });
             const status = data.restitution?.status;
             if (status === 'generated') {
-                toast.success('Restitution générée et conforme au validateur §9.');
+                toast.success('Restitution générée et conforme au validateur.');
             } else if (status === 'rejected') {
                 toast.warning(
-                    'La restitution a été générée mais rejetée par le validateur §9 après 3 tentatives. Régénère ou édite manuellement.'
+                    'La restitution a été générée mais rejetée par le validateur après 3 tentatives. Régénère ou édite manuellement.'
                 );
             } else {
                 toast.info('Restitution traitée.');
@@ -113,10 +113,10 @@ export function useEditAiRestitution() {
             });
             const ok = data.restitution?.validation_report?.ok ?? false;
             if (ok) {
-                toast.success('Édition enregistrée — la restitution passe le validateur §9.');
+                toast.success('Édition enregistrée — la restitution passe le validateur.');
             } else {
                 toast.warning(
-                    "Édition enregistrée — le validateur §9 signale encore des écarts. Approve sera bloqué tant que ce n'est pas conforme."
+                    "Édition enregistrée — le validateur signale encore des écarts. Approve sera bloqué tant que ce n'est pas conforme."
                 );
             }
         },

@@ -266,14 +266,14 @@ const ValidationFailures = ({
     if (failures.length === 0) {
         return (
             <Alert severity="success" icon={<CheckCircle size={16} />}>
-                Validateur §9 OK — la restitution est diffusable.
+                Validateur : OK — la restitution est diffusable.
             </Alert>
         );
     }
     return (
         <Alert severity="warning" icon={<XCircle size={16} />}>
             <Typography variant="body2" sx={{ fontWeight: 600, mb: 1 }}>
-                {failures.length} contrôle(s) en échec — édite ou régénère avant approbation.
+                {failures.length} contrôle(s) en échec : édite ou régénère avant approbation.
             </Typography>
             <Stack spacing={0.5}>
                 {failures.map((f, i) => (
@@ -628,7 +628,7 @@ export function CampaignParticipantAiRestitutionPage({
                                     value={editedDraft}
                                     onChange={e => setEditedDraft(e.target.value)}
                                     sx={{ fontFamily: 'monospace' }}
-                                    helperText={`${editedDraft.length} caractères. Markdown libre. Le validateur §9 sera rejoué à l'enregistrement.`}
+                                    helperText={`${editedDraft.length} caractères. Markdown libre. Le validateur sera rejoué à l'enregistrement.`}
                                 />
                             ) : (
                                 <RestitutionPreview markdown={currentText} />
@@ -638,34 +638,38 @@ export function CampaignParticipantAiRestitutionPage({
 
                     {!isApproved && !editing && (
                         <Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap>
-                            <Tooltip
-                                title={
-                                    validationOk
-                                        ? 'Approuver et diffuser au participant.'
-                                        : 'Bloqué tant que le validateur §9 ne passe pas — édite ou régénère.'
-                                }
-                            >
-                                <span>
-                                    <Button
-                                        variant="contained"
-                                        color="success"
-                                        startIcon={<BadgeCheck size={16} />}
-                                        onClick={handleApprove}
-                                        disabled={!validationOk || approve.isPending}
+                            {!isRejected && (
+                                <>
+                                    <Tooltip
+                                        title={
+                                            validationOk
+                                                ? 'Approuver et diffuser au participant.'
+                                                : 'Bloqué tant que le validateur ne passe pas : édite ou régénère.'
+                                        }
                                     >
-                                        {approve.isPending ? 'Approbation…' : 'Approuver et diffuser'}
+                                        <span>
+                                            <Button
+                                                variant="contained"
+                                                color="success"
+                                                startIcon={<BadgeCheck size={16} />}
+                                                onClick={handleApprove}
+                                                disabled={!validationOk || approve.isPending}
+                                            >
+                                                {approve.isPending ? 'Approbation…' : 'Approuver et diffuser'}
+                                            </Button>
+                                        </span>
+                                    </Tooltip>
+                                    <Button
+                                        variant="outlined"
+                                        color="warning"
+                                        startIcon={<XCircle size={16} />}
+                                        onClick={handleReject}
+                                        disabled={reject.isPending}
+                                    >
+                                        {reject.isPending ? 'Rejet…' : 'Rejeter'}
                                     </Button>
-                                </span>
-                            </Tooltip>
-                            <Button
-                                variant="outlined"
-                                color="warning"
-                                startIcon={<XCircle size={16} />}
-                                onClick={handleReject}
-                                disabled={reject.isPending}
-                            >
-                                {reject.isPending ? 'Rejet…' : 'Rejeter'}
-                            </Button>
+                                </>
+                            )}
                             <Button
                                 variant="outlined"
                                 startIcon={<RotateCw size={16} />}
