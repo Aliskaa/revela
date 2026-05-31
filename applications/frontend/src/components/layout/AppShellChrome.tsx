@@ -265,7 +265,7 @@ export function AppShellTopBar({ avatarInitial }: AppShellTopBarProps) {
 
             <Stack direction="row" alignItems="center" spacing={3}>
                 <Stack direction="row" spacing={0.5}>
-                    <IconButton
+                    {/* <IconButton
                         aria-label="Notifications"
                         sx={{
                             color: 'primary.main',
@@ -282,7 +282,7 @@ export function AppShellTopBar({ avatarInitial }: AppShellTopBarProps) {
                         }}
                     >
                         <Settings size={22} />
-                    </IconButton>
+                    </IconButton> */}
                 </Stack>
                 <Avatar
                     sx={{
