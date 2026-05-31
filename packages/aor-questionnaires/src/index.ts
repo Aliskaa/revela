@@ -59,3 +59,5 @@ export function listQuestionnairesSummaryForUserApp(): Array<{
 }> {
     return listQuestionnairesSummary().filter(q => isQuestionnaireUserFacing(q.id));
 }
+
+export { resolveResultDimDiffPairs, type ResultDimScorePairsInput } from './resolve-diff-pairs.js';

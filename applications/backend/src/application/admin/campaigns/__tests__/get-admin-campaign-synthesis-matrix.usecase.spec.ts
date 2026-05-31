@@ -17,7 +17,7 @@ import { GetAdminCampaignSynthesisMatrixUseCase } from '../get-admin-campaign-sy
 
 const buildCampaign = (overrides: Partial<Parameters<typeof Campaign.create>[0]> = {}): Campaign => {
     return Campaign.hydrate({
-        id: overrides.coachId ?? 7,
+        id: 7,
         coachId: 1,
         companyId: 1,
         name: 'Test',
@@ -27,6 +27,7 @@ const buildCampaign = (overrides: Partial<Parameters<typeof Campaign.create>[0]>
         startsAt: null,
         endsAt: null,
         createdAt: null,
+        ...overrides,
     });
 };
 
@@ -154,6 +155,86 @@ describe('GetAdminCampaignSynthesisMatrixUseCase', () => {
         const controle = matrix?.dimensions[1];
         // Paire (23, 24) : |5−9| = 4 → exactement seuil → warning=false (strict >)
         expect(controle?.gaps[1].cells[0]).toEqual({ value: 4, warning: false });
+    });
+
+    test('uses the campaign questionnaire when qid is not provided', async () => {
+        const ports = buildMocks({
+            campaign: buildCampaign({ questionnaireId: 'S', name: 'Test 2' }),
+            progress: [buildProgress(1, 'Alice')],
+            responsesByParticipant: {
+                1: [
+                    Response.hydrate({
+                        id: 100,
+                        participantId: 1,
+                        inviteTokenId: null,
+                        questionnaireId: 'S',
+                        campaignId: 7,
+                        submissionKind: 'element_humain',
+                        subjectParticipantId: 1,
+                        raterParticipantId: null,
+                        ratedParticipantId: null,
+                        name: '',
+                        email: '',
+                        organisation: null,
+                        submittedAt: new Date('2026-05-01T12:00:00Z'),
+                        scores: [
+                            { scoreKey: 65, value: 4 },
+                            { scoreKey: 66, value: 0 },
+                        ],
+                    }),
+                ],
+            },
+        });
+        const useCase = new GetAdminCampaignSynthesisMatrixUseCase(ports);
+
+        const matrix = await useCase.execute({ campaignId: 7 });
+
+        expect(matrix?.questionnaireId).toBe('S');
+        expect(matrix?.questionnaireTitle).toBe('Questionnaire S — Soi');
+        expect(matrix?.dimensions).toHaveLength(6);
+        expect(matrix?.dimensions[0]?.name).toBe('Présence / Vitalité');
+        expect(matrix?.dimensions[0]?.gaps).toHaveLength(1);
+
+        const amour = matrix?.dimensions.find(d => d.name === 'Amour de soi');
+        expect(amour?.gaps[0]?.cells[0]).toEqual({ value: 4, warning: false });
+    });
+
+    test('computes gap rows for questionnaire F via consecutive score pairs', async () => {
+        const ports = buildMocks({
+            campaign: buildCampaign({ questionnaireId: 'F' }),
+            progress: [buildProgress(1, 'Alice')],
+            responsesByParticipant: {
+                1: [
+                    Response.hydrate({
+                        id: 100,
+                        participantId: 1,
+                        inviteTokenId: null,
+                        questionnaireId: 'F',
+                        campaignId: 7,
+                        submissionKind: 'element_humain',
+                        subjectParticipantId: 1,
+                        raterParticipantId: null,
+                        ratedParticipantId: null,
+                        name: '',
+                        email: '',
+                        organisation: null,
+                        submittedAt: new Date('2026-05-01T12:00:00Z'),
+                        scores: [
+                            { scoreKey: 41, value: 2 },
+                            { scoreKey: 42, value: 5 },
+                        ],
+                    }),
+                ],
+            },
+        });
+        const useCase = new GetAdminCampaignSynthesisMatrixUseCase(ports);
+
+        const matrix = await useCase.execute({ campaignId: 7 });
+
+        expect(matrix?.questionnaireId).toBe('F');
+        const importance = matrix?.dimensions[0];
+        expect(importance?.gaps).toHaveLength(2);
+        expect(importance?.gaps[0]?.cells[0]).toEqual({ value: 3, warning: false });
     });
 
     test('forwards coachId to campaigns.findById for scope filtering', async () => {

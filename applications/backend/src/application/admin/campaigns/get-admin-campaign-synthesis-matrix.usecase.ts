@@ -1,6 +1,6 @@
 // Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
 
-import { getQuestionnaireEntry } from '@aor/questionnaires';
+import { getQuestionnaireEntry, resolveResultDimDiffPairs } from '@aor/questionnaires';
 import type {
     CampaignSynthesisDimension,
     CampaignSynthesisGapCell,
@@ -22,9 +22,6 @@ import type { IResponsesSubmissionReaderPort } from '@src/interfaces/responses/I
  */
 const GAP_WARNING_THRESHOLD = 4;
 
-/** Questionnaire ciblé par défaut pour la synthèse de campagne (« test scientifique »). */
-const DEFAULT_QID = 'B';
-
 export class GetAdminCampaignSynthesisMatrixUseCase {
     public constructor(
         private readonly ports: {
@@ -35,7 +32,8 @@ export class GetAdminCampaignSynthesisMatrixUseCase {
     ) {}
 
     /**
-     * Vue matrice agrégée des réponses Élément B pour tous les participants d'une campagne.
+     * Vue matrice agrégée des réponses `element_humain` pour tous les participants d'une campagne,
+     * selon le questionnaire associé à la campagne (ou `params.qid` en surcharge explicite).
      * Filtrage scope=coach : si `params.coachId` est fourni, on appelle `campaigns.findById`
      * avec le coachId et on retourne `null` si la campagne n'est pas dans son périmètre
      * (pas d'erreur — la résolution `null` est traitée comme « hors périmètre » côté contrôleur).
@@ -45,15 +43,19 @@ export class GetAdminCampaignSynthesisMatrixUseCase {
         coachId?: number;
         qid?: string;
     }): Promise<CampaignSynthesisMatrix | null> {
-        const qid = (params.qid ?? DEFAULT_QID).toUpperCase();
-        const catalog = getQuestionnaireEntry(qid);
-        if (!catalog) {
-            throw new AdminInvalidQuestionnaireError('Questionnaire invalide.');
-        }
-
         const campaign = await this.ports.campaigns.findById(params.campaignId, { coachId: params.coachId });
         if (!campaign) {
             return null;
+        }
+
+        const rawQid = (params.qid ?? campaign.questionnaireId ?? '').trim();
+        if (rawQid.length === 0) {
+            throw new AdminInvalidQuestionnaireError('Cette campagne n’a pas de questionnaire défini.');
+        }
+        const qid = rawQid.toUpperCase();
+        const catalog = getQuestionnaireEntry(qid);
+        if (!catalog) {
+            throw new AdminInvalidQuestionnaireError('Questionnaire invalide.');
         }
 
         const progress = await this.ports.participants.listCampaignParticipantProgress(params.campaignId);
@@ -103,7 +105,7 @@ export class GetAdminCampaignSynthesisMatrixUseCase {
                 values: scoreMaps.map(m => m.get(scoreKey) ?? null),
             }));
 
-            const gaps: CampaignSynthesisGapRow[] = (dim.diff_pairs ?? []).map(pair => {
+            const gaps: CampaignSynthesisGapRow[] = resolveResultDimDiffPairs(dim).map(pair => {
                 const cells: CampaignSynthesisGapCell[] = scoreMaps.map(m => {
                     const e = m.get(pair.e);
                     const w = m.get(pair.w);

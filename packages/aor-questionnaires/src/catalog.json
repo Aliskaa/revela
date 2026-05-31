@@ -2301,6 +2301,14 @@
                 "scores": [
                     15,
                     16
+                ],
+                "diff_pairs": [
+                    {
+                        "e": 15,
+                        "w": 16,
+                        "if_e_gt": "Je me sens plein(e) d'énergie et de vie plus que je ne le veux.",
+                        "if_w_gt": "Je veux me sentir plein(e) d'énergie et de vie plus que je ne le ressens."
+                    }
                 ]
             },
             {
@@ -2308,6 +2316,14 @@
                 "scores": [
                     25,
                     26
+                ],
+                "diff_pairs": [
+                    {
+                        "e": 25,
+                        "w": 26,
+                        "if_e_gt": "Je détermine ma propre vie plus que je ne le veux.",
+                        "if_w_gt": "Je veux déterminer ma propre vie plus que je ne le fais."
+                    }
                 ]
             },
             {
@@ -2315,6 +2331,14 @@
                 "scores": [
                     35,
                     36
+                ],
+                "diff_pairs": [
+                    {
+                        "e": 35,
+                        "w": 36,
+                        "if_e_gt": "Je me connais vraiment plus que je ne le veux.",
+                        "if_w_gt": "Je veux me connaître vraiment plus que je ne le fais."
+                    }
                 ]
             },
             {
@@ -2322,6 +2346,14 @@
                 "scores": [
                     45,
                     46
+                ],
+                "diff_pairs": [
+                    {
+                        "e": 45,
+                        "w": 46,
+                        "if_e_gt": "Je me sens important(e) plus que je ne le veux.",
+                        "if_w_gt": "Je veux me sentir important(e) plus que je ne le ressens."
+                    }
                 ]
             },
             {
@@ -2329,6 +2361,14 @@
                 "scores": [
                     55,
                     56
+                ],
+                "diff_pairs": [
+                    {
+                        "e": 55,
+                        "w": 56,
+                        "if_e_gt": "J'ai confiance en mes capacités plus que je ne le veux.",
+                        "if_w_gt": "Je veux avoir confiance en mes capacités plus que je n'en ai."
+                    }
                 ]
             },
             {
@@ -2336,6 +2376,14 @@
                 "scores": [
                     65,
                     66
+                ],
+                "diff_pairs": [
+                    {
+                        "e": 65,
+                        "w": 66,
+                        "if_e_gt": "Je m'aime bien plus que je ne le veux.",
+                        "if_w_gt": "Je veux m'aimer bien plus que je ne le fais."
+                    }
                 ]
             }
         ],

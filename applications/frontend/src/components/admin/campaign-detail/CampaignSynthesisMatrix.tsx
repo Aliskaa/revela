@@ -53,6 +53,20 @@ const labelCellSx: SxProps<Theme> = {
     },
 };
 
+function countCriticalGapWarnings(dimensions: readonly CampaignSynthesisDimension[]): number {
+    let count = 0;
+    for (const dim of dimensions) {
+        for (const gap of dim.gaps) {
+            for (const cell of gap.cells) {
+                if (cell.warning) {
+                    count += 1;
+                }
+            }
+        }
+    }
+    return count;
+}
+
 function participantInitials(fullName: string): string {
     const parts = fullName.trim().split(/\s+/).filter(Boolean);
     if (parts.length === 0) {
@@ -107,6 +121,7 @@ export function CampaignSynthesisMatrix({ matrix }: CampaignSynthesisMatrixProps
 
     const respondersCount = participants.filter(p => p.hasResponse).length;
     const responseRate = Math.round((respondersCount / participants.length) * 100);
+    const criticalGapCount = countCriticalGapWarnings(dimensions);
 
     return (
         <Card variant="outlined" sx={surfaceCardSx}>
@@ -231,7 +246,7 @@ export function CampaignSynthesisMatrix({ matrix }: CampaignSynthesisMatrixProps
                             gap: 1,
                         }}
                     >
-                        <LegendSwatch label="Écart critique" tone="danger" />
+                        <LegendSwatch label="Écart critique" tone="danger" count={criticalGapCount} />
                         <LegendSwatch label="Donnée manquante" tone="muted" />
                     </Stack>
                 </Box>
@@ -240,7 +255,7 @@ export function CampaignSynthesisMatrix({ matrix }: CampaignSynthesisMatrixProps
     );
 }
 
-function LegendSwatch({ label, tone }: { label: string; tone: 'danger' | 'muted' }) {
+function LegendSwatch({ label, tone, count }: { label: string; tone: 'danger' | 'muted'; count?: number }) {
     const swatchSx =
         tone === 'danger'
             ? { bgcolor: 'tint.dangerHover', color: 'tint.dangerText', borderColor: 'error.main' }
@@ -261,7 +276,7 @@ function LegendSwatch({ label, tone }: { label: string; tone: 'danger' | 'muted'
                     ...swatchSx,
                 }}
             >
-                {tone === 'muted' ? '–' : '3'}
+                {tone === 'muted' ? '–' : String(count ?? 0)}
             </Box>
             <Typography variant="caption" color="text.secondary">
                 {label}
