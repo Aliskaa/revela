@@ -13,9 +13,15 @@ import { stickyActionCellSx } from '@/components/common/data-table/stickyActionC
  * statiques, le risque est nul, mais centraliser ici évite de désactiver la règle dans 6 fichiers
  * et fournit un point unique pour toutes les variantes de placeholders. Les ids sont mémoïsés
  * sur `count` : tant que la longueur ne change pas, les clés restent stables au render.
+ *
+ * Pas de `crypto.randomUUID()` : indisponible hors contexte sécurisé (HTTP sur IP LAN, etc.).
  */
 function useStableIds(count: number): string[] {
-    return React.useMemo(() => Array.from({ length: count }, () => crypto.randomUUID()), [count]);
+    const seqRef = React.useRef(0);
+    return React.useMemo(
+        () => Array.from({ length: count }, () => `sk-${seqRef.current++}`),
+        [count],
+    );
 }
 
 export type SkeletonTableRowsProps = {

@@ -8,3 +8,5 @@ export { MobileListEmptyMessage } from './MobileListEmptyMessage';
 export type { MobileListEmptyMessageProps } from './MobileListEmptyMessage';
 export { ResponsiveListViews } from './ResponsiveListViews';
 export type { ResponsiveListViewsProps } from './ResponsiveListViews';
+export { HorizontalTableScrollHint } from './HorizontalTableScrollHint';
+export type { HorizontalTableScrollHintProps } from './HorizontalTableScrollHint';

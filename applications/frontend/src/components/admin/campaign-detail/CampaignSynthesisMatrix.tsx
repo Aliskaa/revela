@@ -20,6 +20,7 @@ import type { SxProps, Theme } from '@mui/material';
 import { AlertTriangle, BarChart3, Users } from 'lucide-react';
 import { Fragment } from 'react';
 
+import { HorizontalTableScrollHint } from '@/components/common/layout';
 import { surfaceCardSx } from '@/components/common/styles/listSurfaces';
 import type {
     CampaignSynthesisDimension,
@@ -173,14 +174,19 @@ export function CampaignSynthesisMatrix({ matrix }: CampaignSynthesisMatrixProps
                 ) : null}
 
                 <Box sx={{ px: { xs: 1, md: 1.5 }, pb: { xs: 2, md: 2.5 }, pt: respondersCount === 0 ? 0 : 2 }}>
-                    <TableContainer
-                        sx={{
+                    <HorizontalTableScrollHint
+                        sx={{ mb: 2 }}
+                        containerSx={{
                             border: '1px solid',
                             borderColor: 'surface.listTableRowBorder',
                             borderRadius: 2,
-                            overflow: 'visible',
                         }}
                     >
+                        <TableContainer
+                            sx={{
+                                overflow: 'visible',
+                            }}
+                        >
                         <Table size="small" sx={{ width: '100%', tableLayout: 'fixed' }}>
                             <TableHead>
                                 <TableRow>
@@ -214,14 +220,13 @@ export function CampaignSynthesisMatrix({ matrix }: CampaignSynthesisMatrixProps
                                 ))}
                             </TableBody>
                         </Table>
-                    </TableContainer>
+                        </TableContainer>
+                    </HorizontalTableScrollHint>
 
                     <Stack
                         direction="row"
                         spacing={2}
                         sx={{
-                            mt: 2,
-                            px: { xs: 1, md: 1.5 },
                             flexWrap: 'wrap',
                             gap: 1,
                         }}

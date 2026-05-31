@@ -15,6 +15,7 @@ import { MessageSquareText } from 'lucide-react';
 import { Fragment, useMemo } from 'react';
 
 import { ListTableHead, type ListTableColumn } from '@/components/common/data-table';
+import { HorizontalTableScrollHint } from '@/components/common/layout';
 import {
     tableCellSx,
     listRowSx,
@@ -201,7 +202,7 @@ export function MatrixTableMode({ matrix, showInterpretations = true }: MatrixTa
         );
 
     return (
-        <Box sx={{ overflowX: 'auto', width: '100%', ...surfaceCardSx }}>
+        <HorizontalTableScrollHint sx={{ width: '100%', ...surfaceCardSx }} containerSx={{ width: '100%' }}>
             <Table size="medium" sx={{ minWidth: 720 }}>
                 <ListTableHead columns={columns} />
                 <TableBody>
@@ -218,6 +219,6 @@ export function MatrixTableMode({ matrix, showInterpretations = true }: MatrixTa
                     ))}
                 </TableBody>
             </Table>
-        </Box>
+        </HorizontalTableScrollHint>
     );
 };
