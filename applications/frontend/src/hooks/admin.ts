@@ -48,14 +48,20 @@ export const adminKeys = {
 export function useAdminLogin() {
     return useMutation<AdminLoginResponse, Error, { username: string; password: string }>({
         mutationFn: credentials => apiClient.post('/admin/auth/login', credentials).then(r => r.data),
-        onSuccess: data => {
-            // L'access token est posé en cookie httpOnly côté backend (G1 RGPD). On hydrate
-            // simplement le store avec les claims renvoyés dans le body — `username` n'est
-            // pas connu ici, on le récupérera au prochain `GET /admin/auth/me` au besoin.
+        onSuccess: async () => {
+            const me = await apiClient.get<{
+                scope: 'super-admin' | 'coach';
+                coach_id: number | null;
+                username: string;
+                display_name: string;
+                avatar_url: string | null;
+            }>('/admin/auth/me');
             useAuthStore.getState().setAdminMe({
-                scope: data.scope,
-                coachId: data.coach_id,
-                username: '',
+                scope: me.data.scope,
+                coachId: me.data.coach_id,
+                username: me.data.username,
+                display_name: me.data.display_name,
+                avatar_url: me.data.avatar_url,
             });
         },
     });
@@ -382,6 +388,44 @@ export function useAdminCoach(coachId: number, options?: { enabled?: boolean }) 
         queryKey: adminKeys.coach(coachId),
         queryFn: () => apiClient.get(`/admin/coaches/${coachId}`).then(r => r.data),
         enabled: (options?.enabled ?? true) && coachId > 0,
+    });
+}
+
+export function useUploadCoachAvatar(coachId: number) {
+    const qc = useQueryClient();
+    const toast = useToast();
+    return useMutation<{ avatar_url: string }, Error, File>({
+        mutationFn: file => {
+            const formData = new FormData();
+            formData.append('file', file);
+            return apiClient
+                .post(`/admin/coaches/${coachId}/avatar`, formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' },
+                })
+                .then(r => r.data);
+        },
+        onSuccess: data => {
+            qc.setQueryData<AdminCoachDetail>(adminKeys.coach(coachId), current =>
+                current?.coach
+                    ? {
+                          ...current,
+                          coach: { ...current.coach, avatar_url: data.avatar_url },
+                      }
+                    : current
+            );
+            qc.invalidateQueries({ queryKey: adminKeys.coach(coachId) });
+            qc.invalidateQueries({ queryKey: adminKeys.coaches });
+            const me = useAuthStore.getState().adminMe;
+            if (me?.coachId === coachId) {
+                useAuthStore.getState().setAdminMe({
+                    ...me,
+                    avatar_url: data.avatar_url,
+                });
+            }
+            toast.success('Photo de profil mise à jour.');
+        },
+        onError: err =>
+            toast.error(err instanceof Error && err.message ? err.message : 'Impossible de mettre à jour la photo.'),
     });
 }
 

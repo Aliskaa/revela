@@ -13,7 +13,7 @@ import { DeleteCoachDialog } from '@/components/admin/coach-detail/DeleteCoachDi
 import { KpiCard } from '@/components/common/cards';
 import { KpiGrid } from '@/components/common/layout';
 import { useBreadcrumbs } from '@/components/layout/AppShellChromeContext';
-import { useAdminCoach, useCompanies, useUpdateCoach } from '@/hooks/admin';
+import { useAdminCoach, useCompanies, useUpdateCoach, useUploadCoachAvatar } from '@/hooks/admin';
 
 const SKELETON_KEYS = ['stat-1', 'stat-2', 'stat-3'] as const;
 
@@ -27,6 +27,7 @@ export function CoachDetailView({ coachId }: CoachDetailViewProps) {
     const { data, isLoading, isError } = useAdminCoach(coachId);
     const { data: companies = [] } = useCompanies();
     const updateCoach = useUpdateCoach();
+    const uploadCoachAvatar = useUploadCoachAvatar(coachId);
 
     const [editOpen, setEditOpen] = React.useState(false);
     const [deleteOpen, setDeleteOpen] = React.useState(false);
@@ -185,7 +186,24 @@ export function CoachDetailView({ coachId }: CoachDetailViewProps) {
                     alignItems: 'start',
                 }}
             >
-                <CoachInfoCard coach={coach} campaignCount={campaigns.length} onEdit={() => setEditOpen(true)} />
+                <CoachInfoCard
+                    coach={coach}
+                    campaignCount={campaigns.length}
+                    allowAvatarEdit={isAdminCoach}
+                    isAvatarUploading={uploadCoachAvatar.isPending}
+                    onAvatarUpload={
+                        isAdminCoach
+                            ? async file => {
+                                  try {
+                                      await uploadCoachAvatar.mutateAsync(file);
+                                  } catch {
+                                      // Toast émis par le hook.
+                                  }
+                              }
+                            : undefined
+                    }
+                    onEdit={() => setEditOpen(true)}
+                />
                 <CoachCampaignsTable
                     campaigns={campaigns}
                     companyNameById={companyNameById}

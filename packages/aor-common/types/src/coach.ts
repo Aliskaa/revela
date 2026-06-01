@@ -6,6 +6,7 @@ export const coachSchema = z.object({
     username: z.string(),
     displayName: z.string(),
     isActive: z.boolean(),
+    avatar_url: z.string().nullable(),
     createdAt: z.string().nullable(),
     /**
      * `true` pour la ligne sentinelle « Admin » (cible d'assignation des campagnes

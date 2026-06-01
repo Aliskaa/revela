@@ -13,8 +13,10 @@ import {
 } from '@mui/material';
 import { Link } from '@tanstack/react-router';
 
+import { ParticipantAvatar } from '@/components/common/ParticipantAvatar';
 import { SkeletonCards, SkeletonTableRows } from '@/components/common/SkeletonRows';
 import { ActiveStatusChip, AdminBadge } from '@/components/common/chips';
+import { coachInitial } from '@/lib/coachInitial';
 import {
     ClickableTableRow,
     EmptyTableRow,
@@ -32,11 +34,6 @@ const TABLE_COLUMNS = 5;
 
 function formatCreatedAt(createdAt: string | null | undefined): string {
     return createdAt ? new Date(createdAt).toLocaleDateString('fr-FR') : '–';
-}
-
-function coachInitial(displayName: string): string {
-    const trimmed = displayName.trim();
-    return trimmed ? trimmed.charAt(0).toUpperCase() : '?';
 }
 
 export type CoachListViewsProps = {
@@ -142,6 +139,25 @@ type CoachRowProps = {
     detailPathPrefix: string;
 };
 
+function CoachListAvatar({ coach, size }: { coach: Coach; size: 40 | 48 }) {
+    const isDesktop = size === 48;
+    return (
+        <ParticipantAvatar
+            src={coach.avatar_url}
+            initials={coachInitial(coach.displayName)}
+            alt={coach.displayName}
+            size={size}
+            sx={{
+                borderRadius: 2,
+                fontWeight: 800,
+                bgcolor: isDesktop ? 'grey.100' : 'tint.primaryBg',
+                color: 'primary.main',
+                ...(isDesktop ? { fontSize: '1.125rem' } : {}),
+            }}
+        />
+    );
+}
+
 function CoachTableRow({ coach, campaignCount, detailPathPrefix }: CoachRowProps) {
     const detailTo = `${detailPathPrefix}/${coach.id}`;
     const rowLabel = `Ouvrir ${coach.displayName}`;
@@ -150,22 +166,7 @@ function CoachTableRow({ coach, campaignCount, detailPathPrefix }: CoachRowProps
         <ClickableTableRow to={detailTo} ariaLabel={rowLabel}>
             <TableCell sx={{ pl: ADMIN_EDGE_X, py: ADMIN_CELL_PY }}>
                 <Stack direction="row" spacing={2} alignItems="center">
-                    <Box
-                        sx={{
-                            width: 48,
-                            height: 48,
-                            borderRadius: 2,
-                            bgcolor: 'grey.100',
-                            color: 'primary.main',
-                            display: 'grid',
-                            placeItems: 'center',
-                            fontWeight: 800,
-                            fontSize: '1.125rem',
-                            flexShrink: 0,
-                        }}
-                    >
-                        {coachInitial(coach.displayName)}
-                    </Box>
+                    <CoachListAvatar coach={coach} size={48} />
                     <Box>
                         <Stack direction="row" spacing={1} alignItems="center">
                             <Typography
@@ -234,20 +235,7 @@ function CoachMobileCard({ coach, campaignCount, detailPathPrefix }: CoachRowPro
                 <Stack spacing={2}>
                     <Stack direction="row" justifyContent="space-between" alignItems="start" spacing={2}>
                         <Stack direction="row" spacing={2} alignItems="center">
-                            <Box
-                                sx={{
-                                    width: 40,
-                                    height: 40,
-                                    borderRadius: 2,
-                                    bgcolor: 'tint.primaryBg',
-                                    color: 'primary.main',
-                                    display: 'grid',
-                                    placeItems: 'center',
-                                    fontWeight: 800,
-                                }}
-                            >
-                                {coachInitial(coach.displayName)}
-                            </Box>
+                            <CoachListAvatar coach={coach} size={40} />
                             <Box>
                                 <Stack direction="row" spacing={1} alignItems="center">
                                     <Typography variant="h6" fontWeight={800} color="primary.main">

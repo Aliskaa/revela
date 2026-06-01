@@ -2,7 +2,7 @@
 
 import { Box, Stack, Typography } from '@mui/material';
 import { Outlet, createFileRoute, redirect, useNavigate } from '@tanstack/react-router';
-import { ArrowLeft, Building2, ClipboardList, LayoutDashboard, ShieldAlert, UserRound } from 'lucide-react';
+import { ArrowLeft, Building2, ClipboardList, LayoutDashboard, ShieldAlert, UserCircle } from 'lucide-react';
 
 import { AppShellChromeProvider } from '@/components/layout/AppShellChromeContext';
 import { ScopedAppShell, type ScopedNavItem } from '@/components/layout/ScopedAppShell';
@@ -15,9 +15,6 @@ const coachNav: ScopedNavItem[] = [
     { label: 'Mes entreprises', to: '/coach/companies', icon: Building2 },
 ];
 
-const coachFooterNavForSuperAdmin: ScopedNavItem[] = [
-    { label: 'Retour mode admin', to: '/admin', icon: ArrowLeft, exact: true },
-];
 
 /**
  * Bandeau d'avertissement visible uniquement pour le super-admin consultant la vue coach.
@@ -56,6 +53,11 @@ function CoachRouteLayout() {
         navigate({ to: '/admin/login' });
     };
 
+
+    const coachFooterNav: ScopedNavItem[] = isSuperAdmin ? [
+        { label: 'Retour mode admin', to: '/admin', icon: ArrowLeft, exact: true },
+    ] : [{ label: 'Mon profil', to: '/coach/profile', icon: UserCircle }];
+
     return (
         <AppShellChromeProvider>
             <ScopedAppShell
@@ -63,7 +65,7 @@ function CoachRouteLayout() {
                 brandEyebrow={isSuperAdmin ? 'Vue coach (admin)' : 'Espace coach'}
                 userAvatar={userAvatar}
                 nav={coachNav}
-                footerNav={isSuperAdmin ? coachFooterNavForSuperAdmin : []}
+                footerNav={coachFooterNav}
                 onLogout={handleLogout}
                 topBanner={isSuperAdmin ? <SuperAdminBanner /> : undefined}
             >

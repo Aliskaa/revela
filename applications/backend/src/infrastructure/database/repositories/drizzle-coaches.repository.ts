@@ -3,6 +3,7 @@
 import { DRIZZLE_DB_SYMBOL, type DrizzleDb, asc, coachesTable, eq, sql } from '@aor/drizzle';
 import { Inject, Injectable } from '@nestjs/common';
 
+import { adminCoachAvatarPublicPath } from '@src/application/admin/coaches/upload-admin-coach-avatar.usecase';
 import { Coach } from '@src/domain/coaches';
 import type { ICoachesRepositoryPort } from '@src/interfaces/coaches/ICoachesRepository.port';
 
@@ -37,6 +38,48 @@ const hydrateCoach = (row: CoachRow): Coach =>
 @Injectable()
 export class DrizzleCoachesRepository implements ICoachesRepositoryPort {
     public constructor(@Inject(DRIZZLE_DB_SYMBOL) private readonly db: DrizzleDb) {}
+
+    public async findAvatar(coachId: number): Promise<{ data: Buffer; mimeType: string } | null> {
+        const [row] = await this.db
+            .select({
+                avatarData: coachesTable.avatarData,
+                avatarMimeType: coachesTable.avatarMimeType,
+            })
+            .from(coachesTable)
+            .where(eq(coachesTable.id, coachId))
+            .limit(1);
+        if (!row?.avatarData || !row.avatarMimeType) {
+            return null;
+        }
+        const data = Buffer.isBuffer(row.avatarData) ? row.avatarData : Buffer.from(row.avatarData);
+        return { data, mimeType: row.avatarMimeType };
+    }
+
+    public async resolveAvatarUrl(coachId: number): Promise<string | null> {
+        const [row] = await this.db
+            .select({
+                avatarMimeType: coachesTable.avatarMimeType,
+                updatedAt: coachesTable.updatedAt,
+            })
+            .from(coachesTable)
+            .where(eq(coachesTable.id, coachId))
+            .limit(1);
+        if (!row?.avatarMimeType) {
+            return null;
+        }
+        return adminCoachAvatarPublicPath(coachId, row.updatedAt?.getTime());
+    }
+
+    public async saveAvatar(coachId: number, data: Buffer, mimeType: string): Promise<void> {
+        await this.db
+            .update(coachesTable)
+            .set({
+                avatarData: data,
+                avatarMimeType: mimeType,
+                updatedAt: new Date(),
+            })
+            .where(eq(coachesTable.id, coachId));
+    }
 
     public async listAll(): Promise<Coach[]> {
         const rows = await this.db.select(SELECT_COLUMNS).from(coachesTable).orderBy(asc(coachesTable.displayName));

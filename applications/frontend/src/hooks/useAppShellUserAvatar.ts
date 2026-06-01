@@ -1,6 +1,4 @@
-import { useCoaches } from '@/hooks/admin';
 import { useParticipantSession } from '@/hooks/participantSession';
-import { parseAdminJwtClaims } from '@/lib/auth';
 import { personInitialsFromLabel, personInitialsFromNames } from '@/lib/personInitials';
 import { useAuthStore } from '@/stores/authStore';
 
@@ -26,22 +24,23 @@ export function useParticipantAppShellUserAvatar(): AppShellUserAvatarModel {
 }
 
 export function useAdminAppShellUserAvatar(): AppShellUserAvatarModel {
-    const username = useAuthStore(state => state.adminMe?.username) ?? 'Admin';
+    const adminMe = useAuthStore(state => state.adminMe);
+    const displayName = adminMe?.display_name?.trim() || adminMe?.username?.trim() || 'Admin';
     return {
-        src: null,
-        initials: personInitialsFromLabel(username),
-        alt: username,
+        src: adminMe?.avatar_url ?? null,
+        initials: personInitialsFromLabel(displayName),
+        alt: displayName,
     };
 }
 
 export function useCoachAppShellUserAvatar(): AppShellUserAvatarModel {
-    const claims = parseAdminJwtClaims();
-    const { data: coaches = [] } = useCoaches();
-    const coach = claims?.coachId != null ? coaches.find(c => c.id === claims.coachId) : undefined;
+    const adminMe = useAuthStore(state => state.adminMe);
     const displayName =
-        coach?.displayName?.trim() || (claims?.scope === 'super-admin' ? 'Admin' : 'Coach');
+        adminMe?.display_name?.trim() ||
+        adminMe?.username?.trim() ||
+        (adminMe?.scope === 'super-admin' ? 'Admin' : 'Coach');
     return {
-        src: null,
+        src: adminMe?.avatar_url ?? null,
         initials: personInitialsFromLabel(displayName),
         alt: displayName,
     };

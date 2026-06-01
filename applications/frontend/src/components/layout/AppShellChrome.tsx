@@ -1,6 +1,6 @@
 // Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
 
-import { AppBar, Avatar, Box, Drawer, IconButton, Stack, type Theme, Toolbar, Typography, useTheme } from '@mui/material';
+import { AppBar, Box, Drawer, IconButton, Stack, type Theme, Toolbar, Typography, useTheme } from '@mui/material';
 import { Link } from '@tanstack/react-router';
 import { ChevronRight, LineChart, LogOut, Menu, X } from 'lucide-react';
 import * as React from 'react';

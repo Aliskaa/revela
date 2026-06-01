@@ -26,6 +26,7 @@ import {
     ADMIN_TOKEN_SIGNER_PORT_SYMBOL,
     type IAdminTokenSignerPort,
 } from '@src/interfaces/admin/IAdminTokenSigner.port';
+import { ADMIN_AUTH_CONFIG_PORT_SYMBOL, type IAdminAuthConfigPort } from '@src/interfaces/admin/IAdminAuthConfig.port';
 import { COACHES_REPOSITORY_PORT_SYMBOL, type ICoachesReadPort } from '@src/interfaces/coaches/ICoachesRepository.port';
 import { ADMIN_COOKIE_NAMES, clearAuthCookies, setAuthCookies } from '@src/presentation/auth/auth-cookies.helper';
 import { REFRESH_TOKEN_MANAGER_SYMBOL } from '@src/presentation/auth/auth-refresh.module';
@@ -55,6 +56,7 @@ export class AdminController {
         @Inject(REFRESH_TOKEN_MANAGER_SYMBOL) private readonly refreshTokens: RefreshTokenManagerUseCase,
         @Inject(ADMIN_TOKEN_SIGNER_PORT_SYMBOL) private readonly tokenSigner: IAdminTokenSignerPort,
         @Inject(COACHES_REPOSITORY_PORT_SYMBOL) private readonly coaches: ICoachesReadPort,
+        @Inject(ADMIN_AUTH_CONFIG_PORT_SYMBOL) private readonly authConfig: IAdminAuthConfigPort,
         private readonly audit: AuditLoggerService
     ) {}
 
@@ -224,10 +226,28 @@ export class AdminController {
         if (!user || user.role !== 'admin') {
             throw new UnauthorizedException();
         }
+        if (user.scope === 'coach' && user.coachId !== undefined) {
+            const coach = await this.coaches.findById(user.coachId);
+            const avatar_url = coach ? await this.coaches.resolveAvatarUrl(user.coachId) : null;
+            return {
+                scope: 'coach',
+                coach_id: user.coachId,
+                username: user.username,
+                display_name: coach?.displayName ?? user.username,
+                avatar_url,
+            };
+        }
+
+        const adminCoach = await this.coaches.findByUsername(this.authConfig.superAdminUsername);
+        const avatar_url =
+            adminCoach !== null ? await this.coaches.resolveAvatarUrl(adminCoach.id) : null;
+
         return {
             scope: user.scope ?? 'super-admin',
-            coach_id: user.coachId,
+            coach_id: adminCoach?.id ?? null,
             username: user.username,
+            display_name: adminCoach?.displayName ?? user.username,
+            avatar_url,
         };
     }
 }

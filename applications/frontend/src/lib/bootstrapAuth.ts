@@ -17,7 +17,13 @@ import { type AdminAuthMe, type ParticipantAuthMe, useAuthStore } from '@/stores
  */
 export async function bootstrapAuth(): Promise<void> {
     const fetchAdminMe = axios
-        .get<{ scope: 'super-admin' | 'coach'; coach_id: number | null; username: string }>('/api/admin/auth/me', {
+        .get<{
+            scope: 'super-admin' | 'coach';
+            coach_id: number | null;
+            username: string;
+            display_name: string;
+            avatar_url: string | null;
+        }>('/api/admin/auth/me', {
             withCredentials: true,
         })
         .then(r => r.data)
@@ -39,6 +45,8 @@ export async function bootstrapAuth(): Promise<void> {
             scope: admin.scope,
             coachId: admin.coach_id,
             username: admin.username,
+            display_name: admin.display_name,
+            avatar_url: admin.avatar_url,
         };
         setAdminMe(adminMe);
     }

@@ -70,20 +70,21 @@ export const companyToAdminJson = (c: CompanyWithParticipantCountReadModel) => (
  * détenues par l'admin) du reste des coachs. Le frontend l'utilise pour désactiver
  * édition / suppression sur cette ligne.
  */
-export const coachToAdminJson = (c: Coach, opts?: { isAdmin?: boolean }) => ({
+export const coachToAdminJson = (c: Coach, opts?: { isAdmin?: boolean; avatar_url?: string | null }) => ({
     id: c.id,
     username: c.username,
     displayName: c.displayName,
     isActive: c.isActive,
+    avatar_url: opts?.avatar_url ?? null,
     createdAt: c.createdAt,
     isAdmin: opts?.isAdmin ?? false,
 });
 
 export const adminCoachDetailToJson = (
-    detail: { coach: Coach; campaigns: Campaign[] },
+    detail: { coach: Coach; campaigns: Campaign[]; avatar_url: string | null },
     opts?: { isAdmin?: boolean }
 ) => ({
-    coach: coachToAdminJson(detail.coach, opts),
+    coach: coachToAdminJson(detail.coach, { ...opts, avatar_url: detail.avatar_url }),
     campaigns: detail.campaigns.map(campaignToAdminJson),
 });
 

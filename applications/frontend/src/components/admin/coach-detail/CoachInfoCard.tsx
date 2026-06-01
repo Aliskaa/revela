@@ -1,17 +1,13 @@
 // Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
 
-import { Alert, Avatar, Box, Card, CardContent, Stack, Typography } from '@mui/material';
+import { Alert, Box, Card, CardContent, Stack, Typography } from '@mui/material';
 import { AtSign, CalendarDays, ClipboardList, PencilLine, ShieldCheck, UserRound } from 'lucide-react';
 
+import { CoachAvatarHeader } from '@/components/admin/coach-detail/CoachAvatarHeader';
 import { Button } from '@/components/common/Button';
 import { ActiveStatusChip, AdminBadge } from '@/components/common/chips';
 import { drawerSectionTitleSx, surfaceCardSx } from '@/components/common/styles/listSurfaces';
 import type { Coach } from '@aor/types';
-
-function coachInitial(displayName: string): string {
-    const trimmed = displayName.trim();
-    return trimmed ? trimmed.charAt(0).toUpperCase() : '?';
-}
 
 function formatCreatedAt(createdAt: string | null | undefined): string {
     return createdAt
@@ -26,12 +22,21 @@ function formatCreatedAt(createdAt: string | null | undefined): string {
 export type CoachInfoCardProps = {
     coach: Coach;
     campaignCount: number;
-    onEdit: () => void;
+    onEdit?: () => void;
+    allowAvatarEdit?: boolean;
+    onAvatarUpload?: (file: File) => void | Promise<void>;
+    isAvatarUploading?: boolean;
 };
 
-export function CoachInfoCard({ coach, campaignCount, onEdit }: CoachInfoCardProps) {
+export function CoachInfoCard({
+    coach,
+    campaignCount,
+    onEdit,
+    allowAvatarEdit = false,
+    onAvatarUpload,
+    isAvatarUploading = false,
+}: CoachInfoCardProps) {
     const isAdminCoach = coach.isAdmin;
-    const initial = coachInitial(coach.displayName);
 
     const summaryFields = [
         { label: 'Nom à afficher', value: coach.displayName },
@@ -64,15 +69,17 @@ export function CoachInfoCard({ coach, campaignCount, onEdit }: CoachInfoCardPro
                                 Identité et accès du coach.
                             </Typography>
                         </Box>
-                        <Button
-                            appearance="secondary"
-                            size="small"
-                            startIcon={<PencilLine size={14} />}
-                            onClick={onEdit}
-                            sx={{ flexShrink: 0 }}
-                        >
-                            {isAdminCoach ? 'Modifier le nom' : 'Modifier'}
-                        </Button>
+                        {onEdit ? (
+                            <Button
+                                appearance="secondary"
+                                size="small"
+                                startIcon={<PencilLine size={14} />}
+                                onClick={onEdit}
+                                sx={{ flexShrink: 0 }}
+                            >
+                                {isAdminCoach ? 'Modifier le nom' : 'Modifier'}
+                            </Button>
+                        ) : null}
                     </Stack>
                 </Box>
 
@@ -86,20 +93,12 @@ export function CoachInfoCard({ coach, campaignCount, onEdit }: CoachInfoCardPro
                     }}
                 >
                     <Stack direction="row" spacing={2} alignItems="center">
-                        <Avatar
-                            sx={{
-                                width: 56,
-                                height: 56,
-                                bgcolor: 'primary.main',
-                                fontWeight: 700,
-                                fontSize: '1.125rem',
-                                letterSpacing: '0.04em',
-                                boxShadow: theme => theme.palette.shadow.brandMd,
-                                flexShrink: 0,
-                            }}
-                        >
-                            {initial}
-                        </Avatar>
+                        <CoachAvatarHeader
+                            coach={coach}
+                            allowAvatarEdit={allowAvatarEdit}
+                            isAvatarUploading={isAvatarUploading}
+                            onAvatarUpload={onAvatarUpload}
+                        />
                         <Box sx={{ minWidth: 0, flex: 1 }}>
                             <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
                                 <Typography
