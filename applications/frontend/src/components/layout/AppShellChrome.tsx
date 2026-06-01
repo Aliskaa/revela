@@ -1,10 +1,11 @@
 // Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
 
-import { AppBar, Avatar, Box, Drawer, IconButton, Stack, type SxProps, type Theme, Toolbar, Typography, useTheme } from '@mui/material';
+import { AppBar, Avatar, Box, Drawer, IconButton, Stack, type Theme, Toolbar, Typography, useTheme } from '@mui/material';
 import { Link } from '@tanstack/react-router';
-import { Bell, ChevronRight, LineChart, LogOut, Menu, Settings, X } from 'lucide-react';
+import { ChevronRight, LineChart, LogOut, Menu, X } from 'lucide-react';
 import * as React from 'react';
 
+import { ParticipantAvatar, type ParticipantAvatarProps } from '@/components/common/ParticipantAvatar';
 import { useAppShellChrome } from '@/components/layout/AppShellChromeContext';
 import type { ScopedNavItem } from '@/components/layout/ScopedAppShell';
 
@@ -198,32 +199,10 @@ export function AppShellSidebar({
     );
 }
 
-export type AppShellUserAvatarProps = {
-    src?: string | null;
-    initials: string;
-    alt?: string;
-    size?: number;
-    sx?: SxProps<Theme>;
-};
+export type AppShellUserAvatarProps = ParticipantAvatarProps;
 
-export function AppShellUserAvatar({ src, initials, alt, size = 50, sx }: AppShellUserAvatarProps) {
-    return (
-        <Avatar
-            src={src ?? undefined}
-            alt={alt ?? initials}
-            sx={{
-                width: size,
-                height: size,
-                bgcolor: 'primary.main',
-                fontWeight: 700,
-                fontSize: size <= 36 ? '0.875rem' : '1rem',
-                letterSpacing: '0.04em',
-                ...sx,
-            }}
-        >
-            {initials}
-        </Avatar>
-    );
+export function AppShellUserAvatar(props: AppShellUserAvatarProps) {
+    return <ParticipantAvatar {...props} />;
 }
 
 type AppShellTopBarProps = {

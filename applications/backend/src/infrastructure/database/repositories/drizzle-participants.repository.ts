@@ -26,7 +26,7 @@ import {
 import { Inject, Injectable } from '@nestjs/common';
 
 import { invitationTokenAdminStatus } from '@aor/domain';
-import { participantCampaignPeerAvatarPublicPath } from '@src/application/participant-session/upload-participant-avatar.usecase';
+import { participantCampaignPeerAvatarPublicPath, adminParticipantAvatarPublicPath } from '@src/application/participant-session/upload-participant-avatar.usecase';
 import { Participant, type ParticipantFunctionLevel } from '@src/domain/participants';
 import type {
     CampaignParticipantInviteState,
@@ -514,6 +514,12 @@ export class DrizzleParticipantsRepository implements IParticipantsRepositoryPor
                 row.companyId !== null && row.companyName !== null
                     ? { id: row.companyId, name: row.companyName }
                     : null,
+            avatar_url: row.participant.avatarMimeType
+                ? adminParticipantAvatarPublicPath(
+                      row.participant.id,
+                      row.participant.updatedAt?.getTime()
+                  )
+                : null,
             inviteStatus: {},
             responseCount: 0,
         }));
@@ -676,6 +682,12 @@ export class DrizzleParticipantsRepository implements IParticipantsRepositoryPor
                 row.companyId !== null && row.companyName !== null
                     ? { id: row.companyId, name: row.companyName }
                     : null,
+            avatar_url: row.participant.avatarMimeType
+                ? adminParticipantAvatarPublicPath(
+                      row.participant.id,
+                      row.participant.updatedAt?.getTime()
+                  )
+                : null,
             inviteStatus: {},
             responseCount: 0,
         };
@@ -787,6 +799,8 @@ export class DrizzleParticipantsRepository implements IParticipantsRepositoryPor
                 firstName: participantsTable.firstName,
                 lastName: participantsTable.lastName,
                 email: participantsTable.email,
+                avatarMimeType: participantsTable.avatarMimeType,
+                updatedAt: participantsTable.updatedAt,
                 selfRatingStatus: participantProgressTable.selfRatingStatus,
                 peerFeedbackStatus: participantProgressTable.peerFeedbackStatus,
                 elementHumainStatus: participantProgressTable.elementHumainStatus,
@@ -811,6 +825,9 @@ export class DrizzleParticipantsRepository implements IParticipantsRepositoryPor
                     participantId: row.participantId,
                     fullName: `${row.firstName} ${row.lastName}`.trim(),
                     email: row.email,
+                    avatar_url: row.avatarMimeType
+                        ? adminParticipantAvatarPublicPath(row.participantId, row.updatedAt?.getTime())
+                        : null,
                     selfRatingStatus: row.selfRatingStatus ?? 'pending',
                     peerFeedbackStatus: row.peerFeedbackStatus ?? 'pending',
                     elementHumainStatus: row.elementHumainStatus ?? 'locked',

@@ -11,6 +11,7 @@ import {
     Typography,
 } from '@mui/material';
 import { Link } from '@tanstack/react-router';
+import { ParticipantAvatar } from '@/components/common/ParticipantAvatar';
 import { SkeletonCards, SkeletonTableRows } from '@/components/common/SkeletonRows';
 import { CompanyListStatusChip, resolveCompanyListStatus } from '@/components/common/chips';
 import {
@@ -146,6 +147,25 @@ type CompanyRowProps = {
     detailPathPrefix: string;
 };
 
+function CompanyListAvatar({ company, size }: { company: Company; size: 40 | 48 }) {
+    const isDesktop = size === 48;
+    return (
+        <ParticipantAvatar
+            src={company.avatar_url}
+            initials={companyInitial(company.name)}
+            alt={company.name}
+            size={size}
+            sx={{
+                borderRadius: 2,
+                fontWeight: 800,
+                bgcolor: isDesktop ? 'grey.100' : 'tint.primaryBg',
+                color: 'primary.main',
+                ...(isDesktop ? { fontSize: '1.125rem' } : {}),
+            }}
+        />
+    );
+}
+
 function CompanyTableRow({ company, campaigns, detailPathPrefix }: CompanyRowProps) {
     const status = resolveCompanyListStatus(company.id, campaigns);
     const detailTo = `${detailPathPrefix}/${company.id}`;
@@ -154,23 +174,7 @@ function CompanyTableRow({ company, campaigns, detailPathPrefix }: CompanyRowPro
         <ClickableTableRow to={detailTo} ariaLabel={rowLabel}>
             <TableCell sx={{ pl: ADMIN_EDGE_X, py: ADMIN_CELL_PY }}>
                 <Stack direction="row" spacing={2} alignItems="center">
-                    <Box
-                        sx={{
-                            width: 48,
-                            height: 48,
-                            borderRadius: 2,
-                            bgcolor: 'grey.100',
-                            color: 'primary.main',
-                            display: 'grid',
-                            placeItems: 'center',
-                            fontWeight: 800,
-                            fontSize: '1.125rem',
-                            flexShrink: 0,
-                            overflow: 'hidden',
-                        }}
-                    >
-                        {companyInitial(company.name)}
-                    </Box>
+                    <CompanyListAvatar company={company} size={48} />
                     <Box>
                         <Typography
                             fontWeight={700}
@@ -240,20 +244,7 @@ function CompanyMobileCard({ company, campaigns, detailPathPrefix }: CompanyRowP
                 <Stack spacing={2}>
                     <Stack direction="row" justifyContent="space-between" alignItems="start" spacing={2}>
                         <Stack direction="row" spacing={2} alignItems="center">
-                            <Box
-                                sx={{
-                                    width: 40,
-                                    height: 40,
-                                    borderRadius: 2,
-                                    bgcolor: 'tint.primaryBg',
-                                    color: 'primary.main',
-                                    display: 'grid',
-                                    placeItems: 'center',
-                                    fontWeight: 800,
-                                }}
-                            >
-                                {companyInitial(company.name)}
-                            </Box>
+                            <CompanyListAvatar company={company} size={40} />
                             <Box>
                                 <Typography variant="h6" fontWeight={800} color="primary.main">
                                     {company.name}

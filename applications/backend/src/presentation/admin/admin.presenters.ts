@@ -31,6 +31,7 @@ export const participantToAdminJson = (p: ParticipantAdminListItem) => ({
     direction: p.direction,
     service: p.service,
     function_level: p.functionLevel,
+    avatar_url: p.avatar_url,
     created_at: p.createdAt ? p.createdAt.toISOString() : null,
     created_by_coach_id: p.createdByCoachId,
     invite_status: p.inviteStatus,
@@ -58,6 +59,7 @@ export const companyToAdminJson = (c: CompanyWithParticipantCountReadModel) => (
     contact_name: c.contactName,
     contact_email: c.contactEmail,
     participant_count: c.participantCount,
+    avatar_url: c.avatar_url,
 });
 
 /**

@@ -31,6 +31,10 @@ export function AdminDashboardPage() {
         (id: number) => companies.find(c => c.id === id)?.name ?? '–',
         [companies]
     );
+    const companyAvatarUrl = React.useCallback(
+        (id: number) => companies.find(c => c.id === id)?.avatar_url ?? null,
+        [companies]
+    );
     const coachName = React.useCallback(
         (id: number) => coaches.find(c => c.id === id)?.displayName ?? '–',
         [coaches]
@@ -103,6 +107,7 @@ export function AdminDashboardPage() {
                     campaigns={recentCampaigns}
                     isLoading={isLoading}
                     companyName={companyName}
+                    companyAvatarUrl={companyAvatarUrl}
                     coachName={coachName}
                 />
             </ListPanel>

@@ -45,6 +45,7 @@ export class CreateAdminCompanyUseCase {
             contactEmail: created.contactEmail,
             createdAt: created.createdAt,
             participantCount: 0,
+            avatar_url: null,
         };
     }
 }

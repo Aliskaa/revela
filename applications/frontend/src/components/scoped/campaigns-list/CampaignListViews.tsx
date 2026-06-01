@@ -11,6 +11,7 @@ import {
 } from '@mui/material';
 import { Link } from '@tanstack/react-router';
 
+import { ParticipantAvatar } from '@/components/common/ParticipantAvatar';
 import { SkeletonCards, SkeletonTableRows } from '@/components/common/SkeletonRows';
 import { CampaignStatusChip } from '@/components/common/chips';
 import type { ListTableColumn } from '@/components/common/data-table';
@@ -37,6 +38,7 @@ export type CampaignListViewsProps = {
     emptyMessage: string;
     detailPathPrefix: string;
     companyName: (id: number) => string;
+    companyAvatarUrl: (id: number) => string | null;
     coachName: (id: number) => string;
     page: number;
     rowsPerPage: number;
@@ -52,6 +54,7 @@ export function CampaignListViews({
     emptyMessage,
     detailPathPrefix,
     companyName,
+    companyAvatarUrl,
     coachName,
     page,
     rowsPerPage,
@@ -98,6 +101,7 @@ export function CampaignListViews({
                                             campaign={campaign}
                                             detailPathPrefix={detailPathPrefix}
                                             companyName={companyName}
+                                            companyAvatarUrl={companyAvatarUrl}
                                             coachName={coachName}
                                         />
                                     ))
@@ -120,6 +124,7 @@ export function CampaignListViews({
                                     campaign={campaign}
                                     detailPathPrefix={detailPathPrefix}
                                     companyName={companyName}
+                                    companyAvatarUrl={companyAvatarUrl}
                                     coachName={coachName}
                                 />
                             ))
@@ -137,15 +142,35 @@ type CampaignRowProps = {
     campaign: AdminCampaign;
     detailPathPrefix: string;
     companyName: (id: number) => string;
+    companyAvatarUrl: (id: number) => string | null;
     coachName?: (id: number) => string;
 };
+
+function CampaignCompanyAvatar({ companyLabel, avatarUrl }: { companyLabel: string; avatarUrl: string | null }) {
+    return (
+        <ParticipantAvatar
+            src={avatarUrl}
+            initials={companyInitial(companyLabel)}
+            alt={companyLabel}
+            size={32}
+            sx={{
+                borderRadius: 2,
+                bgcolor: 'grey.100',
+                color: 'primary.main',
+                fontWeight: 800,
+                fontSize: '0.75rem',
+            }}
+        />
+    );
+}
 
 function formatCreatedAt(createdAt: string | null | undefined): string {
     return createdAt ? new Date(createdAt).toLocaleDateString('fr-FR') : '–';
 }
 
-function AdminCampaignTableRow({ campaign, detailPathPrefix, companyName, coachName }: CampaignRowProps) {
+function AdminCampaignTableRow({ campaign, detailPathPrefix, companyName, companyAvatarUrl, coachName }: CampaignRowProps) {
     const company = companyName(campaign.companyId);
+    const avatarUrl = companyAvatarUrl(campaign.companyId);
     const detailTo = `${detailPathPrefix}/${campaign.id}`;
     const rowLabel = `Ouvrir ${campaign.name}`;
 
@@ -158,22 +183,7 @@ function AdminCampaignTableRow({ campaign, detailPathPrefix, companyName, coachN
             </TableCell>
             <TableCell sx={{ py: CELL_PY }}>
                 <Stack direction="row" spacing={1.5} alignItems="center">
-                    <Box
-                        sx={{
-                            width: 32,
-                            height: 32,
-                            borderRadius: 2,
-                            bgcolor: 'grey.100',
-                            color: 'primary.main',
-                            display: 'grid',
-                            placeItems: 'center',
-                            fontWeight: 800,
-                            fontSize: '0.75rem',
-                            flexShrink: 0,
-                        }}
-                    >
-                        {companyInitial(company)}
-                    </Box>
+                    <CampaignCompanyAvatar companyLabel={company} avatarUrl={avatarUrl} />
                     <Typography color="text.secondary" fontWeight={600}>
                         {company}
                     </Typography>
@@ -212,9 +222,11 @@ function CampaignMobileCard({
     campaign,
     detailPathPrefix,
     companyName,
+    companyAvatarUrl,
     coachName,
 }: CampaignMobileCardProps) {
     const company = companyName(campaign.companyId);
+    const avatarUrl = companyAvatarUrl(campaign.companyId);
     const detailTo = `${detailPathPrefix}/${campaign.id}`;
 
     return (
@@ -236,14 +248,17 @@ function CampaignMobileCard({
             <CardContent sx={{ p: 2.5 }}>
                 <Stack spacing={2}>
                     <Stack direction="row" justifyContent="space-between" alignItems="start" spacing={2}>
-                        <Box>
-                            <Typography variant="h6" fontWeight={800} color="primary.main">
-                                {campaign.name}
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                                {company} · Coach {coachName(campaign.coachId)}
-                            </Typography>
-                        </Box>
+                        <Stack direction="row" spacing={1.5} alignItems="center" sx={{ minWidth: 0 }}>
+                            <CampaignCompanyAvatar companyLabel={company} avatarUrl={avatarUrl} />
+                            <Box sx={{ minWidth: 0 }}>
+                                <Typography variant="h6" fontWeight={800} color="primary.main" noWrap>
+                                    {campaign.name}
+                                </Typography>
+                                <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }} noWrap>
+                                    {company} · Coach {coachName(campaign.coachId)}
+                                </Typography>
+                            </Box>
+                        </Stack>
                         <CampaignStatusChip status={campaign.status} />
                     </Stack>
                     <Stack direction="row" alignItems="center" justifyContent="space-between">

@@ -3,7 +3,7 @@
 import type { CampaignPeerChoice } from '@aor/types';
 import { Box, Chip, Stack, Typography } from '@mui/material';
 
-import { AppShellUserAvatar } from '@/components/layout/AppShellChrome';
+import { ParticipantAvatar } from '@/components/common/ParticipantAvatar';
 import { personInitialsFromNames } from '@/lib/personInitials';
 
 export type PeerSelectCardProps = {
@@ -38,7 +38,7 @@ export function PeerSelectCard({ peer, alreadyRated, selected, onClick }: PeerSe
                 ...(!alreadyRated ? { '&:hover': { borderColor: 'primary.main', bgcolor: 'tint.primaryGhost' } } : {}),
             }}
         >
-            <AppShellUserAvatar
+            <ParticipantAvatar
                 src={peer.avatar_url}
                 initials={initials}
                 alt={peer.full_name}

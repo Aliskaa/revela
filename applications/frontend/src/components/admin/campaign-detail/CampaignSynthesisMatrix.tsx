@@ -20,8 +20,10 @@ import type { SxProps, Theme } from '@mui/material';
 import { AlertTriangle, BarChart3, Users } from 'lucide-react';
 import { Fragment } from 'react';
 
+import { ParticipantAvatar } from '@/components/common/ParticipantAvatar';
 import { HorizontalTableScrollHint } from '@/components/common/layout';
 import { surfaceCardSx } from '@/components/common/styles/listSurfaces';
+import { personInitialsFromLabel } from '@/lib/personInitials';
 import type {
     CampaignSynthesisDimension,
     CampaignSynthesisGapCell,
@@ -65,17 +67,6 @@ function countCriticalGapWarnings(dimensions: readonly CampaignSynthesisDimensio
         }
     }
     return count;
-}
-
-function participantInitials(fullName: string): string {
-    const parts = fullName.trim().split(/\s+/).filter(Boolean);
-    if (parts.length === 0) {
-        return '?';
-    }
-    if (parts.length === 1) {
-        return parts[0].slice(0, 2).toUpperCase();
-    }
-    return `${parts[0][0] ?? ''}${parts[parts.length - 1][0] ?? ''}`.toUpperCase();
 }
 
 /**
@@ -305,24 +296,30 @@ function ParticipantHeaderCell({ participant }: { participant: CampaignSynthesis
                 }}
             >
                 <Stack spacing={0.75} alignItems="center">
-                    <Box
+                    <ParticipantAvatar
+                        src={participant.avatar_url}
+                        initials={personInitialsFromLabel(participant.fullName)}
+                        alt={participant.fullName}
+                        size={36}
                         sx={{
-                            width: 36,
-                            height: 36,
                             borderRadius: 2,
-                            display: 'grid',
-                            placeItems: 'center',
-                            fontWeight: 800,
                             fontSize: '0.6875rem',
-                            flexShrink: 0,
-                            bgcolor: participant.hasResponse ? 'tint.primaryBg' : 'surface.containerLow',
-                            color: participant.hasResponse ? 'primary.main' : 'text.disabled',
-                            border: '1px solid',
-                            borderColor: participant.hasResponse ? 'tint.primaryRail' : 'border',
+                            fontWeight: 800,
+                            ...(participant.hasResponse
+                                ? {
+                                      bgcolor: 'tint.primaryBg',
+                                      color: 'primary.main',
+                                      border: '1px solid',
+                                      borderColor: 'tint.primaryRail',
+                                  }
+                                : {
+                                      bgcolor: 'surface.containerLow',
+                                      color: 'text.disabled',
+                                      border: '1px solid',
+                                      borderColor: 'border',
+                                  }),
                         }}
-                    >
-                        {participantInitials(participant.fullName)}
-                    </Box>
+                    />
                     <Typography
                         variant="caption"
                         fontWeight={700}

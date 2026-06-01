@@ -38,7 +38,6 @@ export function ParticipantCampaignsTable({
     const columns: ListTableColumn[] = [
         { key: 'status', sx: { pl: EDGE_X, width: 48 } },
         { key: 'campaign', label: 'Campagne' },
-        { key: 'company', label: 'Entreprise' },
         { key: 'joined', label: 'Rejoint le' },
         { key: 'navigate', align: 'right', sx: { pr: EDGE_X, width: 48 } },
     ];
@@ -90,11 +89,6 @@ export function ParticipantCampaignsTable({
                                                     sx={{ fontSize: '1.0625rem' }}
                                                 >
                                                     {c.campaign_name}
-                                                </Typography>
-                                            </TableCell>
-                                            <TableCell sx={tableCellSx}>
-                                                <Typography fontWeight={600} color="text.primary">
-                                                    {c.company_name ?? '–'}
                                                 </Typography>
                                             </TableCell>
                                             <TableCell sx={tableCellSx}>

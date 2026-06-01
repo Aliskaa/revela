@@ -6,6 +6,7 @@ export const matrixPeerColumnSchema = z.object({
     label: z.string(),
     rater_participant_id: z.number().int().nullable(),
     rated_participant_id: z.number().int().nullable().optional(),
+    avatar_url: z.string().nullable(),
 });
 export type ParticipantQuestionnaireMatrixPeerColumn = z.infer<typeof matrixPeerColumnSchema>;
 

@@ -89,6 +89,7 @@ const buildProgress = (participantId: number, fullName: string): CampaignPartici
     participantId,
     fullName,
     email: `${fullName.toLowerCase()}@example.com`,
+    avatar_url: null,
     selfRatingStatus: 'completed',
     peerFeedbackStatus: 'completed',
     elementHumainStatus: 'completed',

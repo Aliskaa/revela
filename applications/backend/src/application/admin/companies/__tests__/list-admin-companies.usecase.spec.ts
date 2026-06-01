@@ -20,6 +20,7 @@ const buildStub = () => {
         findByName: async (): Promise<Company | null> => null,
         findById: async (): Promise<Company | null> => null,
         findByIdWithParticipantCount: async () => null,
+        findAvatar: async () => null,
         listOrderedWithParticipantCount: async (params?: { coachId?: number }) => {
             calls.push(params);
             return [] as CompanyWithParticipantCountReadModel[];

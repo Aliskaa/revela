@@ -61,6 +61,7 @@ export type ParticipantAdminListItem = {
      */
     createdByCoachId: number | null;
     company: { id: number; name: string } | null;
+    avatar_url: string | null;
     readonly inviteStatus: Record<string, string>;
     readonly responseCount: number;
 };
@@ -83,6 +84,7 @@ export type CampaignParticipantProgressItem = {
     participantId: number;
     fullName: string;
     email: string;
+    avatar_url: string | null;
     selfRatingStatus: 'locked' | 'pending' | 'completed';
     peerFeedbackStatus: 'locked' | 'pending' | 'completed';
     elementHumainStatus: 'locked' | 'pending' | 'completed';

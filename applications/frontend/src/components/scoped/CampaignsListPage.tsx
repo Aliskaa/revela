@@ -60,6 +60,7 @@ export function CampaignsListPage({ scope }: CampaignsListPageProps) {
 
     const isLoading = campaignsLoading || (isAdmin && coachesLoading);
     const companyName = (id: number) => companies.find(c => c.id === id)?.name ?? '–';
+    const companyAvatarUrl = (id: number) => companies.find(c => c.id === id)?.avatar_url ?? null;
     const coachName = (id: number) => coaches.find(c => c.id === id)?.displayName ?? '–';
     const questionnairesUsed = new Set(campaigns.map(c => c.questionnaireId).filter(Boolean)).size;
 
@@ -93,6 +94,7 @@ export function CampaignsListPage({ scope }: CampaignsListPageProps) {
             emptyMessage={emptyMessage}
             detailPathPrefix={detailPathPrefix}
             companyName={companyName}
+            companyAvatarUrl={companyAvatarUrl}
             coachName={coachName}
             page={page}
             rowsPerPage={rowsPerPage}

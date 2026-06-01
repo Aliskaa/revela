@@ -5,13 +5,14 @@ import { Link, useNavigate } from '@tanstack/react-router';
 import { Building2, Mail, Users } from 'lucide-react';
 import * as React from 'react';
 
+import { CompanyAvatarHeader } from '@/components/admin/company-detail/CompanyAvatarHeader';
 import { CompanyDangerZone } from '@/components/admin/company-detail/CompanyDangerZone';
 import { CompanyParticipantsTable } from '@/components/admin/company-detail/CompanyParticipantsTable';
 import { DeleteCompanyDialog } from '@/components/admin/company-detail/DeleteCompanyDialog';
 import { KpiCard } from '@/components/common/cards';
 import { KpiGrid } from '@/components/common/layout';
 import { useBreadcrumbs } from '@/components/layout/AppShellChromeContext';
-import { useCompanies, useParticipants } from '@/hooks/admin';
+import { useCompanies, useParticipants, useUploadCompanyAvatar } from '@/hooks/admin';
 import { usePageResetEffect } from '@/lib/usePageResetEffect';
 
 const SKELETON_KEYS = ['stat-1', 'stat-2', 'stat-3'] as const;
@@ -73,6 +74,7 @@ export function CompanyDetailPage({ scope, companyId }: CompanyDetailPageProps) 
     const [deleteCompanyOpen, setDeleteCompanyOpen] = React.useState(false);
 
     const company = companies.find(c => c.id === companyId);
+    const uploadCompanyAvatar = useUploadCompanyAvatar(companyId);
 
     useBreadcrumbs(
         isAdmin
@@ -133,19 +135,19 @@ export function CompanyDetailPage({ scope, companyId }: CompanyDetailPageProps) 
             )}
 
             <Box>
-                <Typography
-                    variant="h3"
-                    sx={{
-                        color: 'primary.main',
-                        fontWeight: 900,
-                        letterSpacing: -0.03,
-                        lineHeight: 1.1,
-                        mb: 1,
+                <CompanyAvatarHeader
+                    company={company}
+                    allowAvatarEdit={isAdmin}
+                    isAvatarUploading={uploadCompanyAvatar.isPending}
+                    onAvatarUpload={async file => {
+                        try {
+                            await uploadCompanyAvatar.mutateAsync(file);
+                        } catch {
+                            // Toast émis par le hook.
+                        }
                     }}
-                >
-                    {company.name}
-                </Typography>
-                <Typography variant="body1" color="text.secondary" sx={{ maxWidth: 720, lineHeight: 1.7 }}>
+                />
+                <Typography variant="body1" color="text.secondary" sx={{ maxWidth: 720, lineHeight: 1.7, mt: 1 }}>
                     {SUBTITLE}
                 </Typography>
             </Box>

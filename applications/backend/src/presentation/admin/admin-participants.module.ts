@@ -4,6 +4,8 @@ import { Module } from '@nestjs/common';
 
 import { CreateParticipantInviteUseCase } from '@src/application/admin/participants/create-participant-invite.usecase';
 import { EraseParticipantRgpdUseCase } from '@src/application/admin/participants/erase-participant-rgpd.usecase';
+import { GetAdminParticipantAvatarUseCase } from '@src/application/admin/participants/get-admin-participant-avatar.usecase';
+import { UploadAdminParticipantAvatarUseCase } from '@src/application/admin/participants/upload-admin-participant-avatar.usecase';
 import { GetAdminParticipantDetailUseCase } from '@src/application/admin/participants/get-admin-participant-detail.usecase';
 import { ImportParticipantsCsvUseCase } from '@src/application/admin/participants/import-participants-csv.usecase';
 import { ListAdminParticipantsUseCase } from '@src/application/admin/participants/list-admin-participants.usecase';
@@ -48,6 +50,8 @@ import {
     CREATE_PARTICIPANT_INVITE_USE_CASE_SYMBOL,
     ERASE_PARTICIPANT_RGPD_USE_CASE_SYMBOL,
     GET_ADMIN_PARTICIPANT_DETAIL_USE_CASE_SYMBOL,
+    GET_ADMIN_PARTICIPANT_AVATAR_USE_CASE_SYMBOL,
+    UPLOAD_ADMIN_PARTICIPANT_AVATAR_USE_CASE_SYMBOL,
     IMPORT_PARTICIPANTS_CSV_USE_CASE_SYMBOL,
     LIST_ADMIN_PARTICIPANTS_USE_CASE_SYMBOL,
     LIST_PARTICIPANT_INVITATION_TOKENS_USE_CASE_SYMBOL,
@@ -118,6 +122,18 @@ import {
             provide: GET_ADMIN_PARTICIPANT_DETAIL_USE_CASE_SYMBOL,
             useFactory: (participants: IParticipantsAdminReadPort) =>
                 new GetAdminParticipantDetailUseCase({ participants }),
+            inject: [PARTICIPANTS_REPOSITORY_PORT_SYMBOL],
+        },
+        {
+            provide: GET_ADMIN_PARTICIPANT_AVATAR_USE_CASE_SYMBOL,
+            useFactory: (participants: IParticipantsIdentityReaderPort & IParticipantsAdminReadPort) =>
+                new GetAdminParticipantAvatarUseCase(participants),
+            inject: [PARTICIPANTS_REPOSITORY_PORT_SYMBOL],
+        },
+        {
+            provide: UPLOAD_ADMIN_PARTICIPANT_AVATAR_USE_CASE_SYMBOL,
+            useFactory: (participants: IParticipantsAdminReadPort & IParticipantsWriterPort) =>
+                new UploadAdminParticipantAvatarUseCase(participants),
             inject: [PARTICIPANTS_REPOSITORY_PORT_SYMBOL],
         },
         {

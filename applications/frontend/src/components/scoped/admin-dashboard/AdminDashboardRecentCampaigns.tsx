@@ -13,6 +13,7 @@ import {
 } from '@mui/material';
 import { Link } from '@tanstack/react-router';
 
+import { ParticipantAvatar } from '@/components/common/ParticipantAvatar';
 import { SkeletonCards, SkeletonTableRows } from '@/components/common/SkeletonRows';
 import { CampaignStatusChip } from '@/components/common/chips';
 import type { ListTableColumn } from '@/components/common/data-table';
@@ -39,6 +40,7 @@ export type AdminDashboardRecentCampaignsProps = {
     campaigns: AdminCampaign[];
     isLoading: boolean;
     companyName: (id: number) => string;
+    companyAvatarUrl: (id: number) => string | null;
     coachName: (id: number) => string;
 };
 
@@ -46,6 +48,7 @@ export function AdminDashboardRecentCampaigns({
     campaigns,
     isLoading,
     companyName,
+    companyAvatarUrl,
     coachName,
 }: AdminDashboardRecentCampaignsProps) {
     const isEmpty = !isLoading && campaigns.length === 0;
@@ -75,6 +78,7 @@ export function AdminDashboardRecentCampaigns({
                                         key={campaign.id}
                                         campaign={campaign}
                                         companyName={companyName}
+                                        companyAvatarUrl={companyAvatarUrl}
                                         coachName={coachName}
                                     />
                                 ))
@@ -96,6 +100,7 @@ export function AdminDashboardRecentCampaigns({
                                 key={campaign.id}
                                 campaign={campaign}
                                 companyName={companyName}
+                                companyAvatarUrl={companyAvatarUrl}
                                 coachName={coachName}
                             />
                         ))
@@ -110,11 +115,31 @@ export function AdminDashboardRecentCampaigns({
 type RecentCampaignRowProps = {
     campaign: AdminCampaign;
     companyName: (id: number) => string;
+    companyAvatarUrl: (id: number) => string | null;
     coachName: (id: number) => string;
 };
 
-function RecentCampaignTableRow({ campaign, companyName, coachName }: RecentCampaignRowProps) {
+function DashboardCompanyAvatar({ companyLabel, avatarUrl }: { companyLabel: string; avatarUrl: string | null }) {
+    return (
+        <ParticipantAvatar
+            src={avatarUrl}
+            initials={companyInitial(companyLabel)}
+            alt={companyLabel}
+            size={32}
+            sx={{
+                borderRadius: 2,
+                bgcolor: 'grey.100',
+                color: 'primary.main',
+                fontWeight: 800,
+                fontSize: '0.75rem',
+            }}
+        />
+    );
+}
+
+function RecentCampaignTableRow({ campaign, companyName, companyAvatarUrl, coachName }: RecentCampaignRowProps) {
     const company = companyName(campaign.companyId);
+    const avatarUrl = companyAvatarUrl(campaign.companyId);
     const detailTo = `/admin/campaigns/${campaign.id}`;
 
     return (
@@ -126,22 +151,7 @@ function RecentCampaignTableRow({ campaign, companyName, coachName }: RecentCamp
             </TableCell>
             <TableCell sx={{ py: CELL_PY }}>
                 <Stack direction="row" spacing={1.5} alignItems="center">
-                    <Box
-                        sx={{
-                            width: 32,
-                            height: 32,
-                            borderRadius: 2,
-                            bgcolor: 'grey.100',
-                            color: 'primary.main',
-                            display: 'grid',
-                            placeItems: 'center',
-                            fontWeight: 800,
-                            fontSize: '0.75rem',
-                            flexShrink: 0,
-                        }}
-                    >
-                        {companyInitial(company)}
-                    </Box>
+                    <DashboardCompanyAvatar companyLabel={company} avatarUrl={avatarUrl} />
                     <Typography color="text.secondary" fontWeight={600}>
                         {company}
                     </Typography>
@@ -172,8 +182,9 @@ function RecentCampaignTableRow({ campaign, companyName, coachName }: RecentCamp
     );
 }
 
-function RecentCampaignMobileCard({ campaign, companyName, coachName }: RecentCampaignRowProps) {
+function RecentCampaignMobileCard({ campaign, companyName, companyAvatarUrl, coachName }: RecentCampaignRowProps) {
     const company = companyName(campaign.companyId);
+    const avatarUrl = companyAvatarUrl(campaign.companyId);
     const detailTo = `/admin/campaigns/${campaign.id}`;
 
     return (
@@ -195,14 +206,17 @@ function RecentCampaignMobileCard({ campaign, companyName, coachName }: RecentCa
             <CardContent sx={{ p: 2.5 }}>
                 <Stack spacing={2}>
                     <Stack direction="row" justifyContent="space-between" alignItems="start" spacing={2}>
-                        <Box>
-                            <Typography variant="h6" fontWeight={800} color="primary.main">
-                                {campaign.name}
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                                {company} · Coach {coachName(campaign.coachId)}
-                            </Typography>
-                        </Box>
+                        <Stack direction="row" spacing={1.5} alignItems="center" sx={{ minWidth: 0 }}>
+                            <DashboardCompanyAvatar companyLabel={company} avatarUrl={avatarUrl} />
+                            <Box sx={{ minWidth: 0 }}>
+                                <Typography variant="h6" fontWeight={800} color="primary.main" noWrap>
+                                    {campaign.name}
+                                </Typography>
+                                <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }} noWrap>
+                                    {company} · Coach {coachName(campaign.coachId)}
+                                </Typography>
+                            </Box>
+                        </Stack>
                         <CampaignStatusChip status={campaign.status} />
                     </Stack>
                     <Stack direction="row" alignItems="center" justifyContent="space-between">

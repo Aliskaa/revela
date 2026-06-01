@@ -29,7 +29,9 @@ import {
     RowNavigateHint,
     type ListTableColumn,
 } from '@/components/common/data-table';
+import { ParticipantAvatar } from '@/components/common/ParticipantAvatar';
 import { useAddParticipantToCompany } from '@/hooks/admin';
+import { personInitialsFromLabel } from '@/lib/personInitials';
 import type { Participant } from '@aor/types';
 
 import { CompanyImportCsv } from './CompanyImportCsv';
@@ -195,21 +197,32 @@ export function CompanyParticipantsTable({
                                                 <ParticipantStatusChip participant={p} />
                                             </TableCell>
                                             <TableCell sx={tableCellSx}>
-                                                <Typography
-                                                    fontWeight={700}
-                                                    color="primary.main"
-                                                    lineHeight={1.2}
-                                                    sx={{ fontSize: '1.0625rem' }}
-                                                >
-                                                    {p.full_name}
-                                                </Typography>
-                                                <Typography
-                                                    variant="caption"
-                                                    color="text.secondary"
-                                                    sx={{ display: 'block', mt: 0.25, opacity: 0.7 }}
-                                                >
-                                                    {p.email}
-                                                </Typography>
+                                                <Stack direction="row" spacing={1.5} alignItems="center">
+                                                    <ParticipantAvatar
+                                                        src={p.avatar_url}
+                                                        initials={personInitialsFromLabel(p.full_name)}
+                                                        alt={p.full_name}
+                                                        size={40}
+                                                        sx={{ borderRadius: 2 }}
+                                                    />
+                                                    <Box sx={{ minWidth: 0 }}>
+                                                        <Typography
+                                                            fontWeight={700}
+                                                            color="primary.main"
+                                                            lineHeight={1.2}
+                                                            sx={{ fontSize: '1.0625rem' }}
+                                                        >
+                                                            {p.full_name}
+                                                        </Typography>
+                                                        <Typography
+                                                            variant="caption"
+                                                            color="text.secondary"
+                                                            sx={{ display: 'block', mt: 0.25, opacity: 0.7 }}
+                                                        >
+                                                            {p.email}
+                                                        </Typography>
+                                                    </Box>
+                                                </Stack>
                                             </TableCell>
                                             <TableCell sx={tableCellSx}>
                                                 <Typography fontWeight={700}>{p.organisation ?? '–'}</Typography>

@@ -20,6 +20,7 @@ export const campaignParticipantProgressSchema = z.object({
     participantId: z.number().int(),
     fullName: z.string(),
     email: z.string(),
+    avatar_url: z.string().nullable(),
     selfRatingStatus: progressStatusSchema,
     peerFeedbackStatus: progressStatusSchema,
     elementHumainStatus: progressStatusSchema,

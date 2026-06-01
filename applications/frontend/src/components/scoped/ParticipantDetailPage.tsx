@@ -13,7 +13,7 @@ import { ParticipantInfoCard } from '@/components/admin/participant-detail/Parti
 import { KpiCard } from '@/components/common/cards';
 import { KpiGrid } from '@/components/common/layout';
 import { useBreadcrumbs } from '@/components/layout/AppShellChromeContext';
-import { useParticipant, useUpdateParticipant } from '@/hooks/admin';
+import { useParticipant, useUpdateParticipant, useUploadAdminParticipantAvatar } from '@/hooks/admin';
 import { useAuthStore } from '@/stores/authStore';
 import type { ParticipantCampaignAssignment, UpdateParticipantProfileBody } from '@aor/types';
 
@@ -61,6 +61,7 @@ export function ParticipantDetailPage({ scope, participantId }: ParticipantDetai
 
     const { data, isLoading, isError } = useParticipant(participantId);
     const updateParticipant = useUpdateParticipant();
+    const uploadParticipantAvatar = useUploadAdminParticipantAvatar(participantId);
 
     const [editDrawerOpen, setEditDrawerOpen] = React.useState(false);
     const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
@@ -234,6 +235,16 @@ export function ParticipantDetailPage({ scope, participantId }: ParticipantDetai
             >
                 <ParticipantInfoCard
                     participant={participant}
+                    avatarUrl={participant.avatar_url}
+                    allowAvatarEdit
+                    isAvatarUploading={uploadParticipantAvatar.isPending}
+                    onAvatarUpload={async file => {
+                        try {
+                            await uploadParticipantAvatar.mutateAsync(file);
+                        } catch {
+                            // Toast émis par le hook.
+                        }
+                    }}
                     companyDetailTo={
                         participant.company ? cfg.companyDetailTo(participant.company.id) : undefined
                     }

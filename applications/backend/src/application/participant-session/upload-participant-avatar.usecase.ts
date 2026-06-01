@@ -19,6 +19,11 @@ const ALLOWED_MIME_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
 export const participantAvatarPublicPath = (cacheBuster?: number): string =>
     cacheBuster ? `/api/participant/avatars/me?v=${cacheBuster}` : '/api/participant/avatars/me';
 
+export const adminParticipantAvatarPublicPath = (participantId: number, cacheBuster?: number): string => {
+    const base = `/api/admin/participants/${participantId}/avatar`;
+    return cacheBuster ? `${base}?v=${cacheBuster}` : base;
+};
+
 export const participantCampaignPeerAvatarPublicPath = (
     campaignId: number,
     peerParticipantId: number,

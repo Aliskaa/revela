@@ -93,6 +93,7 @@ export class GetAdminCampaignSynthesisMatrixUseCase {
                 participantId: p.participantId,
                 fullName: p.fullName,
                 email: p.email,
+                avatar_url: p.avatar_url,
                 hasResponse: elementB !== null,
             });
         }

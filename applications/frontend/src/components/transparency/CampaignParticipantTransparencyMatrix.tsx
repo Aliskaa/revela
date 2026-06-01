@@ -19,7 +19,9 @@ import type { SxProps, Theme } from '@mui/material';
 import { Users } from 'lucide-react';
 import * as React from 'react';
 
+import { ParticipantAvatar } from '@/components/common/ParticipantAvatar';
 import { surfaceCardSx } from '@/components/common/styles/listSurfaces';
+import { personInitialsFromLabel } from '@/lib/personInitials';
 import type { ParticipantQuestionnaireMatrix, TransparencySnapshot } from '@aor/types';
 import { transparencyConvertFToP } from '@aor/types';
 
@@ -90,17 +92,6 @@ const peerHeaderCellSx: SxProps<Theme> = {
     borderColor: 'surface.listTableRowBorder',
 };
 
-function participantInitials(fullName: string): string {
-    const parts = fullName.trim().split(/\s+/).filter(Boolean);
-    if (parts.length === 0) {
-        return '?';
-    }
-    if (parts.length === 1) {
-        return parts[0].slice(0, 2).toUpperCase();
-    }
-    return `${parts[0][0] ?? ''}${parts[parts.length - 1][0] ?? ''}`.toUpperCase();
-}
-
 const ecartLabelSx: SxProps<Theme> = {
     fontSize: '0.5625rem',
     textTransform: 'uppercase',
@@ -122,12 +113,14 @@ const peerLabelSx: SxProps<Theme> = {
 function PeerColumnHeader({
     label,
     fallbackLabel,
+    avatarUrl = null,
     showEcartLabel = false,
     showAvatar = true,
     bgcolor,
 }: {
     label: string;
     fallbackLabel: string;
+    avatarUrl?: string | null;
     showEcartLabel?: boolean;
     showAvatar?: boolean;
     bgcolor: string;
@@ -150,24 +143,21 @@ function PeerColumnHeader({
                                 Écart
                             </Typography>
                         ) : null}
-                        <Box
+                        <ParticipantAvatar
+                            src={avatarUrl}
+                            initials={personInitialsFromLabel(displayName)}
+                            alt={displayName}
+                            size={32}
                             sx={{
-                                width: 32,
-                                height: 32,
                                 borderRadius: 2,
-                                display: 'grid',
-                                placeItems: 'center',
                                 fontWeight: 800,
                                 fontSize: '0.625rem',
-                                flexShrink: 0,
                                 bgcolor: showEcartLabel ? 'surface.containerLow' : 'tint.primaryBg',
                                 color: showEcartLabel ? 'text.secondary' : 'primary.main',
                                 border: '1px solid',
                                 borderColor: showEcartLabel ? 'border' : 'tint.primaryRail',
                             }}
-                        >
-                            {participantInitials(displayName)}
-                        </Box>
+                        />
                         <Typography variant="caption" fontWeight={700} sx={peerLabelSx}>
                             {displayName}
                         </Typography>
@@ -315,6 +305,7 @@ export function CampaignParticipantTransparencyMatrix({
                                             key={`peer-${col.response_id}`}
                                             label={col.label}
                                             fallbackLabel={`Pair #${i + 1}`}
+                                            avatarUrl={col.avatar_url}
                                             showAvatar={showPeerAvatars}
                                             bgcolor="surface.lavenderGrey"
                                         />
@@ -324,6 +315,7 @@ export function CampaignParticipantTransparencyMatrix({
                                             key={`ecart-${col.response_id}`}
                                             label={col.label}
                                             fallbackLabel={`#${i + 1}`}
+                                            avatarUrl={col.avatar_url}
                                             showEcartLabel
                                             showAvatar={showPeerAvatars}
                                             bgcolor="tint.subtleRow"

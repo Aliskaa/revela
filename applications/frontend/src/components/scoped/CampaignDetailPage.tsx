@@ -12,9 +12,11 @@ import { CampaignStatusActions } from '@/components/admin/campaign-detail/Campai
 import { CampaignSummaryCard } from '@/components/admin/campaign-detail/CampaignSummaryCard';
 import { CampaignSynthesisCard } from '@/components/admin/campaign-detail/CampaignSynthesisCard';
 import { KpiCard } from '@/components/common/cards';
+import { ParticipantAvatar } from '@/components/common/ParticipantAvatar';
 import { KpiGrid } from '@/components/common/layout';
 import { useAdminCampaign, useCoaches, useCompanies } from '@/hooks/admin';
 import { computeProgress, statusText } from '@/lib/admin/campaignDetailView';
+import { companyInitial } from '@/lib/companyInitial';
 import { questionnaireLabel } from '@/lib/labels';
 import type { CampaignStatus } from '@aor/types';
 
@@ -74,7 +76,9 @@ export function CampaignDetailPage({ scope, campaignId }: CampaignDetailPageProp
     const participants = detail?.participant_progress ?? [];
     const responsesTotal = detail?.responses_total ?? 0;
 
-    const companyName = campaign ? (companies.find(c => c.id === campaign.companyId)?.name ?? '–') : '–';
+    const company = campaign ? companies.find(c => c.id === campaign.companyId) : undefined;
+    const companyName = company?.name ?? '–';
+    const companyAvatarUrl = company?.avatar_url ?? null;
     const coachName = campaign ? (coaches.find(c => c.id === campaign.coachId)?.displayName ?? '–') : '–';
     const qLabel = questionnaireLabel(campaign?.questionnaireId);
     const progress = computeProgress(participants);
@@ -124,18 +128,34 @@ export function CampaignDetailPage({ scope, campaignId }: CampaignDetailPageProp
     return (
         <Stack spacing={3} sx={{ minWidth: 0 }}>
             <Box>
-                <Typography
-                    variant="h3"
-                    sx={{
-                        color: 'primary.main',
-                        fontWeight: 900,
-                        letterSpacing: -0.03,
-                        lineHeight: 1.1,
-                        mb: 1,
-                    }}
-                >
-                    {campaign.name}
-                </Typography>
+                <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 1 }}>
+                    <ParticipantAvatar
+                        src={companyAvatarUrl}
+                        initials={companyInitial(companyName)}
+                        alt={companyName}
+                        size={56}
+                        sx={{
+                            borderRadius: 2,
+                            flexShrink: 0,
+                            bgcolor: 'grey.100',
+                            color: 'primary.main',
+                            fontWeight: 800,
+                            fontSize: '1.25rem',
+                        }}
+                    />
+                    <Typography
+                        variant="h3"
+                        sx={{
+                            color: 'primary.main',
+                            fontWeight: 900,
+                            letterSpacing: -0.03,
+                            lineHeight: 1.1,
+                            minWidth: 0,
+                        }}
+                    >
+                        {campaign.name}
+                    </Typography>
+                </Stack>
                 <Typography variant="body1" color="text.secondary" sx={{ maxWidth: 720, lineHeight: 1.7 }}>
                     {SUBTITLE}
                 </Typography>

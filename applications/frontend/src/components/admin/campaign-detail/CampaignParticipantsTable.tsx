@@ -19,6 +19,7 @@ import { ChevronDown } from 'lucide-react';
 import * as React from 'react';
 
 import type { ListTableColumn } from '@/components/common/data-table';
+import { ParticipantAvatar } from '@/components/common/ParticipantAvatar';
 import { EmptyTableRow, ListTableHead, ListTablePagination } from '@/components/common/data-table';
 import { MobileListEmptyMessage, ResponsiveListViews } from '@/components/common/layout';
 import {
@@ -27,6 +28,7 @@ import {
     listRowSx,
     surfaceCardSx,
 } from '@/components/common/styles/listSurfaces';
+import { personInitialsFromLabel } from '@/lib/personInitials';
 import { useTablePagination } from '@/lib/useTablePagination';
 import type { CampaignParticipantProgress } from '@aor/types';
 
@@ -37,17 +39,6 @@ import { ParticipantTokensRow } from './ParticipantTokensRow';
 
 const EDGE_X = 5;
 const TABLE_MIN_WIDTH = 680;
-
-function participantInitials(fullName: string): string {
-    const parts = fullName.trim().split(/\s+/).filter(Boolean);
-    if (parts.length === 0) {
-        return '?';
-    }
-    if (parts.length === 1) {
-        return parts[0].slice(0, 2).toUpperCase();
-    }
-    return `${parts[0][0] ?? ''}${parts[parts.length - 1][0] ?? ''}`.toUpperCase();
-}
 
 export type CampaignParticipantsTableProps = {
     campaignId: number;
@@ -250,22 +241,13 @@ type ParticipantIdentityProps = {
 function ParticipantIdentity({ participant, participantUrlPrefix }: ParticipantIdentityProps) {
     return (
         <Stack direction="row" spacing={1.5} alignItems="center">
-            <Box
-                sx={{
-                    width: 40,
-                    height: 40,
-                    borderRadius: 2,
-                    bgcolor: 'grey.100',
-                    color: 'primary.main',
-                    display: 'grid',
-                    placeItems: 'center',
-                    fontWeight: 800,
-                    fontSize: '0.75rem',
-                    flexShrink: 0,
-                }}
-            >
-                {participantInitials(participant.fullName)}
-            </Box>
+            <ParticipantAvatar
+                src={participant.avatar_url}
+                initials={personInitialsFromLabel(participant.fullName)}
+                alt={participant.fullName}
+                size={40}
+                sx={{ borderRadius: 2 }}
+            />
             <Box sx={{ minWidth: 0 }}>
                 {participantUrlPrefix ? (
                     <Link

@@ -100,6 +100,37 @@ export function useParticipant(participantId: number) {
     });
 }
 
+export function useUploadAdminParticipantAvatar(participantId: number) {
+    const qc = useQueryClient();
+    const toast = useToast();
+    return useMutation<{ avatar_url: string }, Error, File>({
+        mutationFn: file => {
+            const formData = new FormData();
+            formData.append('file', file);
+            return apiClient
+                .post(`/admin/participants/${participantId}/avatar`, formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' },
+                })
+                .then(r => r.data);
+        },
+        onSuccess: data => {
+            qc.setQueryData<ParticipantDetail>(adminKeys.participant(participantId), current =>
+                current?.participant
+                    ? {
+                          ...current,
+                          participant: { ...current.participant, avatar_url: data.avatar_url },
+                      }
+                    : current
+            );
+            qc.invalidateQueries({ queryKey: adminKeys.participant(participantId) });
+            qc.invalidateQueries({ queryKey: adminKeys.participants() });
+            toast.success('Photo de profil mise à jour.');
+        },
+        onError: err =>
+            toast.error(err instanceof Error && err.message ? err.message : 'Impossible de mettre à jour la photo.'),
+    });
+}
+
 export function useUpdateParticipant() {
     const qc = useQueryClient();
     const toast = useToast();
@@ -237,6 +268,32 @@ export function useCreateCompany() {
             toast.success(`Entreprise « ${vars.name} » créée.`);
         },
         onError: err => toast.error(toErrorMessage(err, "Échec de la création de l'entreprise.")),
+    });
+}
+
+export function useUploadCompanyAvatar(companyId: number) {
+    const qc = useQueryClient();
+    const toast = useToast();
+    return useMutation<{ avatar_url: string }, Error, File>({
+        mutationFn: file => {
+            const formData = new FormData();
+            formData.append('file', file);
+            return apiClient
+                .post(`/admin/companies/${companyId}/avatar`, formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' },
+                })
+                .then(r => r.data);
+        },
+        onSuccess: data => {
+            qc.setQueryData<Company[]>(adminKeys.companies, current =>
+                current?.map(c => (c.id === companyId ? { ...c, avatar_url: data.avatar_url } : c)) ?? current
+            );
+            qc.invalidateQueries({ queryKey: adminKeys.companies });
+            qc.invalidateQueries({ queryKey: adminKeys.company(companyId) });
+            toast.success('Logo de l’entreprise mis à jour.');
+        },
+        onError: err =>
+            toast.error(err instanceof Error && err.message ? err.message : 'Impossible de mettre à jour le logo.'),
     });
 }
 

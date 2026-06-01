@@ -7,6 +7,7 @@ import * as React from 'react';
 
 import { Button } from '@/components/common/Button';
 import { drawerSectionTitleSx, surfaceCardSx } from '@/components/common/styles/listSurfaces';
+import { personInitialsFromNames } from '@/lib/personInitials';
 import type { Participant, ParticipantFunctionLevel } from '@aor/types';
 
 const FUNCTION_LEVEL_LABELS: Record<ParticipantFunctionLevel, string> = {
@@ -14,12 +15,6 @@ const FUNCTION_LEVEL_LABELS: Record<ParticipantFunctionLevel, string> = {
     middle_management: 'Management intermédiaire',
     frontline_manager: 'Manager de proximité',
 };
-
-function participantInitials(firstName: string, lastName: string): string {
-    const a = firstName.trim().charAt(0);
-    const b = lastName.trim().charAt(0);
-    return `${a}${b}`.toUpperCase() || '?';
-}
 
 function displayOrEmpty(value: string | null | undefined): { text: string; isEmpty: boolean } {
     const trimmed = value?.trim();
@@ -47,7 +42,7 @@ export function ParticipantInfoCard({
     isAvatarUploading = false,
 }: ParticipantInfoCardProps) {
     const fileInputRef = React.useRef<HTMLInputElement>(null);
-    const initials = participantInitials(participant.first_name, participant.last_name);
+    const initials = personInitialsFromNames(participant.first_name, participant.last_name);
     const functionLabel = participant.function_level
         ? FUNCTION_LEVEL_LABELS[participant.function_level]
         : null;
