@@ -38,6 +38,7 @@ import type { GetParticipantSessionQuestionnaireMatrixUseCase } from '@src/appli
 import type { GetParticipantSessionUseCase } from '@src/application/participant-session/get-participant-session.usecase';
 import type { ListParticipantCampaignPeersUseCase } from '@src/application/participant-session/list-participant-campaign-peers.usecase';
 import type { ParticipantLoginUseCase } from '@src/application/participant-session/participant-login.usecase';
+import type { GetParticipantCampaignCoachAvatarUseCase } from '@src/application/participant-session/get-participant-campaign-coach-avatar.usecase';
 import type { GetParticipantCampaignPeerAvatarUseCase } from '@src/application/participant-session/get-participant-campaign-peer-avatar.usecase';
 import type {
     GetParticipantAvatarUseCase,
@@ -78,6 +79,7 @@ import {
     GET_PARTICIPANT_SESSION_USE_CASE_SYMBOL,
     GET_PARTICIPANT_AVATAR_USE_CASE_SYMBOL,
     GET_PARTICIPANT_CAMPAIGN_PEER_AVATAR_USE_CASE_SYMBOL,
+    GET_PARTICIPANT_CAMPAIGN_COACH_AVATAR_USE_CASE_SYMBOL,
     LIST_PARTICIPANT_CAMPAIGN_PEERS_USE_CASE_SYMBOL,
     PARTICIPANT_LOGIN_USE_CASE_SYMBOL,
     SUBMIT_PARTICIPANT_QUESTIONNAIRE_USE_CASE_SYMBOL,
@@ -126,6 +128,8 @@ export class ParticipantController {
         private readonly getParticipantAvatar: GetParticipantAvatarUseCase,
         @Inject(GET_PARTICIPANT_CAMPAIGN_PEER_AVATAR_USE_CASE_SYMBOL)
         private readonly getParticipantCampaignPeerAvatar: GetParticipantCampaignPeerAvatarUseCase,
+        @Inject(GET_PARTICIPANT_CAMPAIGN_COACH_AVATAR_USE_CASE_SYMBOL)
+        private readonly getParticipantCampaignCoachAvatar: GetParticipantCampaignCoachAvatarUseCase,
         private readonly audit: AuditLoggerService
     ) {}
 
@@ -366,6 +370,23 @@ export class ParticipantController {
         @Param('campaignId', ParseIntPipe) campaignId: number
     ) {
         return this.listParticipantCampaignPeers.execute(participantId, campaignId);
+    }
+
+    @Get('campaigns/:campaignId/coach/avatar')
+    @UseGuards(ParticipantJwtAuthGuard)
+    @UseFilters(ParticipantSessionExceptionFilter, ParticipantAvatarExceptionFilter)
+    public async getCampaignCoachAvatar(
+        @CurrentParticipantId() participantId: number,
+        @Param('campaignId', ParseIntPipe) campaignId: number,
+        @Res() res: Response
+    ) {
+        const { buffer, mimeType } = await this.getParticipantCampaignCoachAvatar.execute(
+            participantId,
+            campaignId
+        );
+        res.setHeader('Content-Type', mimeType);
+        res.setHeader('Cache-Control', 'private, max-age=86400');
+        res.send(buffer);
     }
 
     @Get('campaigns/:campaignId/peers/:peerParticipantId/avatar')

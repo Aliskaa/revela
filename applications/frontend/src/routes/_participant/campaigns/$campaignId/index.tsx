@@ -165,7 +165,11 @@ function ParticipantCampaignWorkspaceRoute() {
                 }}
             >
                 <PageHeader title={campaignName} subtitle={`${company} · ${questionnaire}`} />
-                <CampaignCoachProfileLink campaignId={campaignId} coachName={coachName} />
+                <CampaignCoachProfileLink
+                    campaignId={campaignId}
+                    coachName={coachName}
+                    coachAvatarUrl={assignment.coach_avatar_url}
+                />
             </Box>
 
             <KpiGrid columns={4}>

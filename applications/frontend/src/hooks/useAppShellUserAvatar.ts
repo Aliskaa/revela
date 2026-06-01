@@ -6,6 +6,10 @@ export type AppShellUserAvatarModel = {
     src: string | null;
     initials: string;
     alt: string;
+    /** Nom affiché à côté de l'avatar dans la barre d'en-tête. */
+    fullName?: string;
+    /** Ligne secondaire sous le nom (entreprise participant, rôle admin/coach, etc.). */
+    companyName?: string;
 };
 
 export function useParticipantAppShellUserAvatar(): AppShellUserAvatarModel {
@@ -20,6 +24,8 @@ export function useParticipantAppShellUserAvatar(): AppShellUserAvatarModel {
             ? personInitialsFromNames(session.first_name, session.last_name)
             : personInitialsFromLabel('Participant'),
         alt: fullName,
+        fullName,
+        companyName: session?.company_name?.trim() || undefined,
     };
 }
 
@@ -30,6 +36,8 @@ export function useAdminAppShellUserAvatar(): AppShellUserAvatarModel {
         src: adminMe?.avatar_url ?? null,
         initials: personInitialsFromLabel(displayName),
         alt: displayName,
+        fullName: displayName,
+        companyName: 'Administrateur',
     };
 }
 
@@ -39,9 +47,12 @@ export function useCoachAppShellUserAvatar(): AppShellUserAvatarModel {
         adminMe?.display_name?.trim() ||
         adminMe?.username?.trim() ||
         (adminMe?.scope === 'super-admin' ? 'Admin' : 'Coach');
+    const roleLabel = adminMe?.scope === 'super-admin' ? 'Administrateur' : 'Coach';
     return {
         src: adminMe?.avatar_url ?? null,
         initials: personInitialsFromLabel(displayName),
         alt: displayName,
+        fullName: displayName,
+        companyName: roleLabel,
     };
 }

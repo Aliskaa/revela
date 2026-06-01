@@ -6,6 +6,7 @@ import { Sparkles, UserRound, Users } from 'lucide-react';
 import * as React from 'react';
 
 import { EmptyState } from '@/components/common/EmptyState';
+import { CampaignCoachAvatar } from '@/components/participant-dashboard/CampaignCoachAvatar';
 import { PageHeader, ListPanel } from '@/components/common/layout';
 import { LoadingCard } from '@/components/common/LoadingCard';
 import { surfaceCardSx } from '@/components/common/styles/listSurfaces';
@@ -27,6 +28,7 @@ const coachAvailabilityLabel = (status?: ParticipantAssignment['campaign_status'
 
 type CoachView = {
     name: string;
+    avatarUrl: string | null;
     title: string;
     company: string;
     availability: string;
@@ -38,6 +40,7 @@ type CoachView = {
 
 const coachFromAssignment = (assignment?: ParticipantAssignment): CoachView => ({
     name: assignment?.coach_name ?? 'Coach non attribué',
+    avatarUrl: assignment?.coach_avatar_url ?? null,
     title: 'Coach référent Révéla',
     company: assignment?.company_name ?? 'Organisation non renseignée',
     availability: coachAvailabilityLabel(assignment?.campaign_status ?? undefined),
@@ -139,20 +142,11 @@ function ParticipantCoachRoute() {
                         alignItems={{ xs: 'flex-start', md: 'center' }}
                     >
                         <Stack direction="row" spacing={1.5} alignItems="center" sx={{ minWidth: 0 }}>
-                            <Box
-                                sx={{
-                                    width: 48,
-                                    height: 48,
-                                    borderRadius: '50%',
-                                    display: 'grid',
-                                    placeItems: 'center',
-                                    bgcolor: 'primary.main',
-                                    color: 'primary.contrastText',
-                                    flexShrink: 0,
-                                }}
-                            >
-                                <UserRound size={22} />
-                            </Box>
+                            <CampaignCoachAvatar
+                                coachName={coachView.name}
+                                avatarUrl={coachView.avatarUrl}
+                                size={48}
+                            />
                             <Box sx={{ minWidth: 0 }}>
                                 <Typography variant="h6" fontWeight={700} color="primary.main">
                                     {coachView.name}
@@ -188,7 +182,7 @@ function ParticipantCoachRoute() {
                 {!hasCoach ? (
                     <Box sx={{ px: { xs: 2.5, md: 4 }, py: 4 }}>
                         <EmptyState
-                            icon={UserRound}
+                            icon={Sparkles}
                             variant="secondary"
                             title="Aucun coach attribué"
                             description="Aucun coach n'est encore rattaché à votre campagne. Vous serez informé dès qu'un référent sera assigné."

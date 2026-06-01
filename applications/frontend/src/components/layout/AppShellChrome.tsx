@@ -199,10 +199,63 @@ export function AppShellSidebar({
     );
 }
 
-export type AppShellUserAvatarProps = ParticipantAvatarProps;
+export type AppShellUserAvatarProps = ParticipantAvatarProps & {
+    fullName?: string;
+    companyName?: string;
+};
 
-export function AppShellUserAvatar(props: AppShellUserAvatarProps) {
+export function AppShellUserAvatar({ fullName: _fullName, companyName: _companyName, ...props }: AppShellUserAvatarProps) {
     return <ParticipantAvatar {...props} />;
+}
+
+type AppShellUserIdentityProps = {
+    userAvatar: AppShellUserAvatarProps;
+    avatarSize?: number;
+};
+
+function AppShellUserIdentity({ userAvatar, avatarSize }: AppShellUserIdentityProps) {
+    const { fullName, companyName, size, sx, ...avatarProps } = userAvatar;
+    const resolvedSize = avatarSize ?? size ?? 36;
+    const displayName = fullName?.trim();
+    const displayCompany = companyName?.trim();
+
+    if (!displayName) {
+        return <AppShellUserAvatar {...userAvatar} size={resolvedSize} />;
+    }
+
+    return (
+        <Stack direction="row" spacing={1.25} alignItems="center" sx={{ minWidth: 0, flexShrink: 0 }}>
+            <AppShellUserAvatar
+                {...avatarProps}
+                alt={displayName}
+                size={resolvedSize}
+                sx={{
+                    border: '2px solid',
+                    borderColor: 'surface.softWhite',
+                    boxShadow: theme => theme.palette.shadow.cardSoft,
+                    flexShrink: 0,
+                    alignSelf: displayCompany ? 'flex-start' : 'center',
+                    ...sx,
+                }}
+            />
+            <Box sx={{ minWidth: 0, maxWidth: { xs: 96, sm: 200, md: 280 } }}>
+                <Typography
+                    variant="body2"
+                    fontWeight={700}
+                    color="primary.main"
+                    noWrap
+                    sx={{ lineHeight: 1.25, letterSpacing: '-0.01em' }}
+                >
+                    {displayName}
+                </Typography>
+                {displayCompany ? (
+                    <Typography variant="caption" color="text.secondary" noWrap sx={{ display: 'block', lineHeight: 1.35 }}>
+                        {displayCompany}
+                    </Typography>
+                ) : null}
+            </Box>
+        </Stack>
+    );
 }
 
 type AppShellTopBarProps = {
@@ -291,15 +344,7 @@ export function AppShellTopBar({ userAvatar }: AppShellTopBarProps) {
                         <Settings size={22} />
                     </IconButton> */}
                 </Stack>
-                <AppShellUserAvatar
-                    {...userAvatar}
-                    sx={{
-                        border: '2px solid',
-                        borderColor: 'surface.softWhite',
-                        boxShadow: theme => theme.palette.shadow.cardSoft,
-                        ...userAvatar.sx,
-                    }}
-                />
+                <AppShellUserIdentity userAvatar={userAvatar} avatarSize={40} />
             </Stack>
         </Box>
     );
@@ -341,7 +386,7 @@ export function AppShellMobileChrome({
                     <Box sx={{ flex: 1 }}>
                         <AppShellBrandMark brandLabel={brandLabel} brandEyebrow={brandEyebrow} onDark={false} />
                     </Box>
-                    <AppShellUserAvatar {...userAvatar} size={36} />
+                    <AppShellUserIdentity userAvatar={userAvatar} avatarSize={36} />
                 </Toolbar>
             </AppBar>
 

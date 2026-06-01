@@ -2,18 +2,24 @@
 
 import { Box, ButtonBase, Stack, Typography } from '@mui/material';
 import { Link } from '@tanstack/react-router';
-import { ArrowRight, Sparkles } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 
+import { CampaignCoachAvatar } from '@/components/participant-dashboard/CampaignCoachAvatar';
 import { interactiveSurfaceCardSx } from '@/components/common/styles/listSurfaces';
 
 export type CampaignCoachProfileLinkProps = {
     campaignId: number;
     coachName: string;
+    coachAvatarUrl?: string | null;
 };
 
-export function CampaignCoachProfileLink({ campaignId, coachName }: CampaignCoachProfileLinkProps) {
+export function CampaignCoachProfileLink({
+    campaignId,
+    coachName,
+    coachAvatarUrl,
+}: CampaignCoachProfileLinkProps) {
     return (
-        <Link to="/campaigns/$campaignId/coach" params={{ campaignId: String(campaignId) }}>
+        <Link to="/campaigns/$campaignId/coach" params={{ campaignId: String(campaignId) }} style={{ textDecoration: 'none' }}>
             <ButtonBase
                 focusRipple
                 sx={{
@@ -25,20 +31,7 @@ export function CampaignCoachProfileLink({ campaignId, coachName }: CampaignCoac
             >
                 <Box sx={{ p: 2.5, width: '100%' }}>
                     <Stack direction="row" spacing={1.5} alignItems="center">
-                        <Box
-                            sx={{
-                                width: 48,
-                                height: 48,
-                                borderRadius: '50%',
-                                bgcolor: 'primary.main',
-                                color: 'primary.contrastText',
-                                display: 'grid',
-                                placeItems: 'center',
-                                flexShrink: 0,
-                            }}
-                        >
-                            <Sparkles size={20} />
-                        </Box>
+                        <CampaignCoachAvatar coachName={coachName} avatarUrl={coachAvatarUrl} size={48} />
                         <Box sx={{ minWidth: 0, flex: 1 }}>
                             <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
                                 Mon coach

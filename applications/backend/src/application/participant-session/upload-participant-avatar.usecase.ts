@@ -33,6 +33,11 @@ export const participantCampaignPeerAvatarPublicPath = (
     return cacheBuster ? `${base}?v=${cacheBuster}` : base;
 };
 
+export const participantCampaignCoachAvatarPublicPath = (campaignId: number, cacheBuster?: number): string => {
+    const base = `/api/participant/campaigns/${campaignId}/coach/avatar`;
+    return cacheBuster ? `${base}?v=${cacheBuster}` : base;
+};
+
 export class UploadParticipantAvatarUseCase {
     public constructor(
         private readonly participants: IParticipantsIdentityReaderPort & IParticipantsWriterPort
