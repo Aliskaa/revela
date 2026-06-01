@@ -138,8 +138,8 @@ export function ParticipantInfoCard({
                                 src={avatarUrl ?? undefined}
                                 alt={participant.full_name}
                                 sx={{
-                                    width: 56,
-                                    height: 56,
+                                    width: 65,
+                                    height: 65,
                                     bgcolor: 'primary.main',
                                     fontWeight: 700,
                                     fontSize: '1.125rem',

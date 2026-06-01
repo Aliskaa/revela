@@ -206,7 +206,7 @@ export type AppShellUserAvatarProps = {
     sx?: SxProps<Theme>;
 };
 
-export function AppShellUserAvatar({ src, initials, alt, size = 40, sx }: AppShellUserAvatarProps) {
+export function AppShellUserAvatar({ src, initials, alt, size = 50, sx }: AppShellUserAvatarProps) {
     return (
         <Avatar
             src={src ?? undefined}
