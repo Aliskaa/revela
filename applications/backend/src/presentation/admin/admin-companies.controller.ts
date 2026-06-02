@@ -172,7 +172,7 @@ export class AdminCompaniesController {
     }
 
     @Post('companies/:companyId/participants')
-    public async addParticipantToCompanyEndpoint(
+    public async addParticipant(
         @Param('companyId', ParseIntPipe) companyId: number,
         @CurrentCoachScope() coachId: number | undefined,
         @Body(new ZodValidationPipe(addParticipantBodySchema)) body: AddParticipantBody

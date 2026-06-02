@@ -5,6 +5,8 @@ import {
     Controller,
     Delete,
     Get,
+    HttpCode,
+    HttpStatus,
     Inject,
     Param,
     ParseIntPipe,
@@ -82,6 +84,9 @@ export class AdminResponsesController {
     }
 
     @Delete('responses/:responseId')
+    // Famille « suppression avec résumé » → 200 + corps, déclaré explicitement
+    // (ADR-009 §5 : choix conscient et cohérent par famille).
+    @HttpCode(HttpStatus.OK)
     public deleteResponse(
         @Param('responseId', ParseIntPipe) responseId: number,
         @Body() body: { confirm?: boolean },

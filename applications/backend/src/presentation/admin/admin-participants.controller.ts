@@ -5,6 +5,8 @@ import {
     Controller,
     Delete,
     Get,
+    HttpCode,
+    HttpStatus,
     Inject,
     NotFoundException,
     Param,
@@ -220,6 +222,9 @@ export class AdminParticipantsController {
     }
 
     @Delete('participants/:participantId')
+    // Famille « suppression avec résumé » (RGPD erase) → 200 + corps, déclaré
+    // explicitement (ADR-009 §5 : choix conscient et cohérent par famille).
+    @HttpCode(HttpStatus.OK)
     public async deleteParticipant(
         @Param('participantId', ParseIntPipe) participantId: number,
         @Body() body: { confirm?: boolean },

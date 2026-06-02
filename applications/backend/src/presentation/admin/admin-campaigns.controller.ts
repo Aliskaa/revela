@@ -200,7 +200,7 @@ export class AdminCampaignsController {
 
     @Post('campaigns/:campaignId/participants')
     @UseGuards(CampaignAccessGuard)
-    public async addParticipantToCampaignEndpoint(
+    public async addParticipant(
         @Param('campaignId', ParseIntPipe) campaignId: number,
         @CurrentCoachScope() coachId: number | undefined,
         @Body(new ZodValidationPipe(addParticipantBodySchema)) body: AddParticipantBody

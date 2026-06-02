@@ -34,6 +34,7 @@
 | **Total (au 2026-06-02, après Section 2)** | **2** | **3** | **12** | **5** |
 | **Total (au 2026-06-02, après Section 3)** | **2** | **2** | **12** | **6** |
 | **Total (au 2026-06-02, après Section 4)** | **2** | **0** | **11** | **9** |
+| **Total (au 2026-06-02, après Section 5)** | **2** | **0** | **9** | **11** |
 
 État global : **base fonctionnelle, conventions implicites divergentes**. Pas de
 refonte nécessaire — extraction de briques transverses + convergence progressive
@@ -159,14 +160,39 @@ handler Nest par défaut).
 - **Équivalence comportementale** : `PaginationQueryPipe` reproduit exactement `Number(raw ?? d)` + `Math.floor` + garde `>0` des ex-helpers ; les presenters reprennent champ pour champ les mappings inline (audit : `created_at` laissé en `Date`, sérialisé en ISO identique par `Date#toJSON`). Seul écart **assumé et documenté** : la pagination audit est désormais plafonnée à 200 (durcissement défensif, cas par défaut inchangé).
 - **« Ne pas inventer » (CLAUDE.md)** : `normalizeSearch` (spécifique à `admin-participants`, **non** dupliqué) est laissé en place plutôt que sur-généralisé sans besoin.
 
-## Section 5 — Conventions REST
+## Section 5 — Conventions REST — ✅ Traitée le 2026-06-02 (partie frontend-neutre ; verbes/chemins → Section 7)
 
-| Statut | Constat | Preuve |
-|---|---|---|
-| 🟡 | Verbes incohérents : transition d'état campagne en `POST /status` alors que la réassignation coach voisine est en `PATCH /coach` | [admin-campaigns.controller.ts:167](../applications/backend/src/presentation/admin/admin-campaigns.controller.ts#L167) vs [:129](../applications/backend/src/presentation/admin/admin-campaigns.controller.ts#L129) |
-| 🟡 | Sémantique `DELETE` opposée dans le même module : `204` sans corps (coach/company) vs `200` avec corps (response/participant) | [admin-coaches.controller.ts:186](../applications/backend/src/presentation/admin/admin-coaches.controller.ts#L186) vs [admin-participants.controller.ts:246](../applications/backend/src/presentation/admin/admin-participants.controller.ts#L246) |
-| 🟡 | Chemins d'avatar non uniformes : `participant/avatars/me` (pluriel) vs `participant/profile/avatar` vs `admin/coaches/:id/avatar` | [participant.controller.ts:329](../applications/backend/src/presentation/participant-session/participant.controller.ts#L329) ; [:314](../applications/backend/src/presentation/participant-session/participant.controller.ts#L314) ; [admin-coaches.controller.ts:144](../applications/backend/src/presentation/admin/admin-coaches.controller.ts#L144) |
-| 🟡 | Nommage handler avec suffixe technique `...Endpoint` (isolé) | [admin-campaigns.controller.ts:214](../applications/backend/src/presentation/admin/admin-campaigns.controller.ts#L214) ; [admin-companies.controller.ts:171](../applications/backend/src/presentation/admin/admin-companies.controller.ts#L171) |
+> **Partage du périmètre avec la Section 7.** Deux des quatre constats (verbes,
+> chemins d'avatar) sont des **changements de verbe HTTP ou de chemin** consommés par
+> le frontend (`hooks/admin.ts`, `hooks/participantSession.ts`). La **règle impérative**
+> backend ↔ frontend (cf. en-tête Section 7, ADR-010 guardrails) interdit de les exécuter
+> côté backend seul : ils sont déjà inscrits dans la **table de migration ADR-010 (R5/R4)**
+> et seront traités dans la **vague Section 7** (frontend + tests coordonnés). Ne sont
+> traités ici que les items **sans rupture de contrat** (sémantique `DELETE`, nommage des
+> handlers), conformément au mode opératoire des Sections 1→4.
+
+| Statut | Constat | Preuve | Résolution |
+|---|---|---|---|
+| ✅ (était 🟡) | Sémantique `DELETE` « opposée » : `204` sans corps (coach/company) vs `200` avec corps (response/participant) | [admin-coaches.controller.ts:191](../applications/backend/src/presentation/admin/admin-coaches.controller.ts#L191) ; [admin-companies.controller.ts:143](../applications/backend/src/presentation/admin/admin-companies.controller.ts#L143) ; [admin-participants.controller.ts:222](../applications/backend/src/presentation/admin/admin-participants.controller.ts#L222) ; [admin-responses.controller.ts:84](../applications/backend/src/presentation/admin/admin-responses.controller.ts#L84) | **Ce ne sont pas deux conventions en conflit mais deux familles légitimes** déjà arbitrées par ADR-009 §5 : suppression **sans** payload → `204` (coach/company = hard delete) ; suppression renvoyant un **résumé** → `200` + corps (participant = RGPD erase, response = suppression réponse). Le code produisait déjà les bons statuts ; seul le `200` reposait sur le **défaut Nest implicite**. Rendu **explicite** via `@HttpCode(HttpStatus.OK)` sur `deleteParticipant` et `deleteResponse` (en miroir du `@HttpCode(NO_CONTENT)` explicite de coach/company) → la règle « choix conscient et cohérent par famille » est désormais **lisible dans le code**, pas déduite. **Aucun changement de comportement HTTP** (statut/corps identiques) ⇒ aucune modif frontend. |
+| ✅ (était 🟡) | Nommage handler avec suffixe technique `...Endpoint` (isolé) | ex-`addParticipantToCampaignEndpoint` / ex-`addParticipantToCompanyEndpoint` | Renommés en `addParticipant` (ADR-009 §5 : le nom décrit l'intent métier, pas la mécanique transport). Le suffixe `Endpoint` servait à éviter la collision avec le champ injecté `addParticipantToCampaign`/`addParticipantToCompany` ; `addParticipant` lève l'ambiguïté sans suffixe. **Noms de méthodes internes** : le routage Nest passe par les décorateurs, pas par le nom → **zéro impact contrat/frontend** (vérifié : aucune autre référence aux anciens noms). |
+| 🟡 → **Section 7** | Verbes incohérents : transition d'état campagne en `POST /status` (+ `POST /archive`) alors que `PATCH /coach` voisin | [admin-campaigns.controller.ts:161](../applications/backend/src/presentation/admin/admin-campaigns.controller.ts#L161) vs [:133](../applications/backend/src/presentation/admin/admin-campaigns.controller.ts#L133) ; conso. frontend [admin.ts:552](../applications/frontend/src/hooks/admin.ts#L552) / [:588](../applications/frontend/src/hooks/admin.ts#L588) | **Non exécuté ici** (rupture de contrat). Inscrit dans la table de migration ADR-010 **R5** : `PATCH /campaigns/:cid/status` + fusion d'`archive`. Traité backend **+** frontend dans la vague Section 7. |
+| 🟡 → **Section 7** | Chemin d'avatar self non uniforme : `participant/avatars/me` vs schéma cible `participant/profile/avatar` | [participant.controller.ts:329](../applications/backend/src/presentation/participant-session/participant.controller.ts#L329) | **Non exécuté ici** (rupture de contrat). Inscrit dans la table de migration ADR-010 **R4**. *(Les chemins avatar **admin** `<ressource>/:id/avatar` sont déjà conformes R1 — cf. « Conformes — à conserver ».)* |
+
+**Conformité SOLID / Hexa vérifiée** :
+- **Aucune frontière franchie** : les deux changements (décorateur `@HttpCode`, nom de
+  méthode) sont **strictement internes à la couche `presentation/`**. Aucune dépendance
+  ajoutée vers l'application/domaine, aucune logique métier déplacée — la décision « que
+  supprimer / quoi résumer » reste **dans les use cases** (`erase-participant-rgpd`,
+  `delete-admin-response`), le controller ne fait qu'exposer le statut transport.
+- **SRP** : le statut HTTP (concern transport) est déclaré au bord ; le résumé RGPD
+  (concern métier) reste produit par le use case. Séparation inchangée.
+- **OCP** : `@HttpCode` est de la composition par décorateur — les use cases ne sont pas
+  modifiés.
+- **« Ne pas inventer » (CLAUDE.md)** : on ne fabrique pas une convention `DELETE` unique
+  artificielle pour masquer deux besoins réels (hard delete vs résumé) ; on **applique**
+  l'arbitrage déjà écrit en ADR-009 §5. On ne fragmente pas la migration d'URL : verbes et
+  chemins partent **en bloc** dans la Section 7 avec leur frontend (règle impérative
+  respectée), au lieu d'un demi-changement qui casserait la prod.
 
 ## Section 6 — Documentation OpenAPI
 
@@ -211,11 +237,13 @@ handler Nest par défaut).
 9. ✅ **Mapping snake_case** : audit + transparency sortis vers presenters.
    **Fait le 2026-06-02** (cf. Section 4).
 
-### Priorité 4 — Conventions REST & doc (cosmétique, à trancher) — ⬜ À décider
+### Priorité 4 — Conventions REST & doc (cosmétique, à trancher) — 🟡 Partiellement faite
 
-10. ⬜ **Décisions à arbitrer** (produit/tech) : `PATCH` vs `POST` pour les transitions d'état ;
-    convention `DELETE` (204 vs 200+corps) par famille ; schéma de chemin avatar unique ;
-    retrait du suffixe `...Endpoint`.
+10. 🟡 **Décisions à arbitrer** (produit/tech) — partiellement traité en Section 5 :
+    - ✅ convention `DELETE` (204 vs 200+corps) par famille → tranchée + rendue explicite par `@HttpCode`.
+    - ✅ retrait du suffixe `...Endpoint` → fait (`addParticipant`).
+    - ⬜ `PATCH` vs `POST` pour les transitions d'état → renvoyé à la **Section 7** (ADR-010 R5, frontend coordonné).
+    - ⬜ schéma de chemin avatar unique → renvoyé à la **Section 7** (ADR-010 R4, frontend coordonné).
 11. ⬜ **`@ApiOperation`** généralisé sur les 12 controllers restants.
 
 ---
@@ -293,8 +321,10 @@ la campagne devient un segment obligatoire, le use case reçoit enfin `campaignI
       `AdminOrParticipantJwtAuthGuard` (comme son sibling `list()`). Voir Section 2.
 - [x] **Transition d'état campagne** : ✅ tranché 2026-06-02 → `PATCH /status`, `archive`
       fusionné dedans (ADR-010 R5, migration complète).
-- [ ] **`DELETE`** : autoriser les deux formes (204 sans corps / 200 + résumé) selon le besoin,
-      ou imposer une seule forme ? *(non couvert par ADR-010, relève d'ADR-009 §5)*
+- [x] **`DELETE`** : ✅ tranché 2026-06-02 (Section 5) → **les deux formes coexistent**, par
+      famille : `204` sans corps (hard delete : coach/company) / `200` + résumé (RGPD erase,
+      suppression réponse). Statut rendu **explicite** par `@HttpCode` sur les 4 handlers
+      (ADR-009 §5 : choix conscient et cohérent par famille). Aucune modif frontend.
 - [x] **Chemins avatar** : ✅ tranché 2026-06-02 → self sous `/participant/profile/avatar`
       (GET+POST), admin sous `/{ressource}/:id/avatar` (ADR-010 R4/R1).
 - [x] **Matrix admin & campagne** : ✅ tranché 2026-06-02 → déplacé sur l'axe participation
@@ -381,3 +411,27 @@ la campagne devient un segment obligatoire, le use case reçoit enfin `campaignI
   - Aucune modification frontend requise : extraction de briques transport internes, aucun chemin / verbe /
     query / forme de réponse modifié (la forme JSON de l'audit, de la transparence et des avatars est
     préservée à l'identique — la migration d'URL reste la Section 7).
+
+- **2026-06-02 — Section 5 (Conventions REST) : ✅ traitée (partie frontend-neutre).**
+  - 🟡→✅ **Sémantique `DELETE`** : statué « deux familles légitimes » (ADR-009 §5), pas un conflit.
+    `204` sans corps (coach/company) / `200` + résumé (participant RGPD erase, response). Le `200` reposait
+    sur le défaut Nest implicite → rendu **explicite** par `@HttpCode(HttpStatus.OK)` sur `deleteParticipant`
+    et `deleteResponse` (en miroir du `@HttpCode(NO_CONTENT)` de coach/company). Aucun changement de
+    comportement HTTP. Décision `DELETE` cochée + Priorité 4 item 10 partiellement faite.
+  - 🟡→✅ **Suffixe `...Endpoint`** : `addParticipantToCampaignEndpoint` / `addParticipantToCompanyEndpoint`
+    renommés `addParticipant` (ADR-009 §5). Noms de méthodes internes (routage par décorateur) → zéro impact
+    contrat ; aucune autre référence aux anciens noms (vérifié).
+  - 🟡→**Section 7** : **verbes** (`POST /status` + `/archive` → `PATCH /status`) et **chemin avatar self**
+    (`avatars/me` → `profile/avatar`) **non exécutés ici** — ruptures de contrat frontend, déjà inscrites
+    dans la table de migration ADR-010 (R5/R4) et traitées dans la vague Section 7 (règle impérative
+    backend ↔ frontend respectée). Chemins avatar **admin** déjà conformes (R1).
+  - **Conformité SOLID / Hexa** : changements strictement internes à `presentation/` (décorateur `@HttpCode`,
+    nom de méthode) ; aucune dépendance vers application/domaine, aucune logique métier déplacée (le résumé
+    RGPD reste produit par le use case) ; SRP/OCP préservés ; politique « ne pas inventer » respectée
+    (application de l'arbitrage ADR-009 §5 existant, pas de convention `DELETE` artificielle ; migration
+    d'URL non fragmentée).
+  - **Vérifs** : `typecheck` backend ✅ (exit 0) ; Biome ✅ (4 controllers, « No fixes applied ») ;
+    tests `37/38` ✅ (même échec préexistant `calculate-scoring.usecase.spec.ts` — parité fixtures Python du
+    moteur scoring, sans rapport ; aucun fichier scoring touché).
+  - Aucune modification frontend requise pour la partie traitée (statut HTTP et noms de méthodes internes
+    inchangés côté contrat). Les items frontend-couplés restent en Section 7.
