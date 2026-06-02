@@ -24,7 +24,7 @@
 |---|---|---|---|---|
 | 1. Validation des entrées | 0 | 0 | 0 | 2 |
 | 2. Authentification / autorisation | 1 | 2 | 0 | 0 |
-| 3. Filtres d'exception | 0 | 1 | 0 | 0 |
+| 3. Filtres d'exception | 0 | 0 | 0 | 1 |
 | 4. Utilitaires transverses (DRY) | 0 | 2 | 1 | 0 |
 | 5. Conventions REST | 0 | 0 | 4 | 0 |
 | 6. Documentation OpenAPI | 0 | 0 | 1 | 0 |
@@ -32,6 +32,7 @@
 | **Total (état initial)** | **4** | **6** | **12** | **0** |
 | **Total (au 2026-06-02, après Section 1)** | **3** | **5** | **12** | **2** |
 | **Total (au 2026-06-02, après Section 2)** | **2** | **3** | **12** | **5** |
+| **Total (au 2026-06-02, après Section 3)** | **2** | **2** | **12** | **6** |
 
 État global : **base fonctionnelle, conventions implicites divergentes**. Pas de
 refonte nécessaire — extraction de briques transverses + convergence progressive
@@ -102,11 +103,38 @@ avec les `issues` Zod. Réutilisable de façon déclarative : `@Body(new ZodVali
 Divergence guard résiduelle (hors périmètre Section 2, cf. Priorité 3) : guard **par méthode ×20**
 côté participant — convergence vers le guard classe traitée à l'item 7 du plan.
 
-## Section 3 — Filtres d'exception
+## Section 3 — Filtres d'exception — ✅ Traitée le 2026-06-02
 
-| Statut | Constat | Preuve |
-|---|---|---|
-| 🟠 | `scoring` n'a **aucun** `@UseFilters` (aggrave le 🔴 du §1). Participant applique les filtres **par méthode** en combinaisons variables ; admin les applique **au niveau classe** (pattern cible) | [scoring.controller.ts:12-14](../applications/backend/src/presentation/scoring/scoring.controller.ts#L12-L14) ; participant (filtres ligne à ligne) ; admin (`@UseFilters` classe) |
+| Statut | Constat | Preuve | Résolution |
+|---|---|---|---|
+| ✅ (était 🟠) | Participant appliquait les filtres **par méthode** en 17 combinaisons variables (`ParticipantAuth` / `ParticipantSession` / `ParticipantAvatar` / `Responses`) ; admin / questionnaires / invitations les déclarent **au niveau classe** (pattern cible ADR-009 §3) | participant (filtres ligne à ligne, ex. [:287](../applications/backend/src/presentation/participant-session/participant.controller.ts#L287)) ; admin (`@UseFilters` classe, ex. [admin-responses.controller.ts:42](../applications/backend/src/presentation/admin/admin-responses.controller.ts#L42)) | Les **4 filtres** hissés en **un seul `@UseFilters` de classe** sur `ParticipantController` ; les 17 `@UseFilters` par méthode supprimés. **Équivalence comportementale prouvée** : les 4 filtres capturent des types d'erreurs **disjoints** (cf. `@Catch` ci-dessous), donc les empiler au niveau classe ne change aucun routage d'exception. |
+| ✅ (était 🟠) | `scoring` n'avait **aucun** `@UseFilters` (constat lié au 🔴 du §1) | [scoring.controller.ts](../applications/backend/src/presentation/scoring/scoring.controller.ts) | **Aucun filtre nécessaire — décision documentée.** Depuis la Section 1, l'entrée est validée au bord par `ZodValidationPipe` (`questionnaireId ∈ {B,F,S}`, deux séries de 54 entiers 0–5). Cela rend **inatteignable** tout `throw` de `calculateScores` ([scoring-engine.ts:20-30](../packages/aor-scoring/src/scoring-engine.ts#L20-L30)) pour une requête valide : `QUESTIONNAIRE_RULES[id]` est toujours défini et `assertAnswers` ne lève jamais. `scoring` n'a donc **pas d'erreur métier 4xx atteignable** ni de type d'erreur de domaine dédié → poser un `@UseFilters` serait du code mort (un `@Catch()` sans cible, ou un `@Catch()` global avalant aussi les 500 légitimes = anti-pattern). Les erreurs résiduelles (invariant interne `@aor/scoring`, panne de l'adaptateur de persistance) sont des 500 au **statut correct**. **ADR-009 §3 clarifié en conséquence** (le filtre est requis quand l'erreur métier est *réellement atteignable*). |
+
+**Détail de l'équivalence comportementale (participant)** — chaque filtre déclare un `@Catch`
+**disjoint**, donc une exception donnée n'est routée que vers son unique filtre, quel que soit le
+niveau (méthode hier, classe aujourd'hui) :
+
+- `ParticipantAuthExceptionFilter` → `ParticipantInvalidCredentialsError`, `ParticipantPasswordNotSetError`.
+- `ParticipantSessionExceptionFilter` → `ParticipantAccountNotFoundError`, `ParticipantAssignedQuestionnaireMissingError`, `ParticipantQuestionnaireNotAllowedError`.
+- `ParticipantAvatarExceptionFilter` → `ParticipantAvatarFileRequiredError`, `…FileTooLargeError`, `…FileTypeError`, `…NotFoundError`.
+- `ResponsesExceptionFilter` → `ResponsesQuestionnaireNotFoundError`, `ResponsesValidationError`, `ResponseRecordNotFoundError`.
+
+Les handlers auparavant **sans** filtre (`auth/refresh`, `auth/logout`, `auth/me`, `PATCH profile`)
+ne lèvent que des `HttpException` natives Nest (`Unauthorized/BadRequest/NotFound`), hors des
+4 jeux `@Catch` ci-dessus : la classe-level n'altère donc pas leur rendu (toujours géré par le
+handler Nest par défaut).
+
+**Conformité SOLID / Hexa vérifiée** :
+- **SRP** : chaque filtre garde une responsabilité unique (mapper un groupe d'erreurs de domaine
+  vers un statut HTTP). Aucun filtre fourre-tout introduit.
+- **Direction des dépendances (Hexa)** : les filtres restent dans `presentation/` et ne font que
+  traduire des erreurs **typées du domaine** en réponses HTTP (presentation → domaine pour le type
+  capturé, jamais l'inverse). Aucune logique métier déplacée dans la couche transport.
+- **OCP** : le comportement d'erreur est composé par décorateur au niveau classe, sans modifier les
+  use cases ni les filtres eux-mêmes.
+- **« Ne pas inventer » (CLAUDE.md)** : on n'ajoute pas de filtre/erreur de domaine `scoring` fictif
+  pour un chemin prouvé inatteignable ; on met à jour la **règle** (ADR-009 §3) plutôt que d'écrire
+  du code mort pour coller à une convention rendue obsolète par la Section 1.
 
 ## Section 4 — Utilitaires transverses (DRY)
 
@@ -138,16 +166,17 @@ côté participant — convergence vers le guard classe traitée à l'item 7 du 
 > Convergence **progressive** (ADR-009, coûts assumés) : on extrait d'abord les
 > briques transverses, puis on rebranche les controllers. Aucun big-bang.
 
-### Priorité 1 — Failles & status HTTP (rapide, fort impact) — 🟡 Partiellement faite
+### Priorité 1 — Failles & status HTTP (rapide, fort impact) — ✅ Faite
 
 1. ✅ **Protéger `GET /questionnaires/:qid`** — `@UseGuards(AdminOrParticipantJwtAuthGuard)`
    ajouté. **Fait le 2026-06-02** (cf. Section 2). *(Section 2)*
 2. ✅ **`ZodValidationPipe`** créé et branché sur `scoring` (supprime le 500 → 400) et
    sur la branche admin de mutation (campaigns/companies/coaches) — schémas dans `@aor/types`.
    **Fait le 2026-06-02** (cf. Section 1).
-3. ⬜ **`@UseFilters` sur `scoring`** (filtre dédié ou `ResponsesExceptionFilter`). *(Section 3 —
-   le 500 du §1 est déjà résolu par le pipe ; ce point ne concerne plus que les erreurs
-   métier éventuelles du use case scoring.)*
+3. ✅ **Filtres d'exception (Section 3)** — **Fait le 2026-06-02.** (a) Participant : les 4 filtres
+   hissés au niveau classe (17 `@UseFilters` par méthode supprimés, équivalence prouvée par
+   `@Catch` disjoints). (b) `scoring` : **aucun filtre requis** — le `ZodValidationPipe` (§1) rend
+   tout `throw` du moteur inatteignable ; ADR-009 §3 clarifié plutôt que d'ajouter du code mort.
 
 ### Priorité 2 — Briques transverses anti-duplication — 🟡 Partiellement faite
 
@@ -290,3 +319,24 @@ la campagne devient un segment obligatoire, le use case reçoit enfin `campaignI
     tests `37/38` ✅ (même échec préexistant `calculate-scoring.usecase.spec.ts`, sans rapport).
   - Aucune modification frontend requise : `/questionnaires/:qid` passe déjà par l'`apiClient`
     authentifié (durcissement auth, pas de rupture de contrat d'URL — celle-ci relève de la Section 7).
+
+- **2026-06-02 — Section 3 (Filtres d'exception) : ✅ traitée.**
+  - 🟠→✅ **Participant** : les 4 filtres (`ParticipantAuth` / `ParticipantSession` /
+    `ParticipantAvatar` / `Responses`) hissés en **un seul `@UseFilters` de classe** sur
+    `ParticipantController` ; les **17** `@UseFilters` par méthode supprimés. Convergence vers le
+    pattern cible admin (ADR-009 §3).
+  - 🟠→✅ **scoring** : statué **« aucun filtre requis »**. Le `ZodValidationPipe` (Section 1) rend
+    inatteignable tout `throw` de `calculateScores` → pas d'erreur métier 4xx à mapper. Ajouter un
+    filtre serait du code mort. **ADR-009 §3 clarifié** (filtre requis ssi l'erreur métier est
+    réellement atteignable).
+  - **Équivalence comportementale** : les 4 filtres ont des `@Catch` **disjoints** → empilage au
+    niveau classe sans effet de bord ; les handlers sans filtre (`auth/refresh|logout|me`,
+    `PATCH profile`) ne lèvent que des `HttpException` natives hors de ces jeux.
+  - **Conformité SOLID / Hexa** : SRP préservé (un filtre = un groupe d'erreurs) ; aucune logique
+    métier déplacée vers le transport ; OCP (composition par décorateur, use cases inchangés) ;
+    politique « ne pas inventer » respectée (doc mise à jour plutôt que code mort).
+  - **Vérifs** : `typecheck` backend ✅ (exit 0) ; Biome ✅ (`participant.controller.ts` clean) ;
+    tests `37/38` ✅ (même échec préexistant `calculate-scoring.usecase.spec.ts` — parité fixtures
+    Python du moteur scoring, sans rapport avec la Section 3 ; aucun fichier scoring touché).
+  - Aucune modification frontend requise : réorganisation transport interne (placement des
+    `@UseFilters`), aucun chemin / verbe / forme de réponse modifié.

@@ -93,6 +93,15 @@ import {
 @ApiTags('participant')
 @ApiBearerAuth('jwt')
 @Controller('participant')
+// Filtres au niveau classe (pattern cible ADR-009 §3, comme la branche admin). Les quatre
+// filtres capturent des types d'erreurs **disjoints** (auth / session / avatar / responses) :
+// les empiler ici est sans effet de bord — chaque exception n'est routée que vers son filtre.
+@UseFilters(
+    ParticipantAuthExceptionFilter,
+    ParticipantSessionExceptionFilter,
+    ParticipantAvatarExceptionFilter,
+    ResponsesExceptionFilter
+)
 export class ParticipantController {
     public constructor(
         @Inject(PARTICIPANT_LOGIN_USE_CASE_SYMBOL)
@@ -146,7 +155,6 @@ export class ParticipantController {
     @Post('auth/login')
     @UseGuards(ThrottlerGuard)
     @Throttle({ 'auth-strict': { limit: 5, ttl: 60_000 } })
-    @UseFilters(ParticipantAuthExceptionFilter)
     public async login(
         @Body() body: { email?: string; password?: string },
         @Req() req: Request,
@@ -284,7 +292,6 @@ export class ParticipantController {
 
     @Get('session')
     @UseGuards(ParticipantJwtAuthGuard)
-    @UseFilters(ParticipantSessionExceptionFilter)
     public async session(@CurrentParticipantId() participantId: number) {
         return this.getParticipantSession.execute(participantId);
     }
@@ -313,7 +320,6 @@ export class ParticipantController {
 
     @Post('profile/avatar')
     @UseGuards(ParticipantJwtAuthGuard)
-    @UseFilters(ParticipantSessionExceptionFilter, ParticipantAvatarExceptionFilter)
     @UseInterceptors(
         FileInterceptor('file', {
             limits: { fileSize: 2 * 1024 * 1024 },
@@ -328,7 +334,6 @@ export class ParticipantController {
 
     @Get('avatars/me')
     @UseGuards(ParticipantJwtAuthGuard)
-    @UseFilters(ParticipantSessionExceptionFilter, ParticipantAvatarExceptionFilter)
     public async getOwnAvatar(@CurrentParticipantId() participantId: number, @Res() res: Response) {
         const { buffer, mimeType } = await this.getParticipantAvatar.execute(participantId);
         res.setHeader('Content-Type', mimeType);
@@ -340,7 +345,6 @@ export class ParticipantController {
 
     @Get('campaigns/:campaignId/matrix')
     @UseGuards(ParticipantJwtAuthGuard)
-    @UseFilters(ParticipantSessionExceptionFilter)
     public async campaignMatrix(
         @CurrentParticipantId() participantId: number,
         @Param('campaignId', ParseIntPipe) campaignId: number,
@@ -359,7 +363,6 @@ export class ParticipantController {
 
     @Post('campaigns/:campaignId/confirm')
     @UseGuards(ParticipantJwtAuthGuard)
-    @UseFilters(ParticipantSessionExceptionFilter)
     public async confirmCampaign(
         @CurrentParticipantId() participantId: number,
         @Param('campaignId', ParseIntPipe) campaignId: number
@@ -369,7 +372,6 @@ export class ParticipantController {
 
     @Get('campaigns/:campaignId/peers')
     @UseGuards(ParticipantJwtAuthGuard)
-    @UseFilters(ParticipantSessionExceptionFilter)
     public async campaignPeers(
         @CurrentParticipantId() participantId: number,
         @Param('campaignId', ParseIntPipe) campaignId: number
@@ -379,7 +381,6 @@ export class ParticipantController {
 
     @Get('campaigns/:campaignId/coach/avatar')
     @UseGuards(ParticipantJwtAuthGuard)
-    @UseFilters(ParticipantSessionExceptionFilter, ParticipantAvatarExceptionFilter)
     public async getCampaignCoachAvatar(
         @CurrentParticipantId() participantId: number,
         @Param('campaignId', ParseIntPipe) campaignId: number,
@@ -393,7 +394,6 @@ export class ParticipantController {
 
     @Get('campaigns/:campaignId/peers/:peerParticipantId/avatar')
     @UseGuards(ParticipantJwtAuthGuard)
-    @UseFilters(ParticipantSessionExceptionFilter, ParticipantAvatarExceptionFilter)
     public async getCampaignPeerAvatar(
         @CurrentParticipantId() participantId: number,
         @Param('campaignId', ParseIntPipe) campaignId: number,
@@ -416,7 +416,6 @@ export class ParticipantController {
      */
     @Get('campaigns/:campaignId/transparency')
     @UseGuards(ParticipantJwtAuthGuard)
-    @UseFilters(ParticipantSessionExceptionFilter)
     public async campaignTransparency(
         @CurrentParticipantId() participantId: number,
         @Param('campaignId', ParseIntPipe) campaignId: number
@@ -444,7 +443,6 @@ export class ParticipantController {
      */
     @Get('campaigns/:campaignId/restitution')
     @UseGuards(ParticipantJwtAuthGuard)
-    @UseFilters(ParticipantSessionExceptionFilter)
     public async campaignAiRestitution(
         @CurrentParticipantId() participantId: number,
         @Param('campaignId', ParseIntPipe) campaignId: number
@@ -458,7 +456,6 @@ export class ParticipantController {
 
     @Post('campaigns/:campaignId/peer-feedback/confirm')
     @UseGuards(ParticipantJwtAuthGuard)
-    @UseFilters(ResponsesExceptionFilter, ParticipantSessionExceptionFilter)
     public async confirmCampaignPeerFeedback(
         @CurrentParticipantId() participantId: number,
         @Param('campaignId', ParseIntPipe) campaignId: number
@@ -468,7 +465,6 @@ export class ParticipantController {
 
     @Post('campaigns/:campaignId/questionnaires/:qid/submit')
     @UseGuards(ParticipantJwtAuthGuard)
-    @UseFilters(ResponsesExceptionFilter)
     public async submitCampaignQuestionnaire(
         @CurrentParticipantId() participantId: number,
         @Param('campaignId', ParseIntPipe) campaignId: number,
@@ -486,7 +482,6 @@ export class ParticipantController {
      */
     @Get('campaigns/:campaignId/questionnaires/:qid/draft')
     @UseGuards(ParticipantJwtAuthGuard)
-    @UseFilters(ResponsesExceptionFilter, ParticipantSessionExceptionFilter)
     public async getCampaignQuestionnaireDraft(
         @CurrentParticipantId() participantId: number,
         @Param('campaignId', ParseIntPipe) campaignId: number,
@@ -498,7 +493,6 @@ export class ParticipantController {
 
     @Put('campaigns/:campaignId/questionnaires/:qid/draft')
     @UseGuards(ParticipantJwtAuthGuard)
-    @UseFilters(ResponsesExceptionFilter, ParticipantSessionExceptionFilter)
     public async upsertCampaignQuestionnaireDraft(
         @CurrentParticipantId() participantId: number,
         @Param('campaignId', ParseIntPipe) campaignId: number,
@@ -511,7 +505,6 @@ export class ParticipantController {
 
     @Get('responses/:responseId')
     @UseGuards(ParticipantJwtAuthGuard)
-    @UseFilters(ResponsesExceptionFilter)
     public async getResponse(
         @CurrentParticipantId() participantId: number,
         @Param('responseId', ParseIntPipe) responseId: number
@@ -529,7 +522,6 @@ export class ParticipantController {
      */
     @Get('me/export')
     @UseGuards(ParticipantJwtAuthGuard)
-    @UseFilters(ParticipantSessionExceptionFilter)
     public async exportMyData(@CurrentParticipantId() participantId: number) {
         return this.exportParticipantSelfData.execute(participantId);
     }

@@ -79,8 +79,23 @@ existant (à converger progressivement) et nouveau (obligatoire).
 ### 3. Filtres d'exception au niveau classe
 
 Les `@UseFilters` qui s'appliquent à tout un controller sont déclarés au niveau
-classe (pattern admin actuel). Un controller qui peut renvoyer une erreur métier
-**doit** avoir un filtre — `scoring` ne doit pas rester sans filtre.
+classe (pattern admin actuel). Un controller dont un use case **peut atteindre**
+une erreur métier (4xx) **doit** porter le filtre correspondant à ce niveau.
+
+> **Précision (mise à jour 2026-06-02, après convergence Section 3).** La rédaction
+> initiale exigeait « `scoring` ne doit pas rester sans filtre » : à l'époque, le handler
+> faisait un `schema.parse()` brut qui fuyait une `ZodError` en 500. Depuis la Section 1,
+> l'entrée de `scoring` est validée au bord par `ZodValidationPipe`
+> (`questionnaireId ∈ {B,F,S}`, deux séries de 54 entiers 0–5), ce qui rend **inatteignable**
+> tout `throw` du moteur `@aor/scoring` pour une requête valide. `scoring` n'a donc plus
+> d'erreur métier 4xx à mapper, et aucun type d'erreur de domaine dédié : poser un
+> `@UseFilters` y serait du code mort (un `@Catch()` sans cible, ou un `@Catch()` global
+> avalant aussi les 500 légitimes — anti-pattern). **Règle clarifiée** : le filtre est requis
+> quand une erreur métier est *réellement atteignable* depuis la couche transport ; si la
+> validation au bord la rend inatteignable, l'absence de filtre est le bon choix (les erreurs
+> d'invariant interne / infrastructure restent en 500, statut correct). Voir le détail dans
+> [docs/avancement-2026-06-02-presentation-routes.md](../avancement-2026-06-02-presentation-routes.md),
+> Section 3.
 
 ### 4. Utilitaires transverses, pas de copier-coller
 
