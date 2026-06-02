@@ -1,7 +1,7 @@
 // Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
 
 import { Controller, Get, Inject, Param, UseFilters, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import type { GetQuestionnaireDetailUseCase } from '@src/application/questionnaires/get-questionnaire-detail.usecase';
 import type { ListQuestionnairesUseCase } from '@src/application/questionnaires/list-questionnaires.usecase';
@@ -25,12 +25,14 @@ export class QuestionnairesController {
 
     @Get()
     @UseGuards(AdminOrParticipantJwtAuthGuard)
+    @ApiOperation({ summary: 'Liste les questionnaires du catalogue partagé.' })
     public list() {
         return this.listQuestionnaires.execute();
     }
 
     @Get(':qid')
     @UseGuards(AdminOrParticipantJwtAuthGuard)
+    @ApiOperation({ summary: 'Détail d’un questionnaire du catalogue par son identifiant.' })
     public getOne(@Param('qid') qid: string) {
         return this.getQuestionnaireDetail.execute(qid);
     }

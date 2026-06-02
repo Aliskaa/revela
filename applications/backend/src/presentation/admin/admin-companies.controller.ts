@@ -20,7 +20,7 @@ import {
     UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import type { Response } from 'express';
 
 import {
@@ -90,12 +90,14 @@ export class AdminCompaniesController {
     ) {}
 
     @Get('companies')
+    @ApiOperation({ summary: 'Liste les entreprises visibles par l’utilisateur courant.' })
     public async listCompanies(@CurrentCoachScope() coachId: number | undefined) {
         const rows = await this.listAdminCompanies.execute({ coachId });
         return rows.map(companyToAdminJson);
     }
 
     @Get('companies/:companyId')
+    @ApiOperation({ summary: 'Détail d’une entreprise par son identifiant.' })
     public async getCompany(@Param('companyId', ParseIntPipe) companyId: number) {
         const row = await this.getAdminCompany.execute(companyId);
         return companyToAdminJson(row);
@@ -103,6 +105,7 @@ export class AdminCompaniesController {
 
     @Get('companies/:companyId/avatar')
     @UseFilters(ParticipantAvatarExceptionFilter)
+    @ApiOperation({ summary: 'Récupère le logo d’une entreprise.' })
     public async getCompanyAvatar(@Param('companyId', ParseIntPipe) companyId: number, @Res() res: Response) {
         const avatar = await this.getAdminCompanyAvatar.execute(companyId);
         sendAvatarResponse(res, avatar);
@@ -111,6 +114,7 @@ export class AdminCompaniesController {
     @Post('companies/:companyId/avatar')
     @UseInterceptors(FileInterceptor('file'))
     @UseFilters(ParticipantAvatarExceptionFilter)
+    @ApiOperation({ summary: 'Met à jour le logo d’une entreprise.' })
     public async uploadCompanyAvatar(
         @Param('companyId', ParseIntPipe) companyId: number,
         @UploadedFile() file: Express.Multer.File | undefined
@@ -119,6 +123,7 @@ export class AdminCompaniesController {
     }
 
     @Post('companies')
+    @ApiOperation({ summary: 'Crée une entreprise (réservé à l’admin).' })
     public async createCompany(
         @CurrentUser() user: JwtValidatedUser,
         @Body(new ZodValidationPipe(adminCompanyMutationBodySchema)) body: AdminCompanyMutationBody
@@ -132,6 +137,7 @@ export class AdminCompaniesController {
     }
 
     @Patch('companies/:companyId')
+    @ApiOperation({ summary: 'Met à jour une entreprise.' })
     public async updateCompany(
         @Param('companyId', ParseIntPipe) companyId: number,
         @Body(new ZodValidationPipe(adminCompanyMutationBodySchema)) body: AdminCompanyMutationBody
@@ -142,6 +148,7 @@ export class AdminCompaniesController {
 
     @Delete('companies/:companyId')
     @HttpCode(HttpStatus.NO_CONTENT)
+    @ApiOperation({ summary: 'Supprime une entreprise (réservé à l’admin).' })
     public async deleteCompany(
         @Param('companyId', ParseIntPipe) companyId: number,
         @CurrentUser() user: JwtValidatedUser
@@ -155,6 +162,7 @@ export class AdminCompaniesController {
 
     @Post('companies/:companyId/participants/import')
     @UseInterceptors(FileInterceptor('file'))
+    @ApiOperation({ summary: 'Importe des participants dans une entreprise via un fichier CSV (réservé à l’admin).' })
     public async importParticipantsForCompany(
         @Param('companyId', ParseIntPipe) companyId: number,
         @CurrentUser() user: JwtValidatedUser,
@@ -172,6 +180,7 @@ export class AdminCompaniesController {
     }
 
     @Post('companies/:companyId/participants')
+    @ApiOperation({ summary: 'Ajoute un participant à une entreprise (admin ou coach habilité).' })
     public async addParticipant(
         @Param('companyId', ParseIntPipe) companyId: number,
         @CurrentCoachScope() coachId: number | undefined,

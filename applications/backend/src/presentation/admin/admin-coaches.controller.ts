@@ -20,7 +20,7 @@ import {
     UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import type { Response } from 'express';
 
 import {
@@ -116,6 +116,7 @@ export class AdminCoachesController {
     }
 
     @Get('coaches')
+    @ApiOperation({ summary: 'Liste les coachs visibles par l’utilisateur courant.' })
     public async listCoaches(@CurrentUser() user: JwtValidatedUser) {
         const coaches = await this.listAdminCoaches.execute();
         const visibleCoaches = user.scope === 'coach' ? coaches.filter(coach => coach.id === user.coachId) : coaches;
@@ -131,6 +132,7 @@ export class AdminCoachesController {
     }
 
     @Post('coaches')
+    @ApiOperation({ summary: 'Crée un coach (réservé à l’admin).' })
     public async createCoach(
         @CurrentUser() user: JwtValidatedUser,
         @Body(new ZodValidationPipe(createAdminCoachBodySchema)) body: CreateAdminCoachBody
@@ -143,6 +145,7 @@ export class AdminCoachesController {
     }
 
     @Get('coaches/:coachId')
+    @ApiOperation({ summary: 'Détail d’un coach par son identifiant.' })
     public async getCoach(@Param('coachId', ParseIntPipe) coachId: number, @CurrentUser() user: JwtValidatedUser) {
         this.ensureCoachEntityAccess(coachId, user);
         const detail = await this.getAdminCoachDetail.execute(coachId);
@@ -151,6 +154,7 @@ export class AdminCoachesController {
 
     @Get('coaches/:coachId/avatar')
     @UseFilters(ParticipantAvatarExceptionFilter)
+    @ApiOperation({ summary: 'Récupère l’avatar d’un coach.' })
     public async getCoachAvatar(
         @Param('coachId', ParseIntPipe) coachId: number,
         @CurrentUser() user: JwtValidatedUser,
@@ -164,6 +168,7 @@ export class AdminCoachesController {
     @Post('coaches/:coachId/avatar')
     @UseInterceptors(FileInterceptor('file'))
     @UseFilters(ParticipantAvatarExceptionFilter)
+    @ApiOperation({ summary: 'Met à jour l’avatar d’un coach (propriétaire uniquement).' })
     public async uploadCoachAvatar(
         @Param('coachId', ParseIntPipe) coachId: number,
         @CurrentUser() user: JwtValidatedUser,
@@ -174,6 +179,7 @@ export class AdminCoachesController {
     }
 
     @Patch('coaches/:coachId')
+    @ApiOperation({ summary: 'Met à jour un coach (réservé à l’admin).' })
     public async updateCoach(
         @Param('coachId', ParseIntPipe) coachId: number,
         @CurrentUser() user: JwtValidatedUser,
@@ -190,6 +196,7 @@ export class AdminCoachesController {
 
     @Delete('coaches/:coachId')
     @HttpCode(HttpStatus.NO_CONTENT)
+    @ApiOperation({ summary: 'Supprime un coach (réservé à l’admin).' })
     public async deleteCoach(
         @Param('coachId', ParseIntPipe) coachId: number,
         @CurrentUser() user: JwtValidatedUser

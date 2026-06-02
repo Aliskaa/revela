@@ -35,6 +35,7 @@
 | **Total (au 2026-06-02, après Section 3)** | **2** | **2** | **12** | **6** |
 | **Total (au 2026-06-02, après Section 4)** | **2** | **0** | **11** | **9** |
 | **Total (au 2026-06-02, après Section 5)** | **2** | **0** | **9** | **11** |
+| **Total (au 2026-06-02, après Section 6)** | **2** | **0** | **8** | **12** |
 
 État global : **base fonctionnelle, conventions implicites divergentes**. Pas de
 refonte nécessaire — extraction de briques transverses + convergence progressive
@@ -194,11 +195,29 @@ handler Nest par défaut).
   chemins partent **en bloc** dans la Section 7 avec leur frontend (règle impérative
   respectée), au lieu d'un demi-changement qui casserait la prod.
 
-## Section 6 — Documentation OpenAPI
+## Section 6 — Documentation OpenAPI — ✅ Traitée le 2026-06-02
 
-| Statut | Constat | Preuve |
-|---|---|---|
-| 🟡 | `@ApiOperation` présent **uniquement** sur le controller d'auth admin ; absent des 12 autres | [admin.controller.ts:66](../applications/backend/src/presentation/admin/admin.controller.ts#L66) (seul porteur) |
+| Statut | Constat | Preuve | Résolution |
+|---|---|---|---|
+| ✅ (était 🟡) | `@ApiOperation` présent **uniquement** sur le controller d'auth admin (ses 4 routes) ; absent des 12 autres → la doc Swagger était le privilège d'un seul controller (ADR-009 §6 non respecté) | ex-[admin.controller.ts:66](../applications/backend/src/presentation/admin/admin.controller.ts#L66) (seul porteur) | `@ApiOperation({ summary })` ajouté sur **les 79 routes** des 12 controllers manquants (admin-ai-restitutions ×5, admin-audit ×1, admin-campaigns ×12, admin-coaches ×7, admin-companies ×9, admin-management ×2, admin-participants ×10, admin-responses ×5, invitations ×4, participant ×21, questionnaires ×2, scoring ×1). Chaque résumé décrit l'**intent métier** de la route (pas la mécanique transport), en français (CLAUDE.md). Couverture vérifiée : **1 `@ApiOperation` par route** sur les 13 controllers (83 routes au total, dont 4 préexistantes sur `admin.controller`). |
+
+**Couverture** : audit automatique `route ↔ @ApiOperation` = **1:1 sur les 13 controllers**
+(aucune route orpheline). Convention ADR-009 §6 désormais satisfaite et inscrite dans les
+guardrails (« Toute nouvelle route : `@ApiOperation` présent »).
+
+**Conformité SOLID / Hexa vérifiée** :
+- **Aucune frontière franchie** : `@ApiOperation` est un décorateur de **documentation pur**
+  de `@nestjs/swagger`, strictement interne à la couche `presentation/`. Zéro dépendance
+  ajoutée vers l'application/domaine ; aucune logique métier, aucun branchement de use case.
+- **SRP** : le décorateur ne porte qu'une responsabilité (documenter le contrat de transport) ;
+  il ne touche ni au routage, ni à la validation, ni aux filtres.
+- **OCP** : la doc est ajoutée par **composition par décorateur**, sans modifier une seule
+  signature de handler ni un seul use case.
+- **Aucun changement de comportement** : ni chemin, ni verbe, ni query, ni forme de réponse,
+  ni statut HTTP. Les `summary` décrivent l'intent et restent valides après la migration d'URL
+  de la Section 7 (ils ne mentionnent pas les chemins).
+- **« Ne pas inventer » (CLAUDE.md)** : résumés rédigés à partir du **code réel** (route, garde,
+  use case appelé, commentaires existants) — pas de capacité fictive documentée.
 
 ---
 
@@ -244,7 +263,8 @@ handler Nest par défaut).
     - ✅ retrait du suffixe `...Endpoint` → fait (`addParticipant`).
     - ⬜ `PATCH` vs `POST` pour les transitions d'état → renvoyé à la **Section 7** (ADR-010 R5, frontend coordonné).
     - ⬜ schéma de chemin avatar unique → renvoyé à la **Section 7** (ADR-010 R4, frontend coordonné).
-11. ⬜ **`@ApiOperation`** généralisé sur les 12 controllers restants.
+11. ✅ **`@ApiOperation`** généralisé sur les 12 controllers restants (79 routes).
+    **Fait le 2026-06-02** (cf. Section 6).
 
 ---
 
@@ -435,3 +455,22 @@ la campagne devient un segment obligatoire, le use case reçoit enfin `campaignI
     moteur scoring, sans rapport ; aucun fichier scoring touché).
   - Aucune modification frontend requise pour la partie traitée (statut HTTP et noms de méthodes internes
     inchangés côté contrat). Les items frontend-couplés restent en Section 7.
+
+- **2026-06-02 — Section 6 (Documentation OpenAPI) : ✅ traitée.**
+  - 🟡→✅ `@ApiOperation({ summary })` généralisé : **79 routes** des 12 controllers qui en étaient
+    dépourvus (seul `admin.controller` en portait, sur ses 4 routes). Couverture désormais **1:1**
+    route ↔ `@ApiOperation` sur les **13** controllers (83 routes). Convention ADR-009 §6 satisfaite.
+  - Résumés rédigés en **français** (CLAUDE.md), décrivant l'**intent métier** de chaque route et non
+    la mécanique transport — donc **stables après la migration d'URL de la Section 7** (aucun chemin
+    n'y figure). **Priorité 4 item 11** cochée.
+  - **Conformité SOLID / Hexa** : `@ApiOperation` est un décorateur de documentation pur
+    (`@nestjs/swagger`), strictement interne à `presentation/`. Zéro dépendance vers
+    l'application/domaine, aucune logique métier déplacée, aucune signature de handler modifiée
+    (OCP : composition par décorateur). Aucun changement de comportement (chemin / verbe / query /
+    réponse / statut HTTP inchangés).
+  - **Vérifs** : `typecheck` backend ✅ (exit 0) ; Biome ✅ (226 fichiers, « No fixes applied ») ;
+    tests `37/38` ✅ (même échec préexistant `calculate-scoring.usecase.spec.ts` — parité fixtures
+    Python du moteur scoring, sans rapport ; aucun fichier scoring touché). Audit automatique
+    `route ↔ @ApiOperation` = **1:1** sur les 13 controllers.
+  - Aucune modification frontend requise : ajout de métadonnées Swagger uniquement, aucun contrat
+    d'API modifié.

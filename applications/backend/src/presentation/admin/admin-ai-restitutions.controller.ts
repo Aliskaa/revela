@@ -16,7 +16,7 @@ import {
     UseFilters,
     UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import type { ApproveAiRestitutionUseCase } from '@src/application/ai-restitutions/approve-ai-restitution.usecase';
 import type { EditAiRestitutionUseCase } from '@src/application/ai-restitutions/edit-ai-restitution.usecase';
@@ -90,6 +90,7 @@ export class AdminAiRestitutionsController {
     ) {}
 
     @Get('campaigns/:campaignId/participants/:participantId/restitution')
+    @ApiOperation({ summary: 'Lit la restitution IA d’un couple campagne/participant.' })
     public async getRestitution(
         @Param('campaignId', ParseIntPipe) campaignId: number,
         @Param('participantId', ParseIntPipe) participantId: number,
@@ -104,6 +105,7 @@ export class AdminAiRestitutionsController {
     }
 
     @Post('campaigns/:campaignId/participants/:participantId/restitution/generate')
+    @ApiOperation({ summary: 'Génère la restitution IA d’un couple campagne/participant.' })
     public async generate(
         @Param('campaignId', ParseIntPipe) campaignId: number,
         @Param('participantId', ParseIntPipe) participantId: number,
@@ -143,6 +145,7 @@ export class AdminAiRestitutionsController {
     }
 
     @Put('campaigns/:campaignId/participants/:participantId/restitution')
+    @ApiOperation({ summary: 'Édite le contenu de la restitution IA.' })
     public async edit(
         @Param('campaignId', ParseIntPipe) campaignId: number,
         @Param('participantId', ParseIntPipe) participantId: number,
@@ -163,6 +166,7 @@ export class AdminAiRestitutionsController {
     }
 
     @Post('campaigns/:campaignId/participants/:participantId/restitution/approve')
+    @ApiOperation({ summary: 'Approuve la restitution IA (la rend diffusable au participant).' })
     public async approve(
         @Param('campaignId', ParseIntPipe) campaignId: number,
         @Param('participantId', ParseIntPipe) participantId: number,
@@ -193,6 +197,7 @@ export class AdminAiRestitutionsController {
     }
 
     @Post('campaigns/:campaignId/participants/:participantId/restitution/reject')
+    @ApiOperation({ summary: 'Rejette la restitution IA.' })
     public async reject(
         @Param('campaignId', ParseIntPipe) campaignId: number,
         @Param('participantId', ParseIntPipe) participantId: number,

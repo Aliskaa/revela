@@ -24,7 +24,7 @@ import {
 // `Req` est conservé : il sert encore à récupérer `req.ip` (concern transport pur) sur
 // les handlers d'audit, le `req.user` étant lui exposé via `@CurrentUser()`.
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import type { Response } from 'express';
 
 import type { CreateParticipantInviteUseCase } from '@src/application/admin/participants/create-participant-invite.usecase';
@@ -108,6 +108,7 @@ export class AdminParticipantsController {
     }
 
     @Get('participants')
+    @ApiOperation({ summary: 'Liste paginée des participants, filtrable par entreprise et recherche.' })
     public async listParticipants(
         @CurrentCoachScope() coachId: number | undefined,
         @Query(PaginationQueryPipe) { page, perPage }: PaginationParams,
@@ -129,6 +130,7 @@ export class AdminParticipantsController {
     }
 
     @Get('participants/:participantId')
+    @ApiOperation({ summary: 'Détail d’un participant par son identifiant.' })
     public async getParticipant(
         @CurrentCoachScope() coachId: number | undefined,
         @Param('participantId', ParseIntPipe) participantId: number
@@ -142,6 +144,7 @@ export class AdminParticipantsController {
 
     @Get('participants/:participantId/avatar')
     @UseFilters(ParticipantAvatarExceptionFilter)
+    @ApiOperation({ summary: 'Récupère l’avatar d’un participant.' })
     public async getParticipantAvatar(
         @CurrentCoachScope() coachId: number | undefined,
         @Param('participantId', ParseIntPipe) participantId: number,
@@ -154,6 +157,7 @@ export class AdminParticipantsController {
     @Post('participants/:participantId/avatar')
     @UseInterceptors(FileInterceptor('file'))
     @UseFilters(ParticipantAvatarExceptionFilter)
+    @ApiOperation({ summary: 'Met à jour l’avatar d’un participant.' })
     public async uploadParticipantAvatar(
         @CurrentCoachScope() coachId: number | undefined,
         @Param('participantId', ParseIntPipe) participantId: number,
@@ -163,6 +167,7 @@ export class AdminParticipantsController {
     }
 
     @Patch('participants/:participantId')
+    @ApiOperation({ summary: 'Met à jour le profil d’un participant.' })
     public async updateParticipant(
         @CurrentUser() user: JwtValidatedUser,
         @CurrentCoachScope() coachId: number | undefined,
@@ -188,11 +193,13 @@ export class AdminParticipantsController {
 
     @Post('participants/import')
     @UseInterceptors(FileInterceptor('file'))
+    @ApiOperation({ summary: 'Importe des participants via un fichier CSV.' })
     public importParticipants(@UploadedFile() file: Express.Multer.File | undefined) {
         return this.importParticipantsCsv.execute(file?.buffer);
     }
 
     @Post('participants/:participantId/invite')
+    @ApiOperation({ summary: 'Crée une invitation pour un participant.' })
     public createInvite(
         @Param('participantId', ParseIntPipe) participantId: number,
         @Body() body: { campaign_id?: number; questionnaire_id?: string; send_email?: boolean }
@@ -201,11 +208,13 @@ export class AdminParticipantsController {
     }
 
     @Get('participants/:participantId/tokens')
+    @ApiOperation({ summary: 'Liste les tokens d’invitation d’un participant.' })
     public listParticipantTokens(@Param('participantId', ParseIntPipe) participantId: number) {
         return this.listParticipantInvitationTokens.execute(participantId);
     }
 
     @Get('participants/:participantId/matrix')
+    @ApiOperation({ summary: 'Matrice des réponses d’un participant pour un questionnaire.' })
     public getParticipantMatrix(
         @Param('participantId', ParseIntPipe) participantId: number,
         @Query('qid') qidRaw: string,
@@ -225,6 +234,7 @@ export class AdminParticipantsController {
     // Famille « suppression avec résumé » (RGPD erase) → 200 + corps, déclaré
     // explicitement (ADR-009 §5 : choix conscient et cohérent par famille).
     @HttpCode(HttpStatus.OK)
+    @ApiOperation({ summary: 'Efface un participant (RGPD) et renvoie un résumé de la suppression.' })
     public async deleteParticipant(
         @Param('participantId', ParseIntPipe) participantId: number,
         @Body() body: { confirm?: boolean },

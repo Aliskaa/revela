@@ -15,7 +15,7 @@ import {
     UseFilters,
     UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import type { Response } from 'express';
 
 import type { DeleteAdminResponseUseCase } from '@src/application/admin/responses/delete-admin-response.usecase';
@@ -60,6 +60,7 @@ export class AdminResponsesController {
 
     @Get('responses')
     @UseGuards(CampaignAccessGuard)
+    @ApiOperation({ summary: 'Liste paginée des réponses, filtrable par questionnaire et campagne.' })
     public async listResponses(
         @CurrentCoachScope() coachId: number | undefined,
         @Query('qid') qidRaw: string,
@@ -76,6 +77,7 @@ export class AdminResponsesController {
     }
 
     @Get('responses/:responseId')
+    @ApiOperation({ summary: 'Détail d’une réponse par son identifiant.' })
     public getResponse(
         @Param('responseId', ParseIntPipe) responseId: number,
         @CurrentCoachScope() coachId: number | undefined
@@ -87,6 +89,7 @@ export class AdminResponsesController {
     // Famille « suppression avec résumé » → 200 + corps, déclaré explicitement
     // (ADR-009 §5 : choix conscient et cohérent par famille).
     @HttpCode(HttpStatus.OK)
+    @ApiOperation({ summary: 'Supprime une réponse et renvoie un résumé de la suppression.' })
     public deleteResponse(
         @Param('responseId', ParseIntPipe) responseId: number,
         @Body() body: { confirm?: boolean },
@@ -96,6 +99,7 @@ export class AdminResponsesController {
     }
 
     @Get('export/responses')
+    @ApiOperation({ summary: 'Exporte les réponses d’un questionnaire au format CSV.' })
     public async exportResponses(@Query('qid') qidRaw: string, @Res() res: Response): Promise<void> {
         const qid = normalizeQid(qidRaw) ?? '';
         const { body, filename } = await this.exportAdminResponsesCsv.execute(qid);
@@ -105,6 +109,7 @@ export class AdminResponsesController {
     }
 
     @Get('export/responses/anonymized')
+    @ApiOperation({ summary: 'Exporte les réponses anonymisées d’un questionnaire au format CSV.' })
     public async exportAnonymized(
         @Query('qid') qidRaw: string,
         @Query('company_id') companyIdRaw: string,

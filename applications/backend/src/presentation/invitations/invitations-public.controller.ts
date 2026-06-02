@@ -1,7 +1,7 @@
 // Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
 
 import { Body, Controller, Get, Inject, Param, Post, Res, UseFilters, UseGuards } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import type { Response } from 'express';
 
@@ -39,11 +39,13 @@ export class PublicInvitesController {
     ) {}
 
     @Get(':token')
+    @ApiOperation({ summary: 'Aperçu public d’une invitation à partir de son token (sans authentification).' })
     public getInvite(@Param('token') token: string) {
         return this.getInvitePreview.execute(token);
     }
 
     @Post(':token/confirm-participation')
+    @ApiOperation({ summary: 'Confirme la participation rattachée à un token d’invitation.' })
     public confirmParticipation(@Param('token') token: string) {
         return this.confirmInviteParticipation.execute(token);
     }
@@ -57,6 +59,10 @@ export class PublicInvitesController {
     @Post(':token/activate')
     @UseGuards(ThrottlerGuard)
     @Throttle({ 'auth-strict': { limit: 5, ttl: 60_000 } })
+    @ApiOperation({
+        summary:
+            'Active une invitation : pose le mot de passe, consomme le token et ouvre une session participant (cookies httpOnly).',
+    })
     public async activateInvite(
         @Param('token') token: string,
         @Body() body: { password?: string },
@@ -74,6 +80,7 @@ export class PublicInvitesController {
     }
 
     @Post(':token/submit')
+    @ApiOperation({ summary: 'Soumet les réponses d’un questionnaire via un token d’invitation public.' })
     public submitInvite(@Param('token') token: string, @Body() body: unknown) {
         return this.submitInviteQuestionnaire.execute(token, body);
     }

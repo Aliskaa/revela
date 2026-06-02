@@ -7,7 +7,7 @@ import {
     calculateScoringRequestDtoSchema,
 } from '@aor/types';
 import { Body, Controller, Inject, Post } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import { ZodValidationPipe } from '@src/presentation/zod-validation.pipe';
 
@@ -20,6 +20,7 @@ export class ScoringController {
     ) {}
 
     @Post('calculate')
+    @ApiOperation({ summary: 'Calcule les scores d’un questionnaire (B/F/S) à partir des deux séries de réponses.' })
     public calculate(
         @Body(new ZodValidationPipe(calculateScoringRequestDtoSchema)) input: CalculateScoringRequestDto
     ): CalculateScoringResponseDto {

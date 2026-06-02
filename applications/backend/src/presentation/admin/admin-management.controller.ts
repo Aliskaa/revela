@@ -1,7 +1,7 @@
 // Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
 
 import { Controller, Get, Inject, UseFilters, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import type { GetAdminDashboardUseCase } from '@src/application/admin/dashboard/get-admin-dashboard.usecase';
 import type { GetAdminMailStatusUseCase } from '@src/application/admin/mail/get-admin-mail-status.usecase';
@@ -26,12 +26,14 @@ export class AdminManagementController {
     ) {}
 
     @Get('dashboard')
+    @ApiOperation({ summary: 'Données agrégées du tableau de bord admin.' })
     public async dashboard() {
         const snapshot = await this.getAdminDashboard.execute();
         return adminDashboardToJson(snapshot);
     }
 
     @Get('mail/status')
+    @ApiOperation({ summary: 'État de la configuration d’envoi d’e-mails.' })
     public mailStatus() {
         return this.getAdminMailStatus.execute();
     }

@@ -18,7 +18,7 @@ import {
     UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import {
     type AddParticipantBody,
@@ -105,11 +105,13 @@ export class AdminCampaignsController {
     ) {}
 
     @Get('campaigns')
+    @ApiOperation({ summary: 'Liste les campagnes visibles par l’utilisateur courant.' })
     public listCampaigns(@CurrentCoachScope() coachId: number | undefined) {
         return this.listAdminCampaigns.execute({ coachId });
     }
 
     @Get('campaigns/:campaignId')
+    @ApiOperation({ summary: 'Détail d’une campagne par son identifiant.' })
     public async getCampaign(
         @Param('campaignId', ParseIntPipe) campaignId: number,
         @CurrentCoachScope() coachId: number | undefined
@@ -123,6 +125,7 @@ export class AdminCampaignsController {
      * Renvoie `null` si la campagne est hors périmètre du coach (200, payload vide).
      */
     @Get('campaigns/:campaignId/synthesis-matrix')
+    @ApiOperation({ summary: 'Vue de synthèse (test scientifique) d’une campagne selon son questionnaire.' })
     public async getCampaignSynthesisMatrix(
         @Param('campaignId', ParseIntPipe) campaignId: number,
         @CurrentCoachScope() coachId: number | undefined
@@ -131,6 +134,7 @@ export class AdminCampaignsController {
     }
 
     @Patch('campaigns/:campaignId/coach')
+    @ApiOperation({ summary: 'Réassigne le coach d’une campagne (réservé à l’admin).' })
     public async reassignCampaignCoach(
         @Param('campaignId', ParseIntPipe) campaignId: number,
         @CurrentUser() user: JwtValidatedUser,
@@ -144,6 +148,7 @@ export class AdminCampaignsController {
     }
 
     @Post('campaigns')
+    @ApiOperation({ summary: 'Crée une campagne (réservé à l’admin).' })
     public createCampaign(
         @CurrentUser() user: JwtValidatedUser,
         @Body(new ZodValidationPipe(createAdminCampaignBodySchema)) body: CreateAdminCampaignBody
@@ -160,6 +165,7 @@ export class AdminCampaignsController {
 
     @Post('campaigns/:campaignId/status')
     @UseGuards(CampaignAccessGuard)
+    @ApiOperation({ summary: 'Met à jour le statut d’une campagne.' })
     public async updateCampaignStatus(
         @Param('campaignId', ParseIntPipe) campaignId: number,
         @Body(new ZodValidationPipe(updateAdminCampaignStatusBodySchema)) body: UpdateAdminCampaignStatusBody
@@ -171,12 +177,14 @@ export class AdminCampaignsController {
 
     @Post('campaigns/:campaignId/archive')
     @UseGuards(CampaignAccessGuard)
+    @ApiOperation({ summary: 'Archive une campagne.' })
     public async archiveCampaign(@Param('campaignId', ParseIntPipe) campaignId: number) {
         return this.updateAdminCampaignStatus.execute(campaignId, 'archived');
     }
 
     @Post('campaigns/:campaignId/invite-company-participants')
     @UseGuards(CampaignAccessGuard)
+    @ApiOperation({ summary: 'Invite des participants de l’entreprise rattachée à la campagne.' })
     public async inviteCompanyParticipants(
         @Param('campaignId', ParseIntPipe) campaignId: number,
         @Body(new ZodValidationPipe(inviteCampaignParticipantsBodySchema)) body: InviteCampaignParticipantsBody
@@ -190,6 +198,7 @@ export class AdminCampaignsController {
     @Post('campaigns/:campaignId/import-participants')
     @UseGuards(CampaignAccessGuard)
     @UseInterceptors(FileInterceptor('file'))
+    @ApiOperation({ summary: 'Importe des participants dans une campagne via un fichier CSV.' })
     public async importParticipantsForCampaign(
         @Param('campaignId', ParseIntPipe) campaignId: number,
         @CurrentCoachScope() coachId: number | undefined,
@@ -200,6 +209,7 @@ export class AdminCampaignsController {
 
     @Post('campaigns/:campaignId/participants')
     @UseGuards(CampaignAccessGuard)
+    @ApiOperation({ summary: 'Ajoute un participant à une campagne (admin ou coach habilité).' })
     public async addParticipant(
         @Param('campaignId', ParseIntPipe) campaignId: number,
         @CurrentCoachScope() coachId: number | undefined,
@@ -216,6 +226,7 @@ export class AdminCampaignsController {
      */
     @Get('campaigns/:campaignId/participants/:participantId/transparency')
     @UseGuards(CampaignAccessGuard)
+    @ApiOperation({ summary: 'Lit le snapshot du score de transparence (P23) d’un couple campagne/participant.' })
     public async getCampaignParticipantTransparency(
         @Param('campaignId', ParseIntPipe) campaignId: number,
         @Param('participantId', ParseIntPipe) participantId: number
@@ -230,6 +241,7 @@ export class AdminCampaignsController {
      */
     @Post('campaigns/:campaignId/participants/:participantId/transparency/activate')
     @UseGuards(CampaignAccessGuard)
+    @ApiOperation({ summary: 'Active le calcul du score de transparence (P23) pour un couple campagne/participant.' })
     public async activateCampaignParticipantTransparency(
         @Param('campaignId', ParseIntPipe) campaignId: number,
         @Param('participantId', ParseIntPipe) participantId: number,

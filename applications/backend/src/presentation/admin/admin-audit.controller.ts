@@ -1,7 +1,7 @@
 // Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
 
 import { Controller, Get, Inject, Query, UnauthorizedException, UseFilters, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import type { ListAdminAuditEventsUseCase } from '@src/application/admin/audit/list-admin-audit-events.usecase';
 import { CurrentUser } from '@src/presentation/current-user.decorator';
@@ -30,6 +30,7 @@ export class AdminAuditController {
      * les actions des autres coaches ni des super-admins.
      */
     @Get('audit-events')
+    @ApiOperation({ summary: 'Liste paginée du journal d’audit (G6 RGPD, super-admin uniquement).' })
     public async listAuditEvents(
         @CurrentUser() user: JwtValidatedUser,
         @Query(PaginationQueryPipe) { page, perPage }: PaginationParams

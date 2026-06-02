@@ -22,7 +22,7 @@ import {
     UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import type { Request, Response } from 'express';
 
@@ -153,6 +153,7 @@ export class ParticipantController {
     @Post('auth/login')
     @UseGuards(ThrottlerGuard)
     @Throttle({ 'auth-strict': { limit: 5, ttl: 60_000 } })
+    @ApiOperation({ summary: 'Authentification participant : pose les cookies httpOnly et ouvre une session.' })
     public async login(
         @Body() body: { email?: string; password?: string },
         @Req() req: Request,
@@ -213,6 +214,7 @@ export class ParticipantController {
     @Post('auth/refresh')
     @UseGuards(ThrottlerGuard)
     @Throttle({ 'auth-refresh': { limit: 30, ttl: 60_000 } })
+    @ApiOperation({ summary: 'Rotation de la paire de cookies d’authentification participant.' })
     public async refreshAuth(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
         const cookies = (req as Request & { cookies?: Record<string, string> }).cookies ?? {};
         const rawRefresh = cookies[PARTICIPANT_COOKIE_NAMES.refresh];
@@ -255,6 +257,7 @@ export class ParticipantController {
 
     /** Déconnexion participant : révoque la famille du refresh courant et efface les cookies. */
     @Post('auth/logout')
+    @ApiOperation({ summary: 'Déconnexion participant : révoque le refresh courant et efface les cookies.' })
     public async logout(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
         const cookies = (req as Request & { cookies?: Record<string, string> }).cookies ?? {};
         const rawRefresh = cookies[PARTICIPANT_COOKIE_NAMES.refresh];
@@ -280,6 +283,7 @@ export class ParticipantController {
     /** Claims dérivés du JWT participant courant. */
     @Get('auth/me')
     @UseGuards(ParticipantJwtAuthGuard)
+    @ApiOperation({ summary: 'Claims du participant courant.' })
     public async me(@Req() req: Request) {
         const user = (req as Request & { user?: JwtValidatedUser }).user;
         if (!user || user.role !== 'participant' || user.participantId === undefined) {
@@ -290,12 +294,14 @@ export class ParticipantController {
 
     @Get('session')
     @UseGuards(ParticipantJwtAuthGuard)
+    @ApiOperation({ summary: 'Session du participant courant (campagnes et assignations).' })
     public async session(@CurrentParticipantId() participantId: number) {
         return this.getParticipantSession.execute(participantId);
     }
 
     @Patch('profile')
     @UseGuards(ParticipantJwtAuthGuard)
+    @ApiOperation({ summary: 'Met à jour le profil du participant courant.' })
     public async updateProfile(@CurrentParticipantId() participantId: number, @Body() body: unknown) {
         const parsed = updateParticipantProfileBodySchema.safeParse(body);
         if (!parsed.success) {
@@ -323,6 +329,7 @@ export class ParticipantController {
             limits: { fileSize: 2 * 1024 * 1024 },
         })
     )
+    @ApiOperation({ summary: 'Met à jour l’avatar du participant courant.' })
     public async uploadAvatar(
         @CurrentParticipantId() participantId: number,
         @UploadedFile() file: Express.Multer.File | undefined
@@ -332,6 +339,7 @@ export class ParticipantController {
 
     @Get('avatars/me')
     @UseGuards(ParticipantJwtAuthGuard)
+    @ApiOperation({ summary: 'Récupère l’avatar du participant courant.' })
     public async getOwnAvatar(@CurrentParticipantId() participantId: number, @Res() res: Response) {
         const avatar = await this.getParticipantAvatar.execute(participantId);
         sendAvatarResponse(res, avatar);
@@ -339,6 +347,7 @@ export class ParticipantController {
 
     @Get('campaigns/:campaignId/matrix')
     @UseGuards(ParticipantJwtAuthGuard)
+    @ApiOperation({ summary: 'Matrice des réponses du participant courant pour une campagne.' })
     public async campaignMatrix(
         @CurrentParticipantId() participantId: number,
         @Param('campaignId', ParseIntPipe) campaignId: number,
@@ -357,6 +366,7 @@ export class ParticipantController {
 
     @Post('campaigns/:campaignId/confirm')
     @UseGuards(ParticipantJwtAuthGuard)
+    @ApiOperation({ summary: 'Confirme la participation du participant courant à une campagne.' })
     public async confirmCampaign(
         @CurrentParticipantId() participantId: number,
         @Param('campaignId', ParseIntPipe) campaignId: number
@@ -366,6 +376,7 @@ export class ParticipantController {
 
     @Get('campaigns/:campaignId/peers')
     @UseGuards(ParticipantJwtAuthGuard)
+    @ApiOperation({ summary: 'Liste les pairs du participant courant dans une campagne.' })
     public async campaignPeers(
         @CurrentParticipantId() participantId: number,
         @Param('campaignId', ParseIntPipe) campaignId: number
@@ -375,6 +386,7 @@ export class ParticipantController {
 
     @Get('campaigns/:campaignId/coach/avatar')
     @UseGuards(ParticipantJwtAuthGuard)
+    @ApiOperation({ summary: 'Récupère l’avatar du coach d’une campagne.' })
     public async getCampaignCoachAvatar(
         @CurrentParticipantId() participantId: number,
         @Param('campaignId', ParseIntPipe) campaignId: number,
@@ -386,6 +398,7 @@ export class ParticipantController {
 
     @Get('campaigns/:campaignId/peers/:peerParticipantId/avatar')
     @UseGuards(ParticipantJwtAuthGuard)
+    @ApiOperation({ summary: 'Récupère l’avatar d’un pair dans une campagne.' })
     public async getCampaignPeerAvatar(
         @CurrentParticipantId() participantId: number,
         @Param('campaignId', ParseIntPipe) campaignId: number,
@@ -406,6 +419,7 @@ export class ParticipantController {
      */
     @Get('campaigns/:campaignId/transparency')
     @UseGuards(ParticipantJwtAuthGuard)
+    @ApiOperation({ summary: 'Lit le score de transparence (P23) du participant courant pour une campagne.' })
     public async campaignTransparency(
         @CurrentParticipantId() participantId: number,
         @Param('campaignId', ParseIntPipe) campaignId: number
@@ -421,6 +435,7 @@ export class ParticipantController {
      */
     @Get('campaigns/:campaignId/restitution')
     @UseGuards(ParticipantJwtAuthGuard)
+    @ApiOperation({ summary: 'Lit la restitution IA approuvée du participant courant pour une campagne.' })
     public async campaignAiRestitution(
         @CurrentParticipantId() participantId: number,
         @Param('campaignId', ParseIntPipe) campaignId: number
@@ -434,6 +449,7 @@ export class ParticipantController {
 
     @Post('campaigns/:campaignId/peer-feedback/confirm')
     @UseGuards(ParticipantJwtAuthGuard)
+    @ApiOperation({ summary: 'Confirme le feedback entre pairs du participant courant pour une campagne.' })
     public async confirmCampaignPeerFeedback(
         @CurrentParticipantId() participantId: number,
         @Param('campaignId', ParseIntPipe) campaignId: number
@@ -443,6 +459,7 @@ export class ParticipantController {
 
     @Post('campaigns/:campaignId/questionnaires/:qid/submit')
     @UseGuards(ParticipantJwtAuthGuard)
+    @ApiOperation({ summary: 'Soumet les réponses d’un questionnaire dans une campagne.' })
     public async submitCampaignQuestionnaire(
         @CurrentParticipantId() participantId: number,
         @Param('campaignId', ParseIntPipe) campaignId: number,
@@ -460,6 +477,7 @@ export class ParticipantController {
      */
     @Get('campaigns/:campaignId/questionnaires/:qid/draft')
     @UseGuards(ParticipantJwtAuthGuard)
+    @ApiOperation({ summary: 'Lit le brouillon (autosave) d’un questionnaire dans une campagne.' })
     public async getCampaignQuestionnaireDraft(
         @CurrentParticipantId() participantId: number,
         @Param('campaignId', ParseIntPipe) campaignId: number,
@@ -471,6 +489,7 @@ export class ParticipantController {
 
     @Put('campaigns/:campaignId/questionnaires/:qid/draft')
     @UseGuards(ParticipantJwtAuthGuard)
+    @ApiOperation({ summary: 'Enregistre le brouillon (autosave) d’un questionnaire dans une campagne.' })
     public async upsertCampaignQuestionnaireDraft(
         @CurrentParticipantId() participantId: number,
         @Param('campaignId', ParseIntPipe) campaignId: number,
@@ -483,6 +502,7 @@ export class ParticipantController {
 
     @Get('responses/:responseId')
     @UseGuards(ParticipantJwtAuthGuard)
+    @ApiOperation({ summary: 'Lit une réponse appartenant au participant courant.' })
     public async getResponse(
         @CurrentParticipantId() participantId: number,
         @Param('responseId', ParseIntPipe) responseId: number
@@ -500,6 +520,7 @@ export class ParticipantController {
      */
     @Get('me/export')
     @UseGuards(ParticipantJwtAuthGuard)
+    @ApiOperation({ summary: 'Export RGPD « mes données » du participant courant (articles 15 et 20).' })
     public async exportMyData(@CurrentParticipantId() participantId: number) {
         return this.exportParticipantSelfData.execute(participantId);
     }
