@@ -52,3 +52,5 @@ Liens code, autres ADRs, documents externes.
 | [ADR-006](./ADR-006-toast-emitted-from-mutation-hooks.md) | Toast émis par les hooks de mutation, pas par les routes | Accepted | 2026-04-26 |
 | [ADR-007](./ADR-007-use-drawer-form-zod.md) | `useDrawerForm` + Zod pour les formulaires drawer admin | Accepted | 2026-04-26 |
 | [ADR-008](./ADR-008-backend-layer-first-with-actor-segmentation.md) | Architecture backend layer-first avec segmentation par acteur (supersedes ADR-003 §2) | Accepted | 2026-04-27 |
+| [ADR-009](./ADR-009-presentation-controller-conventions.md) | Conventions d'homogénéité des controllers de présentation (complète ADR-008) | Accepted | 2026-06-02 |
+| [ADR-010](./ADR-010-url-route-design-conventions.md) | Conventions de design des URLs / nommage des routes (complète ADR-009 §5) | Accepted | 2026-06-02 |
