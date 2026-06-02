@@ -6,10 +6,12 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import type { ListAdminAuditEventsUseCase } from '@src/application/admin/audit/list-admin-audit-events.usecase';
 import { CurrentUser } from '@src/presentation/current-user.decorator';
 import type { JwtValidatedUser } from '@src/presentation/jwt-validated-user';
+import { type PaginationParams, PaginationQueryPipe } from '@src/presentation/pagination-query.pipe';
 import { ResponsesExceptionFilter } from '@src/presentation/responses/responses-exception.filter';
 
 import { AdminApplicationExceptionFilter } from './admin-application-exception.filter';
 import { AdminJwtAuthGuard } from './admin-jwt-auth.guard';
+import { auditEventToAdminJson } from './admin.presenters';
 import { LIST_ADMIN_AUDIT_EVENTS_USE_CASE_SYMBOL } from './admin.tokens';
 
 @ApiTags('admin-audit')
@@ -30,28 +32,14 @@ export class AdminAuditController {
     @Get('audit-events')
     public async listAuditEvents(
         @CurrentUser() user: JwtValidatedUser,
-        @Query('page') page?: string,
-        @Query('per_page') perPage?: string
+        @Query(PaginationQueryPipe) { page, perPage }: PaginationParams
     ) {
         if (user.scope !== 'super-admin') {
             throw new UnauthorizedException();
         }
-        const result = await this.listAdminAuditEvents.execute({
-            page: page ? Number.parseInt(page, 10) || 1 : 1,
-            perPage: perPage ? Number.parseInt(perPage, 10) || 50 : 50,
-        });
+        const result = await this.listAdminAuditEvents.execute({ page, perPage });
         return {
-            items: result.items.map(item => ({
-                id: item.id,
-                actor_type: item.actorType,
-                actor_id: item.actorId,
-                action: item.action,
-                resource_type: item.resourceType,
-                resource_id: item.resourceId,
-                payload: item.payload,
-                ip_address: item.ipAddress,
-                created_at: item.createdAt,
-            })),
+            items: result.items.map(auditEventToAdminJson),
             total: result.total,
             page: result.page,
             pages: result.pages,

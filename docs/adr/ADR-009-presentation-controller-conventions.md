@@ -99,12 +99,20 @@ une erreur métier (4xx) **doit** porter le filtre correspondant à ce niveau.
 
 ### 4. Utilitaires transverses, pas de copier-coller
 
-- **Pagination** : un seul `PaginationQueryPipe` (ou util partagé) remplace les
-  trois implémentations. Bornes (`per_page ≤ 200`, défauts) centralisées.
+- **Pagination** : un seul `PaginationQueryPipe` (appliqué sur la query complète :
+  `@Query(PaginationQueryPipe) { page, perPage }`) remplace les trois implémentations.
+  Bornes (`per_page ≤ 200`, défauts) centralisées et configurables par instance. Les
+  normaliseurs de query non-paginés (`normalizeQid`, `normalizePositiveInt`) sont des
+  fonctions pures partagées dans `presentation/query-normalizers.ts`. *(Implémenté 2026-06-02.)*
 - **Mapping snake_case** : toujours dans un presenter (`admin.presenters.ts` ou
-  équivalent), jamais mappé inline dans le handler.
-- **Réponse fichier** (avatars) : un helper `sendBinary(res, buffer, mimeType)`
-  centralise les en-têtes `Content-Type` / `Cache-Control` répétés.
+  équivalent), jamais mappé inline dans le handler. Un read-model **partagé** entre
+  plusieurs modules (ex. snapshot transparence consommé par admin **et** participant) a
+  un presenter **unique** à la racine `presentation/`, pas une copie par module. *(Implémenté 2026-06-02.)*
+- **Réponse fichier** (avatars) : un helper centralise les en-têtes `Content-Type` /
+  `Cache-Control` répétés. Implémenté sous le nom **`sendAvatarResponse(res, avatar)`**
+  (et non `sendBinary` générique) : le helper encode la **politique de cache propre aux
+  avatars** (`private, max-age=86400`), qui ne s'applique pas aux autres réponses binaires
+  (exports CSV → `Content-Disposition`, pas de cache). *(Implémenté 2026-06-02.)*
 
 ### 5. Conventions REST
 

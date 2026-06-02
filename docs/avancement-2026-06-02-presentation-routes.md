@@ -33,6 +33,7 @@
 | **Total (au 2026-06-02, après Section 1)** | **3** | **5** | **12** | **2** |
 | **Total (au 2026-06-02, après Section 2)** | **2** | **3** | **12** | **5** |
 | **Total (au 2026-06-02, après Section 3)** | **2** | **2** | **12** | **6** |
+| **Total (au 2026-06-02, après Section 4)** | **2** | **0** | **11** | **9** |
 
 État global : **base fonctionnelle, conventions implicites divergentes**. Pas de
 refonte nécessaire — extraction de briques transverses + convergence progressive
@@ -136,13 +137,27 @@ handler Nest par défaut).
   pour un chemin prouvé inatteignable ; on met à jour la **règle** (ADR-009 §3) plutôt que d'écrire
   du code mort pour coller à une convention rendue obsolète par la Section 1.
 
-## Section 4 — Utilitaires transverses (DRY)
+## Section 4 — Utilitaires transverses (DRY) — ✅ Traitée le 2026-06-02
 
-| Statut | Constat | Preuve |
-|---|---|---|
-| 🟠 | Parsing pagination : `normalizePage/normalizePerPage/normalizePositiveInt/normalizeQid` **copiés à l'identique** dans deux controllers | [admin-responses.controller.ts:72-94](../applications/backend/src/presentation/admin/admin-responses.controller.ts#L72-L94) ; [admin-participants.controller.ts:91-123](../applications/backend/src/presentation/admin/admin-participants.controller.ts#L91-L123) |
-| 🟠 | 3ᵉ variante de pagination, inline et divergente (`Number.parseInt(page,10) \|\| 1`) | [admin-audit.controller.ts:48-49](../applications/backend/src/presentation/admin/admin-audit.controller.ts#L48-L49) |
-| 🟡 | Mapping snake_case tantôt en presenter, tantôt **inline** dans le handler ; en-tête `Cache-Control: private, max-age=86400` répété en dur dans ~6 handlers d'avatar | [admin-audit.controller.ts:52-66](../applications/backend/src/presentation/admin/admin-audit.controller.ts#L52-L66) ; [participant.controller.ts:431-440](../applications/backend/src/presentation/participant-session/participant.controller.ts#L431-L440) ; avatars (participant/coaches/companies/participants) |
+| Statut | Constat | Preuve | Résolution |
+|---|---|---|---|
+| ✅ (était 🟠) | Parsing pagination : `normalizePage/normalizePerPage/normalizePositiveInt/normalizeQid` **copiés à l'identique** dans deux controllers | ex-[admin-responses.controller.ts:72-94] ; ex-[admin-participants.controller.ts:91-123] | [`PaginationQueryPipe`](../applications/backend/src/presentation/pagination-query.pipe.ts) (couple `page`/`per_page`) + [`query-normalizers.ts`](../applications/backend/src/presentation/query-normalizers.ts) (`normalizeQid` / `normalizePositiveInt`). Les 4 méthodes statiques privées supprimées des 2 controllers ; `normalizeQid` aussi dé-dupliqué côté `participant.controller` (3ᵉ copie). |
+| ✅ (était 🟠) | 3ᵉ variante de pagination, inline et divergente (`Number.parseInt(page,10) \|\| 1`) | ex-[admin-audit.controller.ts:48-49] | Remplacée par `@Query(PaginationQueryPipe)`. **Convergence + durcissement** : la pagination audit est désormais bornée (plafond `per_page` = 200, comme les deux autres) là où elle était non plafonnée. Comportement par défaut inchangé (`page=1`, `per_page=50`). |
+| ✅ (était 🟡) | Mapping snake_case tantôt en presenter, tantôt **inline** dans le handler ; en-tête `Cache-Control: private, max-age=86400` répété en dur dans ~6 handlers d'avatar | ex-[admin-audit.controller.ts:52-66] ; ex-[participant.controller.ts:431-440] ; avatars ×6 | (a) `Cache-Control` → helper [`sendAvatarResponse`](../applications/backend/src/presentation/avatar-response.ts) sur les **6** handlers d'avatar (constante de cache centralisée + commentée). (b) Mappings inline → presenters : `auditEventToAdminJson` ([admin.presenters.ts](../applications/backend/src/presentation/admin/admin.presenters.ts)) pour l'audit ; `transparencyScoreSnapshotToJson` **hissé** en presenter partagé ([transparency-snapshot.presenter.ts](../applications/backend/src/presentation/transparency-snapshot.presenter.ts)) consommé à la fois par `admin-campaigns` et `participant.controller` (qui le faisait inline → **dé-duplication** réelle, pas une copie de plus). |
+
+**Briques créées** (racine `presentation/` = frontière transport ADR-008 §5, sauf presenter audit qui reste `admin/`) :
+- [`PaginationQueryPipe`](../applications/backend/src/presentation/pagination-query.pipe.ts) + type `PaginationParams` — unifie les **3** parseurs de pagination ; défauts/plafond configurables par instance.
+- [`query-normalizers.ts`](../applications/backend/src/presentation/query-normalizers.ts) — fonctions pures `normalizeQid` / `normalizePositiveInt` (non-pagination).
+- [`sendAvatarResponse`](../applications/backend/src/presentation/avatar-response.ts) — émet `Content-Type` + `Cache-Control` + corps binaire.
+- [`transparencyScoreSnapshotToJson`](../applications/backend/src/presentation/transparency-snapshot.presenter.ts) — presenter du read-model partagé, **déplacé** depuis `admin.presenters` (import `admin-campaigns` repointé) pour servir admin **et** participant sans coupler les deux modules.
+- `auditEventToAdminJson` — ajouté à [admin.presenters.ts](../applications/backend/src/presentation/admin/admin.presenters.ts) (scope admin).
+
+**Conformité SOLID / Hexa vérifiée** :
+- **SRP** : chaque brique a une responsabilité unique (normaliser une query / borner une pagination / écrire des en-têtes binaires / sérialiser un read-model). Les controllers retrouvent leur rôle d'orchestration pur, sans helper de transport recopié.
+- **Direction des dépendances (Hexa)** : toutes les briques vivent dans `presentation/` et ne dépendent que de types de **read-models** (`AuditEventListItem`, `ParticipantTransparencyScoreSnapshot` — définis dans `interfaces/`) ou d'objets transport (Express `Response`, query brute). **Zéro dépendance vers l'application/domaine** ; aucune logique métier déplacée dans le transport. Les pipes/normaliseurs ne touchent jamais aux use cases.
+- **DRY / source unique** : le presenter transparence passe de « 1 presenter admin + 1 copie inline participant » à **une** source partagée ; `normalizeQid` passe de 3 copies à 1.
+- **Équivalence comportementale** : `PaginationQueryPipe` reproduit exactement `Number(raw ?? d)` + `Math.floor` + garde `>0` des ex-helpers ; les presenters reprennent champ pour champ les mappings inline (audit : `created_at` laissé en `Date`, sérialisé en ISO identique par `Date#toJSON`). Seul écart **assumé et documenté** : la pagination audit est désormais plafonnée à 200 (durcissement défensif, cas par défaut inchangé).
+- **« Ne pas inventer » (CLAUDE.md)** : `normalizeSearch` (spécifique à `admin-participants`, **non** dupliqué) est laissé en place plutôt que sur-généralisé sans besoin.
 
 ## Section 5 — Conventions REST
 
@@ -178,19 +193,23 @@ handler Nest par défaut).
    `@Catch` disjoints). (b) `scoring` : **aucun filtre requis** — le `ZodValidationPipe` (§1) rend
    tout `throw` du moteur inatteignable ; ADR-009 §3 clarifié plutôt que d'ajouter du code mort.
 
-### Priorité 2 — Briques transverses anti-duplication — 🟡 Partiellement faite
+### Priorité 2 — Briques transverses anti-duplication — ✅ Faite
 
 4. ✅ **`@CurrentUser()` + `@CurrentCoachScope()`** → ~25 répétitions de scoping supprimées.
    **Fait le 2026-06-02** (cf. Section 2).
 5. ✅ **`CampaignAccessGuard`** → les 3 `ensureCampaignAccess()` remplacés.
    **Fait le 2026-06-02** (cf. Section 2).
-6. ⬜ **`PaginationQueryPipe`** → unifier les 3 parseurs de pagination. *(Section 4)*
+6. ✅ **`PaginationQueryPipe`** → les 3 parseurs de pagination unifiés (+ `query-normalizers`
+   pour `normalizeQid`/`normalizePositiveInt`). **Fait le 2026-06-02** (cf. Section 4).
 
-### Priorité 3 — Cohérence structurelle — ⬜ À faire
+### Priorité 3 — Cohérence structurelle — 🟡 Partiellement faite
 
 7. ⬜ **Guard au niveau classe côté participant** (exempter explicitement les routes publiques).
-8. ⬜ **Helper `sendBinary(res, buffer, mimeType)`** pour les en-têtes avatar.
-9. ⬜ **Mapping snake_case** : sortir les mappings inline (audit, transparency) vers presenters.
+8. ✅ **Helper `sendAvatarResponse(res, avatar)`** pour les en-têtes avatar (6 handlers).
+   **Fait le 2026-06-02** (cf. Section 4). *(Renommé vs. `sendBinary` du plan initial : le helper
+   encode la politique de cache **avatar** ; les exports CSV, en-têtes distincts, n'en relèvent pas.)*
+9. ✅ **Mapping snake_case** : audit + transparency sortis vers presenters.
+   **Fait le 2026-06-02** (cf. Section 4).
 
 ### Priorité 4 — Conventions REST & doc (cosmétique, à trancher) — ⬜ À décider
 
@@ -340,3 +359,25 @@ la campagne devient un segment obligatoire, le use case reçoit enfin `campaignI
     Python du moteur scoring, sans rapport avec la Section 3 ; aucun fichier scoring touché).
   - Aucune modification frontend requise : réorganisation transport interne (placement des
     `@UseFilters`), aucun chemin / verbe / forme de réponse modifié.
+
+- **2026-06-02 — Section 4 (Utilitaires transverses / DRY) : ✅ traitée.**
+  - 🟠→✅ **Pagination** : `PaginationQueryPipe` (+ type `PaginationParams`) créé ; `query-normalizers.ts`
+    (`normalizeQid` / `normalizePositiveInt`) créé. Les **3** parseurs divergents unifiés
+    (`admin-responses`, `admin-participants`, `admin-audit`) ; les 4 méthodes statiques privées ×2
+    supprimées + la 3ᵉ copie de `normalizeQid` côté `participant.controller`. **Priorité 2 item 6** cochée.
+  - 🟡→✅ **Cache-Control avatar** : helper `sendAvatarResponse(res, avatar)` ; les **6** handlers d'avatar
+    (admin coaches/companies/participants + participant self/coach/peer) rebranchés. **Priorité 3 item 8** cochée.
+  - 🟡→✅ **Mapping snake_case** : `auditEventToAdminJson` (admin.presenters) pour l'audit ;
+    `transparencyScoreSnapshotToJson` **hissé** en presenter partagé (`presentation/`) — consommé par
+    `admin-campaigns` (import repointé) et `participant.controller` (ex-inline). **Priorité 3 item 9** cochée.
+  - **Conformité SOLID / Hexa** : SRP (1 brique = 1 responsabilité transport) ; direction des dépendances
+    respectée (briques `presentation/` → read-models `interfaces/` uniquement, zéro lien application/domaine) ;
+    DRY (transparence : 1 source partagée au lieu de presenter + copie inline) ; équivalence comportementale
+    (logique de normalisation identique aux ex-helpers ; mappings champ pour champ). Seul écart assumé :
+    plafond `per_page=200` désormais appliqué aussi à l'audit (durcissement, défaut inchangé).
+  - **Vérifs** : `typecheck` backend ✅ (exit 0) ; Biome ✅ (12 fichiers, tri d'imports + format appliqués) ;
+    tests `37/38` ✅ (même échec préexistant `calculate-scoring.usecase.spec.ts` — parité fixtures Python du
+    moteur scoring, sans rapport ; aucun fichier scoring touché).
+  - Aucune modification frontend requise : extraction de briques transport internes, aucun chemin / verbe /
+    query / forme de réponse modifié (la forme JSON de l'audit, de la transparence et des avatars est
+    préservée à l'identique — la migration d'URL reste la Section 7).

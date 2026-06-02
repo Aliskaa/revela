@@ -51,8 +51,8 @@ import type { GetParticipantTransparencyScoreUseCase } from '@src/application/tr
 import { CurrentCoachScope } from '@src/presentation/current-coach-scope.decorator';
 import { CurrentUser } from '@src/presentation/current-user.decorator';
 import { ResponsesExceptionFilter } from '@src/presentation/responses/responses-exception.filter';
+import { transparencyScoreSnapshotToJson } from '@src/presentation/transparency-snapshot.presenter';
 import { ZodValidationPipe } from '@src/presentation/zod-validation.pipe';
-import { transparencyScoreSnapshotToJson } from './admin.presenters';
 
 import type { JwtValidatedUser } from '@src/presentation/jwt-validated-user';
 import { AdminApplicationExceptionFilter } from './admin-application-exception.filter';

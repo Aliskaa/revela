@@ -39,6 +39,7 @@ import type { UpdateAdminCoachUseCase } from '@src/application/admin/coaches/upd
 import type { UploadAdminCoachAvatarUseCase } from '@src/application/admin/coaches/upload-admin-coach-avatar.usecase';
 import { ADMIN_AUTH_CONFIG_PORT_SYMBOL, type IAdminAuthConfigPort } from '@src/interfaces/admin/IAdminAuthConfig.port';
 import { COACHES_REPOSITORY_PORT_SYMBOL, type ICoachesReadPort } from '@src/interfaces/coaches/ICoachesRepository.port';
+import { sendAvatarResponse } from '@src/presentation/avatar-response';
 import { ParticipantAvatarExceptionFilter } from '@src/presentation/participant-session/participant-avatar-exception.filter';
 import { ResponsesExceptionFilter } from '@src/presentation/responses/responses-exception.filter';
 import { ZodValidationPipe } from '@src/presentation/zod-validation.pipe';
@@ -156,10 +157,8 @@ export class AdminCoachesController {
         @Res() res: Response
     ) {
         this.ensureCoachEntityAccess(coachId, user);
-        const { buffer, mimeType } = await this.getAdminCoachAvatar.execute(coachId);
-        res.setHeader('Content-Type', mimeType);
-        res.setHeader('Cache-Control', 'private, max-age=86400');
-        res.send(buffer);
+        const avatar = await this.getAdminCoachAvatar.execute(coachId);
+        sendAvatarResponse(res, avatar);
     }
 
     @Post('coaches/:coachId/avatar')

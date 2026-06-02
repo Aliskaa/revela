@@ -4,20 +4,29 @@ import type { AdminDashboardSnapshot } from '@aor/domain';
 import type { AdminParticipantDetail } from '@src/application/admin/participants/get-admin-participant-detail.usecase';
 import type { Campaign } from '@src/domain/campaigns';
 import type { Coach } from '@src/domain/coaches';
+import type { AuditEventListItem } from '@src/interfaces/audit/IAuditEventsRepository.port';
 import type { CompanyWithParticipantCountReadModel } from '@src/interfaces/companies/ICompaniesRepository.port';
 import type {
     ParticipantAdminListItem,
     ParticipantCampaignAssignmentItem,
-    ParticipantTransparencyScoreSnapshot,
 } from '@src/interfaces/participants/IParticipantsRepository.port';
 
-export const transparencyScoreSnapshotToJson = (s: ParticipantTransparencyScoreSnapshot) => ({
-    campaign_id: s.campaignId,
-    participant_id: s.participantId,
-    value: s.value,
-    peer_count: s.peerCount,
-    activated_at: s.activatedAt.toISOString(),
-    activated_by_coach_id: s.activatedByCoachId,
+/**
+ * Sérialise un événement d'audit (G6 RGPD) en DTO snake_case pour l'API admin.
+ * Extrait du mapping inline qui vivait dans `admin-audit.controller` (cf. ADR-009 §4).
+ * `created_at` reste un `Date` : `JSON.stringify` (rendu Nest) appelle `Date#toJSON`
+ * et émet la même chaîne ISO — comportement préservé à l'identique.
+ */
+export const auditEventToAdminJson = (e: AuditEventListItem) => ({
+    id: e.id,
+    actor_type: e.actorType,
+    actor_id: e.actorId,
+    action: e.action,
+    resource_type: e.resourceType,
+    resource_id: e.resourceId,
+    payload: e.payload,
+    ip_address: e.ipAddress,
+    created_at: e.createdAt,
 });
 
 export const participantToAdminJson = (p: ParticipantAdminListItem) => ({

@@ -62,8 +62,11 @@ import type {
 import { PARTICIPANTS_REPOSITORY_PORT_SYMBOL } from '@src/interfaces/participants/IParticipantsRepository.port';
 import { PARTICIPANT_COOKIE_NAMES, clearAuthCookies, setAuthCookies } from '@src/presentation/auth/auth-cookies.helper';
 import { REFRESH_TOKEN_MANAGER_SYMBOL } from '@src/presentation/auth/auth-refresh.module';
+import { sendAvatarResponse } from '@src/presentation/avatar-response';
 import type { JwtValidatedUser } from '@src/presentation/jwt-validated-user';
+import { normalizeQid } from '@src/presentation/query-normalizers';
 import { ResponsesExceptionFilter } from '@src/presentation/responses/responses-exception.filter';
+import { transparencyScoreSnapshotToJson } from '@src/presentation/transparency-snapshot.presenter';
 
 import { CurrentParticipantId } from './current-participant-id.decorator';
 import { ParticipantAuthExceptionFilter } from './participant-auth-exception.filter';
@@ -146,11 +149,6 @@ export class ParticipantController {
         private readonly getParticipantCampaignCoachAvatar: GetParticipantCampaignCoachAvatarUseCase,
         private readonly audit: AuditLoggerService
     ) {}
-
-    private static normalizeQid(raw?: string): string | undefined {
-        const qid = (raw ?? '').trim().toUpperCase();
-        return qid.length > 0 ? qid : undefined;
-    }
 
     @Post('auth/login')
     @UseGuards(ThrottlerGuard)
@@ -335,12 +333,8 @@ export class ParticipantController {
     @Get('avatars/me')
     @UseGuards(ParticipantJwtAuthGuard)
     public async getOwnAvatar(@CurrentParticipantId() participantId: number, @Res() res: Response) {
-        const { buffer, mimeType } = await this.getParticipantAvatar.execute(participantId);
-        res.setHeader('Content-Type', mimeType);
-        // L'URL inclut un paramètre `?v=` (timestamp) renvoyé par la session — le navigateur
-        // ne réutilise pas une image obsolète après un nouvel upload.
-        res.setHeader('Cache-Control', 'private, max-age=86400');
-        res.send(buffer);
+        const avatar = await this.getParticipantAvatar.execute(participantId);
+        sendAvatarResponse(res, avatar);
     }
 
     @Get('campaigns/:campaignId/matrix')
@@ -351,7 +345,7 @@ export class ParticipantController {
         @Query('qid') qid?: string,
         @Query('peers') peers?: string
     ) {
-        const normalizedQid = ParticipantController.normalizeQid(qid);
+        const normalizedQid = normalizeQid(qid);
         const peerColumnPerspective = peers === 'received' ? 'received' : 'given';
         return this.getParticipantSessionMatrix.execute(
             participantId,
@@ -386,10 +380,8 @@ export class ParticipantController {
         @Param('campaignId', ParseIntPipe) campaignId: number,
         @Res() res: Response
     ) {
-        const { buffer, mimeType } = await this.getParticipantCampaignCoachAvatar.execute(participantId, campaignId);
-        res.setHeader('Content-Type', mimeType);
-        res.setHeader('Cache-Control', 'private, max-age=86400');
-        res.send(buffer);
+        const avatar = await this.getParticipantCampaignCoachAvatar.execute(participantId, campaignId);
+        sendAvatarResponse(res, avatar);
     }
 
     @Get('campaigns/:campaignId/peers/:peerParticipantId/avatar')
@@ -400,14 +392,12 @@ export class ParticipantController {
         @Param('peerParticipantId', ParseIntPipe) peerParticipantId: number,
         @Res() res: Response
     ) {
-        const { buffer, mimeType } = await this.getParticipantCampaignPeerAvatar.execute(
+        const avatar = await this.getParticipantCampaignPeerAvatar.execute(
             participantId,
             campaignId,
             peerParticipantId
         );
-        res.setHeader('Content-Type', mimeType);
-        res.setHeader('Cache-Control', 'private, max-age=86400');
-        res.send(buffer);
+        sendAvatarResponse(res, avatar);
     }
 
     /**
@@ -421,19 +411,7 @@ export class ParticipantController {
         @Param('campaignId', ParseIntPipe) campaignId: number
     ) {
         const snapshot = await this.getOwnParticipantTransparencyScore.execute(participantId, campaignId);
-        if (!snapshot) {
-            return { snapshot: null };
-        }
-        return {
-            snapshot: {
-                campaign_id: snapshot.campaignId,
-                participant_id: snapshot.participantId,
-                value: snapshot.value,
-                peer_count: snapshot.peerCount,
-                activated_at: snapshot.activatedAt.toISOString(),
-                activated_by_coach_id: snapshot.activatedByCoachId,
-            },
-        };
+        return { snapshot: snapshot ? transparencyScoreSnapshotToJson(snapshot) : null };
     }
 
     /**

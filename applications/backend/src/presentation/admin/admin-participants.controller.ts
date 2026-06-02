@@ -41,11 +41,14 @@ import { AuditLoggerService } from '@src/application/audit/audit-logger.service'
 import type { GetParticipantQuestionnaireMatrixUseCase } from '@src/application/participant-session/get-participant-questionnaire-matrix.usecase';
 import { ResponsesExceptionFilter } from '@src/presentation/responses/responses-exception.filter';
 
+import { sendAvatarResponse } from '@src/presentation/avatar-response';
 import { CurrentCoachScope } from '@src/presentation/current-coach-scope.decorator';
 import { CurrentUser } from '@src/presentation/current-user.decorator';
 import type { JwtValidatedUser } from '@src/presentation/jwt-validated-user';
+import { type PaginationParams, PaginationQueryPipe } from '@src/presentation/pagination-query.pipe';
 import { ParticipantAvatarExceptionFilter } from '@src/presentation/participant-session/participant-avatar-exception.filter';
 import { GET_PARTICIPANT_QUESTIONNAIRE_MATRIX_USE_CASE_SYMBOL } from '@src/presentation/participant-session/participant.tokens';
+import { normalizePositiveInt, normalizeQid } from '@src/presentation/query-normalizers';
 import { AdminApplicationExceptionFilter } from './admin-application-exception.filter';
 import { AdminJwtAuthGuard } from './admin-jwt-auth.guard';
 import { participantDetailToAdminJson, participantToAdminJson } from './admin.presenters';
@@ -92,30 +95,6 @@ export class AdminParticipantsController {
         private readonly audit: AuditLoggerService
     ) {}
 
-    private static normalizeQid(raw?: string): string | undefined {
-        const qid = (raw ?? '').trim().toUpperCase();
-        return qid.length > 0 ? qid : undefined;
-    }
-
-    private static normalizePositiveInt(raw?: string): number | undefined {
-        if (raw === undefined || raw.trim() === '') {
-            return undefined;
-        }
-        const value = Number(raw);
-        return Number.isFinite(value) && value > 0 ? value : undefined;
-    }
-
-    private static normalizePage(raw?: string): number {
-        const value = Number(raw ?? 1);
-        return Number.isFinite(value) && value > 0 ? Math.floor(value) : 1;
-    }
-
-    private static normalizePerPage(raw?: string): number {
-        const value = Number(raw ?? 50);
-        const safe = Number.isFinite(value) && value > 0 ? Math.floor(value) : 50;
-        return Math.min(safe, 200);
-    }
-
     private static normalizeSearch(raw?: string): string | undefined {
         const trimmed = (raw ?? '').trim();
         if (trimmed.length === 0) {
@@ -129,15 +108,14 @@ export class AdminParticipantsController {
     @Get('participants')
     public async listParticipants(
         @CurrentCoachScope() coachId: number | undefined,
-        @Query('page') pageRaw: string,
-        @Query('per_page') perPageRaw: string,
+        @Query(PaginationQueryPipe) { page, perPage }: PaginationParams,
         @Query('company_id') companyIdRaw: string,
         @Query('q') qRaw: string
     ) {
         const result = await this.listAdminParticipants.execute({
-            page: AdminParticipantsController.normalizePage(pageRaw),
-            perPage: AdminParticipantsController.normalizePerPage(perPageRaw),
-            companyId: AdminParticipantsController.normalizePositiveInt(companyIdRaw),
+            page,
+            perPage,
+            companyId: normalizePositiveInt(companyIdRaw),
             coachId,
             search: AdminParticipantsController.normalizeSearch(qRaw),
         });
@@ -167,10 +145,8 @@ export class AdminParticipantsController {
         @Param('participantId', ParseIntPipe) participantId: number,
         @Res() res: Response
     ) {
-        const { buffer, mimeType } = await this.getAdminParticipantAvatar.execute(participantId, { coachId });
-        res.setHeader('Content-Type', mimeType);
-        res.setHeader('Cache-Control', 'private, max-age=86400');
-        res.send(buffer);
+        const avatar = await this.getAdminParticipantAvatar.execute(participantId, { coachId });
+        sendAvatarResponse(res, avatar);
     }
 
     @Post('participants/:participantId/avatar')
@@ -233,7 +209,7 @@ export class AdminParticipantsController {
         @Query('qid') qidRaw: string,
         @CurrentCoachScope() coachId: number | undefined
     ) {
-        const qid = AdminParticipantsController.normalizeQid(qidRaw) ?? '';
+        const qid = normalizeQid(qidRaw) ?? '';
         return this.getParticipantQuestionnaireMatrix.execute({
             participantId,
             qid,

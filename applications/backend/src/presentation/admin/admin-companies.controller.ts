@@ -39,6 +39,7 @@ import type { ListAdminCompaniesUseCase } from '@src/application/admin/companies
 import type { UpdateAdminCompanyUseCase } from '@src/application/admin/companies/update-admin-company.usecase';
 import type { UploadAdminCompanyAvatarUseCase } from '@src/application/admin/companies/upload-admin-company-avatar.usecase';
 import type { ImportParticipantsCsvUseCase } from '@src/application/admin/participants/import-participants-csv.usecase';
+import { sendAvatarResponse } from '@src/presentation/avatar-response';
 import { ParticipantAvatarExceptionFilter } from '@src/presentation/participant-session/participant-avatar-exception.filter';
 import { ResponsesExceptionFilter } from '@src/presentation/responses/responses-exception.filter';
 import { ZodValidationPipe } from '@src/presentation/zod-validation.pipe';
@@ -103,10 +104,8 @@ export class AdminCompaniesController {
     @Get('companies/:companyId/avatar')
     @UseFilters(ParticipantAvatarExceptionFilter)
     public async getCompanyAvatar(@Param('companyId', ParseIntPipe) companyId: number, @Res() res: Response) {
-        const { buffer, mimeType } = await this.getAdminCompanyAvatar.execute(companyId);
-        res.setHeader('Content-Type', mimeType);
-        res.setHeader('Cache-Control', 'private, max-age=86400');
-        res.send(buffer);
+        const avatar = await this.getAdminCompanyAvatar.execute(companyId);
+        sendAvatarResponse(res, avatar);
     }
 
     @Post('companies/:companyId/avatar')
