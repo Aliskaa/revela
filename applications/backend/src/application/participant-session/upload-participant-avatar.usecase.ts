@@ -17,7 +17,7 @@ const MAX_AVATAR_BYTES = 2 * 1024 * 1024;
 const ALLOWED_MIME_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
 
 export const participantAvatarPublicPath = (cacheBuster?: number): string =>
-    cacheBuster ? `/api/participant/avatars/me?v=${cacheBuster}` : '/api/participant/avatars/me';
+    cacheBuster ? `/api/participant/profile/avatar?v=${cacheBuster}` : '/api/participant/profile/avatar';
 
 export const adminParticipantAvatarPublicPath = (participantId: number, cacheBuster?: number): string => {
     const base = `/api/admin/participants/${participantId}/avatar`;
