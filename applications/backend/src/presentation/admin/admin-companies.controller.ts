@@ -24,6 +24,14 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import type { Response } from 'express';
 
+import {
+    type AddParticipantBody,
+    addParticipantBodySchema,
+    type AdminCompanyMutationBody,
+    adminCompanyMutationBodySchema,
+} from '@aor/types';
+
+import { ZodValidationPipe } from '@src/presentation/zod-validation.pipe';
 import type { AddParticipantToCompanyUseCase } from '@src/application/admin/companies/add-participant-to-company.usecase';
 import type { CreateAdminCompanyUseCase } from '@src/application/admin/companies/create-admin-company.usecase';
 import type { DeleteAdminCompanyUseCase } from '@src/application/admin/companies/delete-admin-company.usecase';
@@ -117,7 +125,7 @@ export class AdminCompaniesController {
     @Post('companies')
     public async createCompany(
         @Req() req: { user: JwtValidatedUser },
-        @Body() body: { name?: string; contact_name?: string | null; contact_email?: string | null }
+        @Body(new ZodValidationPipe(adminCompanyMutationBodySchema)) body: AdminCompanyMutationBody
     ) {
         // Création d'entreprise réservée à l'admin (cf. P07 du suivi produit 2026-05-02).
         if (req.user.scope === 'coach') {
@@ -130,7 +138,7 @@ export class AdminCompaniesController {
     @Patch('companies/:companyId')
     public async updateCompany(
         @Param('companyId', ParseIntPipe) companyId: number,
-        @Body() body: { name?: string; contact_name?: string | null; contact_email?: string | null }
+        @Body(new ZodValidationPipe(adminCompanyMutationBodySchema)) body: AdminCompanyMutationBody
     ) {
         const row = await this.updateAdminCompany.execute(companyId, body);
         return companyToAdminJson(row);
@@ -171,16 +179,7 @@ export class AdminCompaniesController {
     public async addParticipantToCompanyEndpoint(
         @Param('companyId', ParseIntPipe) companyId: number,
         @Req() req: { user: JwtValidatedUser },
-        @Body()
-        body: {
-            first_name?: string;
-            last_name?: string;
-            email?: string;
-            organisation?: string | null;
-            direction?: string | null;
-            service?: string | null;
-            function_level?: string | null;
-        }
+        @Body(new ZodValidationPipe(addParticipantBodySchema)) body: AddParticipantBody
     ) {
         // Ouvert à l'admin et au coach. Pour le coach, le use case vérifie qu'il a au moins
         // une campagne dans cette entreprise. Cf. P08 du suivi produit 2026-05-02.

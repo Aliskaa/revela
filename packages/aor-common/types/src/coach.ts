@@ -35,3 +35,20 @@ export const adminCoachDetailSchema = z.object({
     campaigns: z.array(adminCoachLinkedCampaignSchema),
 });
 export type AdminCoachDetail = z.infer<typeof adminCoachDetailSchema>;
+
+/**
+ * Validation au bord (ADR-009 §1) pour la création et la mise à jour d'un coach.
+ * Forme transport uniquement ; la longueur du mot de passe, le username réservé et
+ * l'unicité sont vérifiés dans les use cases.
+ */
+export const createAdminCoachBodySchema = z.object({
+    username: z.string().optional(),
+    password: z.string().optional(),
+    display_name: z.string().optional(),
+});
+export type CreateAdminCoachBody = z.infer<typeof createAdminCoachBodySchema>;
+
+export const updateAdminCoachBodySchema = createAdminCoachBodySchema.extend({
+    is_active: z.boolean().optional(),
+});
+export type UpdateAdminCoachBody = z.infer<typeof updateAdminCoachBodySchema>;

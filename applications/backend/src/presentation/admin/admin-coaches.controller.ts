@@ -24,6 +24,14 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import type { Response } from 'express';
 
+import {
+    type CreateAdminCoachBody,
+    createAdminCoachBodySchema,
+    type UpdateAdminCoachBody,
+    updateAdminCoachBodySchema,
+} from '@aor/types';
+
+import { ZodValidationPipe } from '@src/presentation/zod-validation.pipe';
 import type { CreateAdminCoachUseCase } from '@src/application/admin/coaches/create-admin-coach.usecase';
 import type { DeleteAdminCoachUseCase } from '@src/application/admin/coaches/delete-admin-coach.usecase';
 import type { GetAdminCoachAvatarUseCase } from '@src/application/admin/coaches/get-admin-coach-avatar.usecase';
@@ -125,7 +133,7 @@ export class AdminCoachesController {
     @Post('coaches')
     public async createCoach(
         @Req() req: { user: JwtValidatedUser },
-        @Body() body: { username?: string; password?: string; display_name?: string }
+        @Body(new ZodValidationPipe(createAdminCoachBodySchema)) body: CreateAdminCoachBody
     ) {
         if (req.user.scope === 'coach') {
             throw new UnauthorizedException();
@@ -171,7 +179,7 @@ export class AdminCoachesController {
     public async updateCoach(
         @Param('coachId', ParseIntPipe) coachId: number,
         @Req() req: { user: JwtValidatedUser },
-        @Body() body: { username?: string; password?: string; display_name?: string; is_active?: boolean }
+        @Body(new ZodValidationPipe(updateAdminCoachBodySchema)) body: UpdateAdminCoachBody
     ) {
         if (req.user.scope === 'coach') {
             throw new UnauthorizedException(

@@ -20,6 +20,20 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
+import {
+    type AddParticipantBody,
+    addParticipantBodySchema,
+    type CreateAdminCampaignBody,
+    createAdminCampaignBodySchema,
+    type InviteCampaignParticipantsBody,
+    inviteCampaignParticipantsBodySchema,
+    type ReassignCampaignCoachBody,
+    reassignCampaignCoachBodySchema,
+    type UpdateAdminCampaignStatusBody,
+    updateAdminCampaignStatusBodySchema,
+} from '@aor/types';
+
+import { ZodValidationPipe } from '@src/presentation/zod-validation.pipe';
 import type { AddParticipantToCampaignUseCase } from '@src/application/admin/campaigns/add-participant-to-campaign.usecase';
 import type { CreateAdminCampaignUseCase } from '@src/application/admin/campaigns/create-admin-campaign.usecase';
 import type { GetAdminCampaignDetailUseCase } from '@src/application/admin/campaigns/get-admin-campaign-detail.usecase';
@@ -130,7 +144,7 @@ export class AdminCampaignsController {
     public async reassignCampaignCoach(
         @Param('campaignId', ParseIntPipe) campaignId: number,
         @Req() req: { user: JwtValidatedUser },
-        @Body() body: { coach_id?: number }
+        @Body(new ZodValidationPipe(reassignCampaignCoachBodySchema)) body: ReassignCampaignCoachBody
     ) {
         if (req.user.scope === 'coach') {
             throw new UnauthorizedException();
@@ -142,17 +156,7 @@ export class AdminCampaignsController {
     @Post('campaigns')
     public createCampaign(
         @Req() req: { user: JwtValidatedUser },
-        @Body()
-        body: {
-            coach_id?: number;
-            company_id?: number;
-            name?: string;
-            questionnaire_id?: string;
-            starts_at?: string | null;
-            ends_at?: string | null;
-            allow_test_without_manual_inputs?: boolean;
-            status?: 'draft' | 'active' | 'closed' | 'archived';
-        }
+        @Body(new ZodValidationPipe(createAdminCampaignBodySchema)) body: CreateAdminCampaignBody
     ) {
         // Un coach ne peut pas créer de campagne en autonomie : c'est une responsabilité admin.
         // Cf. P06 du suivi produit 2026-05-02.
@@ -168,7 +172,7 @@ export class AdminCampaignsController {
     public async updateCampaignStatus(
         @Param('campaignId', ParseIntPipe) campaignId: number,
         @Req() req: { user: JwtValidatedUser },
-        @Body() body: { status?: 'draft' | 'active' | 'closed' | 'archived'; align_starts_at_to_now?: boolean }
+        @Body(new ZodValidationPipe(updateAdminCampaignStatusBodySchema)) body: UpdateAdminCampaignStatusBody
     ) {
         await this.ensureCampaignAccess(campaignId, req.user);
         return this.updateAdminCampaignStatus.execute(campaignId, body.status ?? 'draft', {
@@ -189,7 +193,7 @@ export class AdminCampaignsController {
     public async inviteCompanyParticipants(
         @Param('campaignId', ParseIntPipe) campaignId: number,
         @Req() req: { user: JwtValidatedUser },
-        @Body() body: { participant_ids?: number[] } = {}
+        @Body(new ZodValidationPipe(inviteCampaignParticipantsBodySchema)) body: InviteCampaignParticipantsBody
     ) {
         await this.ensureCampaignAccess(campaignId, req.user);
         const participantIds = Array.isArray(body.participant_ids)
@@ -214,16 +218,7 @@ export class AdminCampaignsController {
     public async addParticipantToCampaignEndpoint(
         @Param('campaignId', ParseIntPipe) campaignId: number,
         @Req() req: { user: JwtValidatedUser },
-        @Body()
-        body: {
-            first_name?: string;
-            last_name?: string;
-            email?: string;
-            organisation?: string | null;
-            direction?: string | null;
-            service?: string | null;
-            function_level?: string | null;
-        }
+        @Body(new ZodValidationPipe(addParticipantBodySchema)) body: AddParticipantBody
     ) {
         // Ouvert à l'admin et au coach (le coach est restreint à ses campagnes via
         // `ensureCampaignAccess`). Cf. P08 du suivi produit 2026-05-02.

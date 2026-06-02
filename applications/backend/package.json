@@ -48,7 +48,8 @@
         "passport-jwt": "catalog:",
         "pg": "catalog:",
         "reflect-metadata": "catalog:",
-        "rxjs": "catalog:"
+        "rxjs": "catalog:",
+        "zod": "catalog:"
     },
     "devDependencies": {
         "@biomejs/biome": "catalog:",

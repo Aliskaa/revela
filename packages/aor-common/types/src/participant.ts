@@ -98,6 +98,22 @@ export const participantSessionSchema = z.object({
 });
 export type ParticipantSession = z.infer<typeof participantSessionSchema>;
 
+/**
+ * Validation au bord (ADR-009 §1) pour l'ajout unitaire d'un participant (à une campagne
+ * ou à une entreprise — même forme côté admin). Forme transport uniquement : prénom/nom/email
+ * requis et normalisation du `function_level` restent gérés par les use cases.
+ */
+export const addParticipantBodySchema = z.object({
+    first_name: z.string().optional(),
+    last_name: z.string().optional(),
+    email: z.string().optional(),
+    organisation: z.string().nullable().optional(),
+    direction: z.string().nullable().optional(),
+    service: z.string().nullable().optional(),
+    function_level: z.string().nullable().optional(),
+});
+export type AddParticipantBody = z.infer<typeof addParticipantBodySchema>;
+
 export const updateParticipantProfileBodySchema = z.object({
     organisation: z.string().max(255).nullable().optional(),
     direction: z.string().max(255).nullable().optional(),

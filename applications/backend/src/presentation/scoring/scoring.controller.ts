@@ -9,6 +9,8 @@ import {
 import { Body, Controller, Inject, Post } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 
+import { ZodValidationPipe } from '@src/presentation/zod-validation.pipe';
+
 @ApiTags('scoring')
 @Controller('scoring')
 export class ScoringController {
@@ -18,8 +20,9 @@ export class ScoringController {
     ) {}
 
     @Post('calculate')
-    public calculate(@Body() payload: CalculateScoringRequestDto): CalculateScoringResponseDto {
-        const input = calculateScoringRequestDtoSchema.parse(payload);
+    public calculate(
+        @Body(new ZodValidationPipe(calculateScoringRequestDtoSchema)) input: CalculateScoringRequestDto
+    ): CalculateScoringResponseDto {
         return this.calculateScoringUseCase.execute(input);
     }
 }

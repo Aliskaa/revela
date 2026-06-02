@@ -22,7 +22,7 @@
 
 | Axe | 🔴 | 🟠 | 🟡 | ✅ |
 |---|---|---|---|---|
-| 1. Validation des entrées | 1 | 1 | 0 | 0 |
+| 1. Validation des entrées | 0 | 0 | 0 | 2 |
 | 2. Authentification / autorisation | 1 | 2 | 0 | 0 |
 | 3. Filtres d'exception | 0 | 1 | 0 | 0 |
 | 4. Utilitaires transverses (DRY) | 0 | 2 | 1 | 0 |
@@ -30,6 +30,7 @@
 | 6. Documentation OpenAPI | 0 | 0 | 1 | 0 |
 | 7. Design des URLs (ADR-010) | 1 | 0 | 6 | 0 |
 | **Total (état initial)** | **4** | **6** | **12** | **0** |
+| **Total (au 2026-06-02, après Section 1)** | **3** | **5** | **12** | **2** |
 
 État global : **base fonctionnelle, conventions implicites divergentes**. Pas de
 refonte nécessaire — extraction de briques transverses + convergence progressive
@@ -37,17 +38,35 @@ des 13 controllers vers le contrat ADR-009.
 
 ---
 
-## Section 1 — Validation des entrées
+## Section 1 — Validation des entrées — ✅ Traitée le 2026-06-02
 
-| Statut | Constat | Preuve |
-|---|---|---|
-| 🔴 | `schema.parse()` brut : une entrée invalide lève une ZodError non filtrée → **HTTP 500** au lieu de 400. Ce controller n'a en plus aucun `@UseFilters` | [scoring.controller.ts:22](../applications/backend/src/presentation/scoring/scoring.controller.ts#L22) |
-| 🟠 | `@Body() body: { champ?: type }` typé **inline sans validation runtime** sur toute la branche admin de mutation (le type TS disparaît à l'exécution → aucune barrière) | [admin-campaigns.controller.ts:145](../applications/backend/src/presentation/admin/admin-campaigns.controller.ts#L145) ; [admin-companies.controller.ts:120](../applications/backend/src/presentation/admin/admin-companies.controller.ts#L120) ; [admin-coaches.controller.ts:128](../applications/backend/src/presentation/admin/admin-coaches.controller.ts#L128) |
-| ✅ (référence) | `safeParse` → `BadRequestException` = pattern cible déjà en place | [participant.controller.ts:295](../applications/backend/src/presentation/participant-session/participant.controller.ts#L295) ; [admin-ai-restitutions.controller.ts:128](../applications/backend/src/presentation/admin/admin-ai-restitutions.controller.ts#L128) |
+| Statut | Constat | Preuve | Résolution |
+|---|---|---|---|
+| ✅ (était 🔴) | `schema.parse()` brut : une entrée invalide levait une ZodError non filtrée → **HTTP 500** au lieu de 400 | [scoring.controller.ts:20-25](../applications/backend/src/presentation/scoring/scoring.controller.ts#L20-L25) | Remplacé par `@Body(new ZodValidationPipe(calculateScoringRequestDtoSchema))` : le pipe lève un `BadRequestException` → **400**. *(Le `@UseFilters` manquant relève de la Section 3 ; il n'est plus nécessaire au 400 — un `BadRequestException` natif est déjà rendu en 400 par Nest.)* |
+| ✅ (était 🟠) | `@Body() body: { champ?: type }` typé **inline sans validation runtime** sur toute la branche admin de mutation (le type TS disparaît à l'exécution → aucune barrière) | campaigns / companies / coaches (create, update, status, reassign, invite, add-participant) | Schémas Zod dédiés dans `@aor/types` + `@Body(new ZodValidationPipe(schema))` sur **les 10 handlers de mutation** des 3 controllers. La validation **métier** (coach actif, unicité, mot de passe…) reste dans les use cases. |
+| ✅ (référence) | `safeParse` → `BadRequestException` = pattern cible déjà en place | [participant.controller.ts:295](../applications/backend/src/presentation/participant-session/participant.controller.ts#L295) ; [admin-ai-restitutions.controller.ts:128](../applications/backend/src/presentation/admin/admin-ai-restitutions.controller.ts#L128) | Conservé. Convergera vers `ZodValidationPipe` au fil de l'eau (pas urgent). |
 
-**4 stratégies coexistent** : `parse()` brut · `safeParse → 400` · `body: unknown`
-délégué ([invitations-public.controller.ts:77](../applications/backend/src/presentation/invitations/invitations-public.controller.ts#L77)) · `body: {…}` inline non validé.
-Cible ADR-009 §1 : `ZodValidationPipe` + `safeParse → 400` partout.
+**Brique créée** : [`ZodValidationPipe`](../applications/backend/src/presentation/zod-validation.pipe.ts)
+(racine `presentation/` = frontière transport ADR-008 §5). `safeParse` → `BadRequestException`
+avec les `issues` Zod. Réutilisable de façon déclarative : `@Body(new ZodValidationPipe(schema))`.
+
+**Schémas ajoutés** dans `@aor/types` (Zod v4, contrats partagés — CLAUDE.md) :
+`createAdminCampaignBodySchema`, `updateAdminCampaignStatusBodySchema`,
+`reassignCampaignCoachBodySchema`, `inviteCampaignParticipantsBodySchema`
+([campaign.ts](../packages/aor-common/types/src/campaign.ts)) ;
+`adminCompanyMutationBodySchema` ([company.ts](../packages/aor-common/types/src/company.ts)) ;
+`createAdminCoachBodySchema`, `updateAdminCoachBodySchema` ([coach.ts](../packages/aor-common/types/src/coach.ts)) ;
+`addParticipantBodySchema` ([participant.ts](../packages/aor-common/types/src/participant.ts)).
+
+> **Note contrat frontend** : ces schémas valident la forme transport en **miroir
+> exact** des types inline préexistants (champs optionnels, types identiques) → aucun
+> payload légitime envoyé par `hooks/admin.ts` n'est rejeté. Section 1 = durcissement
+> de validation (500→400), **pas** une rupture de contrat ⇒ pas de modification frontend
+> requise (contrairement à la Section 7). `zod` ajouté en dépendance directe du backend.
+
+**Reste hors périmètre Section 1** : `body: unknown` délégué au use case
+([invitations-public.controller.ts:77](../applications/backend/src/presentation/invitations/invitations-public.controller.ts#L77))
+— stratégie distincte, non couverte par la Priorité 1 (convergence ultérieure).
 
 ## Section 2 — Authentification / autorisation
 
@@ -98,12 +117,15 @@ Divergence guard : **classe** (admin) vs **par méthode ×20** (participant) vs
 > Convergence **progressive** (ADR-009, coûts assumés) : on extrait d'abord les
 > briques transverses, puis on rebranche les controllers. Aucun big-bang.
 
-### Priorité 1 — Failles & status HTTP (rapide, fort impact) — ⬜ À faire
+### Priorité 1 — Failles & status HTTP (rapide, fort impact) — 🟡 Partiellement faite
 
-1. ⬜ **Protéger `GET /questionnaires/:qid`** (ou documenter explicitement l'ouverture).
-2. ⬜ **`ZodValidationPipe`** + le brancher d'abord sur `scoring` (supprime le 500) et
+1. ⬜ **Protéger `GET /questionnaires/:qid`** (ou documenter explicitement l'ouverture). *(Section 2)*
+2. ✅ **`ZodValidationPipe`** créé et branché sur `scoring` (supprime le 500 → 400) et
    sur la branche admin de mutation (campaigns/companies/coaches) — schémas dans `@aor/types`.
-3. ⬜ **`@UseFilters` sur `scoring`** (filtre dédié ou `ResponsesExceptionFilter`).
+   **Fait le 2026-06-02** (cf. Section 1).
+3. ⬜ **`@UseFilters` sur `scoring`** (filtre dédié ou `ResponsesExceptionFilter`). *(Section 3 —
+   le 500 du §1 est déjà résolu par le pipe ; ce point ne concerne plus que les erreurs
+   métier éventuelles du use case scoring.)*
 
 ### Priorité 2 — Briques transverses anti-duplication — ⬜ À faire
 
@@ -209,6 +231,21 @@ la campagne devient un segment obligatoire, le use case reçoit enfin `campaignI
 
 ## Bilan d'exécution
 
-État initial posé le **2026-06-02**. Aucune correction encore appliquée — ce document
-est la feuille de route de convergence vers [ADR-009](./adr/ADR-009-presentation-controller-conventions.md).
+État initial posé le **2026-06-02**. Feuille de route de convergence vers
+[ADR-009](./adr/ADR-009-presentation-controller-conventions.md).
 À mettre à jour au fil des priorités traitées (modèle : `avancement-2026-05-08-audit-uxui.md`).
+
+### Journal
+
+- **2026-06-02 — Section 1 (Validation des entrées) : ✅ traitée.**
+  - Brique transverse `ZodValidationPipe` créée (`presentation/zod-validation.pipe.ts`).
+  - 9 schémas de body ajoutés dans `@aor/types` (campaign / company / coach / participant).
+  - Branchée sur `scoring` (🔴 500→400 résolu) + 10 handlers de mutation admin
+    (campaigns/companies/coaches — 🟠 résolu).
+  - `zod` ajouté aux dépendances directes du backend.
+  - **Vérifs** : `typecheck` backend ✅ ; tests `37/38` ✅ (l'unique échec,
+    `calculate-scoring.usecase.spec.ts`, est **préexistant** — parité fixtures Python du
+    use case scoring, sans rapport avec la Section 1 : reproduit à l'identique sans les
+    modifs) ; Biome ✅ sur tous les fichiers touchés.
+  - Aucune modification frontend requise (durcissement de validation, pas de rupture de
+    contrat — schémas en miroir des types inline).
