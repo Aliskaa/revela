@@ -8,12 +8,15 @@ export interface ICoachesReadPort {
     listAll(): Promise<Coach[]>;
     findById(id: number): Promise<Coach | null>;
     findByUsername(username: string): Promise<Coach | null>;
+    findAvatar(coachId: number): Promise<{ data: Buffer; mimeType: string } | null>;
+    resolveAvatarUrl(coachId: number): Promise<string | null>;
 }
 
 export interface ICoachesWritePort {
     create(coach: Coach): Promise<Coach>;
     save(coach: Coach): Promise<Coach | null>;
     deleteById(id: number): Promise<void>;
+    saveAvatar(coachId: number, data: Buffer, mimeType: string): Promise<void>;
 }
 
 export interface ICoachesRepositoryPort extends ICoachesReadPort, ICoachesWritePort {}

@@ -10,16 +10,25 @@
 #    restart SSM.
 #
 # Usage :
-#   ./deploy.sh                       # 1er deploiement complet
-#   ./deploy.sh --migrate-db          # 1er deploiement + migration
+#   ./deploy.sh                       # Menu interactif (TTY) ou tout deployer
+#   ./deploy.sh --target all          # Backend + frontend (non interactif)
+#   ./deploy.sh --target backend      # Backend uniquement
+#   ./deploy.sh --target frontend     # Frontend uniquement
+#   ./deploy.sh --backend-only        # Alias de --target backend
+#   ./deploy.sh --frontend-only       # Alias de --target frontend
+#   ./deploy.sh --migrate-db          # Migration DB puis restart (avant trafic)
 #   ./deploy.sh --image-tag v1.0.1    # MAJ avec tag versionne
-#   ./deploy.sh --skip-build          # Juste forcer un restart EC2
-#   ./deploy.sh --skip-build --migrate-db  # Migration seule
+#   ./deploy.sh --skip-build          # Juste forcer un restart EC2 (cible via menu/--target)
+#   ./deploy.sh --skip-build --migrate-db  # Migration seule (sans rebuild)
 #
 # Pre-requis : aws CLI v2, docker (avec buildx), jq, bash 4+
 # -----------------------------------------------------------------------------
 
 set -euo pipefail
+
+# AWS CLI sous Windows (Git Bash) echoue sur la sortie Unicode de drizzle-kit migrate
+# (spinner TTY) si PYTHONUTF8 n'est pas actif — le polling SSM reste alors bloque.
+export PYTHONUTF8="${PYTHONUTF8:-1}"
 
 # Repertoire du script + racine du repo (2 niveaux au-dessus)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -30,6 +39,9 @@ CONFIG_FILE="$SCRIPT_DIR/deploy.config.json"
 IMAGE_TAG="latest"
 SKIP_BUILD=false
 MIGRATE_DB=false
+DEPLOY_TARGET=""   # all | backend | frontend (vide = menu interactif si TTY)
+DEPLOY_BACKEND=false
+DEPLOY_FRONTEND=false
 
 # ─── Parsing arguments ───────────────────────────────────────────────
 usage() {
@@ -39,11 +51,14 @@ usage() {
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        --config)     CONFIG_FILE="$2"; shift 2 ;;
-        --image-tag)  IMAGE_TAG="$2";   shift 2 ;;
-        --skip-build) SKIP_BUILD=true;  shift ;;
-        --migrate-db) MIGRATE_DB=true;  shift ;;
-        -h|--help)    usage 0 ;;
+        --config)        CONFIG_FILE="$2"; shift 2 ;;
+        --image-tag)     IMAGE_TAG="$2";   shift 2 ;;
+        --skip-build)    SKIP_BUILD=true;  shift ;;
+        --migrate-db)    MIGRATE_DB=true;  shift ;;
+        --target)        DEPLOY_TARGET="$2"; shift 2 ;;
+        --backend-only)  DEPLOY_TARGET="backend"; shift ;;
+        --frontend-only) DEPLOY_TARGET="frontend"; shift ;;
+        -h|--help)       usage 0 ;;
         *) echo "Argument inconnu : $1" >&2; usage 1 ;;
     esac
 done
@@ -61,6 +76,78 @@ ok()   { printf "    ${C_GREEN}OK : %s${C_RESET}\n" "$*"; }
 warn() { printf "    ${C_YELLOW}WARN : %s${C_RESET}\n" "$*"; }
 err()  { printf "    ${C_RED}ERR : %s${C_RESET}\n" "$*" >&2; }
 gray() { printf "    ${C_GRAY}%s${C_RESET}\n" "$*"; }
+
+# ─── Cible de deploiement ────────────────────────────────────────────
+resolve_deploy_targets() {
+    case "$DEPLOY_TARGET" in
+        all)
+            DEPLOY_BACKEND=true
+            DEPLOY_FRONTEND=true
+            ;;
+        backend)
+            DEPLOY_BACKEND=true
+            ;;
+        frontend)
+            DEPLOY_FRONTEND=true
+            ;;
+        *)
+            err "Cible invalide : '$DEPLOY_TARGET' (attendu : all, backend, frontend)"
+            exit 1
+            ;;
+    esac
+}
+
+prompt_deploy_target() {
+    if [[ -n "$DEPLOY_TARGET" ]]; then
+        resolve_deploy_targets
+        return
+    fi
+
+    if [[ ! -t 0 ]]; then
+        DEPLOY_TARGET="all"
+        resolve_deploy_targets
+        gray "Mode non interactif : deploiement complet (backend + frontend)"
+        return
+    fi
+
+    echo
+    printf "${C_CYAN}===================================================================${C_RESET}\n"
+    printf "${C_CYAN}  Deploiement Revela — %s (tag=%s)${C_RESET}\n" "$STACK_NAME" "$IMAGE_TAG"
+    printf "${C_CYAN}===================================================================${C_RESET}\n"
+    $SKIP_BUILD && gray "Build/push : ignore (--skip-build)"
+    $MIGRATE_DB && gray "Migration DB : oui (--migrate-db)"
+    echo
+    echo "  Que souhaitez-vous deployer ?"
+    echo
+    echo "    1) Tout (backend + frontend)"
+    echo "    2) Backend uniquement"
+    echo "    3) Frontend uniquement"
+    echo "    4) Quitter"
+    echo
+    local choice=""
+    while true; do
+        read -r -p "  Choix [1-4] : " choice
+        case "$choice" in
+            1) DEPLOY_TARGET="all"; break ;;
+            2) DEPLOY_TARGET="backend"; break ;;
+            3) DEPLOY_TARGET="frontend"; break ;;
+            4) echo "Annule."; exit 0 ;;
+            *) echo "  Choix invalide, saisissez 1, 2, 3 ou 4." ;;
+        esac
+    done
+    echo
+    resolve_deploy_targets
+}
+
+deploy_target_label() {
+    if $DEPLOY_BACKEND && $DEPLOY_FRONTEND; then
+        echo "backend + frontend"
+    elif $DEPLOY_BACKEND; then
+        echo "backend"
+    else
+        echo "frontend"
+    fi
+}
 
 # ─── Pre-flight : config + outils ───────────────────────────────────
 step "Lecture de la config"
@@ -99,6 +186,9 @@ ACCOUNT_ID="$(echo "$identity_json" | jq -r .Account)"
 ARN="$(echo "$identity_json" | jq -r .Arn)"
 REGISTRY="${ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com"
 ok "Compte $ACCOUNT_ID ($ARN)"
+
+prompt_deploy_target
+ok "Cible : $(deploy_target_label)"
 
 # ─── Stack : creation ou detection ──────────────────────────────────
 step "Detection du stack '$STACK_NAME'"
@@ -154,11 +244,14 @@ else
 fi
 
 # ─── Attente des repos ECR ──────────────────────────────────────────
-step "Attente des repos ECR (revela/backend, revela/frontend)"
+ecr_repos=()
+$DEPLOY_BACKEND && ecr_repos+=(revela/backend)
+$DEPLOY_FRONTEND && ecr_repos+=(revela/frontend)
+step "Attente des repos ECR (${ecr_repos[*]})"
 deadline=$(( $(date +%s) + 300 ))
 while true; do
     if aws ecr describe-repositories --region "$REGION" \
-            --repository-names revela/backend revela/frontend --output json >/dev/null 2>&1; then
+            --repository-names "${ecr_repos[@]}" --output json >/dev/null 2>&1; then
         break
     fi
     if (( $(date +%s) > deadline )); then err "Timeout attente repos ECR"; exit 1; fi
@@ -179,21 +272,29 @@ else
     pushd "$REPO_ROOT" >/dev/null
     trap 'popd >/dev/null' EXIT
 
-    step "Build + push backend (linux/arm64, tag=$IMAGE_TAG)"
-    docker buildx build \
-        --platform linux/arm64 \
-        -f applications/backend/Dockerfile \
-        -t "$REGISTRY/revela/backend:$IMAGE_TAG" \
-        --push .
-    ok "Backend pushe"
+    if $DEPLOY_BACKEND; then
+        step "Build + push backend (linux/arm64, tag=$IMAGE_TAG)"
+        backend_tags=(-t "$REGISTRY/revela/backend:$IMAGE_TAG")
+        [[ "$IMAGE_TAG" != "latest" ]] && backend_tags+=(-t "$REGISTRY/revela/backend:latest")
+        docker buildx build \
+            --platform linux/arm64 \
+            -f applications/backend/Dockerfile \
+            "${backend_tags[@]}" \
+            --push .
+        ok "Backend pushe"
+    fi
 
-    step "Build + push frontend (linux/arm64, tag=$IMAGE_TAG)"
-    docker buildx build \
-        --platform linux/arm64 \
-        -f applications/frontend/Dockerfile \
-        -t "$REGISTRY/revela/frontend:$IMAGE_TAG" \
-        --push .
-    ok "Frontend pushe"
+    if $DEPLOY_FRONTEND; then
+        step "Build + push frontend (linux/arm64, tag=$IMAGE_TAG)"
+        frontend_tags=(-t "$REGISTRY/revela/frontend:$IMAGE_TAG")
+        [[ "$IMAGE_TAG" != "latest" ]] && frontend_tags+=(-t "$REGISTRY/revela/frontend:latest")
+        docker buildx build \
+            --platform linux/arm64 \
+            -f applications/frontend/Dockerfile \
+            "${frontend_tags[@]}" \
+            --push .
+        ok "Frontend pushe"
+    fi
 
     popd >/dev/null
     trap - EXIT
@@ -290,10 +391,10 @@ ssm_run() {
     local inv_status="" inv_stdout="" inv_stderr=""
     while true; do
         sleep 5
-        if inv_json="$(aws ssm get-command-invocation \
+        # --query Status evite de parser du JSON contenant des caracteres Unicode (spinner drizzle-kit).
+        if inv_status="$(aws ssm get-command-invocation \
                 --command-id "$cmd_id" --instance-id "$EC2_INSTANCE_ID" --region "$REGION" \
-                --output json 2>/dev/null)"; then
-            inv_status="$(echo "$inv_json" | jq -r .Status)"
+                --query Status --output text 2>/dev/null)"; then
             case "$inv_status" in
                 Success|Failed|Cancelled|TimedOut) break ;;
             esac
@@ -301,8 +402,12 @@ ssm_run() {
         if (( $(date +%s) > deadline )); then err "Timeout SSM ($description)"; return 1; fi
     done
 
-    inv_stdout="$(echo "$inv_json" | jq -r '.StandardOutputContent // ""')"
-    inv_stderr="$(echo "$inv_json" | jq -r '.StandardErrorContent // ""')"
+    inv_stdout="$(aws ssm get-command-invocation \
+            --command-id "$cmd_id" --instance-id "$EC2_INSTANCE_ID" --region "$REGION" \
+            --query 'StandardOutputContent' --output text 2>/dev/null || true)"
+    inv_stderr="$(aws ssm get-command-invocation \
+            --command-id "$cmd_id" --instance-id "$EC2_INSTANCE_ID" --region "$REGION" \
+            --query 'StandardErrorContent' --output text 2>/dev/null || true)"
 
     if [[ "$inv_status" == "Success" ]]; then
         ok "$description"
@@ -312,33 +417,78 @@ ssm_run() {
         return 0
     else
         err "$description : statut $inv_status"
+        [[ -n "$inv_stdout" ]] && printf "${C_RED}%s${C_RESET}\n" "$inv_stdout" >&2
         [[ -n "$inv_stderr" ]] && printf "${C_RED}%s${C_RESET}\n" "$inv_stderr" >&2
         return 1
     fi
 }
 
 # ─── Pull + up sur l'EC2 ────────────────────────────────────────────
-step "SSM : docker compose pull && up -d"
-ssm_run "Restart conteneurs" 8 \
-    'cd /opt/revela' \
-    'sudo docker compose pull' \
-    'sudo docker compose up -d' \
-    'sudo docker compose ps --format "{{.Service}}: {{.Status}}"'
+# Le login ECR du bootstrap expire (~12h). Sans re-login, pull/up echouent
+# mais SSM reste Success si la derniere commande (ps) passe — d'ou set -e.
+compose_services=()
+$DEPLOY_BACKEND && compose_services+=(backend)
+$DEPLOY_FRONTEND && compose_services+=(frontend)
+compose_services_str="${compose_services[*]}"
 
-# ─── Migration DB optionnelle ───────────────────────────────────────
+# Pull backend aussi si migration demandee (meme deploy frontend-only).
+pull_services=("${compose_services[@]}")
 if $MIGRATE_DB; then
-    step "SSM : migration DB"
-    ssm_run "Migration DB" 5 \
-        'BACKEND=$(sudo docker ps --filter name=backend --format "{{.ID}}" | head -1)' \
-        'if [ -z "$BACKEND" ]; then echo "backend container not running"; exit 1; fi' \
-        'sudo docker exec -i "$BACKEND" sh -c "cd /workspace && pnpm --filter @aor/drizzle db:migrate"' \
-        || true
+    if [[ " ${pull_services[*]} " != *" backend "* ]]; then
+        pull_services+=(backend)
+    fi
 fi
+pull_services_str="${pull_services[*]}"
+
+container_checks=()
+$DEPLOY_BACKEND && container_checks+=('revela-backend-1')
+$DEPLOY_FRONTEND && container_checks+=('revela-frontend-1')
+container_check_cmd='for c in '"${container_checks[*]}"'; do age=$(( $(date +%s) - $(date -d "$(sudo docker inspect -f "{{.State.StartedAt}}" "$c")" +%s) )); if (( age > 600 )); then echo "Container $c pas redemarre (age ${age}s)"; exit 1; fi; done'
+
+# Sur l'EC2 (8 Go), ne garder que le tag deploye + le precedent par repo Revela.
+ec2_prune_revela_repo_fn='prune_revela_repo(){ local repo="$1" prev="$2" cur="'"${IMAGE_TAG}"'" reg="'"${REGISTRY}"'"; local keep="$cur"; [[ -n "$prev" && "$prev" != "$cur" ]] && keep="$keep $prev"; while IFS= read -r img; do [[ -z "$img" || "$img" == *"<none>"* ]] && continue; tag="${img##*:}"; ok=0; for t in $keep; do [[ "$tag" == "$t" ]] && ok=1; done; [[ "$ok" == 1 ]] || sudo docker rmi "$img" 2>/dev/null || true; done < <(sudo docker images "${reg}/revela/${repo}" --format "{{.Repository}}:{{.Tag}}"); }'
+
+ssm_restart_cmds=(
+    'set -euo pipefail'
+    'cd /opt/revela'
+    'PREV_BACKEND_TAG=$(grep -oE "revela/backend:[a-zA-Z0-9._-]+" docker-compose.yml | head -1 | sed "s|.*revela/backend:||")'
+    'PREV_FRONTEND_TAG=$(grep -oE "revela/frontend:[a-zA-Z0-9._-]+" docker-compose.yml | head -1 | sed "s|.*revela/frontend:||")'
+    "sudo sed -i 's|revela/backend:[a-zA-Z0-9._-]*|revela/backend:${IMAGE_TAG}|g' /opt/revela/docker-compose.yml"
+    "sudo sed -i 's|revela/frontend:[a-zA-Z0-9._-]*|revela/frontend:${IMAGE_TAG}|g' /opt/revela/docker-compose.yml"
+    "aws ecr get-login-password --region ${REGION} | sudo docker login --username AWS --password-stdin ${REGISTRY}"
+    "sudo docker compose pull ${pull_services_str}"
+)
+if $MIGRATE_DB; then
+    ssm_restart_cmds+=(
+        'echo ">>> Migration DB (conteneur ephemere, avant restart backend)"'
+        'sudo docker compose run --rm --no-deps backend sh -c "cd /workspace && CI=1 pnpm --filter @aor/drizzle db:migrate"'
+    )
+fi
+ssm_restart_cmds+=(
+    "sudo docker compose up -d --force-recreate --remove-orphans ${compose_services_str}"
+    "$container_check_cmd"
+    "$ec2_prune_revela_repo_fn"
+)
+$DEPLOY_BACKEND && ssm_restart_cmds+=('prune_revela_repo backend "$PREV_BACKEND_TAG"')
+$DEPLOY_FRONTEND && ssm_restart_cmds+=('prune_revela_repo frontend "$PREV_FRONTEND_TAG"')
+ssm_restart_cmds+=(
+    'sudo docker image prune -f >/dev/null'
+    'echo "Images Revela restantes:"; sudo docker images --format "{{.Repository}}:{{.Tag}}" | grep revela/ || true'
+    'echo "Disque:"; df -h / | tail -1'
+    'sudo docker compose ps --format "{{.Service}}: {{.Status}} (image {{.Image}})"'
+)
+
+if $MIGRATE_DB; then
+    step "SSM : pull + migration DB + up -d --force-recreate ($compose_services_str)"
+else
+    step "SSM : ECR login + pull + up -d --force-recreate ($compose_services_str)"
+fi
+ssm_run "Deploy conteneurs ($compose_services_str)" 10 "${ssm_restart_cmds[@]}"
 
 # ─── Resume final ───────────────────────────────────────────────────
 echo
 printf "${C_GREEN}===================================================================${C_RESET}\n"
-printf "${C_GREEN}  DEPLOIEMENT TERMINE${C_RESET}\n"
+printf "${C_GREEN}  DEPLOIEMENT TERMINE ($(deploy_target_label))${C_RESET}\n"
 printf "${C_GREEN}===================================================================${C_RESET}\n"
 echo
 echo "URL applicative  : https://$DOMAIN_NAME"
@@ -355,7 +505,7 @@ echo "  2. Recuperer le mot de passe super-admin :"
 echo "     aws secretsmanager get-secret-value --secret-id $ADMIN_PASSWORD_SEC_ARN --region $REGION --query SecretString --output text | jq -r .password"
 echo
 if ! $MIGRATE_DB; then
-    echo "  3. Si 1er deploiement, lance la migration DB :"
-    echo "     ./deploy.sh --skip-build --migrate-db"
+    echo "  3. Si le schema DB a change, relance avec migration avant restart :"
+    echo "     ./deploy.sh --skip-build --migrate-db --image-tag ${IMAGE_TAG}"
     echo
 fi

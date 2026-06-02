@@ -48,14 +48,20 @@ export const adminKeys = {
 export function useAdminLogin() {
     return useMutation<AdminLoginResponse, Error, { username: string; password: string }>({
         mutationFn: credentials => apiClient.post('/admin/auth/login', credentials).then(r => r.data),
-        onSuccess: data => {
-            // L'access token est posé en cookie httpOnly côté backend (G1 RGPD). On hydrate
-            // simplement le store avec les claims renvoyés dans le body — `username` n'est
-            // pas connu ici, on le récupérera au prochain `GET /admin/auth/me` au besoin.
+        onSuccess: async () => {
+            const me = await apiClient.get<{
+                scope: 'super-admin' | 'coach';
+                coach_id: number | null;
+                username: string;
+                display_name: string;
+                avatar_url: string | null;
+            }>('/admin/auth/me');
             useAuthStore.getState().setAdminMe({
-                scope: data.scope,
-                coachId: data.coach_id,
-                username: '',
+                scope: me.data.scope,
+                coachId: me.data.coach_id,
+                username: me.data.username,
+                display_name: me.data.display_name,
+                avatar_url: me.data.avatar_url,
             });
         },
     });
@@ -97,6 +103,37 @@ export function useParticipant(participantId: number) {
         queryKey: adminKeys.participant(participantId),
         queryFn: () => apiClient.get(`/admin/participants/${participantId}`).then(r => r.data),
         enabled: participantId > 0,
+    });
+}
+
+export function useUploadAdminParticipantAvatar(participantId: number) {
+    const qc = useQueryClient();
+    const toast = useToast();
+    return useMutation<{ avatar_url: string }, Error, File>({
+        mutationFn: file => {
+            const formData = new FormData();
+            formData.append('file', file);
+            return apiClient
+                .post(`/admin/participants/${participantId}/avatar`, formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' },
+                })
+                .then(r => r.data);
+        },
+        onSuccess: data => {
+            qc.setQueryData<ParticipantDetail>(adminKeys.participant(participantId), current =>
+                current?.participant
+                    ? {
+                          ...current,
+                          participant: { ...current.participant, avatar_url: data.avatar_url },
+                      }
+                    : current
+            );
+            qc.invalidateQueries({ queryKey: adminKeys.participant(participantId) });
+            qc.invalidateQueries({ queryKey: adminKeys.participants() });
+            toast.success('Photo de profil mise à jour.');
+        },
+        onError: err =>
+            toast.error(err instanceof Error && err.message ? err.message : 'Impossible de mettre à jour la photo.'),
     });
 }
 
@@ -240,6 +277,32 @@ export function useCreateCompany() {
     });
 }
 
+export function useUploadCompanyAvatar(companyId: number) {
+    const qc = useQueryClient();
+    const toast = useToast();
+    return useMutation<{ avatar_url: string }, Error, File>({
+        mutationFn: file => {
+            const formData = new FormData();
+            formData.append('file', file);
+            return apiClient
+                .post(`/admin/companies/${companyId}/avatar`, formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' },
+                })
+                .then(r => r.data);
+        },
+        onSuccess: data => {
+            qc.setQueryData<Company[]>(adminKeys.companies, current =>
+                current?.map(c => (c.id === companyId ? { ...c, avatar_url: data.avatar_url } : c)) ?? current
+            );
+            qc.invalidateQueries({ queryKey: adminKeys.companies });
+            qc.invalidateQueries({ queryKey: adminKeys.company(companyId) });
+            toast.success('Logo de l’entreprise mis à jour.');
+        },
+        onError: err =>
+            toast.error(err instanceof Error && err.message ? err.message : 'Impossible de mettre à jour le logo.'),
+    });
+}
+
 export function useUpdateCompany() {
     const qc = useQueryClient();
     const toast = useToast();
@@ -328,6 +391,44 @@ export function useAdminCoach(coachId: number, options?: { enabled?: boolean }) 
     });
 }
 
+export function useUploadCoachAvatar(coachId: number) {
+    const qc = useQueryClient();
+    const toast = useToast();
+    return useMutation<{ avatar_url: string }, Error, File>({
+        mutationFn: file => {
+            const formData = new FormData();
+            formData.append('file', file);
+            return apiClient
+                .post(`/admin/coaches/${coachId}/avatar`, formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' },
+                })
+                .then(r => r.data);
+        },
+        onSuccess: data => {
+            qc.setQueryData<AdminCoachDetail>(adminKeys.coach(coachId), current =>
+                current?.coach
+                    ? {
+                          ...current,
+                          coach: { ...current.coach, avatar_url: data.avatar_url },
+                      }
+                    : current
+            );
+            qc.invalidateQueries({ queryKey: adminKeys.coach(coachId) });
+            qc.invalidateQueries({ queryKey: adminKeys.coaches });
+            const me = useAuthStore.getState().adminMe;
+            if (me?.coachId === coachId) {
+                useAuthStore.getState().setAdminMe({
+                    ...me,
+                    avatar_url: data.avatar_url,
+                });
+            }
+            toast.success('Photo de profil mise à jour.');
+        },
+        onError: err =>
+            toast.error(err instanceof Error && err.message ? err.message : 'Impossible de mettre à jour la photo.'),
+    });
+}
+
 export function useUpdateCoach() {
     const qc = useQueryClient();
     const toast = useToast();
@@ -380,7 +481,6 @@ export function useAdminCampaigns() {
     return useQuery<AdminCampaign[]>({
         queryKey: adminKeys.campaigns,
         queryFn: () => apiClient.get('/admin/campaigns').then(r => r.data),
-        refetchOnMount: 'always',
     });
 }
 
@@ -389,7 +489,6 @@ export function useAdminCampaign(campaignId: number) {
         queryKey: adminKeys.campaign(campaignId),
         queryFn: () => apiClient.get(`/admin/campaigns/${campaignId}`).then(r => r.data),
         enabled: campaignId > 0,
-        refetchOnMount: 'always',
     });
 }
 
@@ -398,7 +497,6 @@ export function useAdminCampaignSynthesis(campaignId: number) {
         queryKey: adminKeys.campaignSynthesis(campaignId),
         queryFn: () => apiClient.get(`/admin/campaigns/${campaignId}/synthesis-matrix`).then(r => r.data),
         enabled: campaignId > 0,
-        refetchOnMount: 'always',
     });
 }
 

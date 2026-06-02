@@ -2,6 +2,10 @@
 
 import { getQuestionnaireEntry } from '@aor/questionnaires';
 import type { ParticipantSession } from '@aor/types';
+import {
+    participantAvatarPublicPath,
+    participantCampaignCoachAvatarPublicPath,
+} from '@src/application/participant-session/upload-participant-avatar.usecase';
 import { ParticipantAccountNotFoundError } from '@src/domain/participant-session/participant-session.errors';
 import type { CampaignStatus, ICampaignsReadPort } from '@src/interfaces/campaigns/ICampaignsRepository.port';
 import type { ICoachesReadPort } from '@src/interfaces/coaches/ICoachesRepository.port';
@@ -60,6 +64,7 @@ export class GetParticipantSessionUseCase {
                 let companyName: string | null = null;
                 let coachId: number | null = null;
                 let coachName: string | null = null;
+                let coachAvatarUrl: string | null = null;
                 let allowTestWithoutManualInputs = false;
                 let invitationConfirmed = true;
                 const questionnaireTitle =
@@ -77,6 +82,18 @@ export class GetParticipantSessionUseCase {
                     ]);
                     companyName = company?.name ?? null;
                     coachName = coach?.displayName ?? null;
+                    if (coachId !== null) {
+                        const resolved = await this.ports.coaches.resolveAvatarUrl(coachId);
+                        if (resolved) {
+                            const cacheBuster = resolved.includes('?v=')
+                                ? Number(resolved.split('?v=')[1])
+                                : undefined;
+                            coachAvatarUrl = participantCampaignCoachAvatarPublicPath(
+                                assignment.campaignId,
+                                Number.isFinite(cacheBuster) ? cacheBuster : undefined
+                            );
+                        }
+                    }
                     const state = await this.ports.participants.getCampaignParticipantInviteState(
                         assignment.campaignId,
                         participantId
@@ -90,6 +107,7 @@ export class GetParticipantSessionUseCase {
                     company_name: companyName,
                     coach_id: coachId,
                     coach_name: coachName,
+                    coach_avatar_url: coachAvatarUrl,
                     questionnaire_id: assignment.questionnaireId,
                     questionnaire_title: questionnaireTitle,
                     campaign_status: campaignStatus,
@@ -110,15 +128,33 @@ export class GetParticipantSessionUseCase {
 
         const visibleAssignments = assignmentsWithProgress.filter(row => row.campaign_status !== 'archived');
 
+        let avatarUrl: string | null = null;
+        if (participant.hasAvatar()) {
+            const updatedAt = await this.ports.participants.findUpdatedAt(participantId);
+            avatarUrl = participantAvatarPublicPath(updatedAt?.getTime() ?? Date.now());
+        }
+
+        let company_name: string | null = null;
+        if (participant.companyId !== null) {
+            const company = await this.ports.companies.findById(participant.companyId);
+            company_name = company?.name ?? null;
+        }
+        if (!company_name) {
+            company_name =
+                visibleAssignments.find(assignment => assignment.company_name)?.company_name ?? null;
+        }
+
         return {
             participant_id: participant.id,
             email: participant.email,
             first_name: participant.firstName,
             last_name: participant.lastName,
+            company_name,
             organisation: participant.organisation ?? null,
             direction: participant.direction ?? null,
             service: participant.service ?? null,
             function_level: participant.functionLevel ?? null,
+            avatar_url: avatarUrl,
             assignments: visibleAssignments,
         };
     }

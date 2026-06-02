@@ -1,38 +1,21 @@
-import { EmptyState } from '@/components/common/EmptyState';
-import { LoadingCard } from '@/components/common/LoadingCard';
-import { SectionTitle } from '@/components/common/SectionTitle';
-import { StatCard } from '@/components/common/cards';
-import { useConfirmCampaignParticipation, useParticipantSession } from '@/hooks/participantSession';
-import { useCampaignStore } from '@/stores/campaignStore';
-import type { ParticipantSession } from '@aor/types';
-import {
-    Alert,
-    Box,
-    Button,
-    Card,
-    CardContent,
-    Chip,
-    Divider,
-    InputAdornment,
-    Stack,
-    TextField,
-    Typography,
-} from '@mui/material';
-import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import {
-    ArrowRight,
-    BadgeCheck,
-    CalendarDays,
-    CheckCircle2,
-    ClipboardList,
-    Gauge,
-    Layers3,
-    Lock,
-    Search,
-    Sparkles,
-    Users,
-} from 'lucide-react';
+// Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
+
+import { Alert, Box, Chip, LinearProgress, Stack, Typography } from '@mui/material';
+import { Link, createFileRoute } from '@tanstack/react-router';
+import { BadgeCheck, CheckCircle2, ClipboardList, Lock, Target, Users } from 'lucide-react';
 import * as React from 'react';
+
+import { Button } from '@/components/common/Button';
+import { KpiCard } from '@/components/common/cards';
+import { RowNavigateHint } from '@/components/common/data-table';
+import { EmptyState } from '@/components/common/EmptyState';
+import { SearchField } from '@/components/common/forms/SearchField';
+import { PageHeader, KpiGrid, ListPanel } from '@/components/common/layout';
+import { LoadingCard } from '@/components/common/LoadingCard';
+import { listRowSx } from '@/components/common/styles/listSurfaces';
+import { useBreadcrumbs } from '@/components/layout/AppShellChromeContext';
+import { useConfirmCampaignParticipation, useParticipantSession } from '@/hooks/participantSession';
+import type { ParticipantSession } from '@aor/types';
 
 export const Route = createFileRoute('/_participant/campaigns/')({
     component: ParticipantCampaignsRoute,
@@ -51,8 +34,6 @@ type Campaign = {
     questionnaire: string;
     status: CampaignStatus;
     progress: number;
-    participants: string;
-    lastUpdate: string;
     nextAction: string;
     invitationConfirmed: boolean;
 };
@@ -77,19 +58,21 @@ const nextActionFromAssignment = (assignment: ParticipantAssignment): string => 
     }
     const progression = assignment.progression;
     if (!progression) {
-        return assignment.allow_test_without_manual_inputs ? 'Passer le test Element Humain' : 'Demarrer le parcours';
+        return assignment.allow_test_without_manual_inputs
+            ? 'Passer le test Élément Humain'
+            : 'Démarrer le parcours';
     }
     if (progression.self_rating_status !== 'completed') {
-        return 'Completer le regard sur soi';
+        return 'Compléter le regard sur soi';
     }
     if (progression.peer_feedback_status !== 'completed') {
         return 'Finaliser le feedback des pairs';
     }
     if (progression.element_humain_status !== 'completed') {
-        return 'Passer le test Element Humain';
+        return 'Passer le test Élément Humain';
     }
     if (progression.feedback_coach == null) {
-        return 'Consulter les resultats';
+        return 'Consulter les résultats';
     }
     return 'Consulter les retours du coach';
 };
@@ -99,254 +82,165 @@ const campaignFromAssignment = (assignment: ParticipantAssignment): Campaign => 
     campaignId: assignment.campaign_id,
     questionnaireId: assignment.questionnaire_id,
     name: assignment.campaign_name ?? 'Campagne sans nom',
-    company: assignment.company_name ?? 'Organisation non renseignee',
-    coach: assignment.coach_name ?? 'Coach non attribue',
+    company: assignment.company_name ?? 'Organisation non renseignée',
+    coach: assignment.coach_name ?? 'Coach non attribué',
     questionnaire: assignment.questionnaire_title ?? assignment.questionnaire_id,
     status: assignment.campaign_status ?? 'draft',
     progress: progressFromAssignment(assignment),
-    participants: assignment.invitation_confirmed ? 'Participation confirmee' : 'Participation a confirmer',
-    lastUpdate: 'Suivi actualise avec votre session',
     nextAction: nextActionFromAssignment(assignment),
     invitationConfirmed: assignment.invitation_confirmed,
 });
 
-const statsFromAssignments = (assignments: ParticipantAssignment[]) => [
-    { label: 'Campagnes rattachees', value: String(assignments.length), icon: Layers3 },
-    {
-        label: 'Campagnes actives',
-        value: String(assignments.filter(a => a.campaign_status === 'active').length),
-        icon: Gauge,
-    },
-    {
-        label: 'Questionnaires completes',
-        value: String(assignments.filter(a => a.progression?.element_humain_status === 'completed').length),
-        icon: CheckCircle2,
-    },
-    {
-        label: 'Feedbacks recus',
-        value: String(assignments.filter(a => a.progression?.peer_feedback_status === 'completed').length),
-        icon: Users,
-    },
-];
-
-function statusChip(status: CampaignStatus) {
-    if (status === 'active') {
-        return (
-            <Chip
-                label="En cours"
-                size="small"
-                sx={{ borderRadius: 99, bgcolor: 'tint.successBg', color: 'tint.successText' }}
-            />
-        );
+const statusChip = (campaign: Campaign) => {
+    if (!campaign.invitationConfirmed && campaign.status === 'active') {
+        return {
+            label: 'Participation à confirmer',
+            sx: { bgcolor: 'tint.secondaryBg', color: 'tint.secondaryText' },
+        };
     }
-
-    if (status === 'closed') {
-        return (
-            <Chip
-                label="Terminée"
-                size="small"
-                sx={{ borderRadius: 99, bgcolor: 'tint.mutedBg', color: 'tint.mutedText' }}
-            />
-        );
+    if (campaign.status === 'active') {
+        return { label: 'En cours', sx: { bgcolor: 'tint.successBg', color: 'tint.successText' } };
     }
+    if (campaign.status === 'closed') {
+        return { label: 'Terminée', sx: { bgcolor: 'tint.mutedBg', color: 'tint.mutedText' } };
+    }
+    return { label: 'Brouillon', sx: { bgcolor: 'tint.mutedBg', color: 'tint.mutedText' } };
+};
 
-    return (
-        <Chip
-            label="Brouillon"
-            size="small"
-            sx={{ borderRadius: 99, bgcolor: 'tint.secondaryBg', color: 'tint.secondaryText' }}
-        />
-    );
-}
-
-function CampaignCard({ campaign }: { campaign: Campaign }) {
-    const selectCampaign = useCampaignStore(s => s.select);
-    const navigate = useNavigate();
+function CampaignListRow({ campaign }: { campaign: Campaign }) {
     const confirmParticipation = useConfirmCampaignParticipation();
-    const isActive = campaign.status === 'active';
-    const needsConfirmation = isActive && !campaign.invitationConfirmed;
-    const canStartJourney = isActive && campaign.invitationConfirmed;
+    const status = statusChip(campaign);
+    const needsConfirmation = campaign.status === 'active' && !campaign.invitationConfirmed;
+    const detailTo = campaign.campaignId != null ? `/campaigns/${campaign.campaignId}` : undefined;
 
-    const goToWorkspace = () => {
+    const handleConfirm = (event: React.MouseEvent) => {
+        event.preventDefault();
+        event.stopPropagation();
         if (campaign.campaignId == null) return;
-        selectCampaign(campaign.campaignId);
-        navigate({
-            to: '/campaigns/$campaignId',
-            params: { campaignId: String(campaign.campaignId) },
-        });
-    };
-
-    const goToResults = () => {
-        if (campaign.campaignId == null) return;
-        selectCampaign(campaign.campaignId);
-        navigate({
-            to: '/campaigns/$campaignId/results',
-            params: { campaignId: String(campaign.campaignId) },
-        });
-    };
-
-    const handleConfirm = () => {
-        if (campaign.campaignId == null) {
-            return;
-        }
         confirmParticipation.mutate(campaign.campaignId);
     };
 
-    return (
-        <Card variant="outlined">
-            <CardContent sx={{ p: 2.5 }}>
-                <Stack spacing={2}>
-                    <Stack direction="row" justifyContent="space-between" alignItems="start" spacing={2}>
-                        <Box sx={{ minWidth: 0 }}>
-                            <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
-                                <Typography
-                                    variant="h6"
-                                    fontWeight={800}
-                                    color="text.primary"
-                                    sx={{ letterSpacing: -0.3 }}
-                                >
-                                    {campaign.name}
-                                </Typography>
-                                {statusChip(campaign.status)}
-                            </Stack>
-                            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.8, lineHeight: 1.7 }}>
-                                {campaign.company} · Coach {campaign.coach}
-                            </Typography>
-                        </Box>
-
-                        <Box
-                            sx={{
-                                width: 44,
-                                height: 44,
-                                borderRadius: 3,
-                                bgcolor: isActive ? 'tint.primaryBg' : 'tint.primaryHover',
-                                color: isActive ? 'primary.main' : 'tint.mutedText',
-                                display: 'grid',
-                                placeItems: 'center',
-                                flex: 'none',
-                            }}
-                        >
-                            <Sparkles size={18} />
-                        </Box>
-                    </Stack>
-
-                    <Divider />
-
-                    <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1.2fr 0.8fr' }, gap: 2 }}>
-                        <Stack spacing={1.25}>
-                            <Row icon={ClipboardList} label="Questionnaire" value={campaign.questionnaire} />
-                            <Row icon={Users} label="Participants" value={campaign.participants} />
-                            <Row icon={CalendarDays} label="Dernière mise à jour" value={campaign.lastUpdate} />
-                        </Stack>
-
-                        <Card variant="outlined" sx={{ bgcolor: 'rgba(15,23,42,0.03)', p: 2 }}>
-                            <Typography variant="caption" color="text.secondary">
-                                Progression
-                            </Typography>
-                            <Typography variant="h4" fontWeight={800} color="text.primary" sx={{ mt: 0.3 }}>
-                                {campaign.progress}%
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary" sx={{ mt: 1, lineHeight: 1.7 }}>
-                                {campaign.nextAction}
-                            </Typography>
-                        </Card>
-                    </Box>
-
-                    {needsConfirmation && (
-                        <Alert severity="info" sx={{ borderRadius: 3 }}>
-                            Vous devez confirmer votre participation avant de pouvoir démarrer le parcours.
-                        </Alert>
-                    )}
-
-                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.2}>
-                        {needsConfirmation && (
-                            <Button
-                                variant="contained"
-                                disableElevation
-                                onClick={handleConfirm}
-                                disabled={confirmParticipation.isPending || campaign.campaignId == null}
-                                sx={{ borderRadius: 3, bgcolor: 'primary.main' }}
-                                startIcon={<BadgeCheck size={16} />}
-                            >
-                                {confirmParticipation.isPending ? 'Confirmation…' : 'Confirmer ma participation'}
-                            </Button>
-                        )}
-                        {canStartJourney && (
-                            <Button
-                                variant="contained"
-                                disableElevation
-                                onClick={goToWorkspace}
-                                sx={{ borderRadius: 3, bgcolor: 'primary.main' }}
-                                endIcon={<ArrowRight size={16} />}
-                            >
-                                {campaign.progress === 100
-                                    ? 'Voir mes résultats'
-                                    : campaign.progress > 0
-                                      ? 'Continuer le parcours'
-                                      : 'Commencer le parcours'}
-                            </Button>
-                        )}
-                        {campaign.status === 'closed' && (
-                            <Button
-                                variant="contained"
-                                disableElevation
-                                onClick={goToResults}
-                                sx={{ borderRadius: 3, bgcolor: 'primary.main' }}
-                                endIcon={<ArrowRight size={16} />}
-                            >
-                                Voir les résultats
-                            </Button>
-                        )}
-                    </Stack>
+    const rowContent = (
+        <Stack direction="row" spacing={2} justifyContent="space-between" alignItems="center">
+            <Box sx={{ minWidth: 0, flex: 1 }}>
+                <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
+                    <Typography fontWeight={700} color="primary.main" lineHeight={1.2}>
+                        {campaign.name}
+                    </Typography>
+                    <Chip label={status.label} size="small" sx={{ borderRadius: 99, ...status.sx }} />
                 </Stack>
-            </CardContent>
-        </Card>
-    );
-}
-
-function Row({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value: string }) {
-    return (
-        <Stack direction="row" spacing={1.3} alignItems="start">
-            <Box
-                sx={{
-                    width: 36,
-                    height: 36,
-                    borderRadius: 3,
-                    bgcolor: 'tint.primaryBg',
-                    color: 'primary.main',
-                    display: 'grid',
-                    placeItems: 'center',
-                    flex: 'none',
-                }}
-            >
-                <Icon size={16} />
-            </Box>
-            <Box sx={{ minWidth: 0 }}>
-                <Typography variant="caption" color="text.secondary">
-                    {label}
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, lineHeight: 1.7 }}>
+                    {campaign.company} · Coach {campaign.coach} · {campaign.questionnaire}
                 </Typography>
-                <Typography variant="body2" fontWeight={700} color="text.primary" sx={{ mt: 0.25, lineHeight: 1.6 }}>
-                    {value}
-                </Typography>
+                <Box sx={{ mt: 1.5, maxWidth: 520 }}>
+                    <Stack direction="row" justifyContent="space-between" sx={{ mb: 0.5 }}>
+                        <Typography variant="caption" color="text.secondary" fontWeight={600}>
+                            Progression
+                        </Typography>
+                        <Typography variant="caption" fontWeight={700} color="primary.main">
+                            {campaign.progress}%
+                        </Typography>
+                    </Stack>
+                    <LinearProgress
+                        variant="determinate"
+                        value={campaign.progress}
+                        sx={{
+                            height: 8,
+                            borderRadius: 99,
+                            bgcolor: 'tint.subtleBg',
+                            '& .MuiLinearProgress-bar': { bgcolor: 'primary.main' },
+                        }}
+                    />
+                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.75 }}>
+                        {campaign.nextAction}
+                    </Typography>
+                </Box>
             </Box>
+            {needsConfirmation ? (
+                <Button
+                    appearance="primary"
+                    startIcon={<BadgeCheck size={16} />}
+                    onClick={handleConfirm}
+                    disabled={confirmParticipation.isPending || campaign.campaignId == null}
+                    sx={{ flexShrink: 0, whiteSpace: 'nowrap' }}
+                >
+                    {confirmParticipation.isPending ? 'Confirmation…' : 'Confirmer'}
+                </Button>
+            ) : (
+                <Box
+                    className="participant-row-chevron"
+                    sx={{
+                        flexShrink: 0,
+                        display: 'inline-flex',
+                        opacity: 0.45,
+                        transition: 'transform 0.2s ease, opacity 0.2s ease',
+                    }}
+                >
+                    <RowNavigateHint sx={{ opacity: 1, color: 'inherit' }} />
+                </Box>
+            )}
         </Stack>
     );
+
+    const rowSx = {
+        display: 'block',
+        px: { xs: 2.5, md: 4 },
+        py: 3,
+        borderBottom: '1px solid',
+        borderColor: 'surface.lavenderGrey',
+        textDecoration: 'none',
+        color: 'inherit',
+        ...listRowSx,
+        '&:last-child': { borderBottom: 'none' },
+        '&:hover .participant-row-chevron': {
+            opacity: 1,
+            transform: 'translateX(4px)',
+        },
+    };
+
+    if (needsConfirmation || !detailTo) {
+        return <Box sx={rowSx}>{rowContent}</Box>;
+    }
+
+    return (
+        <Box
+            component={Link}
+            to={detailTo}
+            aria-label={`Ouvrir ${campaign.name}`}
+            sx={{ ...rowSx, cursor: 'pointer' }}
+        >
+            {rowContent}
+        </Box>
+    );
 }
 
-function EmptyCampaignsState() {
+function EmptyCampaignsState({ query }: { query: string }) {
+    if (query.trim()) {
+        return (
+            <EmptyState
+                icon={ClipboardList}
+                variant="secondary"
+                title="Aucun résultat"
+                description="Aucune campagne ne correspond à votre recherche."
+            />
+        );
+    }
+
     return (
         <EmptyState
             icon={Lock}
             variant="secondary"
             title="Aucune campagne disponible pour le moment"
-            description="Les campagnes apparaissent ici dès qu’elles sont créées et que ton accès est rattaché par l’administrateur."
+            description="Les campagnes apparaissent ici dès qu'un coach vous y invite."
         />
     );
 }
 
 function ParticipantCampaignsRoute() {
-    const { data: session, isLoading, isError } = useParticipantSession();
+    useBreadcrumbs([{ label: 'Mes campagnes' }]);
     const [query, setQuery] = React.useState('');
+    const { data: session, isLoading, isError } = useParticipantSession();
+
     const assignments = session?.assignments ?? [];
     const sourceCampaigns = assignments.map(campaignFromAssignment);
     const normalizedQuery = query.trim().toLowerCase();
@@ -359,7 +253,15 @@ function ParticipantCampaignsRoute() {
             .toLowerCase()
             .includes(normalizedQuery);
     });
-    const statsView = statsFromAssignments(assignments);
+
+    const activeCount = assignments.filter(a => a.campaign_status === 'active').length;
+    const completedQuestionnaires = assignments.filter(
+        a => a.progression?.element_humain_status === 'completed'
+    ).length;
+    const completedFeedbacks = assignments.filter(
+        a => a.progression?.peer_feedback_status === 'completed'
+    ).length;
+
     if (isLoading) {
         return (
             <LoadingCard
@@ -375,50 +277,53 @@ function ParticipantCampaignsRoute() {
 
     return (
         <Stack spacing={3}>
-            <Card variant="outlined">
-                <CardContent sx={{ p: { xs: 2.5, md: 3 } }}>
-                    <Stack spacing={2.5}>
-                        <SectionTitle
-                            title="Mes campagnes"
-                            subtitle="Toutes les campagnes auxquelles le participant est rattaché. Une campagne correspond à un questionnaire unique."
-                        />
+            <PageHeader
+                title="Mes campagnes"
+                subtitle="Toutes les campagnes auxquelles vous êtes rattaché. Une campagne correspond à un questionnaire unique."
+            />
 
-                        <TextField
-                            fullWidth
-                            size="small"
-                            placeholder="Rechercher une campagne, un coach, une organisation…"
-                            value={query}
-                            onChange={event => setQuery(event.target.value)}
-                            InputProps={{
-                                startAdornment: (
-                                    <InputAdornment position="start">
-                                        <Search size={16} />
-                                    </InputAdornment>
-                                ),
-                            }}
-                            sx={{ maxWidth: 520 }}
-                        />
+            <KpiGrid columns={4}>
+                <KpiCard
+                    label="Mes parcours"
+                    value={assignments.length}
+                    helper="rattachés à votre compte"
+                    icon={ClipboardList}
+                />
+                <KpiCard label="En cours" value={activeCount} helper="parcours actifs" icon={Target} />
+                <KpiCard
+                    label="Questionnaires complétés"
+                    value={completedQuestionnaires}
+                    helper="tests terminés"
+                    icon={CheckCircle2}
+                />
+                <KpiCard
+                    label="Feedbacks reçus"
+                    value={completedFeedbacks}
+                    helper="feedback des pairs"
+                    icon={Users}
+                />
+            </KpiGrid>
 
-                        <Box
-                            sx={{
-                                display: 'grid',
-                                gridTemplateColumns: { xs: '1fr', md: 'repeat(4, minmax(0, 1fr))' },
-                                gap: 2,
-                            }}
-                        >
-                            {statsView.map(stat => (
-                                <StatCard key={stat.label} {...stat} />
-                            ))}
-                        </Box>
-                    </Stack>
-                </CardContent>
-            </Card>
-
-            {visibleCampaigns.length > 0 ? (
-                visibleCampaigns.map(campaign => <CampaignCard key={campaign.id} campaign={campaign} />)
-            ) : (
-                <EmptyCampaignsState />
-            )}
+            <ListPanel
+                title="Liste des parcours"
+                subtitle="Cliquez sur une ligne pour ouvrir le parcours."
+                headerBorder
+                headerActions={
+                    <SearchField
+                        value={query}
+                        onChange={setQuery}
+                        placeholder="Rechercher une campagne, un coach, une organisation…"
+                    />
+                }
+            >
+                {visibleCampaigns.length === 0 ? (
+                    <Box sx={{ px: { xs: 2.5, md: 4 }, py: 4 }}>
+                        <EmptyCampaignsState query={query} />
+                    </Box>
+                ) : (
+                    visibleCampaigns.map(campaign => <CampaignListRow key={campaign.id} campaign={campaign} />)
+                )}
+            </ListPanel>
         </Stack>
     );
 }

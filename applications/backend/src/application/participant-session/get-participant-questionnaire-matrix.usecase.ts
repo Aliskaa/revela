@@ -133,30 +133,47 @@ export class GetParticipantQuestionnaireMatrixUseCase {
         const anonymizeReceivedPeers = perspective === 'received' && (params.anonymizeReceivedPeerLabels ?? false);
 
         const raterDisplayNames = new Map<number, string>();
-        if (perspective === 'received' && !anonymizeReceivedPeers && peerRecords.length > 0) {
-            const raterIds = [
-                ...new Set(
-                    peerRecords
-                        .map(r => r.subjectParticipantId)
-                        .filter((id): id is number => id !== null && id !== undefined)
-                ),
-            ];
-            for (const id of raterIds) {
-                const p = await this.ports.participants.findById(id);
-                if (p) {
-                    raterDisplayNames.set(id, `${p.firstName} ${p.lastName}`.trim());
-                }
+        const avatarUrlByParticipantId = new Map<number, string | null>();
+
+        const loadParticipantDisplay = async (id: number): Promise<void> => {
+            const enriched = await this.ports.participants.findByIdEnriched(id, {
+                coachId: params.coachId,
+            });
+            if (!enriched) {
+                return;
             }
+            raterDisplayNames.set(id, `${enriched.firstName} ${enriched.lastName}`.trim());
+            avatarUrlByParticipantId.set(id, enriched.avatar_url);
+        };
+
+        const avatarParticipantIds = new Set<number>();
+        for (const r of peerRecords) {
+            if (perspective === 'given') {
+                const rawName = r.name.trim() || `Pair #${String(r.id)}`;
+                const ratedId = r.ratedParticipantId ?? parsePeerRatingTargetParticipantId(rawName);
+                if (ratedId !== null) {
+                    avatarParticipantIds.add(ratedId);
+                }
+            } else if (!anonymizeReceivedPeers && r.subjectParticipantId !== null && r.subjectParticipantId !== undefined) {
+                avatarParticipantIds.add(r.subjectParticipantId);
+            }
+        }
+
+        for (const id of avatarParticipantIds) {
+            await loadParticipantDisplay(id);
         }
 
         const peer_columns: ParticipantQuestionnaireMatrixPeerColumn[] = peerRecords.map((r, index) => {
             if (perspective === 'given') {
                 const rawName = r.name.trim() || `Pair #${String(r.id)}`;
+                const ratedId = r.ratedParticipantId ?? parsePeerRatingTargetParticipantId(rawName);
                 return {
                     response_id: r.id,
                     label: displayPeerRatingStoredLabel(rawName),
                     rater_participant_id: r.raterParticipantId,
-                    rated_participant_id: r.ratedParticipantId ?? parsePeerRatingTargetParticipantId(rawName),
+                    rated_participant_id: ratedId,
+                    avatar_url:
+                        ratedId !== null ? (avatarUrlByParticipantId.get(ratedId) ?? null) : null,
                 };
             }
             const raterId = r.subjectParticipantId;
@@ -170,6 +187,10 @@ export class GetParticipantQuestionnaireMatrixUseCase {
                 label,
                 rater_participant_id: anonymizeReceivedPeers ? null : raterId,
                 rated_participant_id: anonymizeReceivedPeers ? null : r.ratedParticipantId,
+                avatar_url:
+                    anonymizeReceivedPeers || raterId === null || raterId === undefined
+                        ? null
+                        : (avatarUrlByParticipantId.get(raterId) ?? null),
             };
         });
 

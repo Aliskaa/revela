@@ -113,7 +113,7 @@ export class AdminCampaignsController {
     }
 
     /**
-     * Vue de synthèse Élément B (test scientifique) au niveau d'une campagne.
+     * Vue de synthèse (test scientifique) au niveau d'une campagne, selon son questionnaire.
      * Cf. PDF AOR section 9 — colonnes = participants, lignes = score_keys + écarts.
      * Renvoie `null` si la campagne est hors périmètre du coach (200, payload vide).
      */

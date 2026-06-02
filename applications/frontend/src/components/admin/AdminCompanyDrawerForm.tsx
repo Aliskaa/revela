@@ -3,6 +3,7 @@
 import { Box, Stack, TextField, Typography } from '@mui/material';
 import { z } from 'zod';
 
+import { drawerSectionTitleSx } from '@/components/common/styles/listSurfaces';
 import { useDrawerForm } from '@/lib/useDrawerForm';
 
 import { AdminDrawerForm } from './AdminDrawerForm';
@@ -42,6 +43,20 @@ const buildDefaults = (initial?: Partial<CompanyFormValues>): CompanyFormValues 
     contactEmail: initial?.contactEmail ?? '',
 });
 
+const MODE = {
+    create: {
+        title: 'Ajouter une entreprise',
+        subtitle:
+            'Référencez une entreprise cliente et renseignez son contact principal pour la retrouver dans vos campagnes.',
+        submitLabel: 'Ajouter l’entreprise',
+    },
+    edit: {
+        title: 'Éditer l’entreprise',
+        subtitle: 'Mettre à jour l’identité et le contact principal de l’entreprise.',
+        submitLabel: 'Enregistrer',
+    },
+} as const;
+
 export function AdminCompanyDrawerForm({
     open,
     mode,
@@ -57,53 +72,59 @@ export function AdminCompanyDrawerForm({
         onSubmit,
     });
 
-    const title = mode === 'create' ? 'Nouvelle entreprise' : 'Éditer l’entreprise';
-    const subtitle =
-        mode === 'create'
-            ? 'Créer une entreprise et la relier à ses campagnes.'
-            : 'Mettre à jour les informations de l’entreprise.';
+    const copy = MODE[mode];
 
     return (
         <AdminDrawerForm
             open={open}
-            title={title}
-            subtitle={subtitle}
+            title={copy.title}
+            subtitle={copy.subtitle}
             onClose={onClose}
             onSubmit={submit}
-            submitLabel={mode === 'create' ? 'Créer' : 'Enregistrer'}
+            submitLabel={copy.submitLabel}
             isSubmitting={isSubmitting || submitting}
             dirty={dirty}
         >
-            <Stack spacing={2.25}>
-                <Box>
-                    <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
+            <Stack spacing={4}>
+                <Box component="section">
+                    <Typography component="h3" sx={drawerSectionTitleSx}>
                         Identité
+                    </Typography>
+                    <TextField
+                        label="Nom de l’entreprise"
+                        value={values.name}
+                        onChange={e => setField('name', e.target.value)}
+                        error={Boolean(errors.name)}
+                        helperText={errors.name}
+                        fullWidth
+                        autoFocus
+                    />
+                </Box>
+
+                <Box component="section">
+                    <Typography component="h3" sx={drawerSectionTitleSx}>
+                        Contact principal
                     </Typography>
                     <Stack spacing={2}>
                         <TextField
-                            label="Nom de l’entreprise"
-                            value={values.name}
-                            onChange={e => setField('name', e.target.value)}
-                            error={Boolean(errors.name)}
-                            helperText={errors.name}
-                            fullWidth
-                            autoFocus
-                        />
-                        <TextField
-                            label="Contact principal (optionnel)"
+                            label="Nom du contact"
                             value={values.contactName}
                             onChange={e => setField('contactName', e.target.value)}
                             error={Boolean(errors.contactName)}
-                            helperText={errors.contactName}
+                            helperText={
+                                errors.contactName || 'Optionnel — affiché dans la liste des entreprises.'
+                            }
                             fullWidth
                         />
                         <TextField
-                            label="Email du contact (optionnel)"
+                            label="Email du contact"
                             type="email"
                             value={values.contactEmail}
                             onChange={e => setField('contactEmail', e.target.value)}
                             error={Boolean(errors.contactEmail)}
-                            helperText={errors.contactEmail}
+                            helperText={
+                                errors.contactEmail || 'Optionnel — sous-titre du contact dans le tableau.'
+                            }
                             fullWidth
                         />
                     </Stack>

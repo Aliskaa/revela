@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+
+<html class="light" lang="fr"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Révéla - Gestion des Campagnes</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&amp;family=Hanken+Grotesk:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-container-highest": "#e2e2e2",
+                    "tertiary-fixed": "#dce1ff",
+                    "tertiary-fixed-dim": "#b7c4ff",
+                    "secondary": "#745b00",
+                    "surface": "#f9f9f9",
+                    "on-primary": "#ffffff",
+                    "on-surface": "#1a1c1c",
+                    "bleu-smalt": "#0F1898",
+                    "on-surface-variant": "#454653",
+                    "secondary-fixed-dim": "#f1c100",
+                    "primary-fixed": "#e0e0ff",
+                    "surface-container": "#eeeeee",
+                    "error": "#ba1a1a",
+                    "jaune-accent": "#FFCC00",
+                    "error-container": "#ffdad6",
+                    "on-tertiary": "#ffffff",
+                    "on-error-container": "#93000a",
+                    "secondary-container": "#fecb00",
+                    "outline-variant": "#c6c5d6",
+                    "on-secondary-container": "#6e5700",
+                    "surface-bright": "#f9f9f9",
+                    "tertiary": "#001551",
+                    "outline": "#767685",
+                    "on-background": "#1a1c1c",
+                    "on-secondary-fixed": "#241a00",
+                    "surface-tint": "#4751c6",
+                    "surface-container-high": "#e8e8e8",
+                    "inverse-surface": "#2f3131",
+                    "surface-container-lowest": "#ffffff",
+                    "on-secondary-fixed-variant": "#584400",
+                    "on-primary-fixed-variant": "#2d36ad",
+                    "on-primary-container": "#848eff",
+                    "surface-container-low": "#f3f3f3",
+                    "on-secondary": "#ffffff",
+                    "on-primary-fixed": "#00046a",
+                    "background": "#f9f9f9",
+                    "soft-white": "#FAFAFA",
+                    "on-tertiary-container": "#7592ff",
+                    "on-error": "#ffffff",
+                    "tertiary-container": "#002681",
+                    "bleu-azurin": "#4F70E5",
+                    "surface-variant": "#e2e2e2",
+                    "surface-dim": "#DADADA",
+                    "primary-fixed-dim": "#bec2ff",
+                    "on-tertiary-fixed": "#001551",
+                    "primary-container": "#0f1898",
+                    "inverse-on-surface": "#f1f1f1",
+                    "primary": "#00046b",
+                    "lavender-grey": "#F5F5FB",
+                    "inverse-primary": "#bec2ff",
+                    "secondary-fixed": "#ffe08b",
+                    "on-tertiary-fixed-variant": "#0a3ab0"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "margin-desktop": "40px",
+                    "gutter": "24px",
+                    "margin-mobile": "20px",
+                    "container-max": "1280px",
+                    "panel-padding": "32px",
+                    "section-gap": "80px"
+            },
+            "fontFamily": {
+                    "label-sm": ["Hanken Grotesk"],
+                    "label-md": ["Hanken Grotesk"],
+                    "caption-xs": ["Hanken Grotesk"],
+                    "body-md": ["Hanken Grotesk"],
+                    "body-lg": ["Hanken Grotesk"],
+                    "headline-lg-mobile": ["Outfit"],
+                    "headline-md": ["Outfit"],
+                    "headline-xl": ["Outfit"],
+                    "headline-lg": ["Outfit"]
+            },
+            "fontSize": {
+                    "label-sm": ["12px", {"lineHeight": "1.2", "fontWeight": "500"}],
+                    "label-md": ["14px", {"lineHeight": "1.2", "letterSpacing": "0.02em", "fontWeight": "600"}],
+                    "caption-xs": ["10px", {"lineHeight": "1.0", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                    "body-md": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "headline-lg-mobile": ["28px", {"lineHeight": "1.2", "fontWeight": "600"}],
+                    "headline-md": ["24px", {"lineHeight": "1.3", "fontWeight": "500"}],
+                    "headline-xl": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+                    "headline-lg": ["32px", {"lineHeight": "1.2", "letterSpacing": "-0.01em", "fontWeight": "600"}]
+            },
+            "boxShadow": {
+              "soft": "0 10px 30px -5px rgba(15, 24, 152, 0.05), 0 4px 6px -2px rgba(15, 24, 152, 0.02)",
+              "ambient": "0 20px 40px -10px rgba(15, 24, 152, 0.12)"
+            }
+          },
+        },
+      }
+    </script>
+<style>
+      .active-nav-glow {
+        box-shadow: 4px 0 15px -2px rgba(255, 204, 0, 0.4);
+      }
+      .glass-panel {
+        background: rgba(255, 255, 255, 0.8);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+      }
+      .kpi-card-hover:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 20px 40px -10px rgba(15, 24, 152, 0.1);
+      }
+      .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      }
+      body {
+        font-family: 'Hanken Grotesk', sans-serif;
+        background-color: #f9f9f9;
+      }
+      h1, h2, h3, .font-outfit {
+        font-family: 'Outfit', sans-serif;
+      }
+    </style>
+</head>
+<body class="flex min-h-screen">
+<!-- SIDEBAR NAVIGATION -->
+<aside class="fixed h-screen w-72 left-0 top-0 bg-primary dark:bg-tertiary flex flex-col py-panel-padding shadow-soft z-50">
+<!-- Logo Header -->
+<div class="px-8 mb-10 flex items-center gap-3">
+<div class="w-10 h-10 bg-jaune-accent rounded-xl flex items-center justify-center shadow-[0_0_15px_rgba(255,204,0,0.5)]">
+<span class="material-symbols-outlined text-primary font-bold">shield</span>
+</div>
+<div>
+<h1 class="font-headline-md text-headline-md font-bold text-soft-white leading-tight">Révéla</h1>
+<p class="text-soft-white/60 text-xs tracking-widest uppercase font-bold">Administration</p>
+</div>
+</div>
+<!-- Navigation Links -->
+<nav class="flex-1 space-y-2 pr-4">
+<a class="flex items-center gap-4 py-3 px-8 text-soft-white/70 hover:text-soft-white transition-colors hover:bg-soft-white/5 group" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-label-md text-label-md">Tableau de bord</span>
+</a>
+<!-- Active State -->
+<a class="flex items-center gap-4 py-3 px-8 text-jaune-accent bg-soft-white/10 rounded-r-full font-bold shadow-[0_0_15px_rgba(255,204,0,0.3)] active-nav-glow scale-[0.98] transition-transform duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="analytics" style="font-variation-settings: 'FILL' 1;">analytics</span>
+<span class="font-label-md text-label-md">Campagnes</span>
+</a>
+<a class="flex items-center gap-4 py-3 px-8 text-soft-white/70 hover:text-soft-white transition-colors hover:bg-soft-white/5 group" href="#">
+<span class="material-symbols-outlined" data-icon="business">business</span>
+<span class="font-label-md text-label-md">Entreprises</span>
+</a>
+<a class="flex items-center gap-4 py-3 px-8 text-soft-white/70 hover:text-soft-white transition-colors hover:bg-soft-white/5 group" href="#">
+<span class="material-symbols-outlined" data-icon="groups">groups</span>
+<span class="font-label-md text-label-md">Coachs</span>
+</a>
+<a class="flex items-center gap-4 py-3 px-8 text-soft-white/70 hover:text-soft-white transition-colors hover:bg-soft-white/5 group" href="#">
+<span class="material-symbols-outlined" data-icon="quiz">quiz</span>
+<span class="font-label-md text-label-md">Questionnaires</span>
+</a>
+<a class="flex items-center gap-4 py-3 px-8 text-soft-white/70 hover:text-soft-white transition-colors hover:bg-soft-white/5 group" href="#">
+<span class="material-symbols-outlined" data-icon="history">history</span>
+<span class="font-label-md text-label-md">Audit log</span>
+</a>
+<a class="flex items-center gap-4 py-3 px-8 text-soft-white/70 hover:text-soft-white transition-colors hover:bg-soft-white/5 group" href="#">
+<span class="material-symbols-outlined" data-icon="visibility">visibility</span>
+<span class="font-label-md text-label-md">Vue coach</span>
+</a>
+</nav>
+<!-- Footer -->
+<div class="mt-auto px-8">
+<a class="flex items-center gap-4 py-3 text-soft-white/70 hover:text-error transition-colors group" href="#">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+<span class="font-label-md text-label-md">Déconnexion</span>
+</a>
+</div>
+</aside>
+<!-- MAIN CONTENT AREA -->
+<main class="flex-1 ml-72 bg-surface min-h-screen">
+<!-- TOP NAV BAR -->
+<header class="flex justify-between items-center w-full px-margin-desktop py-6 bg-transparent">
+<div class="flex items-center gap-4">
+<span class="text-bleu-smalt font-label-md text-label-md font-bold border-b-2 border-jaune-accent py-1">Administration</span>
+</div>
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-3">
+<button class="w-10 h-10 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-surface-container-high transition-colors relative">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-jaune-accent rounded-full border-2 border-surface"></span>
+</button>
+<button class="w-10 h-10 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+</button>
+</div>
+<div class="h-10 w-[1px] bg-outline-variant/30"></div>
+<div class="flex items-center gap-3 cursor-pointer group">
+<div class="text-right">
+<p class="font-label-md text-label-md text-on-surface leading-none">Jean Dupont</p>
+<p class="text-[10px] text-on-surface-variant/70 uppercase font-bold tracking-wider">Super Admin</p>
+</div>
+<div class="w-10 h-10 rounded-full border-2 border-jaune-accent overflow-hidden shadow-soft">
+<img alt="User profile" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBXeetVlNpv5IMYr275StYzP-CvHZnHbKGMlkGoOp3UE0L0g77RlCYv882iSonXxmAA9RYsLFO8hSo0SFcVngBcE3WK8IZgmyUT4R07hpNtqsxudAMrisxcWkf2H4fGDgGPgyF712ydWhprtN04Yos-JtJkIwMwMkHW8ar8ekHAaH1kRmK_0hc1-8hQghk46yEQucESUePXcbULslHZfKQg3V_qayJU_7JmEuFfQyx-gHvLjjyGsIyCW1kkoj3pvfE7vl5apQ8US1PR"/>
+</div>
+</div>
+</div>
+</header>
+<!-- CANVAS CONTENT -->
+<div class="px-margin-desktop pb-section-gap max-w-container-max mx-auto">
+<!-- PAGE HEADER SECTION -->
+<section class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+<div class="space-y-2">
+<span class="inline-block py-1 px-3 bg-bleu-smalt/10 text-bleu-smalt font-label-sm text-label-sm rounded-full">Campagnes</span>
+<h2 class="font-headline-xl text-headline-xl text-primary font-bold leading-tight">Campagnes</h2>
+<p class="text-on-surface-variant text-body-md max-w-xl">
+                        Visualisez les campagnes existantes, leur statut et leur progression en temps réel pour optimiser le coaching opérationnel.
+                    </p>
+</div>
+<button class="bg-bleu-smalt text-on-primary font-label-md text-label-md px-8 py-4 rounded-xl shadow-[0_10px_20px_rgba(15,24,152,0.2)] hover:shadow-ambient transform hover:-translate-y-1 transition-all duration-300 flex items-center gap-2">
+<span class="material-symbols-outlined text-[20px]" data-icon="add">add</span>
+                    Nouvelle campagne
+                </button>
+</section>
+<!-- KPI CARDS GRID -->
+<section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-gutter mb-section-gap">
+<!-- Card 1 -->
+<div class="glass-panel p-6 rounded-[24px] shadow-soft kpi-card-hover transition-all duration-300 relative overflow-hidden group border border-white">
+<div class="relative z-10">
+<p class="text-on-surface-variant font-label-sm text-label-sm mb-1 uppercase tracking-wider">Campagnes</p>
+<div class="flex items-baseline gap-2">
+<h3 class="font-headline-lg text-headline-lg text-primary font-bold">2</h3>
+<span class="text-bleu-smalt font-label-sm text-label-sm">dans le système</span>
+</div>
+</div>
+<span class="material-symbols-outlined absolute -right-4 -bottom-4 text-[120px] text-bleu-smalt/5 rotate-12 transition-transform duration-500 group-hover:rotate-0" data-icon="inventory_2">inventory_2</span>
+<div class="mt-4 w-10 h-10 rounded-full bg-lavender-grey flex items-center justify-center text-bleu-smalt">
+<span class="material-symbols-outlined text-[20px]" data-icon="assignment">assignment</span>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="glass-panel p-6 rounded-[24px] shadow-soft kpi-card-hover transition-all duration-300 relative overflow-hidden group border border-white">
+<div class="relative z-10">
+<p class="text-on-surface-variant font-label-sm text-label-sm mb-1 uppercase tracking-wider">Actives</p>
+<div class="flex items-baseline gap-2">
+<h3 class="font-headline-lg text-headline-lg text-primary font-bold">1</h3>
+<span class="text-bleu-smalt font-label-sm text-label-sm">en cours</span>
+</div>
+</div>
+<span class="material-symbols-outlined absolute -right-4 -bottom-4 text-[120px] text-bleu-smalt/5 rotate-12 transition-transform duration-500 group-hover:rotate-0" data-icon="track_changes">track_changes</span>
+<div class="mt-4 w-10 h-10 rounded-full bg-lavender-grey flex items-center justify-center text-bleu-smalt">
+<span class="material-symbols-outlined text-[20px]" data-icon="target">track_changes</span>
+</div>
+</div>
+<!-- Card 3 -->
+<div class="glass-panel p-6 rounded-[24px] shadow-soft kpi-card-hover transition-all duration-300 relative overflow-hidden group border border-white">
+<div class="relative z-10">
+<p class="text-on-surface-variant font-label-sm text-label-sm mb-1 uppercase tracking-wider">Participants</p>
+<div class="flex items-baseline gap-2">
+<h3 class="font-headline-lg text-headline-lg text-primary font-bold">99</h3>
+<span class="text-bleu-smalt font-label-sm text-label-sm">rattachés</span>
+</div>
+</div>
+<span class="material-symbols-outlined absolute -right-4 -bottom-4 text-[120px] text-bleu-smalt/5 rotate-12 transition-transform duration-500 group-hover:rotate-0" data-icon="group_work">group_work</span>
+<div class="mt-4 w-10 h-10 rounded-full bg-lavender-grey flex items-center justify-center text-bleu-smalt">
+<span class="material-symbols-outlined text-[20px]" data-icon="groups">groups</span>
+</div>
+</div>
+<!-- Card 4 -->
+<div class="glass-panel p-6 rounded-[24px] shadow-soft kpi-card-hover transition-all duration-300 relative overflow-hidden group border border-white">
+<div class="relative z-10">
+<p class="text-on-surface-variant font-label-sm text-label-sm mb-1 uppercase tracking-wider">Questionnaires</p>
+<div class="flex items-baseline gap-2">
+<h3 class="font-headline-lg text-headline-lg text-primary font-bold">2</h3>
+<span class="text-bleu-smalt font-label-sm text-label-sm">B / F / S</span>
+</div>
+</div>
+<span class="material-symbols-outlined absolute -right-4 -bottom-4 text-[120px] text-bleu-smalt/5 rotate-12 transition-transform duration-500 group-hover:rotate-0" data-icon="draw">draw</span>
+<div class="mt-4 w-10 h-10 rounded-full bg-lavender-grey flex items-center justify-center text-bleu-smalt">
+<span class="material-symbols-outlined text-[20px]" data-icon="auto_awesome">auto_awesome</span>
+</div>
+</div>
+</section>
+<!-- CAMPAIGN LIST TABLE -->
+<section class="glass-panel rounded-[32px] shadow-ambient overflow-hidden border border-white">
+<!-- Table Header/Toolbar -->
+<div class="px-8 py-8 flex flex-col sm:flex-row justify-between items-center gap-6">
+<div>
+<h3 class="font-headline-md text-headline-md text-primary font-bold">Liste des campagnes</h3>
+<p class="text-on-surface-variant text-body-md">Gérez et suivez le déploiement de vos sessions de coaching.</p>
+</div>
+<div class="relative w-full max-w-sm">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline" data-icon="search">search</span>
+<input class="w-full bg-lavender-grey border-none rounded-xl py-4 pl-12 pr-6 text-on-surface placeholder:text-outline focus:ring-2 focus:ring-bleu-smalt/20 transition-all font-label-md" placeholder="Rechercher une campagne..." type="text"/>
+</div>
+</div>
+<!-- Table Content -->
+<div class="overflow-x-auto">
+<table class="w-full border-collapse">
+<thead>
+<tr class="bg-lavender-grey">
+<th class="text-left px-8 py-4 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-widest first:rounded-tl-xl last:rounded-tr-xl">Statut</th>
+<th class="text-left px-6 py-4 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-widest">Campagne</th>
+<th class="text-left px-6 py-4 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-widest">Entreprise</th>
+<th class="text-left px-6 py-4 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-widest">Coach</th>
+<th class="text-left px-6 py-4 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-widest">Questionnaire</th>
+<th class="text-left px-6 py-4 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-widest">Créée le</th>
+<th class="text-right px-8 py-4 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-widest">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-lavender-grey/50">
+<!-- Row 1 -->
+<tr class="hover:bg-lavender-grey/40 transition-colors group">
+<td class="px-8 py-6">
+<span class="inline-flex items-center px-3 py-1 rounded-full bg-green-100 text-green-700 font-bold text-[11px] uppercase tracking-wider">
+<span class="w-1.5 h-1.5 rounded-full bg-green-600 mr-2 animate-pulse"></span>
+                                        Active
+                                    </span>
+</td>
+<td class="px-6 py-6">
+<p class="font-label-md text-label-md text-primary font-bold">Test</p>
+</td>
+<td class="px-6 py-6">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-lg bg-orange-100 flex items-center justify-center text-orange-600 font-bold text-xs">O</div>
+<span class="text-on-surface-variant font-label-md">Orange</span>
+</div>
+</td>
+<td class="px-6 py-6">
+<span class="text-on-surface-variant font-label-md">Admin</span>
+</td>
+<td class="px-6 py-6">
+<span class="text-on-surface-variant font-label-md">B — Comportement</span>
+</td>
+<td class="px-6 py-6">
+<span class="text-on-surface-variant/70 font-label-md">05/05/2026</span>
+</td>
+<td class="px-8 py-6 text-right">
+<a class="inline-flex items-center gap-2 text-bleu-smalt font-bold text-label-md hover:underline group-hover:translate-x-1 transition-transform" href="#">
+                                        Ouvrir
+                                        <span class="material-symbols-outlined text-sm" data-icon="chevron_right">chevron_right</span>
+</a>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-lavender-grey/40 transition-colors group">
+<td class="px-8 py-6">
+<span class="inline-flex items-center px-3 py-1 rounded-full bg-jaune-accent/20 text-secondary font-bold text-[11px] uppercase tracking-wider">
+<span class="w-1.5 h-1.5 rounded-full bg-jaune-accent mr-2"></span>
+                                        Brouillon
+                                    </span>
+</td>
+<td class="px-6 py-6">
+<p class="font-label-md text-label-md text-primary font-bold">Test 2</p>
+</td>
+<td class="px-6 py-6">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-lg bg-orange-100 flex items-center justify-center text-orange-600 font-bold text-xs">O</div>
+<span class="text-on-surface-variant font-label-md">Orange</span>
+</div>
+</td>
+<td class="px-6 py-6">
+<span class="text-on-surface-variant font-label-md">Lucky</span>
+</td>
+<td class="px-6 py-6">
+<span class="text-on-surface-variant font-label-md">S — Soi</span>
+</td>
+<td class="px-6 py-6">
+<span class="text-on-surface-variant/70 font-label-md">06/05/2026</span>
+</td>
+<td class="px-8 py-6 text-right">
+<a class="inline-flex items-center gap-2 text-bleu-smalt font-bold text-label-md hover:underline group-hover:translate-x-1 transition-transform" href="#">
+                                        Ouvrir
+                                        <span class="material-symbols-outlined text-sm" data-icon="chevron_right">chevron_right</span>
+</a>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination -->
+<div class="px-8 py-6 border-t border-lavender-grey flex items-center justify-between">
+<div class="flex items-center gap-4 text-on-surface-variant/70 text-label-sm">
+<span>Lignes par page</span>
+<div class="relative">
+<select class="appearance-none bg-lavender-grey border-none rounded-lg px-4 pr-8 py-1 text-on-surface font-bold text-label-sm focus:ring-0">
+<option>10</option>
+<option>25</option>
+<option>50</option>
+</select>
+<span class="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-[16px] pointer-events-none" data-icon="expand_more">expand_more</span>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<span class="text-on-surface-variant text-label-sm font-bold">1–2 sur 2</span>
+<div class="flex gap-2">
+<button class="w-10 h-10 rounded-xl bg-lavender-grey text-outline cursor-not-allowed flex items-center justify-center transition-all">
+<span class="material-symbols-outlined" data-icon="chevron_left">chevron_left</span>
+</button>
+<button class="w-10 h-10 rounded-xl bg-lavender-grey text-outline cursor-not-allowed flex items-center justify-center transition-all">
+<span class="material-symbols-outlined" data-icon="chevron_right">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+</section>
+</div>
+</main>
+<script>
+        // Simple micro-interaction for KPI cards
+        document.querySelectorAll('.kpi-card-hover').forEach(card => {
+            card.addEventListener('mouseenter', () => {
+                const icon = card.querySelector('.material-symbols-outlined[data-icon]');
+                if (icon) icon.style.transform = 'scale(1.1) rotate(-5deg)';
+            });
+            card.addEventListener('mouseleave', () => {
+                const icon = card.querySelector('.material-symbols-outlined[data-icon]');
+                if (icon) icon.style.transform = '';
+            });
+        });
+    </script>
+</body></html>

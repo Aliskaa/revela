@@ -23,11 +23,18 @@ const participantFormSchema = z.object({
 
 export type AddParticipantFormValues = z.infer<typeof participantFormSchema>;
 
+export type ParticipantDrawerMode = 'create' | 'edit';
+
 export type AddParticipantToCampaignDrawerFormProps = {
     open: boolean;
     onClose: () => void;
     onSubmit: (values: AddParticipantFormValues) => Promise<unknown> | unknown;
     isSubmitting?: boolean;
+    mode?: ParticipantDrawerMode;
+    /** Valeurs initiales (mode `edit` ou préremplissage en création). */
+    initialValues?: Partial<AddParticipantFormValues>;
+    /** Override le titre (sinon dérivé du `mode`). */
+    title?: string;
     /**
      * Override le sous-titre par défaut. Permet de réutiliser le drawer depuis la fiche
      * entreprise (où il n'y a pas d'invitation immédiate) en plus du contexte campagne.
@@ -37,14 +44,28 @@ export type AddParticipantToCampaignDrawerFormProps = {
     submitLabel?: string;
 };
 
-const buildDefaults = (): AddParticipantFormValues => ({
-    firstName: '',
-    lastName: '',
-    email: '',
-    organisation: '',
-    direction: '',
-    service: '',
-    functionLevel: '',
+const MODE_COPY = {
+    create: {
+        title: 'Ajouter un participant',
+        subtitle:
+            "Le participant est rattaché à l'entreprise de la campagne et reçoit immédiatement une invitation.",
+        submitLabel: 'Ajouter et inviter',
+    },
+    edit: {
+        title: 'Modifier le participant',
+        subtitle: 'Mettre à jour le profil organisationnel du collaborateur.',
+        submitLabel: 'Enregistrer',
+    },
+} as const;
+
+const buildDefaults = (initial?: Partial<AddParticipantFormValues>): AddParticipantFormValues => ({
+    firstName: initial?.firstName ?? '',
+    lastName: initial?.lastName ?? '',
+    email: initial?.email ?? '',
+    organisation: initial?.organisation ?? '',
+    direction: initial?.direction ?? '',
+    service: initial?.service ?? '',
+    functionLevel: initial?.functionLevel ?? '',
 });
 
 export function AddParticipantToCampaignDrawerForm({
@@ -52,27 +73,31 @@ export function AddParticipantToCampaignDrawerForm({
     onClose,
     onSubmit,
     isSubmitting = false,
+    mode = 'create',
+    initialValues,
+    title,
     subtitle,
     submitLabel,
 }: AddParticipantToCampaignDrawerFormProps) {
+    const copy = MODE_COPY[mode];
+
     const { values, errors, submit, submitting, setField, dirty } = useDrawerForm({
         schema: participantFormSchema,
-        defaultValues: buildDefaults(),
+        defaultValues: buildDefaults(initialValues),
         open,
         onSubmit,
     });
 
+    const identityLocked = mode === 'edit';
+
     return (
         <AdminDrawerForm
             open={open}
-            title="Ajouter un participant"
-            subtitle={
-                subtitle ??
-                "Le participant est rattaché à l'entreprise de la campagne et reçoit immédiatement une invitation."
-            }
+            title={title ?? copy.title}
+            subtitle={subtitle ?? copy.subtitle}
             onClose={onClose}
             onSubmit={submit}
-            submitLabel={submitLabel ?? 'Ajouter et inviter'}
+            submitLabel={submitLabel ?? copy.submitLabel}
             isSubmitting={isSubmitting || submitting}
             dirty={dirty}
         >
@@ -90,7 +115,8 @@ export function AddParticipantToCampaignDrawerForm({
                                 error={Boolean(errors.firstName)}
                                 helperText={errors.firstName}
                                 fullWidth
-                                autoFocus
+                                autoFocus={!identityLocked}
+                                disabled={identityLocked}
                             />
                             <TextField
                                 label="Nom"
@@ -99,6 +125,7 @@ export function AddParticipantToCampaignDrawerForm({
                                 error={Boolean(errors.lastName)}
                                 helperText={errors.lastName}
                                 fullWidth
+                                disabled={identityLocked}
                             />
                         </Stack>
                         <TextField
@@ -109,9 +136,12 @@ export function AddParticipantToCampaignDrawerForm({
                             error={Boolean(errors.email)}
                             helperText={
                                 errors.email ??
-                                "Si un participant existe déjà avec cet email, il sera réutilisé et rattaché à l'entreprise de la campagne."
+                                (identityLocked
+                                    ? undefined
+                                    : "Si un participant existe déjà avec cet email, il sera réutilisé et rattaché à l'entreprise de la campagne.")
                             }
                             fullWidth
+                            disabled={identityLocked}
                         />
                     </Stack>
                 </Box>

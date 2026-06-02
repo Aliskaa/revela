@@ -21,7 +21,7 @@ function MiniBar(props: {
     color?: string;
     comment?: string | null;
 }) {
-    const { label, value, max, color = '#1515B0', comment } = props;
+    const { label, value, max, color = 'primary.main', comment } = props;
     const valueRow = (
         <Stack direction="row" spacing={0.6} alignItems="center" sx={{ mt: 0.5, mb: 1 }}>
             <Typography variant="h6" fontWeight={800} sx={{ color }}>
@@ -73,7 +73,7 @@ function MiniBar(props: {
                 sx={{
                     height: 6,
                     borderRadius: 3,
-                    bgcolor: 'rgba(0,0,0,0.04)',
+                    bgcolor: 'tint.overlayNeutral',
                     '& .MuiLinearProgress-bar': { bgcolor: color, borderRadius: 3 },
                 }}
             />
@@ -114,14 +114,14 @@ function RowBars({ matrix, row }: { matrix: ParticipantQuestionnaireMatrix; row:
                 {row.label}
             </Typography>
             <Stack direction="row" flexWrap="wrap" gap={1.4} useFlexGap>
-                <MiniBar label="Regard sur soi" value={row.self} max={matrix.likert_max} color="#1515B0" />
+                <MiniBar label="Regard sur soi" value={row.self} max={matrix.likert_max} color="primary.main" />
                 {row.peers.map((v, i) => (
                     <MiniBar
                         key={matrix.peer_columns[i]?.response_id ?? i}
                         label={matrix.peer_columns[i]?.label ?? `Pair ${i + 1}`}
                         value={v}
                         max={matrix.likert_max}
-                        color="#83D8F5"
+                        color="info.main"
                         comment={row.peer_comments[i] ?? null}
                     />
                 ))}
@@ -129,7 +129,7 @@ function RowBars({ matrix, row }: { matrix: ParticipantQuestionnaireMatrix; row:
                     label="Analyse Scientifique"
                     value={row.scientific}
                     max={matrix.scientific_value_max}
-                    color="#8BD7B7"
+                    color="success.main"
                 />
             </Stack>
         </Box>
@@ -191,7 +191,7 @@ function GapPanel({
                 mt: 1.5,
                 p: 1.5,
                 borderRadius: 2,
-                bgcolor: 'rgba(15,23,42,0.025)',
+                bgcolor: 'tint.subtleRow',
                 border: '1px dashed',
                 borderColor: 'divider',
             }}
@@ -208,8 +208,8 @@ function GapPanel({
                 <GapBlock
                     pillLabel="Auto"
                     gap={selfGap}
-                    color="#1515B0"
-                    interpretation={pickGapLabel(eRow.self, wRow.self)}
+                    color="primary.main"
+                    interpretation={null}
                     showInterpretations={showInterpretations}
                 />
                 {peerGaps.map((g, i) => (
@@ -217,15 +217,15 @@ function GapPanel({
                         key={`gap-peer-${matrix.peer_columns[i]?.response_id ?? i}`}
                         pillLabel={matrix.peer_columns[i]?.label ?? `Pair ${i + 1}`}
                         gap={g}
-                        color="#0EA5C9"
-                        interpretation={pickGapLabel(eRow.peers[i] ?? null, wRow.peers[i] ?? null)}
+                        color="tint.peerStrong"
+                        interpretation={null}
                         showInterpretations={showInterpretations}
                     />
                 ))}
                 <GapBlock
                     pillLabel="Scientifique"
                     gap={sciGap}
-                    color="#10b981"
+                    color="tint.scientific"
                     interpretation={pickGapLabel(eRow.scientific, wRow.scientific)}
                     showInterpretations={showInterpretations}
                 />

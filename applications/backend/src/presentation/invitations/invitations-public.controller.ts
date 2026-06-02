@@ -1,8 +1,8 @@
 // Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
 
-import { Body, Controller, Get, Inject, Param, Post, Res, UseFilters } from '@nestjs/common';
+import { Body, Controller, Get, Inject, Param, Post, Res, UseFilters, UseGuards } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { Throttle } from '@nestjs/throttler';
+import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import type { Response } from 'express';
 
 import type { RefreshTokenManagerUseCase } from '@src/application/auth/refresh-token-manager.usecase';
@@ -55,6 +55,7 @@ export class PublicInvitesController {
      * de toute façon irréversible, mais on bloque le brute-force sur le token + password.
      */
     @Post(':token/activate')
+    @UseGuards(ThrottlerGuard)
     @Throttle({ 'auth-strict': { limit: 5, ttl: 60_000 } })
     public async activateInvite(
         @Param('token') token: string,

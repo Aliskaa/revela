@@ -1,12 +1,16 @@
 // Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
 
-import { Alert, Box, Button, Card, CardContent, Chip, LinearProgress, Stack, Typography } from '@mui/material';
-import { Link, createFileRoute } from '@tanstack/react-router';
-import { ArrowRight, CheckCircle2, Gauge, Hourglass, Layers3, Sparkles } from 'lucide-react';
-import type * as React from 'react';
+import { Alert, Box, Chip, LinearProgress, Stack, Typography } from '@mui/material';
+import { Link, createFileRoute, useNavigate } from '@tanstack/react-router';
+import { ArrowRight, CheckCircle2, ClipboardList, Hourglass, Sparkles, Target } from 'lucide-react';
 
+import { KpiCard } from '@/components/common/cards';
+import { RowNavigateHint } from '@/components/common/data-table';
 import { EmptyState } from '@/components/common/EmptyState';
+import { PageHeader, KpiGrid, ListPanel } from '@/components/common/layout';
 import { LoadingCard } from '@/components/common/LoadingCard';
+import { listRowSx } from '@/components/common/styles/listSurfaces';
+import { useBreadcrumbs } from '@/components/layout/AppShellChromeContext';
 import { useParticipantSession } from '@/hooks/participantSession';
 import type { ParticipantSession } from '@aor/types';
 
@@ -56,112 +60,87 @@ const statusLabel = (a: ParticipantAssignment): { label: string; sx: object } =>
     return { label: 'Brouillon', sx: { bgcolor: 'tint.mutedBg', color: 'tint.mutedText' } };
 };
 
-type SummaryCardProps = {
-    icon: React.ElementType;
-    label: string;
-    value: string;
-    helper: string;
-};
-
-function SummaryCard({ icon: Icon, label, value, helper }: SummaryCardProps) {
-    return (
-        <Card variant="outlined">
-            <CardContent sx={{ p: 2 }}>
-                <Stack direction="row" spacing={1.5} alignItems="center">
-                    <Box
-                        sx={{
-                            width: 44,
-                            height: 44,
-                            borderRadius: 3,
-                            bgcolor: 'tint.primaryBg',
-                            color: 'primary.main',
-                            display: 'grid',
-                            placeItems: 'center',
-                            flex: 'none',
-                        }}
-                    >
-                        <Icon size={20} />
-                    </Box>
-                    <Box sx={{ minWidth: 0 }}>
-                        <Typography variant="caption" color="text.secondary">
-                            {label}
-                        </Typography>
-                        <Typography variant="h5" fontWeight={800} color="text.primary" sx={{ lineHeight: 1.1 }}>
-                            {value}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                            {helper}
-                        </Typography>
-                    </Box>
-                </Stack>
-            </CardContent>
-        </Card>
-    );
-}
-
 function CampaignSummaryRow({ assignment }: { assignment: ParticipantAssignment }) {
     const progress = progressForAssignment(assignment);
     const status = statusLabel(assignment);
     const name = assignment.campaign_name ?? 'Campagne sans nom';
     const company = assignment.company_name ?? 'Organisation non renseignée';
+
+    const detailTo = `/campaigns/${assignment.campaign_id}`;
+
     return (
-        <Card variant="outlined">
-            <CardContent sx={{ p: 2 }}>
-                <Stack
-                    direction={{ xs: 'column', md: 'row' }}
-                    spacing={2}
-                    justifyContent="space-between"
-                    alignItems={{ xs: 'start', md: 'center' }}
-                >
-                    <Box sx={{ minWidth: 0, flex: 1 }}>
-                        <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
-                            <Typography fontWeight={800} color="text.primary">
-                                {name}
-                            </Typography>
-                            <Chip label={status.label} size="small" sx={{ borderRadius: 99, ...status.sx }} />
-                        </Stack>
-                        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.4 }}>
-                            {company} · {assignment.questionnaire_title ?? assignment.questionnaire_id}
+        <Box
+            component={Link}
+            to={detailTo}
+            aria-label={`Ouvrir ${name}`}
+            sx={{
+                display: 'block',
+                px: { xs: 2.5, md: 4 },
+                py: 3,
+                borderBottom: '1px solid',
+                borderColor: 'surface.lavenderGrey',
+                textDecoration: 'none',
+                color: 'inherit',
+                cursor: 'pointer',
+                ...listRowSx,
+                '&:last-child': { borderBottom: 'none' },
+                '&:hover .participant-row-chevron': {
+                    opacity: 1,
+                    transform: 'translateX(4px)',
+                },
+            }}
+        >
+            <Stack direction="row" spacing={2} justifyContent="space-between" alignItems="center">
+                <Box sx={{ minWidth: 0, flex: 1 }}>
+                    <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
+                        <Typography fontWeight={700} color="primary.main" lineHeight={1.2}>
+                            {name}
                         </Typography>
-                        <Box sx={{ mt: 1.2 }}>
-                            <Stack direction="row" justifyContent="space-between" sx={{ mb: 0.4 }}>
-                                <Typography variant="caption" color="text.secondary">
-                                    Progression
-                                </Typography>
-                                <Typography variant="caption" fontWeight={700} color="text.primary">
-                                    {progress}%
-                                </Typography>
-                            </Stack>
-                            <LinearProgress
-                                variant="determinate"
-                                value={progress}
-                                sx={{
-                                    height: 8,
-                                    borderRadius: 99,
-                                    bgcolor: 'tint.subtleBg',
-                                    '& .MuiLinearProgress-bar': { bgcolor: 'primary.main' },
-                                }}
-                            />
-                        </Box>
+                        <Chip label={status.label} size="small" sx={{ borderRadius: 99, ...status.sx }} />
+                    </Stack>
+                    <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, lineHeight: 1.7 }}>
+                        {company} · {assignment.questionnaire_title ?? assignment.questionnaire_id}
+                    </Typography>
+                    <Box sx={{ mt: 1.5, maxWidth: 480 }}>
+                        <Stack direction="row" justifyContent="space-between" sx={{ mb: 0.5 }}>
+                            <Typography variant="caption" color="text.secondary" fontWeight={600}>
+                                Progression
+                            </Typography>
+                            <Typography variant="caption" fontWeight={700} color="primary.main">
+                                {progress}%
+                            </Typography>
+                        </Stack>
+                        <LinearProgress
+                            variant="determinate"
+                            value={progress}
+                            sx={{
+                                height: 8,
+                                borderRadius: 99,
+                                bgcolor: 'tint.subtleBg',
+                                '& .MuiLinearProgress-bar': { bgcolor: 'primary.main' },
+                            }}
+                        />
                     </Box>
-                    <Link to="/campaigns/$campaignId" params={{ campaignId: String(assignment.campaign_id) }}>
-                        <Button
-                            component="a"
-                            variant="outlined"
-                            size="small"
-                            endIcon={<ArrowRight size={14} />}
-                            sx={{ borderRadius: 3, alignSelf: { xs: 'stretch', md: 'center' } }}
-                        >
-                            Ouvrir
-                        </Button>
-                    </Link>
-                </Stack>
-            </CardContent>
-        </Card>
+                </Box>
+                <Box
+                    className="participant-row-chevron"
+                    sx={{
+                        flexShrink: 0,
+                        display: 'inline-flex',
+                        opacity: 0.45,
+                        transition: 'transform 0.2s ease, opacity 0.2s ease',
+                    }}
+                >
+                    <RowNavigateHint sx={{ opacity: 1, color: 'inherit' }} />
+                </Box>
+            </Stack>
+        </Box>
     );
 }
 
 export function ParticipantDashboardRoute() {
+    useBreadcrumbs([{ label: 'Tableau de bord' }]);
+    const navigate = useNavigate();
     const { data: session, isLoading, isError } = useParticipantSession();
 
     if (isLoading) {
@@ -183,85 +162,57 @@ export function ParticipantDashboardRoute() {
 
     return (
         <Stack spacing={3}>
-            <Card variant="outlined">
-                <CardContent sx={{ p: { xs: 2.5, md: 3 } }}>
-                    <Stack
-                        direction={{ xs: 'column', md: 'row' }}
-                        spacing={2}
-                        justifyContent="space-between"
-                        alignItems={{ xs: 'start', md: 'center' }}
-                    >
-                        <Box>
-                            <Chip
-                                label="Espace participant"
-                                sx={{ borderRadius: 99, bgcolor: 'tint.primaryBg', color: 'primary.main', mb: 1.5 }}
-                            />
-                            <Typography variant="h4" fontWeight={800} color="text.primary" sx={{ letterSpacing: -0.5 }}>
-                                Bonjour {participantFirstName}
-                            </Typography>
-                            <Typography variant="body1" color="text.secondary" sx={{ mt: 0.8, lineHeight: 1.7 }}>
-                                Voici un aperçu rapide de vos parcours et de leur avancement.
-                            </Typography>
-                        </Box>
-                        <Button
-                            component={Link}
-                            to="/campaigns"
-                            variant="contained"
-                            disableElevation
-                            endIcon={<ArrowRight size={14} />}
-                            sx={{ borderRadius: 3 }}
-                        >
-                            Voir mes parcours
-                        </Button>
-                    </Stack>
-                </CardContent>
-            </Card>
-
-            <Box
-                sx={{
-                    display: 'grid',
-                    gridTemplateColumns: {
-                        xs: '1fr',
-                        sm: 'repeat(2, minmax(0, 1fr))',
-                        lg: 'repeat(4, minmax(0, 1fr))',
-                    },
-                    gap: 2,
+            <PageHeader
+                title={`Bonjour ${participantFirstName}`}
+                subtitle="Voici un aperçu rapide de vos parcours et de leur avancement."
+                action={{
+                    label: 'Voir mes parcours',
+                    onClick: () => navigate({ to: '/campaigns' }),
+                    icon: ArrowRight,
                 }}
-            >
-                <SummaryCard
-                    icon={Layers3}
+            />
+
+            <KpiGrid columns={4}>
+                <KpiCard
                     label="Mes parcours"
-                    value={String(total)}
-                    helper="rattachées à votre compte"
+                    value={total}
+                    helper="rattachés à votre compte"
+                    icon={ClipboardList}
                 />
-                <SummaryCard icon={Gauge} label="En cours" value={String(active)} helper="parcours actifs" />
-                <SummaryCard
-                    icon={Hourglass}
+                <KpiCard label="En cours" value={active} helper="parcours actifs" icon={Target} />
+                <KpiCard
                     label="À confirmer"
-                    value={String(toConfirm)}
+                    value={toConfirm}
                     helper="participations en attente"
+                    icon={Hourglass}
                 />
-                <SummaryCard
-                    icon={CheckCircle2}
+                <KpiCard
                     label="Progression moyenne"
                     value={`${averageProgress}%`}
                     helper={`${completed}/${total || 0} parcours terminés`}
+                    icon={CheckCircle2}
                 />
-            </Box>
+            </KpiGrid>
 
-            {total === 0 ? (
-                <EmptyState
-                    icon={Sparkles}
-                    title="Aucun parcours pour le moment"
-                    description="Les parcours apparaissent ici dès qu'un coach vous y invite."
-                />
-            ) : (
-                <Stack spacing={1.4}>
-                    {assignments.map(a => (
+            <ListPanel
+                title="Mes parcours"
+                subtitle="Vos campagnes en cours et leur progression."
+                headerBorder
+            >
+                {total === 0 ? (
+                    <Box sx={{ px: { xs: 2.5, md: 4 }, py: 4 }}>
+                        <EmptyState
+                            icon={Sparkles}
+                            title="Aucun parcours pour le moment"
+                            description="Les parcours apparaissent ici dès qu'un coach vous y invite."
+                        />
+                    </Box>
+                ) : (
+                    assignments.map(a => (
                         <CampaignSummaryRow key={`${a.campaign_id}-${a.questionnaire_id}`} assignment={a} />
-                    ))}
-                </Stack>
-            )}
+                    ))
+                )}
+            </ListPanel>
         </Stack>
     );
 }

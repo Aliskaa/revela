@@ -13,7 +13,7 @@ import {
     UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { Throttle } from '@nestjs/throttler';
+import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import type { Request, Response } from 'express';
 
 import type { AdminAuthUseCase } from '@src/application/admin/auth/admin-auth.usecase';
@@ -26,6 +26,7 @@ import {
     ADMIN_TOKEN_SIGNER_PORT_SYMBOL,
     type IAdminTokenSignerPort,
 } from '@src/interfaces/admin/IAdminTokenSigner.port';
+import { ADMIN_AUTH_CONFIG_PORT_SYMBOL, type IAdminAuthConfigPort } from '@src/interfaces/admin/IAdminAuthConfig.port';
 import { COACHES_REPOSITORY_PORT_SYMBOL, type ICoachesReadPort } from '@src/interfaces/coaches/ICoachesRepository.port';
 import { ADMIN_COOKIE_NAMES, clearAuthCookies, setAuthCookies } from '@src/presentation/auth/auth-cookies.helper';
 import { REFRESH_TOKEN_MANAGER_SYMBOL } from '@src/presentation/auth/auth-refresh.module';
@@ -55,10 +56,12 @@ export class AdminController {
         @Inject(REFRESH_TOKEN_MANAGER_SYMBOL) private readonly refreshTokens: RefreshTokenManagerUseCase,
         @Inject(ADMIN_TOKEN_SIGNER_PORT_SYMBOL) private readonly tokenSigner: IAdminTokenSignerPort,
         @Inject(COACHES_REPOSITORY_PORT_SYMBOL) private readonly coaches: ICoachesReadPort,
+        @Inject(ADMIN_AUTH_CONFIG_PORT_SYMBOL) private readonly authConfig: IAdminAuthConfigPort,
         private readonly audit: AuditLoggerService
     ) {}
 
     @Post('auth/login')
+    @UseGuards(ThrottlerGuard)
     @Throttle({ 'auth-strict': { limit: 5, ttl: 60_000 } })
     @ApiOperation({
         summary:
@@ -124,6 +127,7 @@ export class AdminController {
      * présente un token déjà utilisé → revoke famille (détection de vol).
      */
     @Post('auth/refresh')
+    @UseGuards(ThrottlerGuard)
     @Throttle({ 'auth-refresh': { limit: 30, ttl: 60_000 } })
     @ApiOperation({ summary: 'Rotation de la paire de cookies d’authentification admin.' })
     public async refresh(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
@@ -222,10 +226,28 @@ export class AdminController {
         if (!user || user.role !== 'admin') {
             throw new UnauthorizedException();
         }
+        if (user.scope === 'coach' && user.coachId !== undefined) {
+            const coach = await this.coaches.findById(user.coachId);
+            const avatar_url = coach ? await this.coaches.resolveAvatarUrl(user.coachId) : null;
+            return {
+                scope: 'coach',
+                coach_id: user.coachId,
+                username: user.username,
+                display_name: coach?.displayName ?? user.username,
+                avatar_url,
+            };
+        }
+
+        const adminCoach = await this.coaches.findByUsername(this.authConfig.superAdminUsername);
+        const avatar_url =
+            adminCoach !== null ? await this.coaches.resolveAvatarUrl(adminCoach.id) : null;
+
         return {
             scope: user.scope ?? 'super-admin',
-            coach_id: user.coachId,
+            coach_id: adminCoach?.id ?? null,
             username: user.username,
+            display_name: adminCoach?.displayName ?? user.username,
+            avatar_url,
         };
     }
 }

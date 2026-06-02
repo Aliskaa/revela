@@ -140,3 +140,28 @@ export function useUpdateParticipantProfile() {
         onError: err => toast.error(err instanceof Error && err.message ? err.message : t('toast.profileUpdateFailed')),
     });
 }
+
+export function useUploadParticipantAvatar() {
+    const qc = useQueryClient();
+    const toast = useToast();
+    return useMutation<{ avatar_url: string }, Error, File>({
+        mutationFn: file => {
+            const formData = new FormData();
+            formData.append('file', file);
+            return participantApiClient
+                .post('/participant/profile/avatar', formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' },
+                })
+                .then(r => r.data);
+        },
+        onSuccess: data => {
+            qc.setQueryData<ParticipantSession>(participantSessionKeys.session, current =>
+                current ? { ...current, avatar_url: data.avatar_url } : current
+            );
+            qc.invalidateQueries({ queryKey: participantSessionKeys.session });
+            toast.success('Photo de profil mise à jour.');
+        },
+        onError: err =>
+            toast.error(err instanceof Error && err.message ? err.message : 'Impossible de mettre à jour la photo.'),
+    });
+}

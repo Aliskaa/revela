@@ -1,32 +1,17 @@
 // Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
 
-import {
-    Box,
-    Button,
-    Card,
-    CardContent,
-    Stack,
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableRow,
-    TextField,
-    Typography,
-} from '@mui/material';
-import { ClipboardList, Plus, Sparkles, Target, Users } from 'lucide-react';
+import { Divider, Stack, Typography } from '@mui/material';
+import { ClipboardList, Sparkles, Target, Users } from 'lucide-react';
 import * as React from 'react';
 
 import { AdminCampaignDrawerForm } from '@/components/admin/AdminCampaignDrawerForm';
-import { SectionTitle } from '@/components/common/SectionTitle';
-import { SkeletonCards, SkeletonTableRows } from '@/components/common/SkeletonRows';
-import { StatCard } from '@/components/common/cards';
-import { CampaignStatusChip } from '@/components/common/chips';
-import { EmptyTableRow, OpenDetailButton, StandardTablePagination } from '@/components/common/data-table';
-import { KpiGrid, PageHeroCard } from '@/components/common/layout';
-import { useAdminCampaigns, useAdminDashboard, useCoaches, useCompanies, useCreateAdminCampaign } from '@/hooks/admin';
+import { KpiCard } from '@/components/common/cards';
+import { SearchField } from '@/components/common/forms/SearchField';
+import { PageHeader, KpiGrid, ListPanel } from '@/components/common/layout';
+import { useBreadcrumbs } from '@/components/layout/AppShellChromeContext';
+import { CampaignListViews } from '@/components/scoped/campaigns-list/CampaignListViews';
+import { useAdminCampaigns, useCoaches, useCompanies, useCreateAdminCampaign } from '@/hooks/admin';
 import { parseAdminJwtClaims } from '@/lib/auth';
-import { questionnaireLabel } from '@/lib/labels';
 import { useTablePagination } from '@/lib/useTablePagination';
 
 export type CampaignsListScope = 'admin' | 'coach';
@@ -42,7 +27,8 @@ const SCOPE_LABELS: Record<
     admin: {
         eyebrow: 'Campagnes',
         title: 'Campagnes',
-        subtitle: 'Visualisez les campagnes existantes, leur statut et leur progression.',
+        subtitle:
+            'Visualisez les campagnes existantes, leur statut et leur progression en temps réel pour optimiser le coaching opérationnel.',
         statsLabel: 'Campagnes',
         statsHelper: 'dans le système',
     },
@@ -56,17 +42,9 @@ const SCOPE_LABELS: Record<
     },
 };
 
-/**
- * Liste de campagnes — unifie `admin/campaigns` et `coach/campaigns`. Le scope contrôle :
- *  - les libellés (eyebrow, titre, sous-titre, stats) ;
- *  - le préfixe de lien vers le détail (`/admin/campaigns/$id` vs `/coach/campaigns/$id`) ;
- *  - l'affichage de la colonne « Coach » (admin uniquement) ;
- *  - le pré-remplissage `lockedCoachId` côté coach via les claims JWT (le backend force déjà
- *    `coach_id = req.user.coachId` mais on aligne l'UI pour ne pas afficher un Select inutile) ;
- *  - le KPI « Participants » (admin only — repose sur `useAdminDashboard`) vs « Entreprises » (coach).
- */
 export function CampaignsListPage({ scope }: CampaignsListPageProps) {
     const isAdmin = scope === 'admin';
+    useBreadcrumbs(isAdmin ? [{ label: 'Administration' }, { label: 'Campagnes' }] : [{ label: 'Campagnes' }]);
     const labels = SCOPE_LABELS[scope];
     const detailPathPrefix = isAdmin ? '/admin/campaigns' : '/coach/campaigns';
 
@@ -76,16 +54,13 @@ export function CampaignsListPage({ scope }: CampaignsListPageProps) {
     const { data: campaigns = [], isLoading: campaignsLoading } = useAdminCampaigns();
     const { data: coaches = [], isLoading: coachesLoading } = useCoaches();
     const { data: companies = [] } = useCompanies();
-    const { data: dashboard, isLoading: dashboardLoading } = useAdminDashboard();
     const createCampaign = useCreateAdminCampaign();
-
-    // Côté coach : on lit l'id depuis le JWT pour pré-remplir et masquer le champ « Coach » du form.
     const claims = parseAdminJwtClaims();
     const lockedCoachId = !isAdmin && claims?.scope === 'coach' ? claims.coachId : undefined;
 
     const isLoading = campaignsLoading || (isAdmin && coachesLoading);
-
     const companyName = (id: number) => companies.find(c => c.id === id)?.name ?? '–';
+    const companyAvatarUrl = (id: number) => companies.find(c => c.id === id)?.avatar_url ?? null;
     const coachName = (id: number) => coaches.find(c => c.id === id)?.displayName ?? '–';
     const questionnairesUsed = new Set(campaigns.map(c => c.questionnaireId).filter(Boolean)).size;
 
@@ -106,92 +81,94 @@ export function CampaignsListPage({ scope }: CampaignsListPageProps) {
         resetWhen: [search],
     });
 
-    const desktopColumns = isAdmin ? 7 : 6;
+    const emptyMessage = search ? 'Aucune campagne ne correspond à la recherche.' : 'Aucune campagne pour le moment.';
+
+    const displayFrom = filtered.length === 0 ? 0 : page * rowsPerPage + 1;
+    const displayTo = filtered.length === 0 ? 0 : Math.min((page + 1) * rowsPerPage, filtered.length);
+
+    const listViews = (
+        <CampaignListViews
+            campaigns={paged}
+            isLoading={isLoading}
+            isEmpty={filtered.length === 0}
+            emptyMessage={emptyMessage}
+            detailPathPrefix={detailPathPrefix}
+            companyName={companyName}
+            companyAvatarUrl={companyAvatarUrl}
+            coachName={coachName}
+            page={page}
+            rowsPerPage={rowsPerPage}
+            totalCount={filtered.length}
+            onPageChange={setPage}
+            onRowsPerPageChange={setRowsPerPage}
+        />
+    );
+
+    const drawer = isAdmin ? (
+        <AdminCampaignDrawerForm
+            open={drawerOpen}
+            mode="create"
+            lockedCoachId={lockedCoachId}
+            onClose={() => {
+                setDrawerOpen(false);
+                createCampaign.reset();
+            }}
+            onSubmit={async values => {
+                try {
+                    await createCampaign.mutateAsync({
+                        name: values.name,
+                        companyId: values.companyId,
+                        coachId: values.coachId,
+                        questionnaireId: values.questionnaireId,
+                        startsAt: values.startDate ? new Date(values.startDate).toISOString() : null,
+                        endsAt: values.endDate ? new Date(values.endDate).toISOString() : null,
+                        allowTestWithoutManualInputs: values.allowTestWithoutManualInputs,
+                        status: values.status,
+                    });
+                    setDrawerOpen(false);
+                } catch {
+                    // Le toast d'erreur est émis par le hook ; on garde le drawer ouvert.
+                }
+            }}
+            isSubmitting={createCampaign.isPending}
+        />
+    ) : null;
 
     return (
         <Stack spacing={3}>
-            {isAdmin && (
-                <AdminCampaignDrawerForm
-                    open={drawerOpen}
-                    mode="create"
-                    lockedCoachId={lockedCoachId}
-                    onClose={() => {
-                        setDrawerOpen(false);
-                        createCampaign.reset();
-                    }}
-                    onSubmit={async values => {
-                        try {
-                            await createCampaign.mutateAsync({
-                                name: values.name,
-                                companyId: values.companyId,
-                                coachId: values.coachId,
-                                questionnaireId: values.questionnaireId,
-                                startsAt: values.startDate ? new Date(values.startDate).toISOString() : null,
-                                endsAt: values.endDate ? new Date(values.endDate).toISOString() : null,
-                                allowTestWithoutManualInputs: values.allowTestWithoutManualInputs,
-                                status: values.status,
-                            });
-                            setDrawerOpen(false);
-                        } catch {
-                            // Le toast d'erreur est émis par le hook ; on garde le drawer ouvert.
-                        }
-                    }}
-                    isSubmitting={createCampaign.isPending}
-                />
-            )}
-
-            <PageHeroCard
-                eyebrow={labels.eyebrow}
+            {isAdmin ? drawer : null}
+            <PageHeader
                 title={labels.title}
                 subtitle={labels.subtitle}
-                actions={
-                    isAdmin ? (
-                        <Button
-                            variant="contained"
-                            disableElevation
-                            startIcon={<Plus size={16} />}
-                            onClick={() => setDrawerOpen(true)}
-                            sx={{ bgcolor: 'primary.main' }}
-                        >
-                            Nouvelle campagne
-                        </Button>
-                    ) : undefined
-                }
+                action={isAdmin ? {
+                    label: 'Nouvelle campagne',
+                    onClick: () => setDrawerOpen(true),
+                    icon: ClipboardList,
+                } : undefined}
             />
-
             <KpiGrid columns={4}>
-                <StatCard
+                <KpiCard
                     label={labels.statsLabel}
                     value={campaigns.length}
                     helper={labels.statsHelper}
                     icon={ClipboardList}
                     loading={campaignsLoading}
                 />
-                <StatCard
+                <KpiCard
                     label="Actives"
                     value={campaigns.filter(c => c.status === 'active').length}
                     helper="en cours"
                     icon={Target}
                     loading={campaignsLoading}
                 />
-                {isAdmin ? (
-                    <StatCard
-                        label="Participants"
-                        value={dashboard?.total_participants ?? '–'}
-                        helper="rattachés"
-                        icon={Users}
-                        loading={dashboardLoading}
-                    />
-                ) : (
-                    <StatCard
-                        label="Entreprises"
-                        value={new Set(campaigns.map(c => c.companyId)).size}
-                        helper="rattachées"
-                        icon={Users}
-                        loading={campaignsLoading}
-                    />
-                )}
-                <StatCard
+                <KpiCard
+                    label="Entreprises"
+                    value={new Set(campaigns.map(c => c.companyId)).size}
+                    helper="rattachées"
+                    icon={Users}
+                    loading={campaignsLoading}
+                />
+                <KpiCard
                     label="Questionnaires"
                     value={questionnairesUsed}
                     helper="B / F / S"
@@ -199,165 +176,33 @@ export function CampaignsListPage({ scope }: CampaignsListPageProps) {
                     loading={campaignsLoading}
                 />
             </KpiGrid>
-
-            <Card variant="outlined">
-                <CardContent sx={{ p: 2.5 }}>
-                    <SectionTitle
-                        title="Liste des campagnes"
-                        subtitle={
-                            isAdmin
-                                ? "La table permet de comparer rapidement les campagnes et d'ouvrir leur détail."
-                                : "La table permet de comparer rapidement vos campagnes et d'ouvrir leur détail."
-                        }
-                        action={
-                            <TextField
-                                size="small"
-                                placeholder="Rechercher…"
-                                value={search}
-                                onChange={e => setSearch(e.target.value)}
-                                sx={{ minWidth: 260 }}
-                            />
-                        }
-                    />
-
-                    {/* Desktop table */}
-                    <Box sx={{ display: { xs: 'none', lg: 'block' }, overflowX: 'auto' }}>
-                        <Table sx={{ minWidth: isAdmin ? 1000 : 900 }}>
-                            <TableHead>
-                                <TableRow>
-                                    <TableCell></TableCell>
-                                    <TableCell>Campagne</TableCell>
-                                    <TableCell>Entreprise</TableCell>
-                                    {isAdmin ? <TableCell>Coach</TableCell> : null}
-                                    <TableCell>Questionnaire</TableCell>
-                                    <TableCell>Créée le</TableCell>
-                                    <TableCell />
-                                </TableRow>
-                            </TableHead>
-                            <TableBody>
-                                {isLoading ? (
-                                    <SkeletonTableRows rows={4} columns={desktopColumns} />
-                                ) : (
-                                    paged.map(campaign => (
-                                        <TableRow hover key={campaign.id}>
-                                            <TableCell>
-                                                <CampaignStatusChip status={campaign.status} />
-                                            </TableCell>
-                                            <TableCell>
-                                                <Typography fontWeight={700} color="text.primary">
-                                                    {campaign.name}
-                                                </Typography>
-                                            </TableCell>
-                                            <TableCell>{companyName(campaign.companyId)}</TableCell>
-                                            {isAdmin ? <TableCell>{coachName(campaign.coachId)}</TableCell> : null}
-                                            <TableCell>{questionnaireLabel(campaign.questionnaireId)}</TableCell>
-                                            <TableCell>
-                                                {campaign.createdAt
-                                                    ? new Date(campaign.createdAt).toLocaleDateString('fr-FR')
-                                                    : '–'}
-                                            </TableCell>
-                                            <TableCell align="right">
-                                                <OpenDetailButton to={`${detailPathPrefix}/${campaign.id}`} />
-                                            </TableCell>
-                                        </TableRow>
-                                    ))
-                                )}
-                                {!isLoading && filtered.length === 0 && (
-                                    <EmptyTableRow
-                                        colSpan={desktopColumns}
-                                        message={
-                                            search
-                                                ? 'Aucune campagne ne correspond à la recherche.'
-                                                : 'Aucune campagne pour le moment.'
-                                        }
-                                    />
-                                )}
-                            </TableBody>
-                        </Table>
-                        {filtered.length > 0 && (
-                            <StandardTablePagination
-                                count={filtered.length}
-                                page={page}
-                                rowsPerPage={rowsPerPage}
-                                onPageChange={setPage}
-                                onRowsPerPageChange={setRowsPerPage}
-                            />
-                        )}
-                    </Box>
-
-                    {/* Mobile cards */}
-                    <Stack spacing={2} sx={{ display: { xs: 'flex', lg: 'none' }, mt: 2 }}>
-                        {isLoading ? (
-                            <SkeletonCards count={3} height={160} />
-                        ) : (
-                            filtered.map(campaign => (
-                                <Card variant="outlined" key={campaign.id}>
-                                    <CardContent sx={{ p: 2.5 }}>
-                                        <Stack spacing={2}>
-                                            <Stack
-                                                direction="row"
-                                                justifyContent="space-between"
-                                                alignItems="start"
-                                                spacing={2}
-                                            >
-                                                <Box>
-                                                    <Typography variant="h6" fontWeight={800} color="text.primary">
-                                                        {campaign.name}
-                                                    </Typography>
-                                                    <Typography
-                                                        variant="body2"
-                                                        color="text.secondary"
-                                                        sx={{ mt: 0.5, lineHeight: 1.7 }}
-                                                    >
-                                                        {companyName(campaign.companyId)}
-                                                        {isAdmin ? ` · Coach ${coachName(campaign.coachId)}` : ''}
-                                                    </Typography>
-                                                </Box>
-                                                <CampaignStatusChip status={campaign.status} />
-                                            </Stack>
-
-                                            <Box
-                                                sx={{
-                                                    display: 'grid',
-                                                    gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
-                                                    gap: 1.2,
-                                                }}
-                                            >
-                                                <StatCard
-                                                    variant="mini"
-                                                    label="Questionnaire"
-                                                    value={questionnaireLabel(campaign.questionnaireId)}
-                                                />
-                                                <StatCard
-                                                    variant="mini"
-                                                    label="Créée le"
-                                                    value={
-                                                        campaign.createdAt
-                                                            ? new Date(campaign.createdAt).toLocaleDateString('fr-FR')
-                                                            : '–'
-                                                    }
-                                                />
-                                            </Box>
-
-                                            <OpenDetailButton
-                                                to={`${detailPathPrefix}/${campaign.id}`}
-                                                variant="card"
-                                            />
-                                        </Stack>
-                                    </CardContent>
-                                </Card>
-                            ))
-                        )}
-                        {!isLoading && filtered.length === 0 && (
-                            <Typography variant="body2" color="text.secondary" sx={{ py: 2, textAlign: 'center' }}>
-                                {search
-                                    ? 'Aucune campagne ne correspond à la recherche.'
-                                    : 'Aucune campagne pour le moment.'}
-                            </Typography>
-                        )}
+            <ListPanel
+                title="Liste des campagnes"
+                headerBorder
+                headerActions={
+                    <Stack direction="row" alignItems="center" spacing={2} sx={{ width: { xs: '100%', sm: 'auto' } }}>
+                        <SearchField value={search} onChange={setSearch} placeholder="Rechercher une campagne…" />
+                        {filtered.length > 0 ? (
+                            <>
+                                <Divider
+                                    orientation="vertical"
+                                    flexItem
+                                    sx={{ display: { xs: 'none', md: 'block' }, borderColor: 'surface.lavenderGrey' }}
+                                />
+                                <Typography
+                                    variant="caption"
+                                    color="text.secondary"
+                                    sx={{ display: { xs: 'none', md: 'block' }, whiteSpace: 'nowrap' }}
+                                >
+                                    Affichage {displayFrom}–{displayTo} sur {filtered.length}
+                                </Typography>
+                            </>
+                        ) : null}
                     </Stack>
-                </CardContent>
-            </Card>
+                }
+            >
+                {listViews}
+            </ListPanel>
         </Stack>
     );
 }

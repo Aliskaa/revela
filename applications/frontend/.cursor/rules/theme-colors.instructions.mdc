@@ -1,0 +1,54 @@
+---
+description: Interdit les couleurs hardcodées dans le frontend — source unique theme.ts.
+alwaysApply: false
+globs: applications/frontend/src/*.ts, applications/frontend/src/*.tsx, applications/frontend/src/**/*.ts, applications/frontend/src/**/*.tsx
+---
+
+# Couleurs frontend — source unique `theme.ts`
+
+## Règle
+
+- **Interdit** : valeurs de couleur en dur dans les composants, hooks UI, styles partagés (`sx`, `style`, props `color`, constantes CSS).
+  - Exemples interdits : `#F5F5FB`, `#454653`, `rgb(...)`, `rgba(...)` en dehors de `src/lib/theme.ts`.
+- **Obligatoire** : référencer le thème MUI via des **tokens sémantiques** déjà définis dans `applications/frontend/src/lib/theme.ts`.
+
+## Où mettre une nouvelle couleur
+
+1. Ajouter le token dans `theme.ts` (`palette`, `palette.tint`, `palette.shadow`, etc.) avec un nom sémantique (`lavenderGrey`, `outlineVariant`, `primaryHalo`…).
+2. Étendre le module `@mui/material/styles` si le token est nouveau (comme `tint` ou `shadow`).
+3. Consommer le token depuis les composants — **jamais l'inverse**.
+
+## Comment consommer
+
+Préférer les clés palette reconnues par MUI :
+
+```tsx
+// ✅ GOOD — token thème
+sx={{ bgcolor: 'background.paper', color: 'text.secondary', borderColor: 'border' }}
+sx={{ bgcolor: 'surface.lavenderGrey', borderColor: 'surface.outlineVariant' }}
+sx={{ bgcolor: 'tint.primaryBg', boxShadow: theme => theme.palette.shadow.brandPaper }}
+```
+
+```tsx
+// ❌ BAD — couleur hardcodée
+sx={{ bgcolor: '#F5F5FB', borderColor: 'rgba(15, 24, 152, 0.08)' }}
+const LAVENDER_GREY = '#F5F5FB';
+```
+
+Pour les callbacks `sx`, utiliser `theme.palette…` plutôt que des literals.
+
+## Fichiers concernés
+
+- `src/components/**`
+- `src/routes/**`
+- Fichiers de styles partagés (`listSurfaces.ts`, etc.) : ils réexportent des **références au thème**, pas des hex/rgba locaux.
+
+## Exceptions
+
+- `applications/frontend/src/lib/theme.ts` : seule source de vérité des valeurs brutes.
+- `BRAND_PRIMARY_RGB` : réservé aux APIs non-CSS (ex. jsPDF).
+- Assets/images, exports Stitch de référence (`docs/stitch/**`) : hors scope.
+
+## Lors d'une review ou d'un refactor
+
+Si une couleur hardcodée est repérée, la migrer vers `theme.ts` avant de merger — ne pas introduire de nouveaux literals « temporaires ».

@@ -15,6 +15,7 @@ export const participantSchema = z.object({
     direction: z.string().nullable(),
     service: z.string().nullable(),
     function_level: participantFunctionLevelSchema.nullable(),
+    avatar_url: z.string().nullable(),
     created_at: z.string().nullable(),
     /**
      * Coach ayant créé ce participant via un ajout unitaire (drawer fiche entreprise ou
@@ -49,6 +50,7 @@ export const campaignPeerChoiceSchema = z.object({
     first_name: z.string(),
     last_name: z.string(),
     full_name: z.string(),
+    avatar_url: z.string().nullable(),
 });
 export type CampaignPeerChoice = z.infer<typeof campaignPeerChoiceSchema>;
 
@@ -72,6 +74,7 @@ const participantSessionAssignmentSchema = z.object({
     company_name: z.string().nullable(),
     coach_id: z.number().int().nullable(),
     coach_name: z.string().nullable(),
+    coach_avatar_url: z.string().nullable(),
     questionnaire_id: z.string(),
     questionnaire_title: z.string(),
     campaign_status: campaignStatusSchema.nullable(),
@@ -85,10 +88,12 @@ export const participantSessionSchema = z.object({
     email: z.string(),
     first_name: z.string(),
     last_name: z.string(),
+    company_name: z.string().nullable(),
     organisation: z.string().nullable(),
     direction: z.string().nullable(),
     service: z.string().nullable(),
     function_level: participantFunctionLevelSchema.nullable(),
+    avatar_url: z.string().nullable(),
     assignments: z.array(participantSessionAssignmentSchema),
 });
 export type ParticipantSession = z.infer<typeof participantSessionSchema>;

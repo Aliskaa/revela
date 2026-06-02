@@ -16,6 +16,7 @@ export type CompanyWithParticipantCountReadModel = {
     contactEmail: string | null;
     createdAt: Date | null;
     participantCount: number;
+    avatar_url: string | null;
 };
 
 export interface ICompaniesReadPort {
@@ -29,6 +30,7 @@ export interface ICompaniesReadPort {
     listOrderedWithParticipantCount(params?: {
         coachId?: number;
     }): Promise<CompanyWithParticipantCountReadModel[]>;
+    findAvatar(companyId: number): Promise<{ data: Buffer; mimeType: string } | null>;
 }
 
 export interface ICompaniesWritePort {
@@ -37,6 +39,7 @@ export interface ICompaniesWritePort {
     /** Persiste les changements d'une entité existante. Retourne `null` si l'id n'existe pas. */
     save(company: Company): Promise<Company | null>;
     deleteById(id: number): Promise<void>;
+    saveAvatar(companyId: number, data: Buffer, mimeType: string): Promise<void>;
 }
 
 export interface ICompaniesRepositoryPort extends ICompaniesReadPort, ICompaniesWritePort {}

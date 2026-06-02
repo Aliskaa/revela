@@ -1,5 +1,6 @@
 // Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
 
+import { Button as CommonButton } from '@/components/common/Button';
 import {
     Box,
     Button,
@@ -22,7 +23,6 @@ import { Send, Upload, UserPlus } from 'lucide-react';
 import * as React from 'react';
 
 import { AddParticipantToCampaignDrawerForm } from '@/components/admin/AddParticipantToCampaignDrawerForm';
-import { SectionTitle } from '@/components/common/SectionTitle';
 import {
     useAddParticipantToCampaign,
     useImportParticipantsToCampaign,
@@ -30,6 +30,8 @@ import {
     useParticipants,
 } from '@/hooks/admin';
 import type { AdminCampaign } from '@aor/types';
+
+import { surfaceCardSx } from '@/components/common/styles/listSurfaces';
 
 export type CampaignManageParticipantsProps = {
     campaign: AdminCampaign;
@@ -40,7 +42,10 @@ export type CampaignManageParticipantsProps = {
     alreadyInvitedIds: ReadonlySet<number>;
 };
 
-export function CampaignManageParticipants({ campaign, alreadyInvitedIds }: CampaignManageParticipantsProps) {
+export function CampaignManageParticipants({
+    campaign,
+    alreadyInvitedIds,
+}: CampaignManageParticipantsProps) {
     const inviteParticipants = useInviteCampaignParticipants();
     const importParticipants = useImportParticipantsToCampaign();
     const addParticipant = useAddParticipantToCampaign();
@@ -132,8 +137,28 @@ export function CampaignManageParticipants({ campaign, alreadyInvitedIds }: Camp
     };
 
     return (
-        <Card variant="outlined">
-            <CardContent sx={{ p: 2.5 }}>
+        <Card
+            variant="outlined"
+            sx={{
+                ...surfaceCardSx,
+                display: 'flex',
+                flexDirection: 'column',
+                minHeight: 400,
+                maxHeight: 650,
+                minWidth: 0,
+                width: '100%',
+            }
+            }
+        >
+            <CardContent
+                sx={{
+                    p: 0,
+                    flex: 1,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    minHeight: 0,
+                }}
+            >
                 <AddParticipantToCampaignDrawerForm
                     open={addDrawerOpen}
                     isSubmitting={addParticipant.isPending}
@@ -162,30 +187,51 @@ export function CampaignManageParticipants({ campaign, alreadyInvitedIds }: Camp
                     }}
                 />
 
-                <Stack
-                    direction={{ xs: 'column', sm: 'row' }}
-                    justifyContent="space-between"
-                    alignItems={{ xs: 'flex-start', sm: 'center' }}
-                    spacing={1.5}
-                    sx={{ mb: 1 }}
+                <Box
+                    sx={{
+                        px: 2.5,
+                        pt: 2.5,
+                        pb: 1.5,
+                        borderBottom: '1px solid',
+                        borderColor: 'border',
+                    }}
                 >
-                    <SectionTitle
-                        title="Inviter des participants"
-                        subtitle="Sélectionnez les participants de l'entreprise à inviter, ou ajoutez-en un nouveau."
-                    />
-                    <Button
-                        variant="contained"
-                        disableElevation
-                        startIcon={<UserPlus size={16} />}
-                        disabled={isArchived}
-                        onClick={() => setAddDrawerOpen(true)}
-                        sx={{ borderRadius: 3, bgcolor: 'primary.main', flexShrink: 0 }}
+                    <Stack
+                        direction="row"
+                        justifyContent="space-between"
+                        alignItems="flex-start"
+                        spacing={1.5}
+                        sx={{ mb: 1 }}
                     >
-                        Ajouter un participant
-                    </Button>
-                </Stack>
+                        <Box>
+                            <Typography variant="h6" fontWeight={700} color="primary.main">
+                                Inviter des participants
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
+                                Sélectionnez les participants à inviter.
+                            </Typography>
+                        </Box>
+                        <CommonButton
+                            appearance="primary"
+                            startIcon={<UserPlus size={14} />}
+                            disabled={isArchived}
+                            onClick={() => setAddDrawerOpen(true)}
+                        >
+                            Nouveau
+                        </CommonButton>
+                    </Stack>
+                </Box>
 
-                <Stack spacing={1.5} sx={{ mt: 1 }}>
+                <Stack
+                    spacing={1.5}
+                    sx={{
+                        flex: 1,
+                        minHeight: 0,
+                        px: 1,
+                        py: 0.5,
+                        overflow: 'hidden',
+                    }}
+                >
                     {participantsLoading ? (
                         <Stack spacing={1}>
                             <Skeleton variant="rounded" height={32} />
@@ -200,7 +246,12 @@ export function CampaignManageParticipants({ campaign, alreadyInvitedIds }: Camp
                         </Box>
                     ) : (
                         <>
-                            <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ pl: 0.5 }}>
+                            <Stack
+                                direction="row"
+                                alignItems="center"
+                                justifyContent="space-between"
+                                sx={{ pl: 0.5 }}
+                            >
                                 <FormControlLabel
                                     control={
                                         <Checkbox
@@ -211,25 +262,19 @@ export function CampaignManageParticipants({ campaign, alreadyInvitedIds }: Camp
                                             disabled={invitableIds.size === 0 || isArchived}
                                         />
                                     }
-                                    label={
-                                        <Typography variant="body2" fontWeight={600}>
-                                            {allSelected ? 'Tout désélectionner' : 'Tout sélectionner'}
-                                        </Typography>
-                                    }
+                                    label={<Typography variant="caption" color="text.secondary">{selectedIds.size} sélectionné{selectedIds.size > 1 ? 's' : ''} /{' '}
+                                        {invitableIds.size} disponible{invitableIds.size > 1 ? 's' : ''}</Typography>}
                                 />
-                                <Typography variant="caption" color="text.secondary">
-                                    {selectedIds.size} sélectionné{selectedIds.size > 1 ? 's' : ''} /{' '}
-                                    {invitableIds.size} disponible{invitableIds.size > 1 ? 's' : ''}
-                                </Typography>
                             </Stack>
 
                             <List
                                 dense
                                 disablePadding
                                 sx={{
-                                    maxHeight: 320,
+                                    flex: 1,
+                                    maxHeight: 'none',
                                     overflowY: 'auto',
-                                    border: '1px solid',
+                                    border: 'none',
                                     borderColor: 'border',
                                     borderRadius: 3,
                                 }}
@@ -250,13 +295,16 @@ export function CampaignManageParticipants({ campaign, alreadyInvitedIds }: Camp
                                             secondaryAction={
                                                 alreadyInvited ? (
                                                     <Chip
-                                                        label="Déjà invité"
+                                                        label={'Invité'}
                                                         size="small"
                                                         sx={{
                                                             borderRadius: 99,
                                                             bgcolor: 'tint.successBg',
                                                             color: 'tint.successText',
                                                             fontWeight: 600,
+                                                            fontSize: '0.5625rem',
+                                                            letterSpacing: '0.06em',
+                                                            textTransform: 'uppercase',
                                                         }}
                                                     />
                                                 ) : null
@@ -297,31 +345,55 @@ export function CampaignManageParticipants({ campaign, alreadyInvitedIds }: Camp
                         </>
                     )}
 
-                    <Button
-                        variant="contained"
-                        disableElevation
-                        startIcon={<Send size={16} />}
-                        disabled={inviteParticipants.isPending || isArchived || selectedIds.size === 0}
-                        onClick={handleInvite}
-                        sx={{ borderRadius: 3, mt: 1 }}
+                    <Box
+                        sx={{
+                            px: 2,
+                            py: 2,
+                            borderTop: '1px solid',
+                            borderColor: 'border',
+                            bgcolor: 'surface.footerWash',
+                            mt: 'auto',
+                        }}
                     >
-                        {inviteParticipants.isPending
-                            ? 'Envoi…'
-                            : selectedIds.size === 0
-                              ? 'Inviter les sélectionnés'
-                              : `Inviter (${selectedIds.size})`}
-                    </Button>
+                        <Button
+                            fullWidth
+                            variant="contained"
+                            disableElevation
+                            startIcon={<Send size={16} />}
+                            disabled={inviteParticipants.isPending || isArchived || selectedIds.size === 0}
+                            onClick={handleInvite}
+                            sx={{
+                                borderRadius: 2,
+                                ...(selectedIds.size === 0
+                                    ? {
+                                        bgcolor: 'tint.mutedBg',
+                                        color: 'text.secondary',
+                                        boxShadow: 'none',
+                                    }
+                                    : {}),
+                            }}
+                        >
+                            {inviteParticipants.isPending
+                                ? 'Envoi…'
+                                : selectedIds.size === 0
+                                    ? 'Inviter les sélectionnés'
+                                    : `Inviter les sélectionnés (${selectedIds.size})`}
+                        </Button>
 
-                    <input ref={fileInputRef} type="file" accept=".csv" hidden onChange={handleFileChange} />
-                    <Button
-                        variant="outlined"
-                        startIcon={<Upload size={16} />}
-                        disabled={isImporting || isArchived}
-                        onClick={() => fileInputRef.current?.click()}
-                        sx={{ borderRadius: 3 }}
-                    >
-                        {isImporting ? 'Import en cours…' : 'Importer un CSV'}
-                    </Button>
+                        <>
+                            <input ref={fileInputRef} type="file" accept=".csv" hidden onChange={handleFileChange} />
+                            <Button
+                                variant="outlined"
+                                startIcon={<Upload size={16} />}
+                                disabled={isImporting || isArchived}
+                                onClick={() => fileInputRef.current?.click()}
+                                sx={{ borderRadius: 3, mt: 1.5 }}
+                                fullWidth
+                            >
+                                {isImporting ? 'Import en cours…' : 'Importer un CSV'}
+                            </Button>
+                        </>
+                    </Box>
                     {isImporting && csvFileName && (
                         // biome-ignore lint/a11y/useSemanticElements: role="status" sur Box volontaire — pas de progress numérique à exposer via <output>.
                         <Box

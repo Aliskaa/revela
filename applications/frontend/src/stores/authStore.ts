@@ -16,6 +16,8 @@ export type AdminAuthMe = {
     scope: 'super-admin' | 'coach';
     coachId: number | null;
     username: string;
+    display_name: string;
+    avatar_url: string | null;
 };
 
 export type ParticipantAuthMe = {

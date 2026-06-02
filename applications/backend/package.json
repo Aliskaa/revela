@@ -5,7 +5,6 @@
     "scripts": {
         "build:workspace-libs": "pnpm --filter @aor/logger build && pnpm --filter @aor/utils build && pnpm --filter @aor/types build && pnpm --filter @aor/domain build && pnpm --filter @aor/ports build && pnpm --filter @aor/adapters build && pnpm --filter @aor/scoring build && pnpm --filter @aor/ai-harness build && pnpm --filter @aor/drizzle build && pnpm --filter @aor/questionnaires build && pnpm --filter @aor/ai-harness build",
         "prebuild": "pnpm run build:workspace-libs",
-        "predev": "pnpm run build:workspace-libs",
         "dev": "nest start --watch",
         "build": "nest build",
         "typecheck": "tsc -p tsconfig.json --noEmit",

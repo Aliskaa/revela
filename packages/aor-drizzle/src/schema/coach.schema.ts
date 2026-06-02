@@ -1,4 +1,10 @@
-import { boolean, index, pgTable, serial, timestamp, unique, varchar } from 'drizzle-orm/pg-core';
+import { boolean, customType, index, pgTable, serial, timestamp, unique, varchar } from 'drizzle-orm/pg-core';
+
+const pgBytea = customType<{ data: Buffer; driverData: Buffer | Uint8Array }>({
+    dataType: () => 'bytea',
+    fromDriver: value => (Buffer.isBuffer(value) ? value : Buffer.from(value)),
+    toDriver: value => value,
+});
 
 export const coachesTable = pgTable(
     'coaches',
@@ -9,6 +15,10 @@ export const coachesTable = pgTable(
         password: varchar('password', { length: 255 }).notNull(),
         displayName: varchar('display_name', { length: 255 }).notNull(),
         isActive: boolean('is_active').notNull().default(true),
+        /** Données binaires de la photo de profil (JPEG, PNG ou WebP). */
+        avatarData: pgBytea('avatar_data'),
+        /** Type MIME de la photo (`image/jpeg`, `image/png`, `image/webp`). */
+        avatarMimeType: varchar('avatar_mime_type', { length: 64 }),
         createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
         updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
     },

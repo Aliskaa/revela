@@ -1,6 +1,6 @@
 import {
     Box,
-    Button,
+    Button as MuiButton,
     Dialog,
     DialogActions,
     DialogContent,
@@ -15,6 +15,8 @@ import {
 import { X } from 'lucide-react';
 import * as React from 'react';
 import { useTranslation } from 'react-i18next';
+
+import { Button } from '@/components/common/Button';
 
 export type AdminDrawerFormProps = {
     open: boolean;
@@ -47,7 +49,7 @@ export function AdminDrawerForm({
     submitLabel,
     cancelLabel,
     children,
-    width = 560,
+    width,
     footerLeft,
     footerRight,
     isSubmitDisabled = false,
@@ -59,6 +61,7 @@ export function AdminDrawerForm({
     const resolvedSubmitLabel = submitLabel ?? t('common.save');
     const resolvedCancelLabel = cancelLabel ?? t('common.cancel');
     const [confirmOpen, setConfirmOpen] = React.useState(false);
+    const resolvedWidth = width ?? 448;
 
     const requestClose = React.useCallback(() => {
         if (dirty) {
@@ -81,7 +84,7 @@ export function AdminDrawerForm({
             slotProps={{
                 paper: {
                     sx: {
-                        width: { xs: '100vw', sm: width },
+                        width: { xs: '100vw', sm: resolvedWidth },
                         maxWidth: '100vw',
                         bgcolor: 'background.paper',
                     },
@@ -96,14 +99,28 @@ export function AdminDrawerForm({
                     flexDirection: 'column',
                 }}
             >
-                <Box sx={{ p: 2.5 }}>
+                <Box sx={{ p: { xs: 2.5, sm: 3 } }}>
                     <Stack direction="row" justifyContent="space-between" alignItems="start" spacing={2}>
                         <Box sx={{ minWidth: 0 }}>
-                            <Typography id={titleId} variant="h6" fontWeight={800} color="text.primary">
+                            <Typography
+                                id={titleId}
+                                variant={'h5'}
+                                fontWeight={700}
+                                color={'primary.main'}
+                                sx={{ letterSpacing: -0.02, lineHeight: 1.2 }}
+                            >
                                 {title}
                             </Typography>
                             {subtitle ? (
-                                <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, lineHeight: 1.7 }}>
+                                <Typography
+                                    variant="body2"
+                                    color="text.secondary"
+                                    sx={{
+                                        mt: 0.75,
+                                        lineHeight: 1.7,
+                                        maxWidth: 480,
+                                    }}
+                                >
                                     {subtitle}
                                 </Typography>
                             ) : null}
@@ -112,48 +129,42 @@ export function AdminDrawerForm({
                         <IconButton
                             onClick={requestClose}
                             aria-label={t('drawer.closePanel')}
-                            sx={{ border: '1px solid rgba(15,23,42,0.10)' }}
+                            sx={
+                                {
+                                    borderRadius: '50%',
+                                    color: 'text.secondary',
+                                    '&:hover': { bgcolor: 'surface.lavenderGrey' },
+                                }
+                            }
                         >
                             <X size={16} />
                         </IconButton>
                     </Stack>
                 </Box>
 
-                <Divider />
+                <Divider sx={{ borderColor: 'surface.outlineVariantFaint' }} />
 
                 <Box sx={{ flex: 1, overflowY: 'auto', p: 2.5 }}>{children}</Box>
 
-                <Divider />
+                <Divider sx={{ borderColor: 'surface.outlineVariantFaint' }} />
 
-                <Box sx={{ p: 2.5 }}>
-                    <Stack
-                        direction="row"
-                        spacing={1.2}
-                        justifyContent="space-between"
-                        alignItems="center"
-                        flexWrap="wrap"
-                        useFlexGap
-                    >
-                        <Box>{footerLeft}</Box>
-
-                        <Stack direction="row" spacing={1.2} sx={{ ml: 'auto' }}>
-                            {footerRight}
-                            <Button onClick={requestClose} variant="outlined" sx={{ borderRadius: 3 }}>
-                                {resolvedCancelLabel}
+                <Box sx={{ p: 3 }}>
+                    <Stack direction="row" spacing={2} sx={{ width: '100%' }}>
+                        {footerLeft}
+                        <Button appearance="secondary" onClick={requestClose} sx={{ flex: 1, py: 1.5 }}>
+                            {resolvedCancelLabel}
+                        </Button>
+                        {onSubmit ? (
+                            <Button
+                                appearance="primary"
+                                onClick={onSubmit}
+                                disabled={isSubmitDisabled || isSubmitting}
+                                sx={{ flex: 1, py: 1.5 }}
+                            >
+                                {isSubmitting ? t('common.saving') : resolvedSubmitLabel}
                             </Button>
-
-                            {onSubmit ? (
-                                <Button
-                                    onClick={onSubmit}
-                                    variant="contained"
-                                    disableElevation
-                                    disabled={isSubmitDisabled || isSubmitting}
-                                    sx={{ borderRadius: 3 }}
-                                >
-                                    {isSubmitting ? t('common.saving') : resolvedSubmitLabel}
-                                </Button>
-                            ) : null}
-                        </Stack>
+                        ) : null}
+                        {footerRight}
                     </Stack>
                 </Box>
             </Box>
@@ -165,10 +176,10 @@ export function AdminDrawerForm({
                     </DialogContentText>
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={() => setConfirmOpen(false)}>Continuer la saisie</Button>
-                    <Button onClick={handleConfirmDiscard} color="error" variant="contained" disableElevation>
+                    <MuiButton onClick={() => setConfirmOpen(false)}>Continuer la saisie</MuiButton>
+                    <MuiButton onClick={handleConfirmDiscard} color="error" variant="contained" disableElevation>
                         Abandonner
-                    </Button>
+                    </MuiButton>
                 </DialogActions>
             </Dialog>
         </Drawer>

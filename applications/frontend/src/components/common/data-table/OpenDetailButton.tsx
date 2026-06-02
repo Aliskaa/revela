@@ -1,6 +1,7 @@
 // Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
 
 import { Button } from '@mui/material';
+import { Link } from '@tanstack/react-router';
 import { ChevronRight } from 'lucide-react';
 
 export type OpenDetailButtonProps = {
@@ -8,9 +9,10 @@ export type OpenDetailButtonProps = {
     to: string;
     /**
      * `table` (défaut) : Button text + ChevronRight, pensé pour la dernière cellule d'une row.
+     * `outlined` : bouton borduré pour les listes admin.
      * `card` : Button contained primary + ChevronRight, pensé pour l'action principale d'une card mobile.
      */
-    variant?: 'table' | 'card';
+    variant?: 'table' | 'outlined' | 'card';
     /** Label affiché. Défaut « Ouvrir ». */
     label?: string;
     /** Optionnel — utile quand le label seul ne décrit pas la ligne ciblée (lecteurs d'écran). */
@@ -22,6 +24,34 @@ export type OpenDetailButtonProps = {
  * Centralise label / icône / styles pour rester cohérent entre toutes les listes.
  */
 export function OpenDetailButton({ to, variant = 'table', label = 'Ouvrir', ariaLabel }: OpenDetailButtonProps) {
+    if (variant === 'outlined') {
+        return (
+            <Button
+                component={Link}
+                to={to}
+                variant="outlined"
+                size="small"
+                aria-label={ariaLabel}
+                sx={{
+                    borderRadius: 2,
+                    borderColor: 'tint.primaryRail',
+                    color: 'primary.main',
+                    fontWeight: 600,
+                    fontSize: '0.875rem',
+                    px: 3,
+                    py: 0.75,
+                    textTransform: 'none',
+                    '&:hover': {
+                        bgcolor: 'primary.main',
+                        color: 'primary.contrastText',
+                        borderColor: 'primary.main',
+                    },
+                }}
+            >
+                {label}
+            </Button>
+        );
+    }
     if (variant === 'card') {
         return (
             <Button

@@ -31,6 +31,10 @@ const normalizeName = (raw: string): string => raw.trim();
  * Le participant peut exister **sans mot de passe** (`passwordHash = null`) : il a été créé
  * par l'admin via import CSV ou invitation, mais n'a pas encore activé son compte. Dans cet
  * état, `isActivated()` renvoie `false` et `verifyPassword()` renvoie `false`.
+ *
+ * Les octets de l'avatar vivent en base (`avatar_data`) ; l'entité ne porte que le MIME type
+ * (null = pas d'avatar). Lecture/écriture du binaire via le repository (`saveAvatar` /
+ * `findAvatar`).
  */
 export class Participant {
     readonly #passwordHash: string | null;
@@ -45,6 +49,7 @@ export class Participant {
         public readonly direction: string | null,
         public readonly service: string | null,
         public readonly functionLevel: ParticipantFunctionLevel | null,
+        public readonly avatarMimeType: string | null,
         passwordHash: string | null,
         public readonly createdAt: Date | null,
         /**
@@ -89,6 +94,7 @@ export class Participant {
             null,
             null,
             null,
+            null,
             props.createdByCoachId ?? null
         );
     }
@@ -103,6 +109,7 @@ export class Participant {
         direction: string | null;
         service: string | null;
         functionLevel: ParticipantFunctionLevel | null;
+        avatarMimeType?: string | null;
         passwordHash: string | null;
         createdAt: Date | null;
         createdByCoachId: number | null;
@@ -117,6 +124,7 @@ export class Participant {
             props.direction,
             props.service,
             props.functionLevel,
+            props.avatarMimeType ?? null,
             props.passwordHash,
             props.createdAt,
             props.createdByCoachId
@@ -137,6 +145,7 @@ export class Participant {
             this.direction,
             this.service,
             this.functionLevel,
+            this.avatarMimeType,
             this.#passwordHash,
             this.createdAt,
             this.createdByCoachId
@@ -158,6 +167,28 @@ export class Participant {
             patch.direction !== undefined ? patch.direction : this.direction,
             patch.service !== undefined ? patch.service : this.service,
             patch.functionLevel !== undefined ? patch.functionLevel : this.functionLevel,
+            this.avatarMimeType,
+            this.#passwordHash,
+            this.createdAt,
+            this.createdByCoachId
+        );
+    }
+
+    public setAvatarMimeType(avatarMimeType: string | null): Participant {
+        if (avatarMimeType === this.avatarMimeType) {
+            return this;
+        }
+        return new Participant(
+            this.id,
+            this.companyId,
+            this.firstName,
+            this.lastName,
+            this.email,
+            this.organisation,
+            this.direction,
+            this.service,
+            this.functionLevel,
+            avatarMimeType,
             this.#passwordHash,
             this.createdAt,
             this.createdByCoachId
@@ -178,6 +209,7 @@ export class Participant {
             this.direction,
             this.service,
             this.functionLevel,
+            this.avatarMimeType,
             hash,
             this.createdAt,
             this.createdByCoachId
@@ -186,6 +218,10 @@ export class Participant {
 
     public isActivated(): boolean {
         return this.#passwordHash !== null;
+    }
+
+    public hasAvatar(): boolean {
+        return this.avatarMimeType !== null;
     }
 
     /**

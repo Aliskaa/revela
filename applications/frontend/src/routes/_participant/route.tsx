@@ -1,8 +1,46 @@
+// Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
+
+import { Outlet, createFileRoute, redirect, useNavigate } from '@tanstack/react-router';
+import { ClipboardList, LayoutDashboard, UserRound } from 'lucide-react';
+
+import { AppShellChromeProvider } from '@/components/layout/AppShellChromeContext';
 import { FooterLayout } from '@/components/layout/FooterLayout';
 import { ScopedAppShell, type ScopedNavItem } from '@/components/layout/ScopedAppShell';
+import { useParticipantAppShellUserAvatar } from '@/hooks/useAppShellUserAvatar';
 import { parseAdminJwtClaims, userAdmin, userParticipant } from '@/lib/auth';
-import { Outlet, createFileRoute, redirect, useNavigate } from '@tanstack/react-router';
-import { ClipboardList, Gauge, Sparkles, UserRound } from 'lucide-react';
+
+const participantNav: ScopedNavItem[] = [
+    { label: 'Tableau de bord', to: '/', icon: LayoutDashboard, exact: true },
+    { label: 'Mes campagnes', to: '/campaigns', icon: ClipboardList },
+];
+
+const participantFooterNav: ScopedNavItem[] = [{ label: 'Mon profil', to: '/profile', icon: UserRound }];
+
+function ParticipantRouteLayout() {
+    const navigate = useNavigate();
+    const userAvatar = useParticipantAppShellUserAvatar();
+
+    const handleLogout = () => {
+        userParticipant.removeToken();
+        navigate({ to: '/login' });
+    };
+
+    return (
+        <AppShellChromeProvider>
+            <ScopedAppShell
+                brandLabel="Révéla"
+                brandEyebrow="Espace participant"
+                userAvatar={userAvatar}
+                nav={participantNav}
+                footerNav={participantFooterNav}
+                onLogout={handleLogout}
+                footer={<FooterLayout />}
+            >
+                <Outlet />
+            </ScopedAppShell>
+        </AppShellChromeProvider>
+    );
+}
 
 export const Route = createFileRoute('/_participant')({
     /**
@@ -31,32 +69,3 @@ export const Route = createFileRoute('/_participant')({
     },
     component: ParticipantRouteLayout,
 });
-
-const participantNav: ScopedNavItem[] = [
-    { label: 'Dashboard', to: '/', icon: Gauge, exact: true },
-    { label: 'Mes campagnes', to: '/campaigns', icon: ClipboardList },
-    { label: 'Mon profil', to: '/profile', icon: UserRound },
-];
-
-function ParticipantRouteLayout() {
-    const navigate = useNavigate();
-
-    const handleLogout = () => {
-        userParticipant.removeToken();
-        navigate({ to: '/login' });
-    };
-
-    return (
-        <ScopedAppShell
-            brandIcon={Sparkles}
-            brandLabel="Révéla"
-            brandEyebrow="Espace participant"
-            avatarInitial="P"
-            nav={participantNav}
-            onLogout={handleLogout}
-            footer={<FooterLayout />}
-        >
-            <Outlet />
-        </ScopedAppShell>
-    );
-}

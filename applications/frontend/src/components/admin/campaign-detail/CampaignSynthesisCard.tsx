@@ -1,10 +1,11 @@
 // Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
 
-import { Button, Card, CardContent, Stack } from '@mui/material';
+import { Box, Button, Card, CardContent, Stack, Typography } from '@mui/material';
 import { Link } from '@tanstack/react-router';
 import { BarChart3 } from 'lucide-react';
 
-import { SectionTitle } from '@/components/common/SectionTitle';
+
+import { surfaceCardSx } from '@/components/common/styles/listSurfaces';
 
 export type CampaignSynthesisCardScope = 'admin' | 'coach';
 
@@ -30,25 +31,58 @@ const SYNTHESIS_ROUTE_BY_SCOPE: Record<
  */
 export function CampaignSynthesisCard({ campaignId, scope }: CampaignSynthesisCardProps) {
     return (
-        <Card variant="outlined">
-            <CardContent sx={{ p: 2.5 }}>
-                <SectionTitle
-                    title="Synthèse Élément B"
-                    subtitle="Vue agrégée du test scientifique pour tous les participants, avec mise en évidence automatique des écarts forts."
-                />
-                <Stack spacing={1.2} sx={{ mt: 2 }}>
-                    <Button
-                        component={Link}
-                        to={SYNTHESIS_ROUTE_BY_SCOPE[scope]}
-                        params={{ campaignId: String(campaignId) }}
-                        fullWidth
-                        variant="contained"
-                        disableElevation
-                        startIcon={<BarChart3 size={16} />}
-                        sx={{ borderRadius: 3 }}
-                    >
-                        Voir la synthèse Élément B
-                    </Button>
+        <Card
+            variant="outlined"
+            sx={{
+                ...surfaceCardSx,
+                bgcolor: 'primary.main',
+                color: 'primary.contrastText',
+                border: 'none',
+                boxShadow: theme => theme.palette.shadow.brandHero,
+                position: 'relative',
+                overflow: 'hidden',
+                '&::before': {
+                    content: '""',
+                    position: 'absolute',
+                    inset: 0,
+                    background: theme => theme.palette.tint.onPrimarySheen,
+                    pointerEvents: 'none',
+                },
+            }
+            }
+        >
+            <CardContent sx={{ p: 3, position: 'relative', zIndex: 1 }}>
+                <Box sx={{ mb: 2 }}>
+                    <Typography variant="h6" fontWeight={700} sx={{ mb: 0.5 }}>
+                        Synthèse Élément B
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: 'tint.onPrimaryText', lineHeight: 1.6 }}>
+                        Vue agrégée du test scientifique pour tous les participants, avec mise en évidence
+                        automatique des écarts forts.
+                    </Typography>
+                </Box>
+                <Stack spacing={1.2}>
+                    <Link to={SYNTHESIS_ROUTE_BY_SCOPE[scope]} params={{ campaignId: String(campaignId) }}>
+                        <Button
+                            fullWidth
+                            variant='outlined'
+                            disableElevation
+                            startIcon={<BarChart3 size={16} />}
+                            sx={{
+                                borderRadius: 2,
+                                borderColor: 'tint.onPrimaryBorder',
+                                color: 'primary.contrastText',
+                                bgcolor: 'tint.onPrimarySurface',
+                                backdropFilter: 'blur(8px)',
+                                '&:hover': {
+                                    borderColor: 'tint.onPrimaryBorderHover',
+                                    bgcolor: 'tint.onPrimarySurfaceHover',
+                                },
+                            }}
+                        >
+                            Voir la synthèse Élément B
+                        </Button>
+                    </Link>
                 </Stack>
             </CardContent>
         </Card>

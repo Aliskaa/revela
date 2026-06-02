@@ -1,8 +1,11 @@
 // Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
 
-import { useAdminCampaignParticipantTransparency } from '@/hooks/transparency';
 import { Button, Tooltip } from '@mui/material';
+import { Link } from '@tanstack/react-router';
 import { ScanEye } from 'lucide-react';
+
+import { tableActionButtonSx } from '@/components/common/styles/listSurfaces';
+import { useAdminCampaignParticipantTransparency } from '@/hooks/transparency';
 
 export type CampaignParticipantTransparencyButtonProps = {
     campaignId: number;
@@ -17,9 +20,7 @@ export type CampaignParticipantTransparencyButtonProps = {
 
 /**
  * Bouton de la table des participants (P23) qui mène à la vue détaillée de la matrice de
- * transparence. Affiche le score actuel s'il est déjà activé. Le calcul / recalcul se fait
- * désormais depuis la vue détaillée elle-même (route `.../transparency`), ce qui permet à
- * l'admin/coach de voir le détail (F, écarts pairs, conversions F→P) avant et après calcul.
+ * transparence. Affiche le score actuel s'il est déjà activé.
  */
 export function CampaignParticipantTransparencyButton({
     campaignId,
@@ -31,26 +32,27 @@ export function CampaignParticipantTransparencyButton({
     const snapshot = envelope?.snapshot ?? null;
     const hasSnapshot = snapshot !== null;
 
-    const label = hasSnapshot ? `Transparence ${String(snapshot.value)} %` : 'Voir la transparence';
+    const label = hasSnapshot ? `${snapshot.value} %` : 'Transparence';
     const tooltip = hasSnapshot
         ? `Activé le ${new Date(snapshot.activated_at).toLocaleDateString()} — basé sur ${String(
               snapshot.peer_count
           )} feedback(s) pair(s). Cliquez pour ouvrir le détail et recalculer.`
         : 'Ouvrir la matrice de transparence pour lancer le calcul à partir des feedbacks reçus.';
 
-    const href = `${transparencyUrlPrefix}/${String(campaignId)}/participants/${String(participantId)}/transparency`;
+    const to = `${transparencyUrlPrefix}/${String(campaignId)}/participants/${String(participantId)}/transparency`;
 
     return (
         <Tooltip title={tooltip}>
             <span>
                 <Button
+                    component={Link}
+                    to={to}
                     size="small"
-                    variant={hasSnapshot ? 'contained' : 'outlined'}
-                    color={hasSnapshot ? 'primary' : 'inherit'}
-                    startIcon={<ScanEye size={14} />}
-                    href={href}
+                    variant="outlined"
+                    color="primary"
                     disabled={isLoading}
-                    sx={{ borderRadius: 99 }}
+                    startIcon={<ScanEye size={14} />}
+                    sx={tableActionButtonSx}
                 >
                     {label}
                 </Button>

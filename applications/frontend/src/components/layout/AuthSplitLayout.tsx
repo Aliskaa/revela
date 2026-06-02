@@ -51,7 +51,7 @@ export function AuthSplitLayout({
                     justifyContent: 'space-between',
                     p: 6,
                     bgcolor: 'primary.main',
-                    color: '#fff',
+                    color: 'common.white',
                     position: 'relative',
                     overflow: 'hidden',
                 }}
@@ -79,7 +79,7 @@ export function AuthSplitLayout({
                         width: 320,
                         height: 320,
                         borderRadius: '50%',
-                        bgcolor: 'rgba(255,204,0,0.18)',
+                        bgcolor: 'tint.secondaryGlow',
                         filter: 'blur(12px)',
                     }}
                 />
@@ -90,8 +90,8 @@ export function AuthSplitLayout({
                             width: 44,
                             height: 44,
                             borderRadius: 3,
-                            bgcolor: 'rgba(255,255,255,0.16)',
-                            color: '#fff',
+                            bgcolor: 'tint.onPrimarySurfaceStrong',
+                            color: 'common.white',
                             display: 'grid',
                             placeItems: 'center',
                             backdropFilter: 'blur(6px)',
@@ -103,7 +103,7 @@ export function AuthSplitLayout({
                         <Typography fontWeight={800} lineHeight={1.1}>
                             Révéla
                         </Typography>
-                        <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.72)' }}>
+                        <Typography variant="caption" sx={{ color: 'tint.onPrimaryTextMuted' }}>
                             Lecture des écarts, restitution de campagne
                         </Typography>
                     </Box>
@@ -113,14 +113,14 @@ export function AuthSplitLayout({
                     <Box sx={{ position: 'relative', maxWidth: 520 }}>
                         <Typography
                             variant="h3"
-                            sx={{ fontWeight: 700, lineHeight: 1.25, letterSpacing: -0.5, color: '#fff' }}
+                            sx={{ fontWeight: 700, lineHeight: 1.25, letterSpacing: -0.5, color: 'common.white' }}
                         >
                             « {leftQuote} »
                         </Typography>
                         {leftQuoteAttribution ? (
                             <Typography
                                 variant="body2"
-                                sx={{ mt: 2.5, color: 'rgba(255,255,255,0.72)', fontWeight: 500 }}
+                                sx={{ mt: 2.5, color: 'tint.onPrimaryTextMuted', fontWeight: 500 }}
                             >
                                 — {leftQuoteAttribution}
                             </Typography>
@@ -130,12 +130,11 @@ export function AuthSplitLayout({
                     <Box />
                 )}
 
-                <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.6)', position: 'relative' }}>
+                <Typography variant="caption" sx={{ color: 'tint.onPrimaryTextFaint', position: 'relative' }}>
                     © {new Date().getFullYear()} AOR Conseil — Plateforme Révéla
                 </Typography>
             </Box>
 
-            {/* Panneau formulaire */}
             <Box
                 sx={{
                     display: 'flex',
@@ -158,7 +157,7 @@ export function AuthSplitLayout({
                                 height: 44,
                                 borderRadius: 3,
                                 bgcolor: 'primary.main',
-                                color: '#fff',
+                                color: 'common.white',
                                 display: 'grid',
                                 placeItems: 'center',
                                 boxShadow: theme => theme.palette.shadow.brandHero,

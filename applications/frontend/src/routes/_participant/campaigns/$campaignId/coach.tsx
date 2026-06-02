@@ -1,12 +1,20 @@
+// Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
+
+import { Alert, Box, Card, CardContent, Link as MuiLink, Stack, Typography } from '@mui/material';
+import { Link, createFileRoute } from '@tanstack/react-router';
+import { Sparkles, UserRound, Users } from 'lucide-react';
+import * as React from 'react';
+
+import { EmptyState } from '@/components/common/EmptyState';
+import { CampaignCoachAvatar } from '@/components/participant-dashboard/CampaignCoachAvatar';
+import { PageHeader, ListPanel } from '@/components/common/layout';
 import { LoadingCard } from '@/components/common/LoadingCard';
 import { useParticipantOwnAiRestitution } from '@/hooks/aiRestitutions';
+import ReactMarkdown from 'react-markdown';
+import { surfaceCardSx } from '@/components/common/styles/listSurfaces';
+import { useBreadcrumbs } from '@/components/layout/AppShellChromeContext';
 import { useParticipantSession } from '@/hooks/participantSession';
 import type { ParticipantSession } from '@aor/types';
-import { Alert, Box, Button, Card, CardContent, Chip, Stack, Typography } from '@mui/material';
-import { Link, createFileRoute } from '@tanstack/react-router';
-import { ArrowLeft, Bot, Sparkles, UserRound, Users } from 'lucide-react';
-import * as React from 'react';
-import ReactMarkdown from 'react-markdown';
 
 export const Route = createFileRoute('/_participant/campaigns/$campaignId/coach')({
     component: ParticipantCoachRoute,
@@ -14,37 +22,47 @@ export const Route = createFileRoute('/_participant/campaigns/$campaignId/coach'
 
 type ParticipantAssignment = ParticipantSession['assignments'][number];
 
+const COACH_SUBTITLE =
+    'Votre coach référent accompagne la lecture des résultats et la préparation de la restitution de campagne.';
+
+const coachAvailabilityLabel = (status?: ParticipantAssignment['campaign_status']): string =>
+    status === 'active' ? 'Disponible' : 'En attente';
+
 type CoachView = {
     name: string;
+    avatarUrl: string | null;
     title: string;
     company: string;
-    status: string;
+    availability: string;
     bio: string;
     campaignName: string;
     questionnaire: string;
+    feedback: string | null;
 };
 
 const coachFromAssignment = (assignment?: ParticipantAssignment): CoachView => ({
     name: assignment?.coach_name ?? 'Coach non attribué',
+    avatarUrl: assignment?.coach_avatar_url ?? null,
     title: 'Coach référent Révéla',
-    company: assignment?.company_name ?? '–',
-    status: assignment?.campaign_status === 'active' ? 'Disponible' : 'En attente',
-    campaignName: assignment?.campaign_name ?? 'Aucune campagne active',
+    company: assignment?.company_name ?? 'Organisation non renseignée',
+    availability: coachAvailabilityLabel(assignment?.campaign_status ?? undefined),
+    campaignName: assignment?.campaign_name ?? 'Campagne',
     questionnaire: assignment?.questionnaire_title ?? assignment?.questionnaire_id ?? '–',
     bio: assignment?.coach_name
         ? 'Votre coach accompagne la lecture des résultats et la préparation de la restitution de campagne.'
         : "Aucun coach n'est encore rattaché à votre campagne participant.",
+    feedback: assignment?.progression?.feedback_coach ?? null,
 });
 
 function InfoPill({ label, value, icon: Icon }: { label: string; value: string; icon: React.ElementType }) {
     return (
-        <Card variant="outlined" sx={{ p: 1.8 }}>
-            <Stack direction="row" spacing={1.2} alignItems="start">
+        <Box sx={{ ...surfaceCardSx, p: 2 }}>
+            <Stack direction="row" spacing={1.5} alignItems="start">
                 <Box
                     sx={{
                         width: 36,
                         height: 36,
-                        borderRadius: 3,
+                        borderRadius: 2,
                         bgcolor: 'tint.secondaryBg',
                         color: 'tint.secondaryText',
                         display: 'grid',
@@ -54,21 +72,16 @@ function InfoPill({ label, value, icon: Icon }: { label: string; value: string; 
                 >
                     <Icon size={16} />
                 </Box>
-                <Box>
-                    <Typography variant="caption" color="text.secondary">
+                <Box sx={{ minWidth: 0 }}>
+                    <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
                         {label}
                     </Typography>
-                    <Typography
-                        variant="body2"
-                        fontWeight={700}
-                        color="text.primary"
-                        sx={{ mt: 0.25, lineHeight: 1.6 }}
-                    >
+                    <Typography variant="body2" fontWeight={700} color="text.primary" sx={{ mt: 0.25, lineHeight: 1.6 }}>
                         {value}
                     </Typography>
                 </Box>
             </Stack>
-        </Card>
+        </Box>
     );
 }
 
@@ -84,6 +97,15 @@ function ParticipantCoachRoute() {
     }, [session, campaignId]);
 
     const coachView = coachFromAssignment(assignment);
+    const campaignName = assignment?.campaign_name ?? 'Campagne';
+    const campaignPath = Number.isFinite(campaignId) ? `/campaigns/${campaignId}` : '/campaigns';
+    const hasCoach = Boolean(assignment?.coach_name);
+
+    useBreadcrumbs([
+        { label: 'Mes campagnes', to: '/campaigns' },
+        { label: campaignName, to: campaignPath },
+        { label: 'Mon coach' },
+    ]);
 
     if (isLoading) {
         return <LoadingCard title="Chargement de votre coach" />;
@@ -95,136 +117,83 @@ function ParticipantCoachRoute() {
 
     if (!assignment) {
         return (
-            <Stack spacing={2}>
-                <Alert severity="warning">Aucune campagne trouvée pour cet identifiant.</Alert>
-                <Button
-                    component={Link}
-                    to="/campaigns"
-                    startIcon={<ArrowLeft size={16} />}
-                    variant="outlined"
-                    sx={{ borderRadius: 3, alignSelf: 'flex-start' }}
-                >
+            <Stack spacing={2} sx={{ py: 6, textAlign: 'center' }}>
+                <Typography variant="h6" color="text.secondary">
+                    Aucune campagne trouvée pour cet identifiant.
+                </Typography>
+                <MuiLink component={Link} to="/campaigns" underline="hover" sx={{ fontWeight: 600 }}>
                     Retour aux campagnes
-                </Button>
+                </MuiLink>
             </Stack>
         );
     }
 
     return (
-        <Stack spacing={3}>
-            <Button
-                component={Link}
-                to="/campaigns/$campaignId"
-                params={{ campaignId: String(campaignId) }}
-                startIcon={<ArrowLeft size={16} />}
-                sx={{
-                    alignSelf: 'flex-start',
-                    fontWeight: 600,
-                    color: 'text.secondary',
-                    '&:hover': { bgcolor: 'transparent', color: 'primary.main' },
-                }}
-                disableRipple
-            >
-                Retour à la campagne
-            </Button>
+        <Stack spacing={3} sx={{ minWidth: 0 }}>
+            <Box>
+                <PageHeader title="Mon coach" subtitle={COACH_SUBTITLE} />
+                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
+                    {campaignName} · {coachView.company}
+                </Typography>
+            </Box>
 
-            <Card variant="outlined">
+            <Card variant="outlined" sx={surfaceCardSx}>
                 <CardContent sx={{ p: { xs: 2.5, md: 3 } }}>
                     <Stack
-                        spacing={2.5}
-                        direction={{ xs: 'column', lg: 'row' }}
-                        justifyContent="space-between"
-                        alignItems={{ xs: 'start', lg: 'start' }}
+                        direction={{ xs: 'column', md: 'row' }}
+                        spacing={2}
+                        alignItems={{ xs: 'flex-start', md: 'center' }}
                     >
-                        <Box>
-                            <Chip
-                                label={coachView.status}
-                                sx={{ borderRadius: 99, bgcolor: 'tint.primaryBg', color: 'primary.main', mb: 1.5 }}
+                        <Stack direction="row" spacing={1.5} alignItems="center" sx={{ minWidth: 0 }}>
+                            <CampaignCoachAvatar
+                                coachName={coachView.name}
+                                avatarUrl={coachView.avatarUrl}
+                                size={48}
                             />
-                            <Typography variant="h4" fontWeight={800} color="text.primary" sx={{ letterSpacing: -0.5 }}>
-                                Mon coach
-                            </Typography>
-                            <Typography
-                                variant="body1"
-                                color="text.secondary"
-                                sx={{ mt: 1, lineHeight: 1.7, maxWidth: 840 }}
-                            >
-                                Cette page présente le coach associé à votre campagne.
-                            </Typography>
-                        </Box>
-
-                        <Card variant="outlined" sx={{ width: { xs: '100%', sm: 340 } }}>
-                            <CardContent sx={{ p: 2, display: 'flex', gap: 1.5, alignItems: 'center' }}>
-                                <Box
-                                    sx={{
-                                        width: 48,
-                                        height: 48,
-                                        borderRadius: 4,
-                                        bgcolor: 'primary.main',
-                                        color: '#fff',
-                                        display: 'grid',
-                                        placeItems: 'center',
-                                    }}
-                                >
-                                    <UserRound size={20} />
-                                </Box>
-                                <Box sx={{ minWidth: 0 }}>
-                                    <Typography fontWeight={800} color="text.primary">
-                                        {coachView.name}
-                                    </Typography>
-                                    <Typography variant="body2" color="text.secondary">
-                                        {coachView.title} · {coachView.company}
-                                    </Typography>
-                                </Box>
-                            </CardContent>
-                        </Card>
+                            <Box sx={{ minWidth: 0 }}>
+                                <Typography variant="h6" fontWeight={700} color="primary.main">
+                                    {coachView.name}
+                                </Typography>
+                                <Typography variant="body2" color="text.secondary">
+                                    {coachView.title} · {coachView.company}
+                                </Typography>
+                            </Box>
+                        </Stack>
+                        <Typography
+                            variant="caption"
+                            sx={{
+                                px: 1.5,
+                                py: 0.5,
+                                borderRadius: 99,
+                                bgcolor: 'tint.primaryBg',
+                                color: 'primary.main',
+                                fontWeight: 700,
+                                alignSelf: { xs: 'flex-start', md: 'center' },
+                            }}
+                        >
+                            {coachView.availability}
+                        </Typography>
                     </Stack>
                 </CardContent>
             </Card>
 
-            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(3, minmax(0, 1fr))' }, gap: 2 }}>
-                <Card variant="outlined">
-                    <CardContent sx={{ p: 2.3 }}>
-                        <Typography variant="body2" color="text.secondary">
-                            Statut
-                        </Typography>
-                        <Typography variant="h5" fontWeight={800} color="text.primary" sx={{ mt: 0.5 }}>
-                            {coachView.status}
-                        </Typography>
-                    </CardContent>
-                </Card>
-                <Card variant="outlined">
-                    <CardContent sx={{ p: 2.3 }}>
-                        <Typography variant="body2" color="text.secondary">
-                            Campagne
-                        </Typography>
-                        <Typography variant="h5" fontWeight={800} color="text.primary" sx={{ mt: 0.5 }}>
-                            {coachView.campaignName}
-                        </Typography>
-                    </CardContent>
-                </Card>
-                <Card variant="outlined">
-                    <CardContent sx={{ p: 2.3 }}>
-                        <Typography variant="body2" color="text.secondary">
-                            Questionnaire
-                        </Typography>
-                        <Typography variant="h5" fontWeight={800} color="text.primary" sx={{ mt: 0.5 }}>
-                            {coachView.questionnaire}
-                        </Typography>
-                    </CardContent>
-                </Card>
-            </Box>
-
-            <Card variant="outlined">
-                <CardContent sx={{ p: 2.5 }}>
-                    <Typography variant="h5" fontWeight={800} color="text.primary" sx={{ letterSpacing: -0.4 }}>
-                        Profil du coach
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ mt: 0.7, lineHeight: 1.7 }}>
-                        Lecture simple du rôle et du cadre d'accompagnement.
-                    </Typography>
-                    <Stack spacing={2.5} sx={{ mt: 1.5 }}>
-                        <Box sx={{ borderRadius: 4, bgcolor: 'rgba(15,23,42,0.03)', p: 2.2 }}>
+            <ListPanel
+                title="Profil du coach"
+                subtitle="Rôle et cadre d'accompagnement pour la restitution de vos résultats."
+                headerBorder
+            >
+                {!hasCoach ? (
+                    <Box sx={{ px: { xs: 2.5, md: 4 }, py: 4 }}>
+                        <EmptyState
+                            icon={Sparkles}
+                            variant="secondary"
+                            title="Aucun coach attribué"
+                            description="Aucun coach n'est encore rattaché à votre campagne. Vous serez informé dès qu'un référent sera assigné."
+                        />
+                    </Box>
+                ) : (
+                    <Stack spacing={2.5} sx={{ px: { xs: 2.5, md: 4 }, py: 3 }}>
+                        <Box sx={{ borderRadius: 2, bgcolor: 'surface.lavenderGrey', p: 2.5 }}>
                             <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.8 }}>
                                 {coachView.bio}
                             </Typography>
@@ -240,53 +209,8 @@ function ParticipantCoachRoute() {
                             <InfoPill label="Cadre" value="Confidentialité et lecture partagée" icon={Users} />
                         </Box>
                     </Stack>
-                </CardContent>
-            </Card>
-
-            <Card variant="outlined">
-                <CardContent sx={{ p: 2.5 }}>
-                    <Stack direction="row" alignItems="center" spacing={1.2} sx={{ mb: 1 }}>
-                        <Bot size={18} />
-                        <Typography variant="h5" fontWeight={800} color="text.primary" sx={{ letterSpacing: -0.4 }}>
-                            Retour personnalisé
-                        </Typography>
-                    </Stack>
-                    <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, mb: 2, lineHeight: 1.7 }}>
-                        Lecture rédigée à partir de vos écarts comportementaux et validée par votre coach avant partage.
-                    </Typography>
-                    {aiRestitution ? (
-                        <Box>
-                            <Chip
-                                label={`Partagé le ${new Date(aiRestitution.approved_at).toLocaleDateString('fr-FR', {
-                                    day: '2-digit',
-                                    month: 'long',
-                                    year: 'numeric',
-                                })}`}
-                                size="small"
-                                sx={{ borderRadius: 99, mb: 2 }}
-                            />
-                            <Box
-                                sx={{
-                                    p: 2.5,
-                                    bgcolor: 'rgba(15,23,42,0.03)',
-                                    borderRadius: 4,
-                                    '& h1, & h2, & h3': { mt: 2, mb: 1, fontWeight: 700 },
-                                    '& p': { mb: 1.5, lineHeight: 1.7 },
-                                    '& ul, & ol': { pl: 3, mb: 1.5 },
-                                    '& li': { mb: 0.5 },
-                                }}
-                            >
-                                <ReactMarkdown>{aiRestitution.text}</ReactMarkdown>
-                            </Box>
-                        </Box>
-                    ) : (
-                        <Alert severity="info" sx={{ borderRadius: 3 }}>
-                            Votre coach n'a pas encore partagé de retour personnalisé pour cette campagne. Vous serez
-                            notifié dès qu'il sera disponible.
-                        </Alert>
-                    )}
-                </CardContent>
-            </Card>
+                )}
+            </ListPanel>
         </Stack>
     );
 }

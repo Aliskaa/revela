@@ -4,8 +4,9 @@ import { Stack } from '@mui/material';
 import { createFileRoute } from '@tanstack/react-router';
 import { ClipboardList, MessageSquareText, Target, Users } from 'lucide-react';
 
-import { StatCard } from '@/components/common/cards';
-import { KpiGrid, PageHeroCard } from '@/components/common/layout';
+import { KpiCard } from '@/components/common/cards';
+import { PageHeader, KpiGrid } from '@/components/common/layout';
+import { useBreadcrumbs } from '@/components/layout/AppShellChromeContext';
 import { useAdminCampaigns, useAdminResponses, useParticipants } from '@/hooks/admin';
 import { parseAdminJwtClaims } from '@/lib/auth';
 
@@ -20,6 +21,8 @@ export const Route = createFileRoute('/coach/')({
  * backend : il voit donc l'intégralité, et les libellés sont adaptés en conséquence.
  */
 function CoachDashboardRoute() {
+    useBreadcrumbs([{ label: 'Tableau de bord' }]);
+
     const { data: campaigns = [], isLoading: campaignsLoading } = useAdminCampaigns();
     const { data: participantsPaged, isLoading: participantsLoading } = useParticipants(1, undefined, 1);
     const { data: responsesPaged, isLoading: responsesLoading } = useAdminResponses(undefined, 1, 1);
@@ -27,8 +30,8 @@ function CoachDashboardRoute() {
     const activeCampaigns = campaigns.filter(c => c.status === 'active').length;
     const isSuperAdmin = parseAdminJwtClaims()?.scope === 'super-admin';
 
-    const heroTitle = isSuperAdmin ? "Vue coach (depuis l'admin)" : 'Mon espace coach';
-    const heroSubtitle = isSuperAdmin
+    const title = isSuperAdmin ? "Vue coach (depuis l'admin)" : 'Mon espace coach';
+    const subtitle = isSuperAdmin
         ? "Vue coach consultée depuis le compte admin. Vous voyez l'intégralité des campagnes, participants et réponses, sans restriction de périmètre."
         : 'Vue d\'ensemble de vos campagnes, participants et soumissions. Vous ne voyez ici que les données rattachées à votre périmètre de coaching.';
     const campaignsLabel = isSuperAdmin ? 'Campagnes' : 'Mes campagnes';
@@ -40,31 +43,31 @@ function CoachDashboardRoute() {
 
     return (
         <Stack spacing={3}>
-            <PageHeroCard eyebrow="Tableau de bord" title={heroTitle} subtitle={heroSubtitle} />
+            <PageHeader title={title} subtitle={subtitle} />
 
             <KpiGrid columns={4}>
-                <StatCard
+                <KpiCard
                     label={campaignsLabel}
                     value={campaigns.length}
                     helper={campaignsHelper}
                     icon={ClipboardList}
                     loading={campaignsLoading}
                 />
-                <StatCard
+                <KpiCard
                     label="Actives"
                     value={activeCampaigns}
                     helper="en cours"
                     icon={Target}
                     loading={campaignsLoading}
                 />
-                <StatCard
+                <KpiCard
                     label={participantsLabel}
                     value={participantsPaged?.total ?? 0}
                     helper={participantsHelper}
                     icon={Users}
                     loading={participantsLoading}
                 />
-                <StatCard
+                <KpiCard
                     label={responsesLabel}
                     value={responsesPaged?.total ?? 0}
                     helper={responsesHelper}

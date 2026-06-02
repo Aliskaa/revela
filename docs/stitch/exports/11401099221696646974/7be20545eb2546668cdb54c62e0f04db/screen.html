@@ -1,0 +1,431 @@
+<!DOCTYPE html><html class="light" lang="fr" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Révéla - Gestion des Entreprises</title>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&amp;family=Hanken+Grotesk:wght@100..900&amp;display=swap" rel="stylesheet">
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container-high": "#e8e8e8",
+                        "surface-variant": "#e2e2e2",
+                        "on-tertiary-container": "#7592ff",
+                        "bleu-smalt": "#0F1898",
+                        "background": "#f9f9f9",
+                        "surface-container": "#eeeeee",
+                        "on-tertiary-fixed-variant": "#0a3ab0",
+                        "on-secondary-fixed-variant": "#584400",
+                        "lavender-grey": "#F5F5FB",
+                        "secondary-fixed": "#ffe08b",
+                        "primary-fixed-dim": "#bec2ff",
+                        "inverse-primary": "#bec2ff",
+                        "surface-dim": "#dadada",
+                        "outline-variant": "#c6c5d6",
+                        "surface-container-highest": "#e2e2e2",
+                        "on-secondary-container": "#6e5700",
+                        "soft-white": "#FAFAFA",
+                        "tertiary-container": "#002681",
+                        "on-secondary-fixed": "#241a00",
+                        "on-primary-container": "#848eff",
+                        "primary-fixed": "#e0e0ff",
+                        "surface-container-lowest": "#ffffff",
+                        "secondary-fixed-dim": "#f1c100",
+                        "tertiary-fixed-dim": "#b7c4ff",
+                        "on-primary-fixed-variant": "#2d36ad",
+                        "surface-tint": "#4751c6",
+                        "inverse-surface": "#2f3131",
+                        "primary-container": "#0f1898",
+                        "secondary-container": "#fecb00",
+                        "error": "#ba1a1a",
+                        "tertiary-fixed": "#dce1ff",
+                        "secondary": "#745b00",
+                        "on-surface": "#1a1c1c",
+                        "outline": "#767685",
+                        "on-primary-fixed": "#00046a",
+                        "on-background": "#1a1c1c",
+                        "on-secondary": "#ffffff",
+                        "primary": "#00046b",
+                        "on-error": "#ffffff",
+                        "bleu-azurin": "#4F70E5",
+                        "error-container": "#ffdad6",
+                        "inverse-on-surface": "#f0f1f1",
+                        "on-primary": "#ffffff",
+                        "on-error-container": "#93000a",
+                        "on-tertiary": "#ffffff",
+                        "on-surface-variant": "#454653",
+                        "surface-container-low": "#f3f3f3",
+                        "surface-bright": "#f9f9f9",
+                        "tertiary": "#001551",
+                        "jaune-accent": "#FFCC00",
+                        "surface": "#f9f9f9",
+                        "on-tertiary-fixed": "#001551"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "16px",
+                        "xl": "24px",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "section-gap": "80px",
+                        "gutter": "24px",
+                        "container-max": "1280px",
+                        "margin-mobile": "20px",
+                        "margin-desktop": "40px"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Outfit"],
+                        "body-md": ["Hanken Grotesk"],
+                        "body-lg": ["Hanken Grotesk"],
+                        "label-sm": ["Hanken Grotesk"],
+                        "headline-xl": ["Outfit"],
+                        "headline-md": ["Outfit"],
+                        "label-md": ["Hanken Grotesk"],
+                        "headline-lg-mobile": ["Outfit"]
+                    },
+                    "fontSize": {
+                        "headline-lg": ["32px", {"lineHeight": "1.2", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                        "body-md": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                        "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                        "label-sm": ["12px", {"lineHeight": "1.2", "fontWeight": "500"}],
+                        "headline-xl": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+                        "headline-md": ["24px", {"lineHeight": "1.3", "fontWeight": "500"}],
+                        "label-md": ["14px", {"lineHeight": "1.2", "letterSpacing": "0.02em", "fontWeight": "600"}],
+                        "headline-lg-mobile": ["28px", {"lineHeight": "1.2", "fontWeight": "600"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            background-color: #f9f9f9;
+            font-family: 'Hanken Grotesk', sans-serif;
+            color: #1a1c1c;
+        }
+        .glass-panel {
+            background: rgba(250, 250, 250, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .shadow-soft {
+            box-shadow: 0 4px 6px -1px rgba(15, 24, 152, 0.03), 0 10px 40px -5px rgba(15, 24, 152, 0.05);
+        }
+        .shadow-ambient {
+            box-shadow: 0 20px 60px -10px rgba(15, 24, 152, 0.08);
+        }
+        tr:hover td {
+            background-color: rgba(245, 245, 251, 0.6);
+        }
+        .active-nav-glow {
+            box-shadow: 4px 0 12px rgba(255, 204, 0, 0.2);
+        }
+    </style>
+</head>
+<body class="flex">
+<!-- SideNavBar Component -->
+<aside class="fixed left-0 top-0 bottom-0 z-50 py-8 space-y-2 bg-bleu-smalt dark:bg-bleu-smalt/90 backdrop-blur-xl docked left-0 h-full w-72 flex flex-col no-border shadow-2xl shadow-bleu-smalt/20">
+<div class="px-8 mb-10">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-jaune-accent flex items-center justify-center shadow-lg shadow-jaune-accent/30">
+<span class="material-symbols-outlined text-bleu-smalt text-2xl" data-weight="fill" style="font-variation-settings: 'FILL' 1;">insights</span>
+</div>
+<div>
+<h1 class="font-headline-lg text-headline-lg font-black text-soft-white tracking-tight leading-none">Révéla</h1>
+<p class="text-[10px] text-jaune-accent uppercase tracking-widest font-bold">Operational Cockpit</p>
+</div>
+</div>
+</div>
+<nav class="flex-1 px-4">
+<div class="space-y-1">
+<a class="flex items-center gap-4 text-soft-white/70 hover:text-soft-white px-6 py-4 transition-all duration-300 hover:bg-white/5 hover:translate-x-1" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-label-md text-label-md">Tableau de bord</span>
+</a>
+<a class="flex items-center gap-4 text-soft-white/70 hover:text-soft-white px-6 py-4 transition-all duration-300 hover:bg-white/5 hover:translate-x-1" href="#">
+<span class="material-symbols-outlined">campaign</span>
+<span class="font-label-md text-label-md">Campagnes</span>
+</a>
+<a class="flex items-center gap-4 bg-white/10 text-jaune-accent px-6 py-4 rounded-r-full active-nav-glow" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">business</span>
+<span class="font-label-md text-label-md">Entreprises</span>
+</a>
+<a class="flex items-center gap-4 text-soft-white/70 hover:text-soft-white px-6 py-4 transition-all duration-300 hover:bg-white/5 hover:translate-x-1" href="#">
+<span class="material-symbols-outlined">groups</span>
+<span class="font-label-md text-label-md">Coachs</span>
+</a>
+<a class="flex items-center gap-4 text-soft-white/70 hover:text-soft-white px-6 py-4 transition-all duration-300 hover:bg-white/5 hover:translate-x-1" href="#">
+<span class="material-symbols-outlined">quiz</span>
+<span class="font-label-md text-label-md">Questionnaires</span>
+</a>
+<a class="flex items-center gap-4 text-soft-white/70 hover:text-soft-white px-6 py-4 transition-all duration-300 hover:bg-white/5 hover:translate-x-1" href="#">
+<span class="material-symbols-outlined">history</span>
+<span class="font-label-md text-label-md">Audit log</span>
+</a>
+</div>
+</nav>
+<div class="px-4 mt-auto">
+<div class="h-[1px] bg-white/10 mx-6 mb-6"></div>
+<a class="flex items-center gap-4 text-soft-white/70 hover:text-soft-white px-6 py-4 transition-all duration-300 hover:bg-white/5 rounded-lg mb-2" href="#">
+<span class="material-symbols-outlined">visibility</span>
+<span class="font-label-md text-label-md">Vue coach</span>
+</a>
+<a class="flex items-center gap-4 text-error/80 hover:text-error px-6 py-4 transition-all duration-300 hover:bg-error/5 rounded-lg" href="#">
+<span class="material-symbols-outlined">logout</span>
+<span class="font-label-md text-label-md">Déconnexion</span>
+</a>
+</div>
+</aside>
+<main class="ml-72 flex-1 min-h-screen">
+<!-- TopAppBar Component -->
+<header class="flex justify-between items-center w-full px-10 py-4 ml-0 sticky top-0 z-40 bg-soft-white/80 backdrop-blur-md no-border shadow-md shadow-bleu-smalt/5">
+<div class="flex items-center gap-4">
+<nav class="flex text-on-surface-variant font-label-md gap-2 items-center">
+<span class="text-on-surface-variant/50">Administration</span>
+<span class="material-symbols-outlined text-sm">chevron_right</span>
+<span class="text-bleu-smalt font-bold">Entreprises</span>
+</nav>
+</div>
+<div class="flex items-center gap-6">
+
+<div class="flex items-center gap-2">
+<button class="hover:bg-lavender-grey rounded-full p-2 transition-colors active:scale-95">
+<span class="material-symbols-outlined text-bleu-smalt">notifications</span>
+</button>
+<button class="hover:bg-lavender-grey rounded-full p-2 transition-colors active:scale-95">
+<span class="material-symbols-outlined text-bleu-smalt">settings</span>
+</button>
+</div>
+<div class="h-10 w-10 rounded-full overflow-hidden border-2 border-soft-white shadow-soft">
+<img alt="Administrator Avatar" data-alt="A professional portrait of a modern executive in a bright, high-key office environment. The person has a friendly but authoritative expression, with soft, natural lighting highlighting their features. The background is a blurred, minimalist corporate space with subtle tones of light grey and soft blue, maintaining a premium and professional coaching aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBW2V4gAYeCdBcQ-mCvpNHRP7rDDy6sQYpyuaDJY8EvEBtpNrhhvPzaTo-O4tQTnlHxkm-x5t19mneVFFSJSdOU3SmqFT-vJ1uUR0N4hRYENdMcAZJadUH5xbe9eFLQ6BR1tv8B8yunoyDG2KqEpgc6H_fFZkBu6lvA70Sbm6UrLywuUmvsEE4Vs0xgSyUfkP1W6scFunDqmDJq4JVrj48FOIgcn_iJ2hrIgoQBWEviPOdMI0t0Lp8KTotXPr6olDL_St03zzAZg8cH">
+</div>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<div class="px-10 py-10 max-w-7xl mx-auto">
+<!-- Header Section -->
+<div class="flex justify-between items-end mb-10">
+<div class="space-y-1">
+<h2 class="font-headline-xl text-headline-xl text-bleu-smalt tracking-tight">Entreprises</h2>
+<p class="text-on-surface-variant font-body-md max-w-xl">Référentiel des entreprises clientes, avec leurs campagnes actives, leurs participants rattachés et leurs points de contact privilégiés.</p>
+</div>
+<button class="flex items-center gap-2 px-8 py-4 bg-bleu-smalt text-white rounded-lg font-label-md shadow-lg shadow-bleu-smalt/20 hover:shadow-bleu-smalt/30 hover:-translate-y-1 transition-all active:scale-95">
+<span class="material-symbols-outlined">add_business</span>
+                    Ajouter une entreprise
+                </button>
+</div>
+<!-- KPI Grid -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-gutter mb-section-gap">
+<!-- KPI 1 -->
+<div class="bg-white p-8 rounded-xl shadow-soft hover:shadow-ambient transition-shadow duration-500 relative overflow-hidden group" style="transform: translateY(0px);">
+<div class="absolute top-0 right-0 p-8 text-bleu-smalt/5 group-hover:text-bleu-smalt/10 transition-colors">
+<span class="material-symbols-outlined text-7xl" style="font-variation-settings: 'FILL' 1;">business</span>
+</div>
+<div class="relative z-10">
+<p class="text-on-surface-variant font-label-md uppercase tracking-wider mb-2">Entreprises</p>
+<div class="flex items-baseline gap-2">
+<span class="font-headline-xl text-headline-xl text-bleu-smalt">142</span>
+<span class="text-label-sm text-green-600 flex items-center bg-green-50 px-2 py-0.5 rounded-full">+12%</span>
+</div>
+<p class="text-on-surface-variant/60 font-body-md mt-1">référencées cette année</p>
+</div>
+</div>
+<!-- KPI 2 -->
+<div class="bg-white p-8 rounded-xl shadow-soft hover:shadow-ambient transition-shadow duration-500 relative overflow-hidden group" style="transform: translateY(0px);"><div class="absolute top-0 right-0 p-8 text-bleu-smalt/5 group-hover:text-bleu-smalt/10 transition-colors"><span class="material-symbols-outlined text-7xl" style="font-variation-settings: 'FILL' 1;">groups</span></div><div class="relative z-10"><p class="text-on-surface-variant font-label-md uppercase tracking-wider mb-2">Participants</p><div class="flex items-baseline gap-2"><span class="font-headline-xl text-headline-xl text-bleu-smalt">3,892</span></div><p class="text-on-surface-variant/60 font-body-md mt-1">rattachés aux campagnes</p></div></div>
+<!-- KPI 3 -->
+<div class="bg-white p-8 rounded-xl shadow-soft hover:shadow-ambient transition-shadow duration-500 relative overflow-hidden group" style="transform: translateY(0px);">
+<div class="absolute top-0 right-0 p-8 text-bleu-smalt/5 group-hover:text-bleu-smalt/10 transition-colors">
+<span class="material-symbols-outlined text-7xl" style="font-variation-settings: 'FILL' 1;">assignment</span>
+</div>
+<div class="relative z-10">
+<p class="text-on-surface-variant font-label-md uppercase tracking-wider mb-2">Campagnes</p>
+<div class="flex items-baseline gap-2">
+<span class="font-headline-xl text-headline-xl text-bleu-smalt">28</span>
+<span class="bg-jaune-accent text-bleu-smalt font-bold px-3 py-1 rounded-full text-[10px] ml-2">ACTIVES</span>
+</div>
+<p class="text-on-surface-variant/60 font-body-md mt-1">projets de coaching en cours</p>
+</div>
+</div>
+</div>
+<!-- Main Data Table Container -->
+<div class="bg-white rounded-xl shadow-ambient overflow-hidden">
+<!-- Table Toolbar -->
+<div class="px-10 py-8 flex items-center justify-between border-b border-lavender-grey">
+<h3 class="font-headline-md text-headline-md text-bleu-smalt">Liste des entreprises</h3>
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-2 text-on-surface-variant text-label-md bg-lavender-grey px-4 py-2 rounded-lg">
+<span class="material-symbols-outlined text-sm">filter_list</span>
+                            Filtrer par secteur
+                        </div>
+<div class="h-6 w-[1px] bg-lavender-grey"></div>
+<span class="text-label-sm text-on-surface-variant">Affichage 1-10 sur 142</span>
+</div>
+</div>
+<!-- Table Content -->
+<div class="overflow-x-auto">
+<table class="w-full text-left">
+<thead class="bg-lavender-grey/30">
+<tr>
+<th class="px-10 py-6 font-label-md text-on-surface-variant uppercase tracking-wider text-[11px]">Entreprise</th>
+<th class="px-6 py-6 font-label-md text-on-surface-variant uppercase tracking-wider text-[11px]">Contact Principal</th>
+<th class="px-6 py-6 font-label-md text-on-surface-variant uppercase tracking-wider text-[11px]">Participants</th>
+<th class="px-6 py-6 font-label-md text-on-surface-variant uppercase tracking-wider text-[11px]">Statut</th>
+<th class="px-10 py-6 text-right"></th>
+</tr>
+</thead>
+<tbody class="divide-y divide-lavender-grey/50">
+<!-- Row 1 -->
+<tr class="transition-colors duration-200">
+<td class="px-10 py-6">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-lg bg-surface-container flex items-center justify-center font-bold text-bleu-smalt overflow-hidden">
+<img alt="Orange Logo" data-alt="A minimalist and geometric corporate logo emblem for a company named Orange. The design is clean and modern, featuring a warm orange color palette against a crisp white background. The aesthetic is high-end, professional, and fits perfectly within a premium digital dashboard interface. Soft lighting and subtle gradients give it a tactile, sophisticated feel." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBhdfvsIkcu3JIO2DO-XajFl1N0gH2PebsA6lc8J9Dbm95alPs3TAcg4K8SuTjrps2k2zO-Jnpz4Xj4kKO333DRIuiC8V4Jzg1CLWtl7tZBYADSUQ2A7Vtj1YOnSncWzuPbfBnLkYgkydvAViNj_hP1IHe1-evPWyGNmr6iSVlK5E1wCJ3ni8o1aZGF3XdDRmMiqumXhg9iHDFqDw8VHauP2azWv5yrmcMBPP0pLq2dho8NXR3ZTSe6XsCZpDG1pU-Sq1qZ_qdChMD1">
+</div>
+<div>
+<p class="font-headline-md text-[18px] text-bleu-smalt leading-none">Orange</p>
+<p class="text-label-sm text-on-surface-variant/60">Télécommunications</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-6">
+<div class="flex flex-col">
+<span class="text-body-md font-bold text-on-surface">Jean-Pierre Dubois</span>
+<span class="text-label-sm text-on-surface-variant/60">DRH Groupe</span>
+</div>
+</td>
+<td class="px-6 py-6">
+<div class="flex -space-x-2 overflow-hidden items-center">
+<img alt="User" class="inline-block h-8 w-8 rounded-full ring-2 ring-white" data-alt="A bright and professional profile photo of a young woman with a friendly smile, photographed in a well-lit, soft-focus office setting. The style is clean, modern, and high-fidelity, using a warm color temperature and professional lighting that aligns with a high-end corporate identity." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDXOlFqr6uLzm33zBXPqHllBQ_UWfXKBZ6ZXcQLMO7M4ei7puCPlEwl6BKonmEAIWAcOVRVE6NnFOxFm2MUGB4qbAJXE6TC2C6XeUTm3VICPLH2KeCMa6A9jSjxhyCZlhm4PZvyJGU2jChTuG-_v0GcEt4uCME-f7ywHAgGDt6h55s8PpL4BtPr0Aw_LOU9Bw9dbOfi4aWz3-P5_HB15brQJnCuTwW-djc-fMMHX6bTyv3k1SgiDNfSpiRaojOL4XDpquPYgPuznH95">
+<img alt="User" class="inline-block h-8 w-8 rounded-full ring-2 ring-white" data-alt="A professional headshot of a confident man in his late 30s, featuring soft natural lighting and a clean, minimalist background. The photography is sharp with a shallow depth of field, embodying a premium and trustworthy corporate aesthetic that matches a sophisticated digital management platform." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCUitLAa8mWjFfA07dilDc4zybMvxhGfU5Qk326lPBZiFRaPwmilo6WCYE6tbCzsmabCNiKagZh8o25JSnDHb0QaV-0xag5UwrOWYqp5TDJ4qE-c5FnAi0BfDVZxQHbEvQ4xgQqqUQCNwSo6Tl3fEcvG3WEclX06onAm9vxZjNzVwNOe8Z5rUt1iDFpMF4N-EJuEfyTIJ0kZv0AvZQ2yCTAO0iWlgi6NMQ7f9GFfzcRBWVYUucUnrvfuGX7HI5YI9tdZ8UG0onAeDIA">
+<img alt="User" class="inline-block h-8 w-8 rounded-full ring-2 ring-white" data-alt="A crisp, professional portrait of a woman in a business environment. The lighting is diffused and soft, highlighting a professional and approachable demeanor. The color palette is neutral and sophisticated, perfectly suited for a high-end HR management dashboard." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB9Hhr0v_M6tr7skXD4q_PRLqYvko1Vtw4QAxD3Y3eM-EEpV-LCuflpn_oe-GllGAk6RPxis1vHujXGZKr0KqlnldYxhxRoXM2ZzExueUpNyTmv58EY4uUSmUNwf7URRpBCA8TqyMOuFWe8MWJTQRKqneXUpnSPZAMVbRi6Iovf9ie2Xu2zE9BnaMzUebOecNjNCDgXjrgzDjcgojasDYVyh8HJIUxcl2fEs8pS38rlzB2KzBbowhfg-rYVeG2dOrHOKX3C1VwGWAcm">
+<span class="flex items-center justify-center h-8 w-8 rounded-full bg-lavender-grey text-[10px] font-bold text-bleu-smalt ring-2 ring-white">+96</span>
+</div>
+</td>
+<td class="px-6 py-6">
+<span class="inline-flex items-center px-3 py-1 rounded-full text-[11px] font-bold bg-green-100 text-green-700">ACTIF</span>
+</td>
+<td class="px-10 py-6 text-right">
+<button class="px-6 py-2 border border-bleu-smalt/10 rounded-lg text-bleu-smalt font-label-md hover:bg-bleu-smalt hover:text-white transition-all">Ouvrir</button>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="transition-colors duration-200">
+<td class="px-10 py-6">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-lg bg-surface-container flex items-center justify-center font-bold text-bleu-smalt overflow-hidden">
+<img alt="Airbus Logo" data-alt="A sleek and modern corporate identity logo for an aerospace company, displayed with clean lines and a professional blue and white color palette. The setting is bright and high-key, reflecting a future-forward and precise technological brand. The visual style is premium and minimalist, seamlessly integrating into a luxury admin interface." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCQoAdZlwOncPFJmvFGV5zobWX25zFKCfp-Etn-L31qDWLfcbZ_RS0IDkjs5QhMl0GzlMRJrD7jxM18YxdW-cEIZ0pfAgzJLsBNg57LN_ew6f5K2zLI3Xie60SMRHHiml1tW8dk0xTVnK93KYC2JIfd_Vmg8PdGblFBzoZJ81vuW4wEzYGgWWVseYjvJnB_yXdBD2plwHembs6EgCQvExOTKkgpCQs6tfUbJXKsajPi9qD08pYCcgvi0yYKBGy6wB27vOK6VyxDk2TV">
+</div>
+<div>
+<p class="font-headline-md text-[18px] text-bleu-smalt leading-none">Airbus</p>
+<p class="text-label-sm text-on-surface-variant/60">Aéronautique</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-6">
+<div class="flex flex-col">
+<span class="text-body-md font-bold text-on-surface">Sophie Laurent</span>
+<span class="text-label-sm text-on-surface-variant/60">Chef de Projet Formation</span>
+</div>
+</td>
+<td class="px-6 py-6">
+<div class="flex items-center gap-2">
+<span class="font-bold text-bleu-smalt">142</span>
+<span class="text-label-sm text-on-surface-variant/60">participants</span>
+</div>
+</td>
+<td class="px-6 py-6">
+<span class="inline-flex items-center px-3 py-1 rounded-full text-[11px] font-bold bg-green-100 text-green-700">ACTIF</span>
+</td>
+<td class="px-10 py-6 text-right">
+<button class="px-6 py-2 border border-bleu-smalt/10 rounded-lg text-bleu-smalt font-label-md hover:bg-bleu-smalt hover:text-white transition-all">Ouvrir</button>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="transition-colors duration-200">
+<td class="px-10 py-6">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-lg bg-surface-container flex items-center justify-center font-bold text-bleu-smalt overflow-hidden">
+<img alt="L'Oréal Logo" data-alt="A sophisticated and luxurious cosmetic brand logo design, featuring elegant typography and a minimalist aesthetic. The lighting is soft and flattering, with a palette of whites, golds, and subtle creams. The image conveys a sense of high-end beauty and professional excellence, designed to look perfectly at home in a premium enterprise application." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA5wT7F7HCPIBvRz9gzZIPkIpo3cFtHQxRzJL10R6VIe_XPi-E1ZF_3uteZ4TTRO-csKuK1n2xFZFwCg4cN09b7rmJHk1MuxUjePc_X27Qz9nuHmtrEoeXIFNSdS5i1nEmMrqSyiieZ6IxivwFdBMaYZXfMuPZ7ngqZ5J-qxKP8jwjAavQCdcZR7An5r6PYdr3bZzUWMXLHSGO2jSCt__X25e5LqsjL5vpHx_J2WsQA2mEvZ-DBNio4lu5b_yXT_YCkM6Vw7wgsV57a">
+</div>
+<div>
+<p class="font-headline-md text-[18px] text-bleu-smalt leading-none">L'Oréal</p>
+<p class="text-label-sm text-on-surface-variant/60">Cosmétiques &amp; Luxe</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-6">
+<div class="flex flex-col">
+<span class="text-body-md font-bold text-on-surface">Marc Vasseur</span>
+<span class="text-label-sm text-on-surface-variant/60">L&amp;D Director</span>
+</div>
+</td>
+<td class="px-6 py-6">
+<div class="flex items-center gap-2">
+<span class="font-bold text-bleu-smalt">310</span>
+<span class="text-label-sm text-on-surface-variant/60">participants</span>
+</div>
+</td>
+<td class="px-6 py-6">
+<span class="inline-flex items-center px-3 py-1 rounded-full text-[11px] font-bold bg-lavender-grey text-on-surface-variant">PAUSE</span>
+</td>
+<td class="px-10 py-6 text-right">
+<button class="px-6 py-2 border border-bleu-smalt/10 rounded-lg text-bleu-smalt font-label-md hover:bg-bleu-smalt hover:text-white transition-all">Ouvrir</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination Footer -->
+<div class="px-10 py-6 bg-lavender-grey/20 flex items-center justify-between">
+<div class="flex items-center gap-4">
+<span class="text-label-sm text-on-surface-variant">Lignes par page :</span>
+<select class="bg-transparent border-none text-label-sm text-bleu-smalt focus:ring-0 cursor-pointer font-bold">
+<option>10</option>
+<option>25</option>
+<option>50</option>
+</select>
+</div>
+<div class="flex items-center gap-2">
+<button class="p-2 hover:bg-white rounded-full transition-colors text-on-surface-variant disabled:opacity-30" disabled="">
+<span class="material-symbols-outlined">chevron_left</span>
+</button>
+<div class="flex items-center gap-1">
+<button class="w-8 h-8 rounded-lg bg-bleu-smalt text-white font-bold text-[12px] flex items-center justify-center">1</button>
+<button class="w-8 h-8 rounded-lg hover:bg-white text-on-surface-variant font-bold text-[12px] flex items-center justify-center transition-colors">2</button>
+<button class="w-8 h-8 rounded-lg hover:bg-white text-on-surface-variant font-bold text-[12px] flex items-center justify-center transition-colors">3</button>
+<span class="mx-1 text-on-surface-variant/30">...</span>
+<button class="w-8 h-8 rounded-lg hover:bg-white text-on-surface-variant font-bold text-[12px] flex items-center justify-center transition-colors">15</button>
+</div>
+<button class="p-2 hover:bg-white rounded-full transition-colors text-bleu-smalt">
+<span class="material-symbols-outlined">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+<script>
+        // Simple micro-interactions for the cards
+        document.querySelectorAll('.shadow-soft').forEach(card => {
+            card.addEventListener('mouseenter', () => {
+                card.style.transform = 'translateY(-4px)';
+            });
+            card.addEventListener('mouseleave', () => {
+                card.style.transform = 'translateY(0)';
+            });
+        });
+    </script>
+
+
+</body></html>

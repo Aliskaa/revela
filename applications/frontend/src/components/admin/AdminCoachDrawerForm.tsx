@@ -5,6 +5,7 @@ import { Eye, EyeOff } from 'lucide-react';
 import * as React from 'react';
 import { z } from 'zod';
 
+import { drawerFormFieldSlotProps, drawerFormFieldSx, drawerSectionTitleSx } from '@/components/common/styles/listSurfaces';
 import { useDrawerForm } from '@/lib/useDrawerForm';
 
 import { AdminDrawerForm } from './AdminDrawerForm';
@@ -60,6 +61,19 @@ const buildDefaults = (initial?: Partial<CoachFormValues>): CoachFormValues => (
     isActive: initial?.isActive ?? true,
 });
 
+const COPY = {
+    create: {
+        title: 'Nouveau coach',
+        subtitle: 'Créer un coach et lui attribuer un accès.',
+        submitLabel: 'Créer',
+    },
+    edit: {
+        title: 'Éditer le coach',
+        subtitle: 'Mettre à jour le profil du coach.',
+        submitLabel: 'Enregistrer',
+    },
+} as const;
+
 export function AdminCoachDrawerForm({
     open,
     mode,
@@ -84,42 +98,37 @@ export function AdminCoachDrawerForm({
     });
 
     const [showPassword, setShowPassword] = React.useState(false);
-
-    const title = mode === 'create' ? 'Nouveau coach' : 'Éditer le coach';
-    const subtitle =
-        mode === 'create' ? 'Créer un coach et lui attribuer un accès.' : 'Mettre à jour le profil du coach.';
+    const copy = COPY[mode];
 
     return (
         <AdminDrawerForm
             open={open}
-            title={title}
-            subtitle={subtitle}
+            title={copy.title}
+            subtitle={copy.subtitle}
             onClose={onClose}
             onSubmit={submit}
-            submitLabel={mode === 'create' ? 'Créer' : 'Enregistrer'}
+            submitLabel={copy.submitLabel}
             isSubmitting={isSubmitting || submitting}
             dirty={dirty}
         >
-            <Stack spacing={2.25}>
-                <Box>
-                    <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
+            <Stack spacing={4}>
+                <Box component="section">
+                    <Typography component="h3" sx={drawerSectionTitleSx}>
                         Identité
                     </Typography>
-                    <Stack spacing={2}>
-                        <TextField
-                            label="Nom à afficher"
-                            value={values.displayName}
-                            onChange={e => setField('displayName', e.target.value)}
-                            error={Boolean(errors.displayName)}
-                            helperText={errors.displayName}
-                            fullWidth
-                            autoFocus
-                        />
-                    </Stack>
+                    <TextField
+                        label="Nom à afficher"
+                        value={values.displayName}
+                        onChange={e => setField('displayName', e.target.value)}
+                        error={Boolean(errors.displayName)}
+                        helperText={errors.displayName}
+                        fullWidth
+                        autoFocus
+                    />
                 </Box>
 
-                <Box>
-                    <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
+                <Box component="section">
+                    <Typography component="h3" sx={drawerSectionTitleSx}>
                         Accès
                     </Typography>
                     <Stack spacing={2}>
@@ -177,8 +186,8 @@ export function AdminCoachDrawerForm({
                 </Box>
 
                 {mode === 'edit' && (
-                    <Box>
-                        <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
+                    <Box component="section">
+                        <Typography component="h3" sx={drawerSectionTitleSx}>
                             Statut
                         </Typography>
                         <FormControlLabel
@@ -187,11 +196,30 @@ export function AdminCoachDrawerForm({
                                     checked={values.isActive}
                                     onChange={(_, checked) => setField('isActive', checked)}
                                     disabled={isActiveLocked}
+                                    sx={{
+                                        '& .MuiSwitch-track': {
+                                            bgcolor: 'surface.lavenderGrey',
+                                            opacity: 1,
+                                        },
+                                        '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                                            bgcolor: 'tint.primarySwitchTrack',
+                                            opacity: 1,
+                                        },
+                                    }}
                                 />
                             }
-                            label={values.isActive ? 'Coach actif' : 'Coach désactivé'}
+                            label={
+                                <Typography variant="body2" color="text.secondary">
+                                    {values.isActive ? 'Coach actif' : 'Coach désactivé'}
+                                </Typography>
+                            }
+                            sx={{ m: 0, px: 0.5, py: 0.5 }}
                         />
-                        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
+                        <Typography
+                            variant="caption"
+                            color="text.secondary"
+                            sx={{ display: 'block', mt: 1, mx: 0.5, fontStyle: 'italic', opacity: 0.7 }}
+                        >
                             {isActiveLocked
                                 ? 'Le compte admin reste toujours actif.'
                                 : 'Un coach désactivé conserve ses campagnes mais ne peut plus se connecter.'}

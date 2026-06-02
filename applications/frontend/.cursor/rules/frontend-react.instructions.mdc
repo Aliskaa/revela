@@ -27,3 +27,9 @@ The frontend is a Vite + React + TypeScript application using TanStack Router, T
 - Handle loading, error, and empty states explicitly in async UI.
 - `src/routeTree.gen.ts` is generated; do not hand-edit it.
 - For behavior changes, add or update targeted tests with Testing Library and Vitest.
+
+## Couleurs
+
+- Ne jamais hardcoder de couleurs (`#…`, `rgb`, `rgba`) dans les composants ou fichiers de styles UI.
+- Toute couleur doit être définie dans `src/lib/theme.ts` et consommée via les tokens MUI (`primary.main`, `tint.*`, `border`, `shadow.*`, etc.).
+- Voir la règle détaillée `theme-colors.instructions.mdc`.

@@ -10,7 +10,9 @@ import {
     UserRound,
 } from 'lucide-react';
 
+import { AppShellChromeProvider } from '@/components/layout/AppShellChromeContext';
 import { ScopedAppShell, type ScopedNavItem } from '@/components/layout/ScopedAppShell';
+import { useAdminAppShellUserAvatar } from '@/hooks/useAppShellUserAvatar';
 import { parseAdminJwtClaims, userAdmin } from '@/lib/auth';
 
 /**
@@ -28,12 +30,14 @@ const adminNav: ScopedNavItem[] = [
     { label: 'Coachs', to: '/admin/coaches', icon: UserRound },
     { label: 'Questionnaires', to: '/admin/questionnaires', icon: Sparkles },
     { label: 'Audit log', to: '/admin/audit-log', icon: ScrollText },
-    { label: 'Vue coach', to: '/coach', icon: Gauge },
 ];
+
+const adminFooterNav: ScopedNavItem[] = [{ label: 'Vue coach', to: '/coach', icon: Gauge }];
 
 function AdminRoot() {
     const location = useLocation();
     const navigate = useNavigate();
+    const userAvatar = useAdminAppShellUserAvatar();
     const isLogin = location.pathname === '/admin/login';
 
     if (isLogin) return <Outlet />;
@@ -44,16 +48,18 @@ function AdminRoot() {
     };
 
     return (
-        <ScopedAppShell
-            brandIcon={Shield}
-            brandLabel="Révéla"
-            brandEyebrow="Administration"
-            avatarInitial="A"
-            nav={adminNav}
-            onLogout={handleLogout}
-        >
-            <Outlet />
-        </ScopedAppShell>
+        <AppShellChromeProvider>
+            <ScopedAppShell
+                brandLabel="Révéla"
+                brandEyebrow="Operational Cockpit"
+                userAvatar={userAvatar}
+                nav={adminNav}
+                footerNav={adminFooterNav}
+                onLogout={handleLogout}
+            >
+                <Outlet />
+            </ScopedAppShell>
+        </AppShellChromeProvider>
     );
 }
 

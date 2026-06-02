@@ -1,11 +1,13 @@
 // Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
 
-import { Alert, Button, Card, CardContent, Stack, Tooltip, Typography } from '@mui/material';
+import { Alert, Box, Button, Card, CardContent, Stack, Tooltip, Typography } from '@mui/material';
 import { Archive, Play, Square } from 'lucide-react';
 
 import { SectionTitle } from '@/components/common/SectionTitle';
 import { useUpdateAdminCampaignStatus } from '@/hooks/admin';
 import type { AdminCampaign } from '@aor/types';
+
+import { surfaceCardSx } from '@/components/common/styles/listSurfaces';
 
 export type CampaignStatusActionsProps = {
     campaign: AdminCampaign;
@@ -19,12 +21,16 @@ export function CampaignStatusActions({ campaign, participantsCount }: CampaignS
     const cannotLaunch = participantsCount === 0;
 
     return (
-        <Card variant="outlined">
-            <CardContent sx={{ p: 2.5 }}>
-                <SectionTitle
-                    title="Statut de la campagne"
-                    subtitle="Les participants ne peuvent commencer que si la campagne est active."
-                />
+        <Card variant="outlined" sx={surfaceCardSx}>
+            <CardContent sx={{ p: 3 }}>
+                <Box sx={{ mb: 2 }}>
+                    <Typography variant="h6" fontWeight={700} color="primary.main" sx={{ mb: 0.5 }}>
+                        Statut de la campagne
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.875rem' }}>
+                        Les participants ne peuvent commencer que si la campagne est active.
+                    </Typography>
+                </Box>
                 <Stack spacing={1.2} sx={{ mt: 2 }}>
                     {campaign.status === 'draft' && cannotLaunch && (
                         <Alert severity="warning">
@@ -51,9 +57,10 @@ export function CampaignStatusActions({ campaign, participantsCount }: CampaignS
                                         })
                                     }
                                     sx={{
-                                        borderRadius: 3,
-                                        bgcolor: 'rgb(4,120,87)',
-                                        '&:hover': { bgcolor: 'rgb(3,100,70)' },
+                                        borderRadius: 2,
+                                        bgcolor: 'tint.successText',
+                                        fontWeight: 700,
+                                        '&:hover': { bgcolor: 'tint.successTextHover' },
                                     }}
                                 >
                                     {isPending ? 'En cours…' : 'Lancer la campagne'}
@@ -69,9 +76,12 @@ export function CampaignStatusActions({ campaign, participantsCount }: CampaignS
                             disabled={isPending}
                             onClick={() => updateStatus.mutate({ campaignId: campaign.id, status: 'closed' })}
                             sx={{
-                                borderRadius: 3,
-                                bgcolor: 'rgb(180,120,0)',
-                                '&:hover': { bgcolor: 'rgb(150,100,0)' },
+                                borderRadius: 2,
+                                bgcolor: 'secondary.main',
+                                color: 'primary.main',
+                                fontWeight: 700,
+                                boxShadow: theme => theme.palette.shadow.secondaryLift,
+                                '&:hover': { bgcolor: 'secondary.main', filter: 'brightness(0.95)' },
                             }}
                         >
                             {isPending ? 'En cours…' : 'Clôturer la campagne'}

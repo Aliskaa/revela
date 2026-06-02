@@ -13,6 +13,7 @@ import {
 } from '@aor/drizzle';
 import { Inject, Injectable } from '@nestjs/common';
 
+import { adminCompanyAvatarPublicPath } from '@src/application/admin/companies/upload-admin-company-avatar.usecase';
 import { Company } from '@src/domain/companies';
 import type {
     CompanyWithParticipantCountReadModel,
@@ -36,9 +37,57 @@ const hydrateCompany = (row: CompanyRow): Company =>
         createdAt: row.createdAt,
     });
 
+const toCompanyReadModel = (row: {
+    id: number;
+    name: string;
+    contactName: string | null;
+    contactEmail: string | null;
+    createdAt: Date | null;
+    avatarMimeType: string | null;
+    updatedAt: Date | null;
+    participantCount: number;
+}): CompanyWithParticipantCountReadModel => ({
+    id: row.id,
+    name: row.name,
+    contactName: row.contactName,
+    contactEmail: row.contactEmail,
+    createdAt: row.createdAt,
+    participantCount: row.participantCount,
+    avatar_url: row.avatarMimeType
+        ? adminCompanyAvatarPublicPath(row.id, row.updatedAt?.getTime())
+        : null,
+});
+
 @Injectable()
 export class DrizzleCompaniesRepository implements ICompaniesRepositoryPort {
     public constructor(@Inject(DRIZZLE_DB_SYMBOL) private readonly db: DrizzleDb) {}
+
+    public async findAvatar(companyId: number): Promise<{ data: Buffer; mimeType: string } | null> {
+        const [row] = await this.db
+            .select({
+                avatarData: companiesTable.avatarData,
+                avatarMimeType: companiesTable.avatarMimeType,
+            })
+            .from(companiesTable)
+            .where(eq(companiesTable.id, companyId))
+            .limit(1);
+        if (!row?.avatarData || !row.avatarMimeType) {
+            return null;
+        }
+        const data = Buffer.isBuffer(row.avatarData) ? row.avatarData : Buffer.from(row.avatarData);
+        return { data, mimeType: row.avatarMimeType };
+    }
+
+    public async saveAvatar(companyId: number, data: Buffer, mimeType: string): Promise<void> {
+        await this.db
+            .update(companiesTable)
+            .set({
+                avatarData: data,
+                avatarMimeType: mimeType,
+                updatedAt: new Date(),
+            })
+            .where(eq(companiesTable.id, companyId));
+    }
 
     public async findByName(name: string): Promise<Company | null> {
         const [row] = await this.db.select().from(companiesTable).where(eq(companiesTable.name, name)).limit(1);
@@ -65,14 +114,16 @@ export class DrizzleCompaniesRepository implements ICompaniesRepositoryPort {
         if (!row) {
             return null;
         }
-        return {
+        return toCompanyReadModel({
             id: row.company.id,
             name: row.company.name,
             contactName: row.company.contactName,
             contactEmail: row.company.contactEmail,
             createdAt: row.company.createdAt,
+            avatarMimeType: row.company.avatarMimeType,
+            updatedAt: row.company.updatedAt,
             participantCount: row.participantCount,
-        };
+        });
     }
 
     public async listOrderedWithParticipantCount(params?: {
@@ -103,14 +154,18 @@ export class DrizzleCompaniesRepository implements ICompaniesRepositoryPort {
                       .orderBy(asc(companiesTable.name))
                 : await baseQuery.groupBy(companiesTable.id).orderBy(asc(companiesTable.name));
 
-        return rows.map(row => ({
-            id: row.company.id,
-            name: row.company.name,
-            contactName: row.company.contactName,
-            contactEmail: row.company.contactEmail,
-            createdAt: row.company.createdAt,
-            participantCount: row.participantCount,
-        }));
+        return rows.map(row =>
+            toCompanyReadModel({
+                id: row.company.id,
+                name: row.company.name,
+                contactName: row.company.contactName,
+                contactEmail: row.company.contactEmail,
+                createdAt: row.company.createdAt,
+                avatarMimeType: row.company.avatarMimeType,
+                updatedAt: row.company.updatedAt,
+                participantCount: row.participantCount,
+            })
+        );
     }
 
     public async create(company: Company): Promise<Company> {
@@ -135,6 +190,7 @@ export class DrizzleCompaniesRepository implements ICompaniesRepositoryPort {
                 name: company.name,
                 contactName: company.contactName,
                 contactEmail: company.contactEmail,
+                updatedAt: new Date(),
             })
             .where(eq(companiesTable.id, company.id))
             .returning();

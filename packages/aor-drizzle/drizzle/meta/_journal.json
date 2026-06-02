@@ -138,15 +138,36 @@
     {
       "idx": 19,
       "version": "7",
-      "when": 1778428038371,
-      "tag": "0019_plain_human_torch",
+      "when": 1780253337193,
+      "tag": "0019_bored_morlun",
       "breakpoints": true
     },
     {
       "idx": 20,
       "version": "7",
-      "when": 1778432974884,
-      "tag": "0020_glamorous_rocket_raccoon",
+      "when": 1780254000000,
+      "tag": "0020_participant_avatar_in_db",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1780255000000,
+      "tag": "0021_company_avatar_in_db",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1780256000000,
+      "tag": "0022_coach_avatar_in_db",
+      "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1780257000000,
+      "tag": "0023_ai_restitution",
       "breakpoints": true
     }
   ]

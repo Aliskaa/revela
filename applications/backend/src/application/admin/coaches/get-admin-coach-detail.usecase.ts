@@ -9,6 +9,7 @@ import type { ICoachesReadPort } from '@src/interfaces/coaches/ICoachesRepositor
 export type AdminCoachDetailResult = {
     coach: Coach;
     campaigns: Campaign[];
+    avatar_url: string | null;
 };
 
 export class GetAdminCoachDetailUseCase {
@@ -25,6 +26,7 @@ export class GetAdminCoachDetailUseCase {
             throw new AdminResourceNotFoundError('Coach introuvable.');
         }
         const campaigns = await this.ports.campaigns.listAll({ coachId });
-        return { coach, campaigns };
+        const avatar_url = await this.ports.coaches.resolveAvatarUrl(coachId);
+        return { coach, campaigns, avatar_url };
     }
 }

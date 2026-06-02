@@ -16,9 +16,14 @@ import {
     Tooltip,
     Typography,
 } from '@mui/material';
+import type { SxProps, Theme } from '@mui/material';
+import { AlertTriangle, BarChart3, Users } from 'lucide-react';
 import { Fragment } from 'react';
 
-import { SectionTitle } from '@/components/common/SectionTitle';
+import { ParticipantAvatar } from '@/components/common/ParticipantAvatar';
+import { HorizontalTableScrollHint } from '@/components/common/layout';
+import { surfaceCardSx } from '@/components/common/styles/listSurfaces';
+import { personInitialsFromLabel } from '@/lib/personInitials';
 import type {
     CampaignSynthesisDimension,
     CampaignSynthesisGapCell,
@@ -33,21 +38,36 @@ export type CampaignSynthesisMatrixProps = {
 };
 
 const cellSx = {
-    px: 1.25,
-    py: 0.75,
+    px: 1,
+    py: 1,
     fontVariantNumeric: 'tabular-nums' as const,
     textAlign: 'center' as const,
-    minWidth: 64,
 };
 
-const labelCellSx = {
-    px: 1.5,
-    py: 0.75,
-    minWidth: 240,
-    maxWidth: 320,
-    whiteSpace: 'normal' as const,
+const labelCellSx: SxProps<Theme> = {
+    px: 2,
+    py: 1,
+    width: '30%',
+    whiteSpace: 'normal',
     color: 'text.primary',
+    'tr:hover &': {
+        bgcolor: 'surface.lavenderGreyHover',
+    },
 };
+
+function countCriticalGapWarnings(dimensions: readonly CampaignSynthesisDimension[]): number {
+    let count = 0;
+    for (const dim of dimensions) {
+        for (const gap of dim.gaps) {
+            for (const cell of gap.cells) {
+                if (cell.warning) {
+                    count += 1;
+                }
+            }
+        }
+    }
+    return count;
+}
 
 /**
  * Matrice de synthèse Élément B au niveau d'une campagne. Reproduit la structure
@@ -62,90 +82,267 @@ export function CampaignSynthesisMatrix({ matrix }: CampaignSynthesisMatrixProps
 
     if (participants.length === 0) {
         return (
-            <Card variant="outlined">
-                <CardContent sx={{ p: 2.5 }}>
-                    <SectionTitle
-                        title="Synthèse Élément B"
-                        subtitle="Aucun participant rattaché à cette campagne pour le moment."
-                    />
+            <Card variant="outlined" sx={surfaceCardSx}>
+                <CardContent sx={{ px: 3, py: 4, textAlign: 'center' }}>
+                    <Box
+                        sx={{
+                            width: 48,
+                            height: 48,
+                            borderRadius: 2,
+                            mx: 'auto',
+                            mb: 2,
+                            display: 'grid',
+                            placeItems: 'center',
+                            bgcolor: 'tint.primaryBg',
+                            color: 'primary.main',
+                        }}
+                    >
+                        <BarChart3 size={22} />
+                    </Box>
+                    <Typography variant="h6" fontWeight={700} color="primary.main" sx={{ mb: 0.5 }}>
+                        Synthèse en attente
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.7 }}>
+                        Aucun participant rattaché à cette campagne pour le moment.
+                    </Typography>
                 </CardContent>
             </Card>
         );
     }
 
     const respondersCount = participants.filter(p => p.hasResponse).length;
+    const responseRate = Math.round((respondersCount / participants.length) * 100);
+    const criticalGapCount = countCriticalGapWarnings(dimensions);
 
     return (
-        <Card variant="outlined">
-            <CardContent sx={{ p: 2.5 }}>
-                <SectionTitle
-                    title="Synthèse Élément B"
-                    subtitle={`${questionnaireTitle} — comparaison des scores scientifiques par participant.`}
-                />
+        <Card variant="outlined" sx={surfaceCardSx}>
+            <CardContent sx={{ p: 0 }}>
+                <Box
+                    sx={{
+                        px: { xs: 2.5, md: 3 },
+                        pt: { xs: 2.5, md: 3 },
+                        pb: 2,
+                        borderBottom: '1px solid',
+                        borderColor: 'surface.lavenderGrey',
+                    }}
+                >
+                    <Stack
+                        direction={{ xs: 'column', md: 'row' }}
+                        spacing={2}
+                        justifyContent="space-between"
+                        alignItems={{ xs: 'flex-start', md: 'flex-end' }}
+                    >
+                        <Box>
+                            <Typography variant="h6" fontWeight={700} color="primary.main" sx={{ mb: 0.5 }}>
+                                Matrice comparative
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.7, maxWidth: 640 }}>
+                                {questionnaireTitle} — scores scientifiques par participant, regroupés par dimension.
+                            </Typography>
+                        </Box>
 
-                <Stack direction="row" spacing={1.2} sx={{ mt: 1.5, flexWrap: 'wrap' }}>
-                    <Chip
-                        size="small"
-                        label={`${respondersCount} / ${participants.length} ont répondu`}
-                        sx={{ borderRadius: 99 }}
-                    />
-                    <Chip
-                        size="small"
-                        label={`Écart > ${gapWarningThreshold} = alerte`}
-                        sx={{
-                            borderRadius: 99,
-                            bgcolor: 'rgba(220,38,38,0.08)',
-                            color: 'rgb(185,28,28)',
-                            fontWeight: 600,
+                        <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap' }}>
+                            <Chip
+                                size="small"
+                                icon={<Users size={14} />}
+                                label={`${respondersCount}/${participants.length} réponses (${responseRate} %)`}
+                                sx={{
+                                    borderRadius: 99,
+                                    bgcolor: 'tint.primaryBg',
+                                    color: 'primary.main',
+                                    fontWeight: 700,
+                                    '& .MuiChip-icon': { color: 'primary.main' },
+                                }}
+                            />
+                            <Chip
+                                size="small"
+                                icon={<AlertTriangle size={14} />}
+                                label={`Écart > ${gapWarningThreshold} = alerte`}
+                                sx={{
+                                    borderRadius: 99,
+                                    bgcolor: 'tint.dangerHover',
+                                    color: 'tint.dangerText',
+                                    fontWeight: 700,
+                                    '& .MuiChip-icon': { color: 'tint.dangerText' },
+                                }}
+                            />
+                        </Stack>
+                    </Stack>
+                </Box>
+
+                {respondersCount === 0 ? (
+                    <Box sx={{ px: { xs: 2.5, md: 3 }, py: 2 }}>
+                        <Alert severity="info" sx={{ borderRadius: 2 }}>
+                            Aucun participant n'a encore terminé le test scientifique. La synthèse se remplira au fur
+                            et à mesure des soumissions.
+                        </Alert>
+                    </Box>
+                ) : null}
+
+                <Box sx={{ px: { xs: 1, md: 1.5 }, pb: { xs: 2, md: 2.5 }, pt: respondersCount === 0 ? 0 : 2 }}>
+                    <HorizontalTableScrollHint
+                        sx={{ mb: 2 }}
+                        containerSx={{
+                            border: '1px solid',
+                            borderColor: 'surface.listTableRowBorder',
+                            borderRadius: 2,
                         }}
-                    />
-                </Stack>
-
-                {respondersCount === 0 && (
-                    <Alert severity="info" sx={{ mt: 2, borderRadius: 2 }}>
-                        Aucun participant n'a encore terminé le test scientifique. La synthèse se remplira au fur
-                        et à mesure des soumissions.
-                    </Alert>
-                )}
-
-                <TableContainer sx={{ mt: 2, border: '1px solid', borderColor: 'divider', borderRadius: 2 }}>
-                    <Table size="small" sx={{ tableLayout: 'fixed' }}>
-                        <TableHead>
-                            <TableRow sx={{ bgcolor: 'rgba(15,23,42,0.04)' }}>
-                                <TableCell sx={{ ...labelCellSx, fontWeight: 700 }}></TableCell>
-                                {participants.map(p => (
-                                    <ParticipantHeaderCell key={p.participantId} participant={p} />
+                    >
+                        <TableContainer
+                            sx={{
+                                overflow: 'visible',
+                            }}
+                        >
+                        <Table size="small" sx={{ width: '100%', tableLayout: 'fixed' }}>
+                            <TableHead>
+                                <TableRow>
+                                    <TableCell
+                                        sx={{
+                                            ...labelCellSx,
+                                            fontWeight: 800,
+                                            fontSize: '0.6875rem',
+                                            textTransform: 'uppercase',
+                                            letterSpacing: '0.08em',
+                                            color: 'text.secondary',
+                                            bgcolor: 'surface.lavenderGrey',
+                                            borderBottom: '1px solid',
+                                            borderColor: 'surface.listTableRowBorder',
+                                        }}
+                                    >
+                                        Dimension / score
+                                    </TableCell>
+                                    {participants.map(p => (
+                                        <ParticipantHeaderCell key={p.participantId} participant={p} />
+                                    ))}
+                                </TableRow>
+                            </TableHead>
+                            <TableBody>
+                                {dimensions.map(dim => (
+                                    <DimensionRows
+                                        key={dim.name}
+                                        dimension={dim}
+                                        participantCount={participants.length}
+                                    />
                                 ))}
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            {dimensions.map(dim => (
-                                <DimensionRows
-                                    key={dim.name}
-                                    dimension={dim}
-                                    participantCount={participants.length}
-                                />
-                            ))}
-                        </TableBody>
-                    </Table>
-                </TableContainer>
+                            </TableBody>
+                        </Table>
+                        </TableContainer>
+                    </HorizontalTableScrollHint>
+
+                    <Stack
+                        direction="row"
+                        spacing={2}
+                        sx={{
+                            flexWrap: 'wrap',
+                            gap: 1,
+                        }}
+                    >
+                        <LegendSwatch label="Écart critique" tone="danger" count={criticalGapCount} />
+                        <LegendSwatch label="Donnée manquante" tone="muted" />
+                    </Stack>
+                </Box>
             </CardContent>
         </Card>
     );
 }
 
+function LegendSwatch({ label, tone, count }: { label: string; tone: 'danger' | 'muted'; count?: number }) {
+    const swatchSx =
+        tone === 'danger'
+            ? { bgcolor: 'tint.dangerHover', color: 'tint.dangerText', borderColor: 'error.main' }
+            : { bgcolor: 'surface.containerLow', color: 'text.disabled', borderColor: 'border' };
+
+    return (
+        <Stack direction="row" spacing={0.75} alignItems="center">
+            <Box
+                sx={{
+                    width: 18,
+                    height: 18,
+                    borderRadius: 1,
+                    border: '1px solid',
+                    display: 'grid',
+                    placeItems: 'center',
+                    fontSize: '0.625rem',
+                    fontWeight: 800,
+                    ...swatchSx,
+                }}
+            >
+                {tone === 'muted' ? '–' : String(count ?? 0)}
+            </Box>
+            <Typography variant="caption" color="text.secondary">
+                {label}
+            </Typography>
+        </Stack>
+    );
+}
+
 function ParticipantHeaderCell({ participant }: { participant: CampaignSynthesisParticipantColumn }) {
     return (
-        <Tooltip title={participant.email} placement="top">
+        <Tooltip
+            title={
+                participant.hasResponse
+                    ? participant.email
+                    : `${participant.email} — en attente de réponse`
+            }
+            placement="top"
+        >
             <TableCell
                 sx={{
                     ...cellSx,
-                    fontWeight: 700,
-                    minWidth: 96,
-                    color: participant.hasResponse ? 'text.primary' : 'text.disabled',
+                    verticalAlign: 'bottom',
+                    bgcolor: 'surface.lavenderGrey',
+                    borderBottom: '1px solid',
+                    borderColor: 'surface.listTableRowBorder',
                 }}
             >
-                {participant.fullName}
+                <Stack spacing={0.75} alignItems="center">
+                    <ParticipantAvatar
+                        src={participant.avatar_url}
+                        initials={personInitialsFromLabel(participant.fullName)}
+                        alt={participant.fullName}
+                        size={36}
+                        sx={{
+                            borderRadius: 2,
+                            fontSize: '0.6875rem',
+                            fontWeight: 800,
+                            ...(participant.hasResponse
+                                ? {
+                                      bgcolor: 'tint.primaryBg',
+                                      color: 'primary.main',
+                                      border: '1px solid',
+                                      borderColor: 'tint.primaryRail',
+                                  }
+                                : {
+                                      bgcolor: 'surface.containerLow',
+                                      color: 'text.disabled',
+                                      border: '1px solid',
+                                      borderColor: 'border',
+                                  }),
+                        }}
+                    />
+                    <Typography
+                        variant="caption"
+                        fontWeight={700}
+                        sx={{
+                            display: 'block',
+                            maxWidth: 96,
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                            color: participant.hasResponse ? 'text.primary' : 'text.disabled',
+                        }}
+                    >
+                        {participant.fullName}
+                    </Typography>
+                    <Box
+                        sx={{
+                            width: 6,
+                            height: 6,
+                            borderRadius: '50%',
+                            bgcolor: participant.hasResponse ? 'tint.scientific' : 'tint.mutedBg',
+                        }}
+                    />
+                </Stack>
             </TableCell>
         </Tooltip>
     );
@@ -158,8 +355,6 @@ function DimensionRows({
     dimension: CampaignSynthesisDimension;
     participantCount: number;
 }) {
-    // Cf. MatrixTableMode : on intercale chaque ligne d'écart juste sous la paire (e, w)
-    // qu'elle compare, plutôt que de les regrouper en fin de dimension.
     const rowsByKey = new Map(dimension.rows.map(r => [r.scoreKey, r]));
     const pairedKeys = new Set<number>();
     for (const gap of dimension.gaps) {
@@ -170,17 +365,19 @@ function DimensionRows({
 
     return (
         <>
-            <TableRow sx={{ bgcolor: 'tint.primaryBg' }}>
+            <TableRow sx={{ bgcolor: 'tint.primaryWash' }}>
                 <TableCell
                     colSpan={participantCount + 1}
                     sx={{
-                        py: 1,
-                        px: 1.5,
-                        fontWeight: 700,
+                        py: 1.1,
+                        px: 2,
+                        fontWeight: 800,
                         color: 'primary.main',
                         textTransform: 'uppercase',
-                        letterSpacing: 0.6,
-                        fontSize: '0.75rem',
+                        letterSpacing: '0.08em',
+                        fontSize: '0.6875rem',
+                        borderLeft: '4px solid',
+                        borderColor: 'primary.main',
                     }}
                 >
                     {dimension.name}
@@ -191,8 +388,8 @@ function DimensionRows({
                 const wRow = rowsByKey.get(gap.wScoreKey);
                 return (
                     <Fragment key={`pair-${gap.eScoreKey}-${gap.wScoreKey}`}>
-                        {eRow && <ScoreRow row={eRow} />}
-                        {wRow && <ScoreRow row={wRow} />}
+                        {eRow ? <ScoreRow row={eRow} /> : null}
+                        {wRow ? <ScoreRow row={wRow} /> : null}
                         <GapRow gap={gap} />
                     </Fragment>
                 );
@@ -206,14 +403,27 @@ function DimensionRows({
 
 function ScoreRow({ row }: { row: CampaignSynthesisScoreRow }) {
     return (
-        <TableRow>
+        <TableRow
+            hover
+            sx={{
+                '&:hover': { bgcolor: 'surface.lavenderGreyHover' },
+                '& td': { borderColor: 'surface.listTableRowBorder' },
+            }}
+        >
             <TableCell sx={labelCellSx}>
-                <Typography variant="body2">{row.label}</Typography>
+                <Typography variant="body2" fontWeight={600}>
+                    {row.label}
+                </Typography>
             </TableCell>
             {row.values.map((v, idx) => (
                 <TableCell
                     key={`${row.scoreKey}-${String(idx)}`}
-                    sx={{ ...cellSx, color: v === null ? 'text.disabled' : 'text.primary' }}
+                    sx={{
+                        ...cellSx,
+                        fontWeight: 600,
+                        color: v === null ? 'text.disabled' : 'text.primary',
+                        bgcolor: v === null ? 'transparent' : 'tint.primaryGhost',
+                    }}
                 >
                     {v ?? '–'}
                 </TableCell>
@@ -224,9 +434,21 @@ function ScoreRow({ row }: { row: CampaignSynthesisScoreRow }) {
 
 function GapRow({ gap }: { gap: CampaignSynthesisGapRow }) {
     return (
-        <TableRow sx={{ bgcolor: 'rgba(15,23,42,0.02)' }}>
-            <TableCell sx={{ ...labelCellSx, fontStyle: 'italic', color: 'text.secondary' }}>
-                <Typography variant="body2">
+        <TableRow
+            sx={{
+                bgcolor: 'tint.subtleRow',
+                '& td': { borderColor: 'surface.listTableRowBorder' },
+            }}
+        >
+            <TableCell
+                sx={{
+                    ...labelCellSx,
+                    fontStyle: 'italic',
+                    color: 'text.secondary',
+                    bgcolor: 'tint.subtleRow',
+                }}
+            >
+                <Typography variant="caption" fontWeight={700} sx={{ letterSpacing: '0.04em' }}>
                     {gap.label}
                 </Typography>
             </TableCell>
@@ -239,23 +461,30 @@ function GapRow({ gap }: { gap: CampaignSynthesisGapRow }) {
 
 function GapCellView({ cell }: { cell: CampaignSynthesisGapCell }) {
     if (cell.value === null) {
-        return <TableCell sx={{ ...cellSx, color: 'text.disabled' }}>–</TableCell>;
+        return (
+            <TableCell sx={{ ...cellSx, color: 'text.disabled' }}>
+                –
+            </TableCell>
+        );
     }
+
     if (cell.warning) {
         return (
             <TableCell sx={cellSx}>
                 <Box
                     sx={{
                         display: 'inline-flex',
-                        minWidth: 28,
-                        px: 0.75,
-                        py: 0.25,
-                        borderRadius: 1,
+                        minWidth: 30,
+                        px: 0.875,
+                        py: 0.375,
+                        borderRadius: 99,
                         border: '2px solid',
-                        borderColor: 'rgb(220,38,38)',
-                        color: 'rgb(185,28,28)',
-                        fontWeight: 700,
+                        borderColor: 'error.main',
+                        bgcolor: 'tint.dangerHover',
+                        color: 'tint.dangerText',
+                        fontWeight: 800,
                         justifyContent: 'center',
+                        boxShadow: theme => theme.palette.shadow.brandWhisper,
                     }}
                 >
                     {cell.value}
@@ -263,5 +492,10 @@ function GapCellView({ cell }: { cell: CampaignSynthesisGapCell }) {
             </TableCell>
         );
     }
-    return <TableCell sx={{ ...cellSx, color: 'rgb(4,120,87)', fontWeight: 600 }}>{cell.value}</TableCell>;
+
+    return (
+        <TableCell sx={{ ...cellSx, color: 'text.secondary', fontWeight: 600 }}>
+            {cell.value}
+        </TableCell>
+    );
 }

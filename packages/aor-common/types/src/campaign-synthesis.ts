@@ -15,6 +15,7 @@ export const synthesisParticipantColumnSchema = z.object({
     participantId: z.number().int(),
     fullName: z.string(),
     email: z.string(),
+    avatar_url: z.string().nullable(),
     /** `true` si une réponse `element_humain` existe pour ce couple (campagne, participant). */
     hasResponse: z.boolean(),
 });

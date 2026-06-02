@@ -1,0 +1,58 @@
+import { useParticipantSession } from '@/hooks/participantSession';
+import { personInitialsFromLabel, personInitialsFromNames } from '@/lib/personInitials';
+import { useAuthStore } from '@/stores/authStore';
+
+export type AppShellUserAvatarModel = {
+    src: string | null;
+    initials: string;
+    alt: string;
+    /** Nom affiché à côté de l'avatar dans la barre d'en-tête. */
+    fullName?: string;
+    /** Ligne secondaire sous le nom (entreprise participant, rôle admin/coach, etc.). */
+    companyName?: string;
+};
+
+export function useParticipantAppShellUserAvatar(): AppShellUserAvatarModel {
+    const { data: session } = useParticipantSession();
+    const fullName =
+        session && `${session.first_name} ${session.last_name}`.trim().length > 0
+            ? `${session.first_name} ${session.last_name}`.trim()
+            : 'Participant';
+    return {
+        src: session?.avatar_url ?? null,
+        initials: session
+            ? personInitialsFromNames(session.first_name, session.last_name)
+            : personInitialsFromLabel('Participant'),
+        alt: fullName,
+        fullName,
+        companyName: session?.company_name?.trim() || undefined,
+    };
+}
+
+export function useAdminAppShellUserAvatar(): AppShellUserAvatarModel {
+    const adminMe = useAuthStore(state => state.adminMe);
+    const displayName = adminMe?.display_name?.trim() || adminMe?.username?.trim() || 'Admin';
+    return {
+        src: adminMe?.avatar_url ?? null,
+        initials: personInitialsFromLabel(displayName),
+        alt: displayName,
+        fullName: displayName,
+        companyName: 'Administrateur',
+    };
+}
+
+export function useCoachAppShellUserAvatar(): AppShellUserAvatarModel {
+    const adminMe = useAuthStore(state => state.adminMe);
+    const displayName =
+        adminMe?.display_name?.trim() ||
+        adminMe?.username?.trim() ||
+        (adminMe?.scope === 'super-admin' ? 'Admin' : 'Coach');
+    const roleLabel = adminMe?.scope === 'super-admin' ? 'Administrateur' : 'Coach';
+    return {
+        src: adminMe?.avatar_url ?? null,
+        initials: personInitialsFromLabel(displayName),
+        alt: displayName,
+        fullName: displayName,
+        companyName: roleLabel,
+    };
+}

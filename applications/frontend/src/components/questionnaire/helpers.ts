@@ -8,7 +8,7 @@ export function invalidateParticipantSessionQueries(queryClient: QueryClient) {
     void queryClient.invalidateQueries({ queryKey: participantSessionKeys.campaignPeersRoot });
 }
 
-export const aorPrimaryButtonSx: SxProps<Theme> = (theme) => ({
+export const aorPrimaryButtonSx: SxProps<Theme> = theme => ({
     py: 1.2,
     px: 3.5,
     borderRadius: 2,

@@ -5,9 +5,11 @@ import { Module } from '@nestjs/common';
 import { AddParticipantToCompanyUseCase } from '@src/application/admin/companies/add-participant-to-company.usecase';
 import { CreateAdminCompanyUseCase } from '@src/application/admin/companies/create-admin-company.usecase';
 import { DeleteAdminCompanyUseCase } from '@src/application/admin/companies/delete-admin-company.usecase';
+import { GetAdminCompanyAvatarUseCase } from '@src/application/admin/companies/get-admin-company-avatar.usecase';
 import { GetAdminCompanyUseCase } from '@src/application/admin/companies/get-admin-company.usecase';
 import { ListAdminCompaniesUseCase } from '@src/application/admin/companies/list-admin-companies.usecase';
 import { UpdateAdminCompanyUseCase } from '@src/application/admin/companies/update-admin-company.usecase';
+import { UploadAdminCompanyAvatarUseCase } from '@src/application/admin/companies/upload-admin-company-avatar.usecase';
 import {
     CAMPAIGNS_REPOSITORY_PORT_SYMBOL,
     type ICampaignsReadPort,
@@ -32,6 +34,8 @@ import {
     CREATE_ADMIN_COMPANY_USE_CASE_SYMBOL,
     DELETE_ADMIN_COMPANY_USE_CASE_SYMBOL,
     GET_ADMIN_COMPANY_USE_CASE_SYMBOL,
+    GET_ADMIN_COMPANY_AVATAR_USE_CASE_SYMBOL,
+    UPLOAD_ADMIN_COMPANY_AVATAR_USE_CASE_SYMBOL,
     LIST_ADMIN_COMPANIES_USE_CASE_SYMBOL,
     UPDATE_ADMIN_COMPANY_USE_CASE_SYMBOL,
 } from './admin.tokens';
@@ -48,6 +52,17 @@ import {
         {
             provide: GET_ADMIN_COMPANY_USE_CASE_SYMBOL,
             useFactory: (companies: ICompaniesReadPort) => new GetAdminCompanyUseCase({ companies }),
+            inject: [COMPANIES_REPOSITORY_PORT_SYMBOL],
+        },
+        {
+            provide: GET_ADMIN_COMPANY_AVATAR_USE_CASE_SYMBOL,
+            useFactory: (companies: ICompaniesReadPort) => new GetAdminCompanyAvatarUseCase(companies),
+            inject: [COMPANIES_REPOSITORY_PORT_SYMBOL],
+        },
+        {
+            provide: UPLOAD_ADMIN_COMPANY_AVATAR_USE_CASE_SYMBOL,
+            useFactory: (companies: ICompaniesReadPort & ICompaniesWritePort) =>
+                new UploadAdminCompanyAvatarUseCase(companies),
             inject: [COMPANIES_REPOSITORY_PORT_SYMBOL],
         },
         {

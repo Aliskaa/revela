@@ -13,6 +13,7 @@ import {
     Patch,
     Post,
     Req,
+    Res,
     UnauthorizedException,
     UploadedFile,
     UseFilters,
@@ -21,14 +22,18 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import type { Response } from 'express';
 
 import type { AddParticipantToCompanyUseCase } from '@src/application/admin/companies/add-participant-to-company.usecase';
 import type { CreateAdminCompanyUseCase } from '@src/application/admin/companies/create-admin-company.usecase';
 import type { DeleteAdminCompanyUseCase } from '@src/application/admin/companies/delete-admin-company.usecase';
+import type { GetAdminCompanyAvatarUseCase } from '@src/application/admin/companies/get-admin-company-avatar.usecase';
 import type { GetAdminCompanyUseCase } from '@src/application/admin/companies/get-admin-company.usecase';
 import type { ListAdminCompaniesUseCase } from '@src/application/admin/companies/list-admin-companies.usecase';
 import type { UpdateAdminCompanyUseCase } from '@src/application/admin/companies/update-admin-company.usecase';
+import type { UploadAdminCompanyAvatarUseCase } from '@src/application/admin/companies/upload-admin-company-avatar.usecase';
 import type { ImportParticipantsCsvUseCase } from '@src/application/admin/participants/import-participants-csv.usecase';
+import { ParticipantAvatarExceptionFilter } from '@src/presentation/participant-session/participant-avatar-exception.filter';
 import { ResponsesExceptionFilter } from '@src/presentation/responses/responses-exception.filter';
 
 import type { JwtValidatedUser } from '@src/presentation/jwt-validated-user';
@@ -40,6 +45,8 @@ import {
     CREATE_ADMIN_COMPANY_USE_CASE_SYMBOL,
     DELETE_ADMIN_COMPANY_USE_CASE_SYMBOL,
     GET_ADMIN_COMPANY_USE_CASE_SYMBOL,
+    GET_ADMIN_COMPANY_AVATAR_USE_CASE_SYMBOL,
+    UPLOAD_ADMIN_COMPANY_AVATAR_USE_CASE_SYMBOL,
     IMPORT_PARTICIPANTS_CSV_USE_CASE_SYMBOL,
     LIST_ADMIN_COMPANIES_USE_CASE_SYMBOL,
     UPDATE_ADMIN_COMPANY_USE_CASE_SYMBOL,
@@ -56,6 +63,10 @@ export class AdminCompaniesController {
         private readonly listAdminCompanies: ListAdminCompaniesUseCase,
         @Inject(GET_ADMIN_COMPANY_USE_CASE_SYMBOL)
         private readonly getAdminCompany: GetAdminCompanyUseCase,
+        @Inject(GET_ADMIN_COMPANY_AVATAR_USE_CASE_SYMBOL)
+        private readonly getAdminCompanyAvatar: GetAdminCompanyAvatarUseCase,
+        @Inject(UPLOAD_ADMIN_COMPANY_AVATAR_USE_CASE_SYMBOL)
+        private readonly uploadAdminCompanyAvatar: UploadAdminCompanyAvatarUseCase,
         @Inject(CREATE_ADMIN_COMPANY_USE_CASE_SYMBOL)
         private readonly createAdminCompany: CreateAdminCompanyUseCase,
         @Inject(UPDATE_ADMIN_COMPANY_USE_CASE_SYMBOL)
@@ -79,6 +90,28 @@ export class AdminCompaniesController {
     public async getCompany(@Param('companyId', ParseIntPipe) companyId: number) {
         const row = await this.getAdminCompany.execute(companyId);
         return companyToAdminJson(row);
+    }
+
+    @Get('companies/:companyId/avatar')
+    @UseFilters(ParticipantAvatarExceptionFilter)
+    public async getCompanyAvatar(
+        @Param('companyId', ParseIntPipe) companyId: number,
+        @Res() res: Response
+    ) {
+        const { buffer, mimeType } = await this.getAdminCompanyAvatar.execute(companyId);
+        res.setHeader('Content-Type', mimeType);
+        res.setHeader('Cache-Control', 'private, max-age=86400');
+        res.send(buffer);
+    }
+
+    @Post('companies/:companyId/avatar')
+    @UseInterceptors(FileInterceptor('file'))
+    @UseFilters(ParticipantAvatarExceptionFilter)
+    public async uploadCompanyAvatar(
+        @Param('companyId', ParseIntPipe) companyId: number,
+        @UploadedFile() file: Express.Multer.File | undefined
+    ) {
+        return this.uploadAdminCompanyAvatar.execute(companyId, file);
     }
 
     @Post('companies')

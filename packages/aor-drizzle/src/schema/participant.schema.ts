@@ -1,7 +1,13 @@
-import { index, integer, pgEnum, pgTable, serial, timestamp, varchar } from 'drizzle-orm/pg-core';
+import { customType, index, integer, pgEnum, pgTable, serial, timestamp, varchar } from 'drizzle-orm/pg-core';
 
 import { coachesTable } from './coach.schema';
 import { companiesTable } from './company.schema';
+
+const pgBytea = customType<{ data: Buffer; driverData: Buffer | Uint8Array }>({
+    dataType: () => 'bytea',
+    fromDriver: value => (Buffer.isBuffer(value) ? value : Buffer.from(value)),
+    toDriver: value => value,
+});
 
 export const participantFunctionLevelEnum = pgEnum('participant_function_level', [
     'direction',
@@ -21,6 +27,10 @@ export const participantsTable = pgTable(
         direction: varchar('direction', { length: 255 }),
         service: varchar('service', { length: 255 }),
         functionLevel: participantFunctionLevelEnum('function_level'),
+        /** Données binaires de l'avatar (JPEG, PNG ou WebP). Null si aucun avatar. */
+        avatarData: pgBytea('avatar_data'),
+        /** Type MIME de l'avatar (`image/jpeg`, `image/png`, `image/webp`). */
+        avatarMimeType: varchar('avatar_mime_type', { length: 64 }),
         /** Scrypt hash (see backend `hashPassword`); null until invitation onboarding is completed. */
         passwordHash: varchar('password_hash', { length: 255 }),
         /**

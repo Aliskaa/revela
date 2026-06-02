@@ -3,6 +3,8 @@
 import { Skeleton, TableCell, TableRow } from '@mui/material';
 import * as React from 'react';
 
+import { stickyActionCellSx } from '@/components/common/data-table/stickyActionCell';
+
 /**
  * Génère des identifiants stables pour les éléments d'un placeholder.
  *
@@ -11,9 +13,15 @@ import * as React from 'react';
  * statiques, le risque est nul, mais centraliser ici évite de désactiver la règle dans 6 fichiers
  * et fournit un point unique pour toutes les variantes de placeholders. Les ids sont mémoïsés
  * sur `count` : tant que la longueur ne change pas, les clés restent stables au render.
+ *
+ * Pas de `crypto.randomUUID()` : indisponible hors contexte sécurisé (HTTP sur IP LAN, etc.).
  */
 function useStableIds(count: number): string[] {
-    return React.useMemo(() => Array.from({ length: count }, () => crypto.randomUUID()), [count]);
+    const seqRef = React.useRef(0);
+    return React.useMemo(
+        () => Array.from({ length: count }, () => `sk-${seqRef.current++}`),
+        [count],
+    );
 }
 
 export type SkeletonTableRowsProps = {
@@ -21,6 +29,8 @@ export type SkeletonTableRowsProps = {
     rows: number;
     /** Nombre de cellules par ligne (en général le nombre de colonnes du `TableHead`). */
     columns: number;
+    /** Applique les styles sticky sur la dernière cellule (colonne d'action). */
+    stickyLastColumn?: boolean;
 };
 
 /**
@@ -28,15 +38,22 @@ export type SkeletonTableRowsProps = {
  * Pattern auparavant dupliqué dans toutes les routes admin avec `Array.from(...).map((_, i) => …)`,
  * ce qui faisait remonter `noArrayIndexKey` à chaque appel.
  */
-export function SkeletonTableRows({ rows, columns }: SkeletonTableRowsProps) {
+export function SkeletonTableRows({ rows, columns, stickyLastColumn = false }: SkeletonTableRowsProps) {
     const rowIds = useStableIds(rows);
     const columnIds = useStableIds(columns);
     return (
         <>
             {rowIds.map(rowId => (
                 <TableRow key={rowId}>
-                    {columnIds.map(columnId => (
-                        <TableCell key={columnId}>
+                    {columnIds.map((columnId, columnIndex) => (
+                        <TableCell
+                            key={columnId}
+                            sx={
+                                stickyLastColumn && columnIndex === columns - 1
+                                    ? { ...stickyActionCellSx, align: 'right' }
+                                    : undefined
+                            }
+                        >
                             <Skeleton variant="text" />
                         </TableCell>
                     ))}

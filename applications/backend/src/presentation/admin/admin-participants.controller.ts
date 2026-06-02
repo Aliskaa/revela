@@ -13,6 +13,7 @@ import {
     Post,
     Query,
     Req,
+    Res,
     UploadedFile,
     UseFilters,
     UseGuards,
@@ -20,9 +21,12 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import type { Response } from 'express';
 
 import type { CreateParticipantInviteUseCase } from '@src/application/admin/participants/create-participant-invite.usecase';
 import type { EraseParticipantRgpdUseCase } from '@src/application/admin/participants/erase-participant-rgpd.usecase';
+import type { GetAdminParticipantAvatarUseCase } from '@src/application/admin/participants/get-admin-participant-avatar.usecase';
+import type { UploadAdminParticipantAvatarUseCase } from '@src/application/admin/participants/upload-admin-participant-avatar.usecase';
 import type { GetAdminParticipantDetailUseCase } from '@src/application/admin/participants/get-admin-participant-detail.usecase';
 import type { ImportParticipantsCsvUseCase } from '@src/application/admin/participants/import-participants-csv.usecase';
 import type { ListAdminParticipantsUseCase } from '@src/application/admin/participants/list-admin-participants.usecase';
@@ -37,6 +41,7 @@ import { ResponsesExceptionFilter } from '@src/presentation/responses/responses-
 
 import type { JwtValidatedUser } from '@src/presentation/jwt-validated-user';
 import { GET_PARTICIPANT_QUESTIONNAIRE_MATRIX_USE_CASE_SYMBOL } from '@src/presentation/participant-session/participant.tokens';
+import { ParticipantAvatarExceptionFilter } from '@src/presentation/participant-session/participant-avatar-exception.filter';
 import { AdminApplicationExceptionFilter } from './admin-application-exception.filter';
 import { AdminJwtAuthGuard } from './admin-jwt-auth.guard';
 import { participantDetailToAdminJson, participantToAdminJson } from './admin.presenters';
@@ -45,6 +50,8 @@ import {
     CREATE_PARTICIPANT_INVITE_USE_CASE_SYMBOL,
     ERASE_PARTICIPANT_RGPD_USE_CASE_SYMBOL,
     GET_ADMIN_PARTICIPANT_DETAIL_USE_CASE_SYMBOL,
+    GET_ADMIN_PARTICIPANT_AVATAR_USE_CASE_SYMBOL,
+    UPLOAD_ADMIN_PARTICIPANT_AVATAR_USE_CASE_SYMBOL,
     IMPORT_PARTICIPANTS_CSV_USE_CASE_SYMBOL,
     LIST_ADMIN_PARTICIPANTS_USE_CASE_SYMBOL,
     LIST_PARTICIPANT_INVITATION_TOKENS_USE_CASE_SYMBOL,
@@ -70,6 +77,10 @@ export class AdminParticipantsController {
         private readonly eraseParticipantRgpd: EraseParticipantRgpdUseCase,
         @Inject(GET_ADMIN_PARTICIPANT_DETAIL_USE_CASE_SYMBOL)
         private readonly getAdminParticipantDetail: GetAdminParticipantDetailUseCase,
+        @Inject(GET_ADMIN_PARTICIPANT_AVATAR_USE_CASE_SYMBOL)
+        private readonly getAdminParticipantAvatar: GetAdminParticipantAvatarUseCase,
+        @Inject(UPLOAD_ADMIN_PARTICIPANT_AVATAR_USE_CASE_SYMBOL)
+        private readonly uploadAdminParticipantAvatar: UploadAdminParticipantAvatarUseCase,
         @Inject(UPDATE_ADMIN_PARTICIPANT_USE_CASE_SYMBOL)
         private readonly updateAdminParticipant: UpdateAdminParticipantUseCase,
         @Inject(GET_PARTICIPANT_QUESTIONNAIRE_MATRIX_USE_CASE_SYMBOL)
@@ -145,6 +156,32 @@ export class AdminParticipantsController {
             throw new NotFoundException();
         }
         return participantDetailToAdminJson(detail);
+    }
+
+    @Get('participants/:participantId/avatar')
+    @UseFilters(ParticipantAvatarExceptionFilter)
+    public async getParticipantAvatar(
+        @Req() req: { user: JwtValidatedUser },
+        @Param('participantId', ParseIntPipe) participantId: number,
+        @Res() res: Response
+    ) {
+        const coachId = req.user.scope === 'coach' ? req.user.coachId : undefined;
+        const { buffer, mimeType } = await this.getAdminParticipantAvatar.execute(participantId, { coachId });
+        res.setHeader('Content-Type', mimeType);
+        res.setHeader('Cache-Control', 'private, max-age=86400');
+        res.send(buffer);
+    }
+
+    @Post('participants/:participantId/avatar')
+    @UseInterceptors(FileInterceptor('file'))
+    @UseFilters(ParticipantAvatarExceptionFilter)
+    public async uploadParticipantAvatar(
+        @Req() req: { user: JwtValidatedUser },
+        @Param('participantId', ParseIntPipe) participantId: number,
+        @UploadedFile() file: Express.Multer.File | undefined
+    ) {
+        const coachId = req.user.scope === 'coach' ? req.user.coachId : undefined;
+        return this.uploadAdminParticipantAvatar.execute(participantId, file, { coachId });
     }
 
     @Patch('participants/:participantId')

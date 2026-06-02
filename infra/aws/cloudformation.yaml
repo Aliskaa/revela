@@ -82,6 +82,29 @@ Parameters:
       aws rds describe-db-engine-versions --engine postgres --region eu-west-3
       --query "DBEngineVersions[?starts_with(EngineVersion,'16.')].EngineVersion" --output text
 
+  DBInstanceClass:
+    Type: String
+    Default: db.t4g.medium
+    AllowedValues: [db.t4g.micro, db.t4g.small, db.t4g.medium, db.t4g.large, db.m6g.large]
+    Description: >
+      Classe RDS. t4g.micro = beta/dev (1 Go RAM, burstable).
+      t4g.medium = production 15-30 users (4 Go RAM, burstable).
+      m6g.large = production serieuse (8 Go RAM, non-burstable).
+
+  DBMultiAZ:
+    Type: String
+    Default: 'true'
+    AllowedValues: ['true', 'false']
+    Description: Active le standby synchrone sur une 2e AZ pour failover automatique.
+
+  AlarmEmail:
+    Type: String
+    Default: ''
+    Description: >
+      Email pour recevoir les alarmes CloudWatch (RAM/CPU/connexions). Laisser vide
+      pour creer les alarmes sans notification. Necessite de cliquer sur le lien
+      de confirmation envoye par SNS apres deploiement.
+
   # -- EC2 --
   Ec2InstanceType:
     Type: String
@@ -89,9 +112,20 @@ Parameters:
     AllowedValues: [t4g.micro, t4g.small, t4g.medium]
 
   LatestAl2023Arm64Ami:
-    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
-    Default: /aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-arm64
-    Description: Resolu automatiquement vers la derniere AL2023 ARM64
+    Type: AWS::EC2::Image::Id
+    Default: ami-0576514e4186e8431
+    Description: >
+      AMI Amazon Linux 2023 ARM64. Verrouillee a une AMI specifique pour eviter
+      la recreation forcee de l'EC2 a chaque deploy (le param SSM "latest" resout
+      dynamiquement et casse les change sets). Pour upgrader : recuperer le dernier
+      via "aws ssm get-parameter --name /aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-arm64
+      --region eu-west-3 --query Parameter.Value" puis passer en parametre du stack.
+
+# ─────────────────────────────────────────────────────────────────────
+# Conditions
+# ─────────────────────────────────────────────────────────────────────
+Conditions:
+  HasAlarmEmail: !Not [!Equals [!Ref AlarmEmail, '']]
 
 # ─────────────────────────────────────────────────────────────────────
 # Ressources
@@ -265,7 +299,7 @@ Resources:
       DBInstanceIdentifier: !Sub "${AWS::StackName}"
       Engine: postgres
       EngineVersion: !Ref DBEngineVersion
-      DBInstanceClass: db.t4g.micro
+      DBInstanceClass: !Ref DBInstanceClass
       AllocatedStorage: '20'
       StorageType: gp3
       StorageEncrypted: true
@@ -275,9 +309,11 @@ Resources:
       DBSubnetGroupName: !Ref RdsSubnetGroup
       VPCSecurityGroups: [!Ref RdsSecurityGroup]
       PubliclyAccessible: false
-      MultiAZ: false
+      MultiAZ: !Ref DBMultiAZ
       BackupRetentionPeriod: 7
       DeletionProtection: false
+      EnablePerformanceInsights: true
+      PerformanceInsightsRetentionPeriod: 7
       Tags:
         - { Key: Project, Value: Revela }
 
@@ -466,6 +502,113 @@ Resources:
         - Type: forward
           TargetGroupArn: !Ref TargetGroup
 
+  # ── Monitoring : SNS + alarmes CloudWatch ─────────────────────────
+  AlarmTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: !Sub "${AWS::StackName}-alarms"
+      DisplayName: Revela Alarms
+      Tags:
+        - { Key: Project, Value: Revela }
+
+  AlarmEmailSubscription:
+    Type: AWS::SNS::Subscription
+    Condition: HasAlarmEmail
+    Properties:
+      TopicArn: !Ref AlarmTopic
+      Protocol: email
+      Endpoint: !Ref AlarmEmail
+
+  RdsFreeMemoryAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub "${AWS::StackName}-rds-free-memory-low"
+      AlarmDescription: RAM RDS sous 200 Mo — risque d'OOM ou de swap
+      Namespace: AWS/RDS
+      MetricName: FreeableMemory
+      Dimensions:
+        - { Name: DBInstanceIdentifier, Value: !Sub "${AWS::StackName}" }
+      Statistic: Average
+      Period: 300
+      EvaluationPeriods: 2
+      Threshold: 209715200  # 200 Mo en octets
+      ComparisonOperator: LessThanThreshold
+      TreatMissingData: notBreaching
+      AlarmActions: [!Ref AlarmTopic]
+      OKActions: [!Ref AlarmTopic]
+
+  RdsCpuCreditBalanceAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub "${AWS::StackName}-rds-cpu-credits-low"
+      AlarmDescription: Credits CPU RDS sous 50 — throttling imminent
+      Namespace: AWS/RDS
+      MetricName: CPUCreditBalance
+      Dimensions:
+        - { Name: DBInstanceIdentifier, Value: !Sub "${AWS::StackName}" }
+      Statistic: Average
+      Period: 300
+      EvaluationPeriods: 2
+      Threshold: 50
+      ComparisonOperator: LessThanThreshold
+      TreatMissingData: notBreaching
+      AlarmActions: [!Ref AlarmTopic]
+      OKActions: [!Ref AlarmTopic]
+
+  RdsConnectionsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub "${AWS::StackName}-rds-connections-high"
+      AlarmDescription: Plus de 80 connexions actives — pool sature ou fuite
+      Namespace: AWS/RDS
+      MetricName: DatabaseConnections
+      Dimensions:
+        - { Name: DBInstanceIdentifier, Value: !Sub "${AWS::StackName}" }
+      Statistic: Maximum
+      Period: 60
+      EvaluationPeriods: 3
+      Threshold: 80
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+      AlarmActions: [!Ref AlarmTopic]
+      OKActions: [!Ref AlarmTopic]
+
+  RdsCpuUsageAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub "${AWS::StackName}-rds-cpu-high"
+      AlarmDescription: CPU RDS au-dessus de 80% pendant 10 min
+      Namespace: AWS/RDS
+      MetricName: CPUUtilization
+      Dimensions:
+        - { Name: DBInstanceIdentifier, Value: !Sub "${AWS::StackName}" }
+      Statistic: Average
+      Period: 300
+      EvaluationPeriods: 2
+      Threshold: 80
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+      AlarmActions: [!Ref AlarmTopic]
+      OKActions: [!Ref AlarmTopic]
+
+  RdsStorageAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub "${AWS::StackName}-rds-storage-low"
+      AlarmDescription: Moins de 5 Go libres sur la RDS
+      Namespace: AWS/RDS
+      MetricName: FreeStorageSpace
+      Dimensions:
+        - { Name: DBInstanceIdentifier, Value: !Sub "${AWS::StackName}" }
+      Statistic: Average
+      Period: 300
+      EvaluationPeriods: 2
+      Threshold: 5368709120  # 5 Go en octets
+      ComparisonOperator: LessThanThreshold
+      TreatMissingData: notBreaching
+      AlarmActions: [!Ref AlarmTopic]
+      OKActions: [!Ref AlarmTopic]
+
 # ─────────────────────────────────────────────────────────────────────
 # Outputs
 # ─────────────────────────────────────────────────────────────────────
@@ -504,6 +647,10 @@ Outputs:
   AdminPasswordSecretArn:
     Description: Secret contenant le mot de passe super-admin — recuperer dans la console Secrets Manager pour la 1ere connexion
     Value: !Ref AdminPasswordSecret
+
+  AlarmTopicArn:
+    Description: Topic SNS qui recoit les alarmes CloudWatch. Souscrire d'autres emails via la console SNS.
+    Value: !Ref AlarmTopic
 
   Ec2InstanceId:
     Description: Instance ID (pour Session Manager — Console AWS > Systems Manager > Session Manager > Start Session)

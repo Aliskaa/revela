@@ -1,0 +1,1 @@
+ALTER TABLE "participants" ADD COLUMN "avatar_url" varchar(512);

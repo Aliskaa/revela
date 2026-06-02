@@ -1,3 +1,5 @@
+// Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
+
 import type { ParticipantQuestionnaireMatrix } from '@aor/types';
 import {
     Box,
@@ -9,13 +11,41 @@ import {
     ToggleButtonGroup,
     Typography,
 } from '@mui/material';
+import type { SxProps, Theme } from '@mui/material';
 import { BarChart3, Table2 } from 'lucide-react';
 import { useState } from 'react';
+
 import { MatrixChartMode } from './MatrixChartMode';
 import { MatrixTableMode } from './MatrixTableMode';
 
 type QuestionnaireMatrixDisplayProps = {
     matrix: ParticipantQuestionnaireMatrix;
+};
+
+const toggleGroupSx = {
+    bgcolor: 'surface.lavenderGrey',
+    p: 0.5,
+    borderRadius: 2,
+    gap: 0.5,
+} as const;
+
+const toggleButtonSx: SxProps<Theme> = {
+    px: 2,
+    py: 0.75,
+    border: 'none',
+    borderRadius: 1.5,
+    textTransform: 'none' as const,
+    fontWeight: 600,
+    fontSize: '0.8125rem',
+    color: 'text.secondary',
+    '&.Mui-selected': {
+        bgcolor: 'background.paper',
+        color: 'primary.main',
+        boxShadow: theme => theme.palette.shadow.brandPaper,
+    },
+    '&.Mui-selected:hover': {
+        bgcolor: 'background.paper',
+    },
 };
 
 export const QuestionnaireMatrixDisplay = ({ matrix }: QuestionnaireMatrixDisplayProps) => {
@@ -29,18 +59,22 @@ export const QuestionnaireMatrixDisplay = ({ matrix }: QuestionnaireMatrixDispla
                 justifyContent="space-between"
                 alignItems={{ xs: 'flex-start', sm: 'center' }}
                 spacing={2}
-                sx={{ mb: 4 }}
+                sx={{ mb: 3 }}
             >
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }}>
                     <Chip
                         label={`${matrix.peer_columns.length} retour(s) pair(s)`}
                         size="small"
                         variant="outlined"
-                        sx={{ fontWeight: 600 }}
+                        sx={{
+                            fontWeight: 600,
+                            borderColor: 'surface.outlineVariant',
+                            color: 'text.secondary',
+                        }}
                     />
                 </Box>
 
-                <Stack direction="row" alignItems="center" spacing={2}>
+                <Stack direction="row" alignItems="center" spacing={2} flexWrap="wrap" useFlexGap>
                     <FormControlLabel
                         control={
                             <Checkbox
@@ -63,31 +97,13 @@ export const QuestionnaireMatrixDisplay = ({ matrix }: QuestionnaireMatrixDispla
                         }}
                         size="small"
                         aria-label="Mode d'affichage"
-                        sx={{ bgcolor: 'background.default', p: 0.5, borderRadius: 2 }}
+                        sx={toggleGroupSx}
                     >
-                        <ToggleButton
-                            value="table"
-                            aria-label="Tableau"
-                            sx={{
-                                px: 2,
-                                border: 'none',
-                                borderRadius: 1.5,
-                                '&.Mui-selected': { bgcolor: 'background.paper', boxShadow: 1 },
-                            }}
-                        >
+                        <ToggleButton value="table" aria-label="Tableau" sx={toggleButtonSx}>
                             <Table2 size={16} style={{ marginRight: 8 }} />
                             Tableau
                         </ToggleButton>
-                        <ToggleButton
-                            value="chart"
-                            aria-label="Graphique"
-                            sx={{
-                                px: 2,
-                                border: 'none',
-                                borderRadius: 1.5,
-                                '&.Mui-selected': { bgcolor: 'background.paper', boxShadow: 1 },
-                            }}
-                        >
+                        <ToggleButton value="chart" aria-label="Graphique" sx={toggleButtonSx}>
                             <BarChart3 size={16} style={{ marginRight: 8 }} />
                             Graphique
                         </ToggleButton>
