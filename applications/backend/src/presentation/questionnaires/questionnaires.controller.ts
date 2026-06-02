@@ -30,6 +30,7 @@ export class QuestionnairesController {
     }
 
     @Get(':qid')
+    @UseGuards(AdminOrParticipantJwtAuthGuard)
     public getOne(@Param('qid') qid: string) {
         return this.getQuestionnaireDetail.execute(qid);
     }

@@ -48,6 +48,8 @@ import {
     TransparencyScoreNotComputableError,
 } from '@src/application/transparency/activate-participant-transparency-score.usecase';
 import type { GetParticipantTransparencyScoreUseCase } from '@src/application/transparency/get-participant-transparency-score.usecase';
+import { CurrentCoachScope } from '@src/presentation/current-coach-scope.decorator';
+import { CurrentUser } from '@src/presentation/current-user.decorator';
 import { ResponsesExceptionFilter } from '@src/presentation/responses/responses-exception.filter';
 import { ZodValidationPipe } from '@src/presentation/zod-validation.pipe';
 import { transparencyScoreSnapshotToJson } from './admin.presenters';
@@ -68,6 +70,7 @@ import {
     REASSIGN_ADMIN_CAMPAIGN_COACH_USE_CASE_SYMBOL,
     UPDATE_ADMIN_CAMPAIGN_STATUS_USE_CASE_SYMBOL,
 } from './admin.tokens';
+import { CampaignAccessGuard } from './campaign-access.guard';
 
 @ApiTags('admin-campaigns')
 @ApiBearerAuth('jwt')
@@ -101,28 +104,16 @@ export class AdminCampaignsController {
         private readonly audit: AuditLoggerService
     ) {}
 
-    private async ensureCampaignAccess(campaignId: number, user: JwtValidatedUser): Promise<void> {
-        if (user.scope !== 'coach') {
-            return;
-        }
-        const detail = await this.getAdminCampaignDetail.execute(campaignId, { coachId: user.coachId });
-        if (!detail) {
-            throw new UnauthorizedException();
-        }
-    }
-
     @Get('campaigns')
-    public listCampaigns(@Req() req: { user: JwtValidatedUser }) {
-        const coachId = req.user.scope === 'coach' ? req.user.coachId : undefined;
+    public listCampaigns(@CurrentCoachScope() coachId: number | undefined) {
         return this.listAdminCampaigns.execute({ coachId });
     }
 
     @Get('campaigns/:campaignId')
     public async getCampaign(
         @Param('campaignId', ParseIntPipe) campaignId: number,
-        @Req() req: { user: JwtValidatedUser }
+        @CurrentCoachScope() coachId: number | undefined
     ) {
-        const coachId = req.user.scope === 'coach' ? req.user.coachId : undefined;
         return this.getAdminCampaignDetail.execute(campaignId, { coachId });
     }
 
@@ -134,19 +125,18 @@ export class AdminCampaignsController {
     @Get('campaigns/:campaignId/synthesis-matrix')
     public async getCampaignSynthesisMatrix(
         @Param('campaignId', ParseIntPipe) campaignId: number,
-        @Req() req: { user: JwtValidatedUser }
+        @CurrentCoachScope() coachId: number | undefined
     ) {
-        const coachId = req.user.scope === 'coach' ? req.user.coachId : undefined;
         return this.getAdminCampaignSynthesisMatrix.execute({ campaignId, coachId });
     }
 
     @Patch('campaigns/:campaignId/coach')
     public async reassignCampaignCoach(
         @Param('campaignId', ParseIntPipe) campaignId: number,
-        @Req() req: { user: JwtValidatedUser },
+        @CurrentUser() user: JwtValidatedUser,
         @Body(new ZodValidationPipe(reassignCampaignCoachBodySchema)) body: ReassignCampaignCoachBody
     ) {
-        if (req.user.scope === 'coach') {
+        if (user.scope === 'coach') {
             throw new UnauthorizedException();
         }
         const coachId = typeof body.coach_id === 'number' ? body.coach_id : Number(body.coach_id);
@@ -155,12 +145,12 @@ export class AdminCampaignsController {
 
     @Post('campaigns')
     public createCampaign(
-        @Req() req: { user: JwtValidatedUser },
+        @CurrentUser() user: JwtValidatedUser,
         @Body(new ZodValidationPipe(createAdminCampaignBodySchema)) body: CreateAdminCampaignBody
     ) {
         // Un coach ne peut pas créer de campagne en autonomie : c'est une responsabilité admin.
         // Cf. P06 du suivi produit 2026-05-02.
-        if (req.user.scope === 'coach') {
+        if (user.scope === 'coach') {
             throw new UnauthorizedException(
                 "La création d'une campagne est réservée à l'admin. Demandez à l'admin de vous attribuer une campagne."
             );
@@ -169,33 +159,28 @@ export class AdminCampaignsController {
     }
 
     @Post('campaigns/:campaignId/status')
+    @UseGuards(CampaignAccessGuard)
     public async updateCampaignStatus(
         @Param('campaignId', ParseIntPipe) campaignId: number,
-        @Req() req: { user: JwtValidatedUser },
         @Body(new ZodValidationPipe(updateAdminCampaignStatusBodySchema)) body: UpdateAdminCampaignStatusBody
     ) {
-        await this.ensureCampaignAccess(campaignId, req.user);
         return this.updateAdminCampaignStatus.execute(campaignId, body.status ?? 'draft', {
             alignStartsAtToNow: Boolean(body.align_starts_at_to_now),
         });
     }
 
     @Post('campaigns/:campaignId/archive')
-    public async archiveCampaign(
-        @Param('campaignId', ParseIntPipe) campaignId: number,
-        @Req() req: { user: JwtValidatedUser }
-    ) {
-        await this.ensureCampaignAccess(campaignId, req.user);
+    @UseGuards(CampaignAccessGuard)
+    public async archiveCampaign(@Param('campaignId', ParseIntPipe) campaignId: number) {
         return this.updateAdminCampaignStatus.execute(campaignId, 'archived');
     }
 
     @Post('campaigns/:campaignId/invite-company-participants')
+    @UseGuards(CampaignAccessGuard)
     public async inviteCompanyParticipants(
         @Param('campaignId', ParseIntPipe) campaignId: number,
-        @Req() req: { user: JwtValidatedUser },
         @Body(new ZodValidationPipe(inviteCampaignParticipantsBodySchema)) body: InviteCampaignParticipantsBody
     ) {
-        await this.ensureCampaignAccess(campaignId, req.user);
         const participantIds = Array.isArray(body.participant_ids)
             ? body.participant_ids.filter((n): n is number => Number.isFinite(n))
             : undefined;
@@ -203,27 +188,25 @@ export class AdminCampaignsController {
     }
 
     @Post('campaigns/:campaignId/import-participants')
+    @UseGuards(CampaignAccessGuard)
     @UseInterceptors(FileInterceptor('file'))
     public async importParticipantsForCampaign(
         @Param('campaignId', ParseIntPipe) campaignId: number,
-        @Req() req: { user: JwtValidatedUser },
+        @CurrentCoachScope() coachId: number | undefined,
         @UploadedFile() file: Express.Multer.File | undefined
     ) {
-        await this.ensureCampaignAccess(campaignId, req.user);
-        const coachId = req.user.scope === 'coach' ? req.user.coachId : undefined;
         return this.importParticipantsToCampaign.execute(campaignId, file?.buffer, { coachId });
     }
 
     @Post('campaigns/:campaignId/participants')
+    @UseGuards(CampaignAccessGuard)
     public async addParticipantToCampaignEndpoint(
         @Param('campaignId', ParseIntPipe) campaignId: number,
-        @Req() req: { user: JwtValidatedUser },
+        @CurrentCoachScope() coachId: number | undefined,
         @Body(new ZodValidationPipe(addParticipantBodySchema)) body: AddParticipantBody
     ) {
         // Ouvert à l'admin et au coach (le coach est restreint à ses campagnes via
-        // `ensureCampaignAccess`). Cf. P08 du suivi produit 2026-05-02.
-        await this.ensureCampaignAccess(campaignId, req.user);
-        const coachId = req.user.scope === 'coach' ? req.user.coachId : undefined;
+        // `CampaignAccessGuard`). Cf. P08 du suivi produit 2026-05-02.
         return this.addParticipantToCampaign.execute(campaignId, body, { coachId });
     }
 
@@ -232,12 +215,11 @@ export class AdminCampaignsController {
      * Renvoie `null` tant que le coach/admin n'a pas activé le calcul.
      */
     @Get('campaigns/:campaignId/participants/:participantId/transparency')
+    @UseGuards(CampaignAccessGuard)
     public async getCampaignParticipantTransparency(
         @Param('campaignId', ParseIntPipe) campaignId: number,
-        @Param('participantId', ParseIntPipe) participantId: number,
-        @Req() req: { user: JwtValidatedUser }
+        @Param('participantId', ParseIntPipe) participantId: number
     ) {
-        await this.ensureCampaignAccess(campaignId, req.user);
         const snapshot = await this.getParticipantTransparencyScore.execute({ campaignId, participantId });
         return { snapshot: snapshot ? transparencyScoreSnapshotToJson(snapshot) : null };
     }
@@ -247,16 +229,17 @@ export class AdminCampaignsController {
      * et à l'admin. Calcule la valeur depuis la matrice et persiste un snapshot figé.
      */
     @Post('campaigns/:campaignId/participants/:participantId/transparency/activate')
+    @UseGuards(CampaignAccessGuard)
     public async activateCampaignParticipantTransparency(
         @Param('campaignId', ParseIntPipe) campaignId: number,
         @Param('participantId', ParseIntPipe) participantId: number,
-        @Req() req: { user: JwtValidatedUser } & { ip?: string }
+        @CurrentUser() user: JwtValidatedUser,
+        @CurrentCoachScope() coachId: number | undefined,
+        @Req() req: { ip?: string }
     ) {
-        await this.ensureCampaignAccess(campaignId, req.user);
-        const coachId = req.user.scope === 'coach' ? req.user.coachId : undefined;
         // En scope super-admin, `coachId` est `null` côté JWT : le use case résoudra vers la
         // ligne sentinelle « Admin » de `coaches` (P05).
-        const actorCoachId = req.user.coachId ?? null;
+        const actorCoachId = user.coachId ?? null;
         let snapshot: Awaited<ReturnType<ActivateParticipantTransparencyScoreUseCase['execute']>>;
         try {
             snapshot = await this.activateParticipantTransparencyScore.execute({
@@ -272,8 +255,8 @@ export class AdminCampaignsController {
             throw err;
         }
         void this.audit.record({
-            actorType: req.user.scope === 'super-admin' ? 'super-admin' : 'coach',
-            actorId: req.user.coachId ?? null,
+            actorType: user.scope === 'super-admin' ? 'super-admin' : 'coach',
+            actorId: user.coachId ?? null,
             action: 'admin.transparency.activate',
             resourceType: 'participant',
             resourceId: participantId,

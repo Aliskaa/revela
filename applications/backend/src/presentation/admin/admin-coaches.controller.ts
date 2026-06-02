@@ -12,7 +12,6 @@ import {
     ParseIntPipe,
     Patch,
     Post,
-    Req,
     Res,
     UnauthorizedException,
     UploadedFile,
@@ -44,6 +43,7 @@ import { ParticipantAvatarExceptionFilter } from '@src/presentation/participant-
 import { ResponsesExceptionFilter } from '@src/presentation/responses/responses-exception.filter';
 import { ZodValidationPipe } from '@src/presentation/zod-validation.pipe';
 
+import { CurrentUser } from '@src/presentation/current-user.decorator';
 import type { JwtValidatedUser } from '@src/presentation/jwt-validated-user';
 import { AdminApplicationExceptionFilter } from './admin-application-exception.filter';
 import { AdminJwtAuthGuard } from './admin-jwt-auth.guard';
@@ -115,10 +115,9 @@ export class AdminCoachesController {
     }
 
     @Get('coaches')
-    public async listCoaches(@Req() req: { user: JwtValidatedUser }) {
+    public async listCoaches(@CurrentUser() user: JwtValidatedUser) {
         const coaches = await this.listAdminCoaches.execute();
-        const visibleCoaches =
-            req.user.scope === 'coach' ? coaches.filter(coach => coach.id === req.user.coachId) : coaches;
+        const visibleCoaches = user.scope === 'coach' ? coaches.filter(coach => coach.id === user.coachId) : coaches;
         return Promise.all(
             visibleCoaches.map(async coach => {
                 const avatar_url = await this.coaches.resolveAvatarUrl(coach.id);
@@ -132,10 +131,10 @@ export class AdminCoachesController {
 
     @Post('coaches')
     public async createCoach(
-        @Req() req: { user: JwtValidatedUser },
+        @CurrentUser() user: JwtValidatedUser,
         @Body(new ZodValidationPipe(createAdminCoachBodySchema)) body: CreateAdminCoachBody
     ) {
-        if (req.user.scope === 'coach') {
+        if (user.scope === 'coach') {
             throw new UnauthorizedException();
         }
         const coach = await this.createAdminCoach.execute(body);
@@ -143,8 +142,8 @@ export class AdminCoachesController {
     }
 
     @Get('coaches/:coachId')
-    public async getCoach(@Param('coachId', ParseIntPipe) coachId: number, @Req() req: { user: JwtValidatedUser }) {
-        this.ensureCoachEntityAccess(coachId, req.user);
+    public async getCoach(@Param('coachId', ParseIntPipe) coachId: number, @CurrentUser() user: JwtValidatedUser) {
+        this.ensureCoachEntityAccess(coachId, user);
         const detail = await this.getAdminCoachDetail.execute(coachId);
         return adminCoachDetailToJson(detail, { isAdmin: this.isAdminCoachUsername(detail.coach.username) });
     }
@@ -153,10 +152,10 @@ export class AdminCoachesController {
     @UseFilters(ParticipantAvatarExceptionFilter)
     public async getCoachAvatar(
         @Param('coachId', ParseIntPipe) coachId: number,
-        @Req() req: { user: JwtValidatedUser },
+        @CurrentUser() user: JwtValidatedUser,
         @Res() res: Response
     ) {
-        this.ensureCoachEntityAccess(coachId, req.user);
+        this.ensureCoachEntityAccess(coachId, user);
         const { buffer, mimeType } = await this.getAdminCoachAvatar.execute(coachId);
         res.setHeader('Content-Type', mimeType);
         res.setHeader('Cache-Control', 'private, max-age=86400');
@@ -168,20 +167,20 @@ export class AdminCoachesController {
     @UseFilters(ParticipantAvatarExceptionFilter)
     public async uploadCoachAvatar(
         @Param('coachId', ParseIntPipe) coachId: number,
-        @Req() req: { user: JwtValidatedUser },
+        @CurrentUser() user: JwtValidatedUser,
         @UploadedFile() file: Express.Multer.File | undefined
     ) {
-        await this.ensureCoachAvatarUploadAccess(coachId, req.user);
+        await this.ensureCoachAvatarUploadAccess(coachId, user);
         return this.uploadAdminCoachAvatar.execute(coachId, file);
     }
 
     @Patch('coaches/:coachId')
     public async updateCoach(
         @Param('coachId', ParseIntPipe) coachId: number,
-        @Req() req: { user: JwtValidatedUser },
+        @CurrentUser() user: JwtValidatedUser,
         @Body(new ZodValidationPipe(updateAdminCoachBodySchema)) body: UpdateAdminCoachBody
     ) {
-        if (req.user.scope === 'coach') {
+        if (user.scope === 'coach') {
             throw new UnauthorizedException(
                 'La modification du profil coach est réservée à l’admin. Utilisez la page profil pour changer votre photo.'
             );
@@ -194,9 +193,9 @@ export class AdminCoachesController {
     @HttpCode(HttpStatus.NO_CONTENT)
     public async deleteCoach(
         @Param('coachId', ParseIntPipe) coachId: number,
-        @Req() req: { user: JwtValidatedUser }
+        @CurrentUser() user: JwtValidatedUser
     ): Promise<void> {
-        if (req.user.scope === 'coach') {
+        if (user.scope === 'coach') {
             throw new UnauthorizedException();
         }
         await this.deleteAdminCoach.execute(coachId);

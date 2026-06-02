@@ -1,12 +1,13 @@
 // Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
 
-import { Controller, Get, Inject, Query, Req, UnauthorizedException, UseFilters, UseGuards } from '@nestjs/common';
+import { Controller, Get, Inject, Query, UnauthorizedException, UseFilters, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
 import type { ListAdminAuditEventsUseCase } from '@src/application/admin/audit/list-admin-audit-events.usecase';
+import { CurrentUser } from '@src/presentation/current-user.decorator';
+import type { JwtValidatedUser } from '@src/presentation/jwt-validated-user';
 import { ResponsesExceptionFilter } from '@src/presentation/responses/responses-exception.filter';
 
-import type { JwtValidatedUser } from '@src/presentation/jwt-validated-user';
 import { AdminApplicationExceptionFilter } from './admin-application-exception.filter';
 import { AdminJwtAuthGuard } from './admin-jwt-auth.guard';
 import { LIST_ADMIN_AUDIT_EVENTS_USE_CASE_SYMBOL } from './admin.tokens';
@@ -28,11 +29,11 @@ export class AdminAuditController {
      */
     @Get('audit-events')
     public async listAuditEvents(
-        @Req() req: { user: JwtValidatedUser },
+        @CurrentUser() user: JwtValidatedUser,
         @Query('page') page?: string,
         @Query('per_page') perPage?: string
     ) {
-        if (req.user.scope !== 'super-admin') {
+        if (user.scope !== 'super-admin') {
             throw new UnauthorizedException();
         }
         const result = await this.listAdminAuditEvents.execute({

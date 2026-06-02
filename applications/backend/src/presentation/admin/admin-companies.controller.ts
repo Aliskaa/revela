@@ -12,7 +12,6 @@ import {
     ParseIntPipe,
     Patch,
     Post,
-    Req,
     Res,
     UnauthorizedException,
     UploadedFile,
@@ -44,6 +43,8 @@ import { ParticipantAvatarExceptionFilter } from '@src/presentation/participant-
 import { ResponsesExceptionFilter } from '@src/presentation/responses/responses-exception.filter';
 import { ZodValidationPipe } from '@src/presentation/zod-validation.pipe';
 
+import { CurrentCoachScope } from '@src/presentation/current-coach-scope.decorator';
+import { CurrentUser } from '@src/presentation/current-user.decorator';
 import type { JwtValidatedUser } from '@src/presentation/jwt-validated-user';
 import { AdminApplicationExceptionFilter } from './admin-application-exception.filter';
 import { AdminJwtAuthGuard } from './admin-jwt-auth.guard';
@@ -88,8 +89,7 @@ export class AdminCompaniesController {
     ) {}
 
     @Get('companies')
-    public async listCompanies(@Req() req: { user: JwtValidatedUser }) {
-        const coachId = req.user.scope === 'coach' ? req.user.coachId : undefined;
+    public async listCompanies(@CurrentCoachScope() coachId: number | undefined) {
         const rows = await this.listAdminCompanies.execute({ coachId });
         return rows.map(companyToAdminJson);
     }
@@ -121,11 +121,11 @@ export class AdminCompaniesController {
 
     @Post('companies')
     public async createCompany(
-        @Req() req: { user: JwtValidatedUser },
+        @CurrentUser() user: JwtValidatedUser,
         @Body(new ZodValidationPipe(adminCompanyMutationBodySchema)) body: AdminCompanyMutationBody
     ) {
         // Création d'entreprise réservée à l'admin (cf. P07 du suivi produit 2026-05-02).
-        if (req.user.scope === 'coach') {
+        if (user.scope === 'coach') {
             throw new UnauthorizedException("La création d'une entreprise est réservée à l'admin.");
         }
         const row = await this.createAdminCompany.execute(body);
@@ -145,10 +145,10 @@ export class AdminCompaniesController {
     @HttpCode(HttpStatus.NO_CONTENT)
     public async deleteCompany(
         @Param('companyId', ParseIntPipe) companyId: number,
-        @Req() req: { user: JwtValidatedUser }
+        @CurrentUser() user: JwtValidatedUser
     ): Promise<void> {
         // Suppression d'entreprise réservée à l'admin (cf. P07 du suivi produit 2026-05-02).
-        if (req.user.scope === 'coach') {
+        if (user.scope === 'coach') {
             throw new UnauthorizedException("La suppression d'une entreprise est réservée à l'admin.");
         }
         await this.deleteAdminCompany.execute(companyId);
@@ -158,12 +158,12 @@ export class AdminCompaniesController {
     @UseInterceptors(FileInterceptor('file'))
     public async importParticipantsForCompany(
         @Param('companyId', ParseIntPipe) companyId: number,
-        @Req() req: { user: JwtValidatedUser },
+        @CurrentUser() user: JwtValidatedUser,
         @UploadedFile() file: Express.Multer.File | undefined
     ) {
         // L'import CSV en masse est réservé à l'admin. Les coachs ajoutent les participants
         // unitairement via le formulaire de la fiche campagne (cf. P08 du suivi produit).
-        if (req.user.scope === 'coach') {
+        if (user.scope === 'coach') {
             throw new UnauthorizedException(
                 "L'import CSV en masse est réservé à l'admin. Pour ajouter un participant, utilisez le formulaire d'ajout unitaire depuis la fiche campagne."
             );
@@ -175,12 +175,11 @@ export class AdminCompaniesController {
     @Post('companies/:companyId/participants')
     public async addParticipantToCompanyEndpoint(
         @Param('companyId', ParseIntPipe) companyId: number,
-        @Req() req: { user: JwtValidatedUser },
+        @CurrentCoachScope() coachId: number | undefined,
         @Body(new ZodValidationPipe(addParticipantBodySchema)) body: AddParticipantBody
     ) {
         // Ouvert à l'admin et au coach. Pour le coach, le use case vérifie qu'il a au moins
         // une campagne dans cette entreprise. Cf. P08 du suivi produit 2026-05-02.
-        const coachId = req.user.scope === 'coach' ? req.user.coachId : undefined;
         return this.addParticipantToCompany.execute(companyId, body, { coachId });
     }
 }

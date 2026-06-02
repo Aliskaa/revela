@@ -43,7 +43,7 @@ export type AddParticipantToCampaignResult = {
  * Variante unitaire de `ImportParticipantsToCampaignUseCase` (cf. P08 du suivi produit) :
  * permet à l'admin **et** au coach d'ajouter un participant à une campagne via un formulaire
  * (et non via un import CSV). Le restriction scope=coach est appliquée au niveau du
- * controller (`ensureCampaignAccess`).
+ * controller (`CampaignAccessGuard`).
  *
  * Comportement aligné sur l'import CSV existant :
  * - Si l'email existe déjà ET que le coach n'en est pas propriétaire (admin ou autre coach) :

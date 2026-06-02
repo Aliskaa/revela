@@ -32,6 +32,7 @@ import {
     EXPORT_ADMIN_RESPONSES_CSV_USE_CASE_SYMBOL,
     LIST_ADMIN_RESPONSES_USE_CASE_SYMBOL,
 } from './admin.tokens';
+import { CampaignAccessGuard } from './campaign-access.guard';
 
 /**
  * `AdminCampaignsModule` est importé pour exposer `GET_ADMIN_CAMPAIGN_DETAIL` que le contrôleur
@@ -41,6 +42,7 @@ import {
     imports: [AdminSharedModule, AdminCampaignsModule, ResponsesModule],
     controllers: [AdminResponsesController],
     providers: [
+        CampaignAccessGuard,
         {
             provide: LIST_ADMIN_RESPONSES_USE_CASE_SYMBOL,
             useFactory: (responses: IResponsesAdminListPort) => new ListAdminResponsesUseCase({ responses }),

@@ -41,6 +41,7 @@ import {
     GET_ADMIN_AI_RESTITUTION_USE_CASE_SYMBOL,
     REJECT_AI_RESTITUTION_USE_CASE_SYMBOL,
 } from './admin.tokens';
+import { CampaignAccessGuard } from './campaign-access.guard';
 
 /**
  * Module Restitution IA — endpoints admin/coach §10 PDF AOR.
@@ -52,12 +53,13 @@ import {
  * (puis AWS Secrets Manager).
  *
  * Importe `AdminCampaignsModule` pour réutiliser `GET_ADMIN_CAMPAIGN_DETAIL_USE_CASE_SYMBOL`
- * (ensureCampaignAccess côté contrôleur).
+ * (consommé par le `CampaignAccessGuard` qui scope l'accès campagne du coach).
  */
 @Module({
     imports: [AdminSharedModule, AdminCampaignsModule, AuditModule],
     controllers: [AdminAiRestitutionsController],
     providers: [
+        CampaignAccessGuard,
         FakeLlmAdapter,
         AnthropicLlmAdapter,
         {

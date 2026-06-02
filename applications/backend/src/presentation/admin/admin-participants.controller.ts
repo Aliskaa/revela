@@ -19,6 +19,8 @@ import {
     UseGuards,
     UseInterceptors,
 } from '@nestjs/common';
+// `Req` est conservé : il sert encore à récupérer `req.ip` (concern transport pur) sur
+// les handlers d'audit, le `req.user` étant lui exposé via `@CurrentUser()`.
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import type { Response } from 'express';
@@ -39,6 +41,8 @@ import { AuditLoggerService } from '@src/application/audit/audit-logger.service'
 import type { GetParticipantQuestionnaireMatrixUseCase } from '@src/application/participant-session/get-participant-questionnaire-matrix.usecase';
 import { ResponsesExceptionFilter } from '@src/presentation/responses/responses-exception.filter';
 
+import { CurrentCoachScope } from '@src/presentation/current-coach-scope.decorator';
+import { CurrentUser } from '@src/presentation/current-user.decorator';
 import type { JwtValidatedUser } from '@src/presentation/jwt-validated-user';
 import { ParticipantAvatarExceptionFilter } from '@src/presentation/participant-session/participant-avatar-exception.filter';
 import { GET_PARTICIPANT_QUESTIONNAIRE_MATRIX_USE_CASE_SYMBOL } from '@src/presentation/participant-session/participant.tokens';
@@ -124,13 +128,12 @@ export class AdminParticipantsController {
 
     @Get('participants')
     public async listParticipants(
-        @Req() req: { user: JwtValidatedUser },
+        @CurrentCoachScope() coachId: number | undefined,
         @Query('page') pageRaw: string,
         @Query('per_page') perPageRaw: string,
         @Query('company_id') companyIdRaw: string,
         @Query('q') qRaw: string
     ) {
-        const coachId = req.user.scope === 'coach' ? req.user.coachId : undefined;
         const result = await this.listAdminParticipants.execute({
             page: AdminParticipantsController.normalizePage(pageRaw),
             perPage: AdminParticipantsController.normalizePerPage(perPageRaw),
@@ -147,10 +150,9 @@ export class AdminParticipantsController {
 
     @Get('participants/:participantId')
     public async getParticipant(
-        @Req() req: { user: JwtValidatedUser },
+        @CurrentCoachScope() coachId: number | undefined,
         @Param('participantId', ParseIntPipe) participantId: number
     ) {
-        const coachId = req.user.scope === 'coach' ? req.user.coachId : undefined;
         const detail = await this.getAdminParticipantDetail.execute(participantId, { coachId });
         if (!detail) {
             throw new NotFoundException();
@@ -161,11 +163,10 @@ export class AdminParticipantsController {
     @Get('participants/:participantId/avatar')
     @UseFilters(ParticipantAvatarExceptionFilter)
     public async getParticipantAvatar(
-        @Req() req: { user: JwtValidatedUser },
+        @CurrentCoachScope() coachId: number | undefined,
         @Param('participantId', ParseIntPipe) participantId: number,
         @Res() res: Response
     ) {
-        const coachId = req.user.scope === 'coach' ? req.user.coachId : undefined;
         const { buffer, mimeType } = await this.getAdminParticipantAvatar.execute(participantId, { coachId });
         res.setHeader('Content-Type', mimeType);
         res.setHeader('Cache-Control', 'private, max-age=86400');
@@ -176,26 +177,26 @@ export class AdminParticipantsController {
     @UseInterceptors(FileInterceptor('file'))
     @UseFilters(ParticipantAvatarExceptionFilter)
     public async uploadParticipantAvatar(
-        @Req() req: { user: JwtValidatedUser },
+        @CurrentCoachScope() coachId: number | undefined,
         @Param('participantId', ParseIntPipe) participantId: number,
         @UploadedFile() file: Express.Multer.File | undefined
     ) {
-        const coachId = req.user.scope === 'coach' ? req.user.coachId : undefined;
         return this.uploadAdminParticipantAvatar.execute(participantId, file, { coachId });
     }
 
     @Patch('participants/:participantId')
     public async updateParticipant(
-        @Req() req: { user: JwtValidatedUser } & { ip?: string },
+        @CurrentUser() user: JwtValidatedUser,
+        @CurrentCoachScope() coachId: number | undefined,
         @Param('participantId', ParseIntPipe) participantId: number,
-        @Body() body: UpdateParticipantProfileBody
+        @Body() body: UpdateParticipantProfileBody,
+        @Req() req: { ip?: string }
     ) {
-        const coachId = req.user.scope === 'coach' ? req.user.coachId : undefined;
         const detail = await this.updateAdminParticipant.execute(participantId, body, { coachId });
 
         void this.audit.record({
-            actorType: req.user.scope === 'super-admin' ? 'super-admin' : 'coach',
-            actorId: req.user.coachId ?? null,
+            actorType: user.scope === 'super-admin' ? 'super-admin' : 'coach',
+            actorId: user.coachId ?? null,
             action: 'admin.participant.update',
             resourceType: 'participant',
             resourceId: participantId,
@@ -230,10 +231,9 @@ export class AdminParticipantsController {
     public getParticipantMatrix(
         @Param('participantId', ParseIntPipe) participantId: number,
         @Query('qid') qidRaw: string,
-        @Req() req: { user: JwtValidatedUser }
+        @CurrentCoachScope() coachId: number | undefined
     ) {
         const qid = AdminParticipantsController.normalizeQid(qidRaw) ?? '';
-        const coachId = req.user.scope === 'coach' ? req.user.coachId : undefined;
         return this.getParticipantQuestionnaireMatrix.execute({
             participantId,
             qid,
@@ -247,14 +247,15 @@ export class AdminParticipantsController {
     public async deleteParticipant(
         @Param('participantId', ParseIntPipe) participantId: number,
         @Body() body: { confirm?: boolean },
-        @Req() req: { user: JwtValidatedUser } & { ip?: string }
+        @CurrentUser() user: JwtValidatedUser,
+        @CurrentCoachScope() coachId: number | undefined,
+        @Req() req: { ip?: string }
     ) {
-        const coachId = req.user.scope === 'coach' ? req.user.coachId : undefined;
         const summary = await this.eraseParticipantRgpd.execute(participantId, body.confirm, { coachId });
 
         void this.audit.record({
-            actorType: req.user.scope === 'super-admin' ? 'super-admin' : 'coach',
-            actorId: req.user.coachId ?? null,
+            actorType: user.scope === 'super-admin' ? 'super-admin' : 'coach',
+            actorId: user.coachId ?? null,
             action: 'admin.participant.erase',
             resourceType: 'participant',
             resourceId: participantId,

@@ -60,11 +60,13 @@ import {
     REASSIGN_ADMIN_CAMPAIGN_COACH_USE_CASE_SYMBOL,
     UPDATE_ADMIN_CAMPAIGN_STATUS_USE_CASE_SYMBOL,
 } from './admin.tokens';
+import { CampaignAccessGuard } from './campaign-access.guard';
 
 @Module({
     imports: [AdminSharedModule, AuditModule],
     controllers: [AdminCampaignsController],
     providers: [
+        CampaignAccessGuard,
         {
             provide: LIST_ADMIN_CAMPAIGNS_USE_CASE_SYMBOL,
             useFactory: (campaigns: ICampaignsReadPort) => new ListAdminCampaignsUseCase({ campaigns }),

@@ -13,13 +13,11 @@ import {
     Post,
     Put,
     Req,
-    UnauthorizedException,
     UseFilters,
     UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
-import type { GetAdminCampaignDetailUseCase } from '@src/application/admin/campaigns/get-admin-campaign-detail.usecase';
 import type { ApproveAiRestitutionUseCase } from '@src/application/ai-restitutions/approve-ai-restitution.usecase';
 import type { EditAiRestitutionUseCase } from '@src/application/ai-restitutions/edit-ai-restitution.usecase';
 import type { GenerateAiRestitutionUseCase } from '@src/application/ai-restitutions/generate-ai-restitution.usecase';
@@ -28,6 +26,8 @@ import type { RejectAiRestitutionUseCase } from '@src/application/ai-restitution
 import { AuditLoggerService } from '@src/application/audit/audit-logger.service';
 import type { AiRestitutionRecord } from '@src/interfaces/ai-restitutions/IAiRestitutionsRepository.port';
 
+import { CurrentCoachScope } from '@src/presentation/current-coach-scope.decorator';
+import { CurrentUser } from '@src/presentation/current-user.decorator';
 import type { JwtValidatedUser } from '@src/presentation/jwt-validated-user';
 import { AdminAiRestitutionsExceptionFilter } from './admin-ai-restitutions-exception.filter';
 import { AdminApplicationExceptionFilter } from './admin-application-exception.filter';
@@ -37,9 +37,9 @@ import {
     EDIT_AI_RESTITUTION_USE_CASE_SYMBOL,
     GENERATE_AI_RESTITUTION_USE_CASE_SYMBOL,
     GET_ADMIN_AI_RESTITUTION_USE_CASE_SYMBOL,
-    GET_ADMIN_CAMPAIGN_DETAIL_USE_CASE_SYMBOL,
     REJECT_AI_RESTITUTION_USE_CASE_SYMBOL,
 } from './admin.tokens';
+import { CampaignAccessGuard } from './campaign-access.guard';
 
 const recordToAdminView = (r: AiRestitutionRecord): AiRestitutionAdminView => {
     const intermediate = r.intermediateJson as
@@ -72,7 +72,7 @@ const recordToAdminView = (r: AiRestitutionRecord): AiRestitutionAdminView => {
 @ApiTags('admin-ai-restitutions')
 @ApiBearerAuth('jwt')
 @Controller('admin')
-@UseGuards(AdminJwtAuthGuard)
+@UseGuards(AdminJwtAuthGuard, CampaignAccessGuard)
 @UseFilters(AdminApplicationExceptionFilter, AdminAiRestitutionsExceptionFilter)
 export class AdminAiRestitutionsController {
     public constructor(
@@ -86,29 +86,15 @@ export class AdminAiRestitutionsController {
         private readonly rejectRestitution: RejectAiRestitutionUseCase,
         @Inject(GET_ADMIN_AI_RESTITUTION_USE_CASE_SYMBOL)
         private readonly getAdminRestitution: GetAdminAiRestitutionUseCase,
-        @Inject(GET_ADMIN_CAMPAIGN_DETAIL_USE_CASE_SYMBOL)
-        private readonly getAdminCampaignDetail: GetAdminCampaignDetailUseCase,
         private readonly audit: AuditLoggerService
     ) {}
-
-    private async ensureCampaignAccess(campaignId: number, user: JwtValidatedUser): Promise<void> {
-        if (user.scope !== 'coach') {
-            return;
-        }
-        const detail = await this.getAdminCampaignDetail.execute(campaignId, { coachId: user.coachId });
-        if (!detail) {
-            throw new UnauthorizedException();
-        }
-    }
 
     @Get('campaigns/:campaignId/participants/:participantId/restitution')
     public async getRestitution(
         @Param('campaignId', ParseIntPipe) campaignId: number,
         @Param('participantId', ParseIntPipe) participantId: number,
-        @Req() req: { user: JwtValidatedUser }
+        @CurrentCoachScope() coachId: number | undefined
     ): Promise<AiRestitutionAdminEnvelope> {
-        await this.ensureCampaignAccess(campaignId, req.user);
-        const coachId = req.user.scope === 'coach' ? req.user.coachId : undefined;
         const record = await this.getAdminRestitution.execute({
             campaignId,
             participantId,
@@ -122,16 +108,16 @@ export class AdminAiRestitutionsController {
         @Param('campaignId', ParseIntPipe) campaignId: number,
         @Param('participantId', ParseIntPipe) participantId: number,
         @Body() body: unknown,
-        @Req() req: { user: JwtValidatedUser } & { ip?: string }
+        @CurrentUser() user: JwtValidatedUser,
+        @CurrentCoachScope() coachId: number | undefined,
+        @Req() req: { ip?: string }
     ): Promise<AiRestitutionAdminEnvelope> {
-        await this.ensureCampaignAccess(campaignId, req.user);
         const parsed = harnessInputSchema.safeParse(body);
         if (!parsed.success) {
             throw new BadRequestException(
                 'Corps de requête invalide pour la génération de la restitution (cf. schéma §5 PDF).'
             );
         }
-        const coachId = req.user.scope === 'coach' ? req.user.coachId : undefined;
         const record = await this.generateRestitution.execute({
             campaignId,
             participantId,
@@ -139,8 +125,8 @@ export class AdminAiRestitutionsController {
             harnessInput: parsed.data,
         });
         void this.audit.record({
-            actorType: req.user.scope === 'super-admin' ? 'super-admin' : 'coach',
-            actorId: req.user.coachId ?? null,
+            actorType: user.scope === 'super-admin' ? 'super-admin' : 'coach',
+            actorId: user.coachId ?? null,
             action: 'admin.ai_restitution.generate',
             resourceType: 'participant',
             resourceId: participantId,
@@ -161,14 +147,12 @@ export class AdminAiRestitutionsController {
         @Param('campaignId', ParseIntPipe) campaignId: number,
         @Param('participantId', ParseIntPipe) participantId: number,
         @Body() body: unknown,
-        @Req() req: { user: JwtValidatedUser }
+        @CurrentCoachScope() coachId: number | undefined
     ): Promise<AiRestitutionAdminEnvelope> {
-        await this.ensureCampaignAccess(campaignId, req.user);
         const parsed = editAiRestitutionBodySchema.safeParse(body);
         if (!parsed.success) {
             throw new BadRequestException("Corps de requête invalide pour l'édition de la restitution.");
         }
-        const coachId = req.user.scope === 'coach' ? req.user.coachId : undefined;
         const record = await this.editRestitution.execute({
             campaignId,
             participantId,
@@ -182,11 +166,11 @@ export class AdminAiRestitutionsController {
     public async approve(
         @Param('campaignId', ParseIntPipe) campaignId: number,
         @Param('participantId', ParseIntPipe) participantId: number,
-        @Req() req: { user: JwtValidatedUser } & { ip?: string }
+        @CurrentUser() user: JwtValidatedUser,
+        @CurrentCoachScope() coachId: number | undefined,
+        @Req() req: { ip?: string }
     ): Promise<AiRestitutionAdminEnvelope> {
-        await this.ensureCampaignAccess(campaignId, req.user);
-        const coachId = req.user.scope === 'coach' ? req.user.coachId : undefined;
-        const actorCoachId = req.user.coachId ?? null;
+        const actorCoachId = user.coachId ?? null;
         const record = await this.approveRestitution.execute({
             campaignId,
             participantId,
@@ -194,8 +178,8 @@ export class AdminAiRestitutionsController {
             actorCoachId,
         });
         void this.audit.record({
-            actorType: req.user.scope === 'super-admin' ? 'super-admin' : 'coach',
-            actorId: req.user.coachId ?? null,
+            actorType: user.scope === 'super-admin' ? 'super-admin' : 'coach',
+            actorId: user.coachId ?? null,
             action: 'admin.ai_restitution.approve',
             resourceType: 'participant',
             resourceId: participantId,
@@ -212,18 +196,18 @@ export class AdminAiRestitutionsController {
     public async reject(
         @Param('campaignId', ParseIntPipe) campaignId: number,
         @Param('participantId', ParseIntPipe) participantId: number,
-        @Req() req: { user: JwtValidatedUser } & { ip?: string }
+        @CurrentUser() user: JwtValidatedUser,
+        @CurrentCoachScope() coachId: number | undefined,
+        @Req() req: { ip?: string }
     ): Promise<AiRestitutionAdminEnvelope> {
-        await this.ensureCampaignAccess(campaignId, req.user);
-        const coachId = req.user.scope === 'coach' ? req.user.coachId : undefined;
         const record = await this.rejectRestitution.execute({
             campaignId,
             participantId,
             coachId,
         });
         void this.audit.record({
-            actorType: req.user.scope === 'super-admin' ? 'super-admin' : 'coach',
-            actorId: req.user.coachId ?? null,
+            actorType: user.scope === 'super-admin' ? 'super-admin' : 'coach',
+            actorId: user.coachId ?? null,
             action: 'admin.ai_restitution.reject',
             resourceType: 'participant',
             resourceId: participantId,

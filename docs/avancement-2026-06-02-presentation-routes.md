@@ -31,6 +31,7 @@
 | 7. Design des URLs (ADR-010) | 1 | 0 | 6 | 0 |
 | **Total (état initial)** | **4** | **6** | **12** | **0** |
 | **Total (au 2026-06-02, après Section 1)** | **3** | **5** | **12** | **2** |
+| **Total (au 2026-06-02, après Section 2)** | **2** | **3** | **12** | **5** |
 
 État global : **base fonctionnelle, conventions implicites divergentes**. Pas de
 refonte nécessaire — extraction de briques transverses + convergence progressive
@@ -68,18 +69,38 @@ avec les `issues` Zod. Réutilisable de façon déclarative : `@Body(new ZodVali
 ([invitations-public.controller.ts:77](../applications/backend/src/presentation/invitations/invitations-public.controller.ts#L77))
 — stratégie distincte, non couverte par la Priorité 1 (convergence ultérieure).
 
-## Section 2 — Authentification / autorisation
+## Section 2 — Authentification / autorisation — ✅ Traitée le 2026-06-02
 
-| Statut | Constat | Preuve |
-|---|---|---|
-| 🔴 | `GET /questionnaires/:qid` **sans aucun guard**, alors que le sibling `list()` exige `AdminOrParticipantJwtAuthGuard` et que la classe déclare `@ApiBearerAuth`. Pas d'`APP_GUARD` global → endpoint réellement ouvert | [questionnaires.controller.ts:32-35](../applications/backend/src/presentation/questionnaires/questionnaires.controller.ts#L32-L35) |
-| 🟠 | Scoping coach `req.user.scope === 'coach' ? req.user.coachId : undefined` dupliqué **~25 fois** ; `@Req() req: { user: JwtValidatedUser }` typé inline partout faute de décorateur `@CurrentUser()` | admin-campaigns / responses / coaches / companies / participants / ai-restitutions (tous) |
-| 🟠 | `ensureCampaignAccess()` **copié à l'identique** dans 3 controllers | [admin-responses.controller.ts:62](../applications/backend/src/presentation/admin/admin-responses.controller.ts#L62) ; [admin-campaigns.controller.ts:90](../applications/backend/src/presentation/admin/admin-campaigns.controller.ts#L90) ; [admin-ai-restitutions.controller.ts:94](../applications/backend/src/presentation/admin/admin-ai-restitutions.controller.ts#L94) |
-| ✅ (référence) | `@CurrentParticipantId()` = bon pattern décorateur côté participant ; guard classe = bon pattern côté admin | [current-participant-id.decorator.ts](../applications/backend/src/presentation/participant-session/current-participant-id.decorator.ts) |
+| Statut | Constat | Preuve | Résolution |
+|---|---|---|---|
+| ✅ (était 🔴) | `GET /questionnaires/:qid` **sans aucun guard**, alors que le sibling `list()` exige `AdminOrParticipantJwtAuthGuard` et que la classe déclare `@ApiBearerAuth`. Pas d'`APP_GUARD` global → endpoint réellement ouvert | [questionnaires.controller.ts:32-35](../applications/backend/src/presentation/questionnaires/questionnaires.controller.ts#L32-L35) | `@UseGuards(AdminOrParticipantJwtAuthGuard)` ajouté sur `getOne` (décision tranchée du 2026-06-02 : sécuriser comme le sibling). Aucune modif frontend : `useQuestionnaire` passe déjà par l'`apiClient` authentifié (le sibling `/questionnaires` exigeait déjà un JWT). |
+| ✅ (était 🟠) | Scoping coach `req.user.scope === 'coach' ? req.user.coachId : undefined` dupliqué **~25 fois** ; `@Req() req: { user: JwtValidatedUser }` typé inline partout faute de décorateur `@CurrentUser()` | admin-campaigns / responses / coaches / companies / participants / ai-restitutions (tous) | Deux décorateurs de paramètre créés (racine `presentation/`) : `@CurrentCoachScope()` (résout le `coachId` ou `undefined`) et `@CurrentUser()` (expose `JwtValidatedUser`). Toutes les répétitions inline supprimées sur les 7 controllers admin (+ audit). `@Req()` ne subsiste que pour `req.ip` (concern transport pur) sur les handlers d'audit. |
+| ✅ (était 🟠) | `ensureCampaignAccess()` **copié à l'identique** dans 3 controllers | [admin-responses.controller.ts:62](../applications/backend/src/presentation/admin/admin-responses.controller.ts#L62) ; [admin-campaigns.controller.ts:90](../applications/backend/src/presentation/admin/admin-campaigns.controller.ts#L90) ; [admin-ai-restitutions.controller.ts:94](../applications/backend/src/presentation/admin/admin-ai-restitutions.controller.ts#L94) | `CampaignAccessGuard` créé ([admin/campaign-access.guard.ts](../applications/backend/src/presentation/admin/campaign-access.guard.ts)). Appliqué au **niveau classe** sur ai-restitutions (5 routes, toutes `:campaignId`) et **par méthode** sur les 7 handlers campaigns concernés + `listResponses` (lit `campaign_id` en query). Les 3 copies privées supprimées. Provider ajouté dans les 3 modules. |
+| ✅ (référence) | `@CurrentParticipantId()` = bon pattern décorateur côté participant ; guard classe = bon pattern côté admin | [current-participant-id.decorator.ts](../applications/backend/src/presentation/participant-session/current-participant-id.decorator.ts) | Conservé — modèle des deux nouveaux décorateurs. |
 
-Divergence guard : **classe** (admin) vs **par méthode ×20** (participant) vs
-**partielle** (questionnaires). Cible ADR-009 §2 : guard classe + `@CurrentUser()` /
-`@CurrentCoachScope()` + `CampaignAccessGuard`.
+**Briques créées** :
+[`@CurrentUser()`](../applications/backend/src/presentation/current-user.decorator.ts) et
+[`@CurrentCoachScope()`](../applications/backend/src/presentation/current-coach-scope.decorator.ts)
+(racine `presentation/` = partagés admin/coach, frontière transport ADR-008 §5) ;
+[`CampaignAccessGuard`](../applications/backend/src/presentation/admin/campaign-access.guard.ts)
+(`admin/` = spécifique au périmètre campagne admin).
+
+**Conformité SOLID / Hexa vérifiée** :
+- **Direction des dépendances** : le guard dépend du use case `GetAdminCampaignDetailUseCase`
+  via le **token d'injection** `GET_ADMIN_CAMPAIGN_DETAIL_USE_CASE_SYMBOL` (presentation → application,
+  inversion respectée, ADR-008). Les décorateurs ne lisent que `req.user` : zéro dépendance
+  application/domaine.
+- **SRP** : la décision métier « cette campagne est-elle visible par ce coach ? » **reste dans
+  le use case** ; le guard ne fait qu'orchestrer (check scope → délègue → lève l'exception HTTP).
+  Aucune logique métier déplacée dans la couche transport.
+- **OCP/DIP** : comportement d'autorisation ajouté par composition (guard + décorateurs) sans
+  modifier les use cases.
+- **Équivalence comportementale** : logique identique aux ex-copies privées (super-admin →
+  accès libre ; coach → 401 si la campagne sort de son périmètre ; pas de `campaignId` → laisser
+  passer, le use case filtrant déjà par `coachId`).
+
+Divergence guard résiduelle (hors périmètre Section 2, cf. Priorité 3) : guard **par méthode ×20**
+côté participant — convergence vers le guard classe traitée à l'item 7 du plan.
 
 ## Section 3 — Filtres d'exception
 
@@ -119,7 +140,8 @@ Divergence guard : **classe** (admin) vs **par méthode ×20** (participant) vs
 
 ### Priorité 1 — Failles & status HTTP (rapide, fort impact) — 🟡 Partiellement faite
 
-1. ⬜ **Protéger `GET /questionnaires/:qid`** (ou documenter explicitement l'ouverture). *(Section 2)*
+1. ✅ **Protéger `GET /questionnaires/:qid`** — `@UseGuards(AdminOrParticipantJwtAuthGuard)`
+   ajouté. **Fait le 2026-06-02** (cf. Section 2). *(Section 2)*
 2. ✅ **`ZodValidationPipe`** créé et branché sur `scoring` (supprime le 500 → 400) et
    sur la branche admin de mutation (campaigns/companies/coaches) — schémas dans `@aor/types`.
    **Fait le 2026-06-02** (cf. Section 1).
@@ -127,11 +149,13 @@ Divergence guard : **classe** (admin) vs **par méthode ×20** (participant) vs
    le 500 du §1 est déjà résolu par le pipe ; ce point ne concerne plus que les erreurs
    métier éventuelles du use case scoring.)*
 
-### Priorité 2 — Briques transverses anti-duplication — ⬜ À faire
+### Priorité 2 — Briques transverses anti-duplication — 🟡 Partiellement faite
 
-4. ⬜ **`@CurrentUser()` + `@CurrentCoachScope()`** → supprimer les ~25 répétitions de scoping.
-5. ⬜ **`CampaignAccessGuard`** → remplacer les 3 `ensureCampaignAccess()`.
-6. ⬜ **`PaginationQueryPipe`** → unifier les 3 parseurs de pagination.
+4. ✅ **`@CurrentUser()` + `@CurrentCoachScope()`** → ~25 répétitions de scoping supprimées.
+   **Fait le 2026-06-02** (cf. Section 2).
+5. ✅ **`CampaignAccessGuard`** → les 3 `ensureCampaignAccess()` remplacés.
+   **Fait le 2026-06-02** (cf. Section 2).
+6. ⬜ **`PaginationQueryPipe`** → unifier les 3 parseurs de pagination. *(Section 4)*
 
 ### Priorité 3 — Cohérence structurelle — ⬜ À faire
 
@@ -217,8 +241,8 @@ la campagne devient un segment obligatoire, le use case reçoit enfin `campaignI
 
 ## Décisions à prendre
 
-- [x] **`GET /questionnaires/:qid`** : ✅ tranché 2026-06-02 → **à sécuriser** avec
-      `AdminOrParticipantJwtAuthGuard` (comme son sibling `list()`). Voir Priorité 1, item 1.
+- [x] **`GET /questionnaires/:qid`** : ✅ tranché **et appliqué** 2026-06-02 → sécurisé avec
+      `AdminOrParticipantJwtAuthGuard` (comme son sibling `list()`). Voir Section 2.
 - [x] **Transition d'état campagne** : ✅ tranché 2026-06-02 → `PATCH /status`, `archive`
       fusionné dedans (ADR-010 R5, migration complète).
 - [ ] **`DELETE`** : autoriser les deux formes (204 sans corps / 200 + résumé) selon le besoin,
@@ -249,3 +273,20 @@ la campagne devient un segment obligatoire, le use case reçoit enfin `campaignI
     modifs) ; Biome ✅ sur tous les fichiers touchés.
   - Aucune modification frontend requise (durcissement de validation, pas de rupture de
     contrat — schémas en miroir des types inline).
+
+- **2026-06-02 — Section 2 (Authentification / autorisation) : ✅ traitée.**
+  - 🔴→✅ `GET /questionnaires/:qid` sécurisé par `@UseGuards(AdminOrParticipantJwtAuthGuard)`.
+  - 🟠→✅ Décorateurs `@CurrentUser()` et `@CurrentCoachScope()` créés (racine `presentation/`) ;
+    ~25 répétitions de scoping coach + le typage inline `@Req() req: { user: JwtValidatedUser }`
+    supprimés sur les 7 controllers admin + audit. `@Req()` ne subsiste que pour `req.ip`.
+  - 🟠→✅ `CampaignAccessGuard` créé (`presentation/admin/`) ; les 3 `ensureCampaignAccess()`
+    supprimés. Appliqué au niveau classe (ai-restitutions) et par méthode (campaigns ×7 +
+    `listResponses`). Provider ajouté dans les 3 modules (campaigns/responses/ai-restitutions).
+  - **Brique Priorité 1 item 1 + Priorité 2 items 4 & 5** cochées.
+  - **Conformité SOLID / Hexa** : direction des dépendances respectée (guard → use case via
+    token d'injection) ; décision métier conservée dans le use case (le guard orchestre seulement) ;
+    équivalence comportementale avec les ex-copies privées.
+  - **Vérifs** : `typecheck` backend ✅ (exit 0) ; Biome ✅ (tri d'imports appliqué sur 6 fichiers) ;
+    tests `37/38` ✅ (même échec préexistant `calculate-scoring.usecase.spec.ts`, sans rapport).
+  - Aucune modification frontend requise : `/questionnaires/:qid` passe déjà par l'`apiClient`
+    authentifié (durcissement auth, pas de rupture de contrat d'URL — celle-ci relève de la Section 7).

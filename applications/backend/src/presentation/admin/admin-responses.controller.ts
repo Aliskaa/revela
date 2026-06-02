@@ -9,34 +9,31 @@ import {
     Param,
     ParseIntPipe,
     Query,
-    Req,
     Res,
-    UnauthorizedException,
     UseFilters,
     UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import type { Response } from 'express';
 
-import type { GetAdminCampaignDetailUseCase } from '@src/application/admin/campaigns/get-admin-campaign-detail.usecase';
 import type { DeleteAdminResponseUseCase } from '@src/application/admin/responses/delete-admin-response.usecase';
 import type { ExportAdminAnonymizedResponsesCsvUseCase } from '@src/application/admin/responses/export-admin-anonymized-responses-csv.usecase';
 import type { ExportAdminResponsesCsvUseCase } from '@src/application/admin/responses/export-admin-responses-csv.usecase';
 import type { ListAdminResponsesUseCase } from '@src/application/admin/responses/list-admin-responses.usecase';
 import type { GetPublicResponseUseCase } from '@src/application/responses/get-public-response.usecase';
+import { CurrentCoachScope } from '@src/presentation/current-coach-scope.decorator';
 import { ResponsesExceptionFilter } from '@src/presentation/responses/responses-exception.filter';
 import { GET_PUBLIC_RESPONSE_USE_CASE_SYMBOL } from '@src/presentation/responses/responses.tokens';
 
-import type { JwtValidatedUser } from '@src/presentation/jwt-validated-user';
 import { AdminApplicationExceptionFilter } from './admin-application-exception.filter';
 import { AdminJwtAuthGuard } from './admin-jwt-auth.guard';
 import {
     DELETE_ADMIN_RESPONSE_USE_CASE_SYMBOL,
     EXPORT_ADMIN_ANONYMIZED_RESPONSES_CSV_USE_CASE_SYMBOL,
     EXPORT_ADMIN_RESPONSES_CSV_USE_CASE_SYMBOL,
-    GET_ADMIN_CAMPAIGN_DETAIL_USE_CASE_SYMBOL,
     LIST_ADMIN_RESPONSES_USE_CASE_SYMBOL,
 } from './admin.tokens';
+import { CampaignAccessGuard } from './campaign-access.guard';
 
 @ApiTags('admin-responses')
 @ApiBearerAuth('jwt')
@@ -54,20 +51,8 @@ export class AdminResponsesController {
         @Inject(EXPORT_ADMIN_RESPONSES_CSV_USE_CASE_SYMBOL)
         private readonly exportAdminResponsesCsv: ExportAdminResponsesCsvUseCase,
         @Inject(EXPORT_ADMIN_ANONYMIZED_RESPONSES_CSV_USE_CASE_SYMBOL)
-        private readonly exportAdminAnonymizedResponsesCsv: ExportAdminAnonymizedResponsesCsvUseCase,
-        @Inject(GET_ADMIN_CAMPAIGN_DETAIL_USE_CASE_SYMBOL)
-        private readonly getAdminCampaignDetail: GetAdminCampaignDetailUseCase
+        private readonly exportAdminAnonymizedResponsesCsv: ExportAdminAnonymizedResponsesCsvUseCase
     ) {}
-
-    private async ensureCampaignAccess(campaignId: number, user: JwtValidatedUser): Promise<void> {
-        if (user.scope !== 'coach') {
-            return;
-        }
-        const detail = await this.getAdminCampaignDetail.execute(campaignId, { coachId: user.coachId });
-        if (!detail) {
-            throw new UnauthorizedException();
-        }
-    }
 
     private static normalizeQid(raw?: string): string | undefined {
         const qid = (raw ?? '').trim().toUpperCase();
@@ -94,8 +79,9 @@ export class AdminResponsesController {
     }
 
     @Get('responses')
+    @UseGuards(CampaignAccessGuard)
     public async listResponses(
-        @Req() req: { user: JwtValidatedUser },
+        @CurrentCoachScope() coachId: number | undefined,
         @Query('qid') qidRaw: string,
         @Query('campaign_id') campaignIdRaw: string,
         @Query('page') pageRaw: string,
@@ -105,10 +91,6 @@ export class AdminResponsesController {
         const campaignId = AdminResponsesController.normalizePositiveInt(campaignIdRaw);
         const page = AdminResponsesController.normalizePage(pageRaw);
         const perPage = AdminResponsesController.normalizePerPage(perPageRaw);
-        if (campaignId !== undefined) {
-            await this.ensureCampaignAccess(campaignId, req.user);
-        }
-        const coachId = req.user.scope === 'coach' ? req.user.coachId : undefined;
         const result = await this.listAdminResponses.execute({ qid, campaignId, coachId, page, perPage });
         return {
             ...result,
@@ -117,8 +99,10 @@ export class AdminResponsesController {
     }
 
     @Get('responses/:responseId')
-    public getResponse(@Param('responseId', ParseIntPipe) responseId: number, @Req() req: { user: JwtValidatedUser }) {
-        const coachId = req.user.scope === 'coach' ? req.user.coachId : undefined;
+    public getResponse(
+        @Param('responseId', ParseIntPipe) responseId: number,
+        @CurrentCoachScope() coachId: number | undefined
+    ) {
         return this.getPublicResponse.execute(responseId, { coachId });
     }
 
@@ -126,9 +110,8 @@ export class AdminResponsesController {
     public deleteResponse(
         @Param('responseId', ParseIntPipe) responseId: number,
         @Body() body: { confirm?: boolean },
-        @Req() req: { user: JwtValidatedUser }
+        @CurrentCoachScope() coachId: number | undefined
     ) {
-        const coachId = req.user.scope === 'coach' ? req.user.coachId : undefined;
         return this.deleteAdminResponse.execute(responseId, body.confirm, { coachId });
     }
 
