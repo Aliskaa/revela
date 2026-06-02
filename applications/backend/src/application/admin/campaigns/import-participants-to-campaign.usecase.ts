@@ -79,12 +79,9 @@ export class ImportParticipantsToCampaignUseCase {
                     );
                     created += 1;
                 } else {
-                    const ownsParticipant =
-                        isCoachScope && participant.createdByCoachId === access.coachId;
+                    const ownsParticipant = isCoachScope && participant.createdByCoachId === access.coachId;
                     if (isCoachScope && !ownsParticipant) {
-                        errors.push(
-                            `Ligne ${String(line)} : ce participant existe déjà et ne peut pas être modifié.`
-                        );
+                        errors.push(`Ligne ${String(line)} : ce participant existe déjà et ne peut pas être modifié.`);
                         continue;
                     }
                     const reassigned = participant.setCompanyId(company.id);

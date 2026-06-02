@@ -1,7 +1,7 @@
 // Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
 
 import { BadRequestException, type PipeTransform } from '@nestjs/common';
-import { z } from 'zod';
+import type { z } from 'zod';
 
 /**
  * Validation au bord (ADR-009 §1) : applique un schéma Zod à une entrée de transport

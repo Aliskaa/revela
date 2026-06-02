@@ -53,9 +53,7 @@ const toCompanyReadModel = (row: {
     contactEmail: row.contactEmail,
     createdAt: row.createdAt,
     participantCount: row.participantCount,
-    avatar_url: row.avatarMimeType
-        ? adminCompanyAvatarPublicPath(row.id, row.updatedAt?.getTime())
-        : null,
+    avatar_url: row.avatarMimeType ? adminCompanyAvatarPublicPath(row.id, row.updatedAt?.getTime()) : null,
 });
 
 @Injectable()

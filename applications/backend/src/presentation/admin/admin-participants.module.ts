@@ -5,12 +5,12 @@ import { Module } from '@nestjs/common';
 import { CreateParticipantInviteUseCase } from '@src/application/admin/participants/create-participant-invite.usecase';
 import { EraseParticipantRgpdUseCase } from '@src/application/admin/participants/erase-participant-rgpd.usecase';
 import { GetAdminParticipantAvatarUseCase } from '@src/application/admin/participants/get-admin-participant-avatar.usecase';
-import { UploadAdminParticipantAvatarUseCase } from '@src/application/admin/participants/upload-admin-participant-avatar.usecase';
 import { GetAdminParticipantDetailUseCase } from '@src/application/admin/participants/get-admin-participant-detail.usecase';
 import { ImportParticipantsCsvUseCase } from '@src/application/admin/participants/import-participants-csv.usecase';
 import { ListAdminParticipantsUseCase } from '@src/application/admin/participants/list-admin-participants.usecase';
 import { ListParticipantInvitationTokensUseCase } from '@src/application/admin/participants/list-participant-invitation-tokens.usecase';
 import { UpdateAdminParticipantUseCase } from '@src/application/admin/participants/update-admin-participant.usecase';
+import { UploadAdminParticipantAvatarUseCase } from '@src/application/admin/participants/upload-admin-participant-avatar.usecase';
 import { GetParticipantQuestionnaireMatrixUseCase } from '@src/application/participant-session/get-participant-questionnaire-matrix.usecase';
 import { type IInviteUrlConfigPort, INVITE_URL_CONFIG_PORT_SYMBOL } from '@src/interfaces/admin/IInviteUrlConfig.port';
 import {
@@ -49,13 +49,13 @@ import { AdminSharedModule } from './admin-shared.module';
 import {
     CREATE_PARTICIPANT_INVITE_USE_CASE_SYMBOL,
     ERASE_PARTICIPANT_RGPD_USE_CASE_SYMBOL,
-    GET_ADMIN_PARTICIPANT_DETAIL_USE_CASE_SYMBOL,
     GET_ADMIN_PARTICIPANT_AVATAR_USE_CASE_SYMBOL,
-    UPLOAD_ADMIN_PARTICIPANT_AVATAR_USE_CASE_SYMBOL,
+    GET_ADMIN_PARTICIPANT_DETAIL_USE_CASE_SYMBOL,
     IMPORT_PARTICIPANTS_CSV_USE_CASE_SYMBOL,
     LIST_ADMIN_PARTICIPANTS_USE_CASE_SYMBOL,
     LIST_PARTICIPANT_INVITATION_TOKENS_USE_CASE_SYMBOL,
     UPDATE_ADMIN_PARTICIPANT_USE_CASE_SYMBOL,
+    UPLOAD_ADMIN_PARTICIPANT_AVATAR_USE_CASE_SYMBOL,
 } from './admin.tokens';
 
 @Module({

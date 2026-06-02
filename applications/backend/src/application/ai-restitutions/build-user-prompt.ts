@@ -47,7 +47,7 @@ export const buildUserPrompt = (intermediate: IntermediateObject): string => {
 
     if (!hasDimensions) {
         lines.push(
-            '- Aucune dimension comportementale ne dépasse le seuil de signalement (§4 du cadre). Produis une restitution prudente centrée sur l\'équilibre apparent, à explorer en accompagnement. N\'emploie JAMAIS les mots « inclusion », « contrôle », « affection », « ouverture » dans ta réponse — ils sont réservés aux dimensions explicitement listées dans `selected_dimensions` ci-dessus (ici vide).'
+            "- Aucune dimension comportementale ne dépasse le seuil de signalement (§4 du cadre). Produis une restitution prudente centrée sur l'équilibre apparent, à explorer en accompagnement. N'emploie JAMAIS les mots « inclusion », « contrôle », « affection », « ouverture » dans ta réponse — ils sont réservés aux dimensions explicitement listées dans `selected_dimensions` ci-dessus (ici vide)."
         );
     } else {
         lines.push(

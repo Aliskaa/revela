@@ -204,9 +204,7 @@ export class SubmitParticipantQuestionnaireUseCase {
                     throw new ResponsesValidationError('Clé de commentaire invalide.');
                 }
                 if (!(rawKey in payload.scores)) {
-                    throw new ResponsesValidationError(
-                        'Un commentaire ne peut être attaché qu’à une note saisie.'
-                    );
+                    throw new ResponsesValidationError('Un commentaire ne peut être attaché qu’à une note saisie.');
                 }
                 const trimmed = rawValue.trim();
                 if (trimmed.length === 0) {
@@ -251,10 +249,7 @@ export class SubmitParticipantQuestionnaireUseCase {
         }
         const manualInputsCompleted =
             existing.some(r => r.submissionKind === 'self_rating') &&
-            existing.some(
-                r =>
-                    r.submissionKind === 'peer_rating' && r.subjectParticipantId === participant.id
-            );
+            existing.some(r => r.submissionKind === 'peer_rating' && r.subjectParticipantId === participant.id);
         if (!campaign.allowTestWithoutManualInputs && !manualInputsCompleted) {
             throw new ResponsesValidationError(
                 'Le test Element Humain sera disponible apres le regard sur soi et le feedback pair.'

@@ -1,12 +1,12 @@
 // Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
 
+import { adminParticipantAvatarPublicPath } from '@src/application/participant-session/upload-participant-avatar.usecase';
 import { AdminResourceNotFoundError } from '@src/domain/admin/admin.errors';
 import {
     ParticipantAvatarFileRequiredError,
     ParticipantAvatarFileTooLargeError,
     ParticipantAvatarFileTypeError,
 } from '@src/domain/participant-session/participant-avatar.errors';
-import { adminParticipantAvatarPublicPath } from '@src/application/participant-session/upload-participant-avatar.usecase';
 import type {
     IParticipantsAdminReadPort,
     IParticipantsWriterPort,

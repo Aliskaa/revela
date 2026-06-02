@@ -2,8 +2,8 @@
 
 import { randomBytes } from 'node:crypto';
 
-import { type IPasswordHasherPort, PASSWORD_HASHER_PORT_SYMBOL } from '@aor/ports';
 import { createConsoleLogger } from '@aor/logger';
+import { type IPasswordHasherPort, PASSWORD_HASHER_PORT_SYMBOL } from '@aor/ports';
 import { Inject, Injectable, type OnModuleInit } from '@nestjs/common';
 
 import { Coach } from '@src/domain/coaches';
@@ -51,6 +51,6 @@ export class EnsureAdminCoachService implements OnModuleInit {
             displayName: 'Admin',
         });
         await this.coaches.create(draft);
-        log.info('Compte coach Admin créé (cible d\'assignation des campagnes)', { username });
+        log.info("Compte coach Admin créé (cible d'assignation des campagnes)", { username });
     }
 }

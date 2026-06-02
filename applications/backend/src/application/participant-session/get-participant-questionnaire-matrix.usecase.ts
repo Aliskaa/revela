@@ -154,7 +154,11 @@ export class GetParticipantQuestionnaireMatrixUseCase {
                 if (ratedId !== null) {
                     avatarParticipantIds.add(ratedId);
                 }
-            } else if (!anonymizeReceivedPeers && r.subjectParticipantId !== null && r.subjectParticipantId !== undefined) {
+            } else if (
+                !anonymizeReceivedPeers &&
+                r.subjectParticipantId !== null &&
+                r.subjectParticipantId !== undefined
+            ) {
                 avatarParticipantIds.add(r.subjectParticipantId);
             }
         }
@@ -172,8 +176,7 @@ export class GetParticipantQuestionnaireMatrixUseCase {
                     label: displayPeerRatingStoredLabel(rawName),
                     rater_participant_id: r.raterParticipantId,
                     rated_participant_id: ratedId,
-                    avatar_url:
-                        ratedId !== null ? (avatarUrlByParticipantId.get(ratedId) ?? null) : null,
+                    avatar_url: ratedId !== null ? (avatarUrlByParticipantId.get(ratedId) ?? null) : null,
                 };
             }
             const raterId = r.subjectParticipantId;

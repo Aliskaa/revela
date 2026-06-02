@@ -14,8 +14,8 @@ import {
     Post,
     Req,
     Res,
-    UploadedFile,
     UnauthorizedException,
+    UploadedFile,
     UseFilters,
     UseGuards,
     UseInterceptors,
@@ -26,12 +26,11 @@ import type { Response } from 'express';
 
 import {
     type CreateAdminCoachBody,
-    createAdminCoachBodySchema,
     type UpdateAdminCoachBody,
+    createAdminCoachBodySchema,
     updateAdminCoachBodySchema,
 } from '@aor/types';
 
-import { ZodValidationPipe } from '@src/presentation/zod-validation.pipe';
 import type { CreateAdminCoachUseCase } from '@src/application/admin/coaches/create-admin-coach.usecase';
 import type { DeleteAdminCoachUseCase } from '@src/application/admin/coaches/delete-admin-coach.usecase';
 import type { GetAdminCoachAvatarUseCase } from '@src/application/admin/coaches/get-admin-coach-avatar.usecase';
@@ -39,10 +38,11 @@ import type { GetAdminCoachDetailUseCase } from '@src/application/admin/coaches/
 import type { ListAdminCoachesUseCase } from '@src/application/admin/coaches/list-admin-coaches.usecase';
 import type { UpdateAdminCoachUseCase } from '@src/application/admin/coaches/update-admin-coach.usecase';
 import type { UploadAdminCoachAvatarUseCase } from '@src/application/admin/coaches/upload-admin-coach-avatar.usecase';
-import { ParticipantAvatarExceptionFilter } from '@src/presentation/participant-session/participant-avatar-exception.filter';
 import { ADMIN_AUTH_CONFIG_PORT_SYMBOL, type IAdminAuthConfigPort } from '@src/interfaces/admin/IAdminAuthConfig.port';
 import { COACHES_REPOSITORY_PORT_SYMBOL, type ICoachesReadPort } from '@src/interfaces/coaches/ICoachesRepository.port';
+import { ParticipantAvatarExceptionFilter } from '@src/presentation/participant-session/participant-avatar-exception.filter';
 import { ResponsesExceptionFilter } from '@src/presentation/responses/responses-exception.filter';
+import { ZodValidationPipe } from '@src/presentation/zod-validation.pipe';
 
 import type { JwtValidatedUser } from '@src/presentation/jwt-validated-user';
 import { AdminApplicationExceptionFilter } from './admin-application-exception.filter';
@@ -51,11 +51,11 @@ import { adminCoachDetailToJson, coachToAdminJson } from './admin.presenters';
 import {
     CREATE_ADMIN_COACH_USE_CASE_SYMBOL,
     DELETE_ADMIN_COACH_USE_CASE_SYMBOL,
-    GET_ADMIN_COACH_DETAIL_USE_CASE_SYMBOL,
     GET_ADMIN_COACH_AVATAR_USE_CASE_SYMBOL,
-    UPLOAD_ADMIN_COACH_AVATAR_USE_CASE_SYMBOL,
+    GET_ADMIN_COACH_DETAIL_USE_CASE_SYMBOL,
     LIST_ADMIN_COACHES_USE_CASE_SYMBOL,
     UPDATE_ADMIN_COACH_USE_CASE_SYMBOL,
+    UPLOAD_ADMIN_COACH_AVATAR_USE_CASE_SYMBOL,
 } from './admin.tokens';
 
 @ApiTags('admin-coaches')

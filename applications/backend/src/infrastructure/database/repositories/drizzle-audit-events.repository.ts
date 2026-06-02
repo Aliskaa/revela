@@ -30,9 +30,7 @@ export class DrizzleAuditEventsRepository implements IAuditEventsRepositoryPort 
         const perPage = Math.min(Math.max(params.perPage, 1), 200);
         const page = Math.max(params.page, 1);
 
-        const [{ total }] = await this.db
-            .select({ total: sql<number>`cast(count(*) as int)` })
-            .from(auditEventsTable);
+        const [{ total }] = await this.db.select({ total: sql<number>`cast(count(*) as int)` }).from(auditEventsTable);
 
         const rows = await this.db
             .select()

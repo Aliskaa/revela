@@ -27,7 +27,7 @@ export class DeleteAdminCoachUseCase {
         const adminCoach = await this.ports.coaches.findByUsername(this.ports.authConfig.superAdminUsername);
         if (!adminCoach) {
             throw new Error(
-                'Compte coach Admin introuvable. EnsureAdminCoachService n\'a pas pu initialiser la ligne sentinelle.'
+                "Compte coach Admin introuvable. EnsureAdminCoachService n'a pas pu initialiser la ligne sentinelle."
             );
         }
         if (coachId === adminCoach.id) {

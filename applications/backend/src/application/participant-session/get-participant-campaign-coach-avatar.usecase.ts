@@ -1,7 +1,7 @@
 // Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
 
-import { ParticipantQuestionnaireNotAllowedError } from '@src/domain/participant-session/participant-session.errors';
 import { ParticipantAvatarNotFoundError } from '@src/domain/participant-session/participant-avatar.errors';
+import { ParticipantQuestionnaireNotAllowedError } from '@src/domain/participant-session/participant-session.errors';
 import type { ICampaignsReadPort } from '@src/interfaces/campaigns/ICampaignsRepository.port';
 import type { ICoachesReadPort } from '@src/interfaces/coaches/ICoachesRepository.port';
 import type { IParticipantsInviteAssignmentsReaderPort } from '@src/interfaces/participants/IParticipantsRepository.port';
@@ -15,10 +15,7 @@ export class GetParticipantCampaignCoachAvatarUseCase {
         }
     ) {}
 
-    public async execute(
-        participantId: number,
-        campaignId: number
-    ): Promise<{ buffer: Buffer; mimeType: string }> {
+    public async execute(participantId: number, campaignId: number): Promise<{ buffer: Buffer; mimeType: string }> {
         const assignments = await this.ports.participants.listInviteAssignmentsForParticipant(participantId);
         if (!assignments.some(assignment => assignment.campaignId === campaignId)) {
             throw new ParticipantQuestionnaireNotAllowedError('Cette campagne ne correspond pas à vos affectations.');

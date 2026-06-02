@@ -20,8 +20,7 @@ import { LIST_ADMIN_AUDIT_EVENTS_USE_CASE_SYMBOL } from './admin.tokens';
     providers: [
         {
             provide: LIST_ADMIN_AUDIT_EVENTS_USE_CASE_SYMBOL,
-            useFactory: (auditEvents: IAuditEventsRepositoryPort) =>
-                new ListAdminAuditEventsUseCase({ auditEvents }),
+            useFactory: (auditEvents: IAuditEventsRepositoryPort) => new ListAdminAuditEventsUseCase({ auditEvents }),
             inject: [AUDIT_EVENTS_REPOSITORY_PORT_SYMBOL],
         },
     ],

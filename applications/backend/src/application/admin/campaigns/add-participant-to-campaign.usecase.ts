@@ -114,12 +114,9 @@ export class AddParticipantToCampaignUseCase {
             created = true;
         } else {
             const isCoachScope = access.coachId !== undefined;
-            const ownsParticipant =
-                isCoachScope && participant.createdByCoachId === access.coachId;
+            const ownsParticipant = isCoachScope && participant.createdByCoachId === access.coachId;
             if (isCoachScope && !ownsParticipant) {
-                throw new AdminValidationError(
-                    'Ce participant existe déjà et ne peut pas être modifié.'
-                );
+                throw new AdminValidationError('Ce participant existe déjà et ne peut pas être modifié.');
             }
             if (participant.companyId !== company.id) {
                 const reassigned = participant.setCompanyId(company.id);

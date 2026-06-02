@@ -1,12 +1,12 @@
 // Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
 
 import {
+    DRIZZLE_DB_SYMBOL,
+    type DrizzleDb,
     aiPromptVersionsTable,
     aiRestitutionsTable,
     and,
     desc,
-    DRIZZLE_DB_SYMBOL,
-    type DrizzleDb,
     eq,
 } from '@aor/drizzle';
 import type { AiRestitutionValidationReport } from '@aor/types';
@@ -20,10 +20,7 @@ import type {
     UpdateAiRestitutionInput,
 } from '@src/interfaces/ai-restitutions/IAiRestitutionsRepository.port';
 
-const toRecord = (
-    row: typeof aiRestitutionsTable.$inferSelect,
-    promptVersion: string
-): AiRestitutionRecord => ({
+const toRecord = (row: typeof aiRestitutionsTable.$inferSelect, promptVersion: string): AiRestitutionRecord => ({
     id: row.id,
     participantId: row.participantId,
     campaignId: row.campaignId,
@@ -42,9 +39,7 @@ const toRecord = (
     updatedAt: row.updatedAt,
 });
 
-const toPromptVersionRecord = (
-    row: typeof aiPromptVersionsTable.$inferSelect
-): AiPromptVersionRecord => ({
+const toPromptVersionRecord = (row: typeof aiPromptVersionsTable.$inferSelect): AiPromptVersionRecord => ({
     id: row.id,
     version: row.version,
     systemPrompt: row.systemPrompt,
@@ -71,10 +66,7 @@ export class DrizzleAiRestitutionsRepository implements IAiRestitutionsRepositor
                 promptVersion: aiPromptVersionsTable.version,
             })
             .from(aiRestitutionsTable)
-            .innerJoin(
-                aiPromptVersionsTable,
-                eq(aiPromptVersionsTable.id, aiRestitutionsTable.promptVersionId)
-            )
+            .innerJoin(aiPromptVersionsTable, eq(aiPromptVersionsTable.id, aiRestitutionsTable.promptVersionId))
             .where(
                 and(
                     eq(aiRestitutionsTable.participantId, participantId),
@@ -93,10 +85,7 @@ export class DrizzleAiRestitutionsRepository implements IAiRestitutionsRepositor
                 promptVersion: aiPromptVersionsTable.version,
             })
             .from(aiRestitutionsTable)
-            .innerJoin(
-                aiPromptVersionsTable,
-                eq(aiPromptVersionsTable.id, aiRestitutionsTable.promptVersionId)
-            )
+            .innerJoin(aiPromptVersionsTable, eq(aiPromptVersionsTable.id, aiRestitutionsTable.promptVersionId))
             .where(eq(aiRestitutionsTable.id, id))
             .limit(1);
         const row = rows[0];

@@ -1,15 +1,6 @@
 // Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
 
-import {
-    Controller,
-    Get,
-    Inject,
-    Query,
-    Req,
-    UnauthorizedException,
-    UseFilters,
-    UseGuards,
-} from '@nestjs/common';
+import { Controller, Get, Inject, Query, Req, UnauthorizedException, UseFilters, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
 import type { ListAdminAuditEventsUseCase } from '@src/application/admin/audit/list-admin-audit-events.usecase';

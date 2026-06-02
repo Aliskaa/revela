@@ -85,9 +85,7 @@ export class GetParticipantSessionUseCase {
                     if (coachId !== null) {
                         const resolved = await this.ports.coaches.resolveAvatarUrl(coachId);
                         if (resolved) {
-                            const cacheBuster = resolved.includes('?v=')
-                                ? Number(resolved.split('?v=')[1])
-                                : undefined;
+                            const cacheBuster = resolved.includes('?v=') ? Number(resolved.split('?v=')[1]) : undefined;
                             coachAvatarUrl = participantCampaignCoachAvatarPublicPath(
                                 assignment.campaignId,
                                 Number.isFinite(cacheBuster) ? cacheBuster : undefined
@@ -140,8 +138,7 @@ export class GetParticipantSessionUseCase {
             company_name = company?.name ?? null;
         }
         if (!company_name) {
-            company_name =
-                visibleAssignments.find(assignment => assignment.company_name)?.company_name ?? null;
+            company_name = visibleAssignments.find(assignment => assignment.company_name)?.company_name ?? null;
         }
 
         return {

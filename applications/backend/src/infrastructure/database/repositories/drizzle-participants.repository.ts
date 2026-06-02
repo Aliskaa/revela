@@ -26,7 +26,10 @@ import {
 import { Inject, Injectable } from '@nestjs/common';
 
 import { invitationTokenAdminStatus } from '@aor/domain';
-import { participantCampaignPeerAvatarPublicPath, adminParticipantAvatarPublicPath } from '@src/application/participant-session/upload-participant-avatar.usecase';
+import {
+    adminParticipantAvatarPublicPath,
+    participantCampaignPeerAvatarPublicPath,
+} from '@src/application/participant-session/upload-participant-avatar.usecase';
 import { Participant, type ParticipantFunctionLevel } from '@src/domain/participants';
 import type {
     CampaignParticipantInviteState,
@@ -515,10 +518,7 @@ export class DrizzleParticipantsRepository implements IParticipantsRepositoryPor
                     ? { id: row.companyId, name: row.companyName }
                     : null,
             avatar_url: row.participant.avatarMimeType
-                ? adminParticipantAvatarPublicPath(
-                      row.participant.id,
-                      row.participant.updatedAt?.getTime()
-                  )
+                ? adminParticipantAvatarPublicPath(row.participant.id, row.participant.updatedAt?.getTime())
                 : null,
             inviteStatus: {},
             responseCount: 0,
@@ -683,10 +683,7 @@ export class DrizzleParticipantsRepository implements IParticipantsRepositoryPor
                     ? { id: row.companyId, name: row.companyName }
                     : null,
             avatar_url: row.participant.avatarMimeType
-                ? adminParticipantAvatarPublicPath(
-                      row.participant.id,
-                      row.participant.updatedAt?.getTime()
-                  )
+                ? adminParticipantAvatarPublicPath(row.participant.id, row.participant.updatedAt?.getTime())
                 : null,
             inviteStatus: {},
             responseCount: 0,
@@ -869,11 +866,7 @@ export class DrizzleParticipantsRepository implements IParticipantsRepositoryPor
                 last_name: r.lastName,
                 full_name: fullName.length > 0 ? fullName : `Participant #${String(r.participantId)}`,
                 avatar_url: r.avatarMimeType
-                    ? participantCampaignPeerAvatarPublicPath(
-                          campaignId,
-                          r.participantId,
-                          r.updatedAt?.getTime()
-                      )
+                    ? participantCampaignPeerAvatarPublicPath(campaignId, r.participantId, r.updatedAt?.getTime())
                     : null,
             };
         });

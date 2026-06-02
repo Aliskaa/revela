@@ -22,11 +22,11 @@ import {
     RefreshTokenInvalidError,
     type RefreshTokenManagerUseCase,
 } from '@src/application/auth/refresh-token-manager.usecase';
+import { ADMIN_AUTH_CONFIG_PORT_SYMBOL, type IAdminAuthConfigPort } from '@src/interfaces/admin/IAdminAuthConfig.port';
 import {
     ADMIN_TOKEN_SIGNER_PORT_SYMBOL,
     type IAdminTokenSignerPort,
 } from '@src/interfaces/admin/IAdminTokenSigner.port';
-import { ADMIN_AUTH_CONFIG_PORT_SYMBOL, type IAdminAuthConfigPort } from '@src/interfaces/admin/IAdminAuthConfig.port';
 import { COACHES_REPOSITORY_PORT_SYMBOL, type ICoachesReadPort } from '@src/interfaces/coaches/ICoachesRepository.port';
 import { ADMIN_COOKIE_NAMES, clearAuthCookies, setAuthCookies } from '@src/presentation/auth/auth-cookies.helper';
 import { REFRESH_TOKEN_MANAGER_SYMBOL } from '@src/presentation/auth/auth-refresh.module';
@@ -239,8 +239,7 @@ export class AdminController {
         }
 
         const adminCoach = await this.coaches.findByUsername(this.authConfig.superAdminUsername);
-        const avatar_url =
-            adminCoach !== null ? await this.coaches.resolveAvatarUrl(adminCoach.id) : null;
+        const avatar_url = adminCoach !== null ? await this.coaches.resolveAvatarUrl(adminCoach.id) : null;
 
         return {
             scope: user.scope ?? 'super-admin',

@@ -41,8 +41,7 @@ export class UpdateAdminCoachUseCase {
         // Ligne sentinelle « Admin » : seul `display_name` est modifiable. Le `username` reste
         // verrouillé (c'est lui qui identifie la ligne via `ADMIN_USERNAME` env), le password
         // n'a pas de sens (auth via env, pas via cette ligne), et `is_active` doit rester `true`.
-        const isAdminCoach =
-            current.username === this.ports.authConfig.superAdminUsername.trim().toLowerCase();
+        const isAdminCoach = current.username === this.ports.authConfig.superAdminUsername.trim().toLowerCase();
         if (isAdminCoach) {
             if (hasUsername) {
                 throw new AdminValidationError('Le username du compte admin ne peut pas être modifié.');

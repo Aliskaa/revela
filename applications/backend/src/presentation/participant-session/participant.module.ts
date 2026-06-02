@@ -10,13 +10,13 @@ import { GetOwnParticipantAiRestitutionUseCase } from '@src/application/ai-resti
 import { ConfirmCampaignParticipationUseCase } from '@src/application/participant-session/confirm-campaign-participation.usecase';
 import { ConfirmPeerFeedbackUseCase } from '@src/application/participant-session/confirm-peer-feedback.usecase';
 import { ExportParticipantSelfDataUseCase } from '@src/application/participant-session/export-participant-self-data.usecase';
+import { GetParticipantCampaignCoachAvatarUseCase } from '@src/application/participant-session/get-participant-campaign-coach-avatar.usecase';
+import { GetParticipantCampaignPeerAvatarUseCase } from '@src/application/participant-session/get-participant-campaign-peer-avatar.usecase';
 import { GetParticipantQuestionnaireMatrixUseCase } from '@src/application/participant-session/get-participant-questionnaire-matrix.usecase';
 import { GetParticipantSessionQuestionnaireMatrixUseCase } from '@src/application/participant-session/get-participant-session-questionnaire-matrix.usecase';
 import { GetParticipantSessionUseCase } from '@src/application/participant-session/get-participant-session.usecase';
 import { ListParticipantCampaignPeersUseCase } from '@src/application/participant-session/list-participant-campaign-peers.usecase';
 import { ParticipantLoginUseCase } from '@src/application/participant-session/participant-login.usecase';
-import { GetParticipantCampaignCoachAvatarUseCase } from '@src/application/participant-session/get-participant-campaign-coach-avatar.usecase';
-import { GetParticipantCampaignPeerAvatarUseCase } from '@src/application/participant-session/get-participant-campaign-peer-avatar.usecase';
 import {
     GetParticipantAvatarUseCase,
     UploadParticipantAvatarUseCase,
@@ -75,14 +75,14 @@ import {
     EXPORT_PARTICIPANT_SELF_DATA_USE_CASE_SYMBOL,
     GET_OWN_PARTICIPANT_AI_RESTITUTION_USE_CASE_SYMBOL,
     GET_OWN_PARTICIPANT_TRANSPARENCY_SCORE_USE_CASE_SYMBOL,
+    GET_PARTICIPANT_AVATAR_USE_CASE_SYMBOL,
+    GET_PARTICIPANT_CAMPAIGN_COACH_AVATAR_USE_CASE_SYMBOL,
+    GET_PARTICIPANT_CAMPAIGN_PEER_AVATAR_USE_CASE_SYMBOL,
     GET_PARTICIPANT_ELEMENT_B_DRAFT_USE_CASE_SYMBOL,
     GET_PARTICIPANT_OWNED_RESPONSE_USE_CASE_SYMBOL,
     GET_PARTICIPANT_QUESTIONNAIRE_MATRIX_USE_CASE_SYMBOL,
     GET_PARTICIPANT_SESSION_QUESTIONNAIRE_MATRIX_USE_CASE_SYMBOL,
     GET_PARTICIPANT_SESSION_USE_CASE_SYMBOL,
-    GET_PARTICIPANT_AVATAR_USE_CASE_SYMBOL,
-    GET_PARTICIPANT_CAMPAIGN_PEER_AVATAR_USE_CASE_SYMBOL,
-    GET_PARTICIPANT_CAMPAIGN_COACH_AVATAR_USE_CASE_SYMBOL,
     LIST_PARTICIPANT_CAMPAIGN_PEERS_USE_CASE_SYMBOL,
     PARTICIPANT_LOGIN_USE_CASE_SYMBOL,
     SUBMIT_PARTICIPANT_QUESTIONNAIRE_USE_CASE_SYMBOL,
@@ -296,7 +296,8 @@ import {
         },
         {
             provide: GET_PARTICIPANT_AVATAR_USE_CASE_SYMBOL,
-            useFactory: (participants: IParticipantsIdentityReaderPort) => new GetParticipantAvatarUseCase(participants),
+            useFactory: (participants: IParticipantsIdentityReaderPort) =>
+                new GetParticipantAvatarUseCase(participants),
             inject: [PARTICIPANTS_REPOSITORY_PORT_SYMBOL],
         },
         {

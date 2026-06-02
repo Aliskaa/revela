@@ -22,18 +22,17 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
 import {
     type AddParticipantBody,
-    addParticipantBodySchema,
     type CreateAdminCampaignBody,
-    createAdminCampaignBodySchema,
     type InviteCampaignParticipantsBody,
-    inviteCampaignParticipantsBodySchema,
     type ReassignCampaignCoachBody,
-    reassignCampaignCoachBodySchema,
     type UpdateAdminCampaignStatusBody,
+    addParticipantBodySchema,
+    createAdminCampaignBodySchema,
+    inviteCampaignParticipantsBodySchema,
+    reassignCampaignCoachBodySchema,
     updateAdminCampaignStatusBodySchema,
 } from '@aor/types';
 
-import { ZodValidationPipe } from '@src/presentation/zod-validation.pipe';
 import type { AddParticipantToCampaignUseCase } from '@src/application/admin/campaigns/add-participant-to-campaign.usecase';
 import type { CreateAdminCampaignUseCase } from '@src/application/admin/campaigns/create-admin-campaign.usecase';
 import type { GetAdminCampaignDetailUseCase } from '@src/application/admin/campaigns/get-admin-campaign-detail.usecase';
@@ -50,6 +49,7 @@ import {
 } from '@src/application/transparency/activate-participant-transparency-score.usecase';
 import type { GetParticipantTransparencyScoreUseCase } from '@src/application/transparency/get-participant-transparency-score.usecase';
 import { ResponsesExceptionFilter } from '@src/presentation/responses/responses-exception.filter';
+import { ZodValidationPipe } from '@src/presentation/zod-validation.pipe';
 import { transparencyScoreSnapshotToJson } from './admin.presenters';
 
 import type { JwtValidatedUser } from '@src/presentation/jwt-validated-user';

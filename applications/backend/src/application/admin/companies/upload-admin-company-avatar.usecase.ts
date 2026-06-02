@@ -6,10 +6,7 @@ import {
     ParticipantAvatarFileTooLargeError,
     ParticipantAvatarFileTypeError,
 } from '@src/domain/participant-session/participant-avatar.errors';
-import type {
-    ICompaniesReadPort,
-    ICompaniesWritePort,
-} from '@src/interfaces/companies/ICompaniesRepository.port';
+import type { ICompaniesReadPort, ICompaniesWritePort } from '@src/interfaces/companies/ICompaniesRepository.port';
 
 const MAX_AVATAR_BYTES = 2 * 1024 * 1024;
 const ALLOWED_MIME_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
@@ -22,10 +19,7 @@ export const adminCompanyAvatarPublicPath = (companyId: number, cacheBuster?: nu
 export class UploadAdminCompanyAvatarUseCase {
     public constructor(private readonly companies: ICompaniesReadPort & ICompaniesWritePort) {}
 
-    public async execute(
-        companyId: number,
-        file: Express.Multer.File | undefined
-    ): Promise<{ avatar_url: string }> {
+    public async execute(companyId: number, file: Express.Multer.File | undefined): Promise<{ avatar_url: string }> {
         if (!file?.buffer || file.buffer.length === 0) {
             throw new ParticipantAvatarFileRequiredError();
         }

@@ -8,9 +8,9 @@ import { DeleteAdminCoachUseCase } from '@src/application/admin/coaches/delete-a
 import { EnsureAdminCoachService } from '@src/application/admin/coaches/ensure-admin-coach.service';
 import { GetAdminCoachAvatarUseCase } from '@src/application/admin/coaches/get-admin-coach-avatar.usecase';
 import { GetAdminCoachDetailUseCase } from '@src/application/admin/coaches/get-admin-coach-detail.usecase';
-import { UploadAdminCoachAvatarUseCase } from '@src/application/admin/coaches/upload-admin-coach-avatar.usecase';
 import { ListAdminCoachesUseCase } from '@src/application/admin/coaches/list-admin-coaches.usecase';
 import { UpdateAdminCoachUseCase } from '@src/application/admin/coaches/update-admin-coach.usecase';
+import { UploadAdminCoachAvatarUseCase } from '@src/application/admin/coaches/upload-admin-coach-avatar.usecase';
 import { ADMIN_AUTH_CONFIG_PORT_SYMBOL, type IAdminAuthConfigPort } from '@src/interfaces/admin/IAdminAuthConfig.port';
 import {
     CAMPAIGNS_REPOSITORY_PORT_SYMBOL,
@@ -28,11 +28,11 @@ import { AdminSharedModule } from './admin-shared.module';
 import {
     CREATE_ADMIN_COACH_USE_CASE_SYMBOL,
     DELETE_ADMIN_COACH_USE_CASE_SYMBOL,
-    GET_ADMIN_COACH_DETAIL_USE_CASE_SYMBOL,
     GET_ADMIN_COACH_AVATAR_USE_CASE_SYMBOL,
-    UPLOAD_ADMIN_COACH_AVATAR_USE_CASE_SYMBOL,
+    GET_ADMIN_COACH_DETAIL_USE_CASE_SYMBOL,
     LIST_ADMIN_COACHES_USE_CASE_SYMBOL,
     UPDATE_ADMIN_COACH_USE_CASE_SYMBOL,
+    UPLOAD_ADMIN_COACH_AVATAR_USE_CASE_SYMBOL,
 } from './admin.tokens';
 
 @Module({
@@ -67,8 +67,7 @@ import {
         },
         {
             provide: UPLOAD_ADMIN_COACH_AVATAR_USE_CASE_SYMBOL,
-            useFactory: (coaches: ICoachesReadPort & ICoachesWritePort) =>
-                new UploadAdminCoachAvatarUseCase(coaches),
+            useFactory: (coaches: ICoachesReadPort & ICoachesWritePort) => new UploadAdminCoachAvatarUseCase(coaches),
             inject: [COACHES_REPOSITORY_PORT_SYMBOL],
         },
         {

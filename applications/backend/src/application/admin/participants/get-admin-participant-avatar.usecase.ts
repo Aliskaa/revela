@@ -7,9 +7,7 @@ import type {
 } from '@src/interfaces/participants/IParticipantsRepository.port';
 
 export class GetAdminParticipantAvatarUseCase {
-    public constructor(
-        private readonly participants: IParticipantsIdentityReaderPort & IParticipantsAdminReadPort
-    ) {}
+    public constructor(private readonly participants: IParticipantsIdentityReaderPort & IParticipantsAdminReadPort) {}
 
     public async execute(
         participantId: number,

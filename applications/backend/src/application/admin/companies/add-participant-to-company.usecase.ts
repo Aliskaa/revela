@@ -110,12 +110,9 @@ export class AddParticipantToCompanyUseCase {
             // on rejette pour éviter une mutation silencieuse d'un participant créé par admin
             // ou un autre coach (cf. PDF AOR §coach delete).
             const isCoachScope = access.coachId !== undefined;
-            const ownsParticipant =
-                isCoachScope && participant.createdByCoachId === access.coachId;
+            const ownsParticipant = isCoachScope && participant.createdByCoachId === access.coachId;
             if (isCoachScope && !ownsParticipant) {
-                throw new AdminValidationError(
-                    'Ce participant existe déjà et ne peut pas être modifié.'
-                );
+                throw new AdminValidationError('Ce participant existe déjà et ne peut pas être modifié.');
             }
 
             if (participant.companyId !== company.id) {

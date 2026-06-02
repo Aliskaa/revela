@@ -39,11 +39,12 @@ export const participantCampaignCoachAvatarPublicPath = (campaignId: number, cac
 };
 
 export class UploadParticipantAvatarUseCase {
-    public constructor(
-        private readonly participants: IParticipantsIdentityReaderPort & IParticipantsWriterPort
-    ) {}
+    public constructor(private readonly participants: IParticipantsIdentityReaderPort & IParticipantsWriterPort) {}
 
-    public async execute(participantId: number, file: Express.Multer.File | undefined): Promise<{ avatar_url: string }> {
+    public async execute(
+        participantId: number,
+        file: Express.Multer.File | undefined
+    ): Promise<{ avatar_url: string }> {
         if (!file?.buffer || file.buffer.length === 0) {
             throw new ParticipantAvatarFileRequiredError();
         }

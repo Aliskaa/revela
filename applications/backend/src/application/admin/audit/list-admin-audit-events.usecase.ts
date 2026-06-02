@@ -1,9 +1,6 @@
 // Copyright (c) 2026 AOR Conseil — proprietary, see LICENSE.md.
 
-import type {
-    AuditEventListItem,
-    IAuditEventsRepositoryPort,
-} from '@src/interfaces/audit/IAuditEventsRepository.port';
+import type { AuditEventListItem, IAuditEventsRepositoryPort } from '@src/interfaces/audit/IAuditEventsRepository.port';
 import type { Paginated } from '@src/shared/pagination';
 
 export class ListAdminAuditEventsUseCase {
