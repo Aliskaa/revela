@@ -16,15 +16,19 @@
 #   ./deploy.sh --target frontend     # Frontend uniquement
 #   ./deploy.sh --backend-only        # Alias de --target backend
 #   ./deploy.sh --frontend-only       # Alias de --target frontend
-#   ./deploy.sh --migrate-db          # 1er deploiement + migration
+#   ./deploy.sh --migrate-db          # Migration DB puis restart (avant trafic)
 #   ./deploy.sh --image-tag v1.0.1    # MAJ avec tag versionne
 #   ./deploy.sh --skip-build          # Juste forcer un restart EC2 (cible via menu/--target)
-#   ./deploy.sh --skip-build --migrate-db  # Migration seule
+#   ./deploy.sh --skip-build --migrate-db  # Migration seule (sans rebuild)
 #
 # Pre-requis : aws CLI v2, docker (avec buildx), jq, bash 4+
 # -----------------------------------------------------------------------------
 
 set -euo pipefail
+
+# AWS CLI sous Windows (Git Bash) echoue sur la sortie Unicode de drizzle-kit migrate
+# (spinner TTY) si PYTHONUTF8 n'est pas actif — le polling SSM reste alors bloque.
+export PYTHONUTF8="${PYTHONUTF8:-1}"
 
 # Repertoire du script + racine du repo (2 niveaux au-dessus)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -270,20 +274,24 @@ else
 
     if $DEPLOY_BACKEND; then
         step "Build + push backend (linux/arm64, tag=$IMAGE_TAG)"
+        backend_tags=(-t "$REGISTRY/revela/backend:$IMAGE_TAG")
+        [[ "$IMAGE_TAG" != "latest" ]] && backend_tags+=(-t "$REGISTRY/revela/backend:latest")
         docker buildx build \
             --platform linux/arm64 \
             -f applications/backend/Dockerfile \
-            -t "$REGISTRY/revela/backend:$IMAGE_TAG" \
+            "${backend_tags[@]}" \
             --push .
         ok "Backend pushe"
     fi
 
     if $DEPLOY_FRONTEND; then
         step "Build + push frontend (linux/arm64, tag=$IMAGE_TAG)"
+        frontend_tags=(-t "$REGISTRY/revela/frontend:$IMAGE_TAG")
+        [[ "$IMAGE_TAG" != "latest" ]] && frontend_tags+=(-t "$REGISTRY/revela/frontend:latest")
         docker buildx build \
             --platform linux/arm64 \
             -f applications/frontend/Dockerfile \
-            -t "$REGISTRY/revela/frontend:$IMAGE_TAG" \
+            "${frontend_tags[@]}" \
             --push .
         ok "Frontend pushe"
     fi
@@ -383,10 +391,10 @@ ssm_run() {
     local inv_status="" inv_stdout="" inv_stderr=""
     while true; do
         sleep 5
-        if inv_json="$(aws ssm get-command-invocation \
+        # --query Status evite de parser du JSON contenant des caracteres Unicode (spinner drizzle-kit).
+        if inv_status="$(aws ssm get-command-invocation \
                 --command-id "$cmd_id" --instance-id "$EC2_INSTANCE_ID" --region "$REGION" \
-                --output json 2>/dev/null)"; then
-            inv_status="$(echo "$inv_json" | jq -r .Status)"
+                --query Status --output text 2>/dev/null)"; then
             case "$inv_status" in
                 Success|Failed|Cancelled|TimedOut) break ;;
             esac
@@ -394,8 +402,12 @@ ssm_run() {
         if (( $(date +%s) > deadline )); then err "Timeout SSM ($description)"; return 1; fi
     done
 
-    inv_stdout="$(echo "$inv_json" | jq -r '.StandardOutputContent // ""')"
-    inv_stderr="$(echo "$inv_json" | jq -r '.StandardErrorContent // ""')"
+    inv_stdout="$(aws ssm get-command-invocation \
+            --command-id "$cmd_id" --instance-id "$EC2_INSTANCE_ID" --region "$REGION" \
+            --query 'StandardOutputContent' --output text 2>/dev/null || true)"
+    inv_stderr="$(aws ssm get-command-invocation \
+            --command-id "$cmd_id" --instance-id "$EC2_INSTANCE_ID" --region "$REGION" \
+            --query 'StandardErrorContent' --output text 2>/dev/null || true)"
 
     if [[ "$inv_status" == "Success" ]]; then
         ok "$description"
@@ -419,30 +431,59 @@ $DEPLOY_BACKEND && compose_services+=(backend)
 $DEPLOY_FRONTEND && compose_services+=(frontend)
 compose_services_str="${compose_services[*]}"
 
+# Pull backend aussi si migration demandee (meme deploy frontend-only).
+pull_services=("${compose_services[@]}")
+if $MIGRATE_DB; then
+    if [[ " ${pull_services[*]} " != *" backend "* ]]; then
+        pull_services+=(backend)
+    fi
+fi
+pull_services_str="${pull_services[*]}"
+
 container_checks=()
 $DEPLOY_BACKEND && container_checks+=('revela-backend-1')
 $DEPLOY_FRONTEND && container_checks+=('revela-frontend-1')
 container_check_cmd='for c in '"${container_checks[*]}"'; do age=$(( $(date +%s) - $(date -d "$(sudo docker inspect -f "{{.State.StartedAt}}" "$c")" +%s) )); if (( age > 600 )); then echo "Container $c pas redemarre (age ${age}s)"; exit 1; fi; done'
 
-step "SSM : ECR login + pull + up -d --force-recreate ($compose_services_str)"
-ssm_run "Restart conteneurs ($compose_services_str)" 8 \
-    'set -euo pipefail' \
-    'cd /opt/revela' \
-    "aws ecr get-login-password --region ${REGION} | sudo docker login --username AWS --password-stdin ${REGISTRY}" \
-    "sudo docker compose pull ${compose_services_str}" \
-    "sudo docker compose up -d --force-recreate --remove-orphans ${compose_services_str}" \
-    "$container_check_cmd" \
-    'sudo docker compose ps --format "{{.Service}}: {{.Status}} (image {{.Image}})"'
+# Sur l'EC2 (8 Go), ne garder que le tag deploye + le precedent par repo Revela.
+ec2_prune_revela_repo_fn='prune_revela_repo(){ local repo="$1" prev="$2" cur="'"${IMAGE_TAG}"'" reg="'"${REGISTRY}"'"; local keep="$cur"; [[ -n "$prev" && "$prev" != "$cur" ]] && keep="$keep $prev"; while IFS= read -r img; do [[ -z "$img" || "$img" == *"<none>"* ]] && continue; tag="${img##*:}"; ok=0; for t in $keep; do [[ "$tag" == "$t" ]] && ok=1; done; [[ "$ok" == 1 ]] || sudo docker rmi "$img" 2>/dev/null || true; done < <(sudo docker images "${reg}/revela/${repo}" --format "{{.Repository}}:{{.Tag}}"); }'
 
-# ─── Migration DB optionnelle ───────────────────────────────────────
+ssm_restart_cmds=(
+    'set -euo pipefail'
+    'cd /opt/revela'
+    'PREV_BACKEND_TAG=$(grep -oE "revela/backend:[a-zA-Z0-9._-]+" docker-compose.yml | head -1 | sed "s|.*revela/backend:||")'
+    'PREV_FRONTEND_TAG=$(grep -oE "revela/frontend:[a-zA-Z0-9._-]+" docker-compose.yml | head -1 | sed "s|.*revela/frontend:||")'
+    "sudo sed -i 's|revela/backend:[a-zA-Z0-9._-]*|revela/backend:${IMAGE_TAG}|g' /opt/revela/docker-compose.yml"
+    "sudo sed -i 's|revela/frontend:[a-zA-Z0-9._-]*|revela/frontend:${IMAGE_TAG}|g' /opt/revela/docker-compose.yml"
+    "aws ecr get-login-password --region ${REGION} | sudo docker login --username AWS --password-stdin ${REGISTRY}"
+    "sudo docker compose pull ${pull_services_str}"
+)
 if $MIGRATE_DB; then
-    step "SSM : migration DB"
-    ssm_run "Migration DB" 5 \
-        'BACKEND=$(sudo docker ps --filter name=backend --format "{{.ID}}" | head -1)' \
-        'if [ -z "$BACKEND" ]; then echo "backend container not running"; exit 1; fi' \
-        'sudo docker exec -i "$BACKEND" sh -c "cd /workspace && pnpm --filter @aor/drizzle db:migrate"' \
-        || true
+    ssm_restart_cmds+=(
+        'echo ">>> Migration DB (conteneur ephemere, avant restart backend)"'
+        'sudo docker compose run --rm --no-deps backend sh -c "cd /workspace && CI=1 pnpm --filter @aor/drizzle db:migrate"'
+    )
 fi
+ssm_restart_cmds+=(
+    "sudo docker compose up -d --force-recreate --remove-orphans ${compose_services_str}"
+    "$container_check_cmd"
+    "$ec2_prune_revela_repo_fn"
+)
+$DEPLOY_BACKEND && ssm_restart_cmds+=('prune_revela_repo backend "$PREV_BACKEND_TAG"')
+$DEPLOY_FRONTEND && ssm_restart_cmds+=('prune_revela_repo frontend "$PREV_FRONTEND_TAG"')
+ssm_restart_cmds+=(
+    'sudo docker image prune -f >/dev/null'
+    'echo "Images Revela restantes:"; sudo docker images --format "{{.Repository}}:{{.Tag}}" | grep revela/ || true'
+    'echo "Disque:"; df -h / | tail -1'
+    'sudo docker compose ps --format "{{.Service}}: {{.Status}} (image {{.Image}})"'
+)
+
+if $MIGRATE_DB; then
+    step "SSM : pull + migration DB + up -d --force-recreate ($compose_services_str)"
+else
+    step "SSM : ECR login + pull + up -d --force-recreate ($compose_services_str)"
+fi
+ssm_run "Deploy conteneurs ($compose_services_str)" 10 "${ssm_restart_cmds[@]}"
 
 # ─── Resume final ───────────────────────────────────────────────────
 echo
@@ -464,7 +505,7 @@ echo "  2. Recuperer le mot de passe super-admin :"
 echo "     aws secretsmanager get-secret-value --secret-id $ADMIN_PASSWORD_SEC_ARN --region $REGION --query SecretString --output text | jq -r .password"
 echo
 if ! $MIGRATE_DB; then
-    echo "  3. Si 1er deploiement, lance la migration DB :"
-    echo "     ./deploy.sh --skip-build --migrate-db"
+    echo "  3. Si le schema DB a change, relance avec migration avant restart :"
+    echo "     ./deploy.sh --skip-build --migrate-db --image-tag ${IMAGE_TAG}"
     echo
 fi
