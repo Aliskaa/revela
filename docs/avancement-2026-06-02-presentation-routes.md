@@ -37,10 +37,23 @@
 | **Total (au 2026-06-02, après Section 5)** | **2** | **0** | **9** | **11** |
 | **Total (au 2026-06-02, après Section 6)** | **2** | **0** | **8** | **12** |
 | **Total (au 2026-06-02, après Section 7)** | **1** | **0** | **2** | **19** |
+| **Total (au 2026-06-02, après Section 8 — guard participant)** | **0** | **0** | **0** | **22** |
 
-État global : **base fonctionnelle, conventions implicites divergentes**. Pas de
-refonte nécessaire — extraction de briques transverses + convergence progressive
-des 13 controllers vers le contrat ADR-009.
+> ⚠️ **Note de réconciliation du compteur (2026-06-02).** Les colonnes du « Total (état
+> initial) » (ligne `4 | 6 | 12 | 0`) ne sont **pas** égales à la somme du détail par axe
+> ci-dessus : par axe on a `🔴 = 2` (axe 2 + axe 7), `🟠 = 4` (axe 2 + axe 4), `✅ = 3` ;
+> seul `🟡 = 12` coïncide. Cet écart est un **artefact de comptage présent dès la rédaction
+> initiale**, antérieur à toute exécution. Les **3 seuls 🔴 réellement décrits** dans le corps
+> (scoring 500→400 §1 ; `/questionnaires/:qid` non gardé §2 ; matrix non scopé §7) sont **tous
+> résolus** ; les « 1 🔴 / 2 🟡 » qui subsistent dans la progression arithmétique **ne
+> correspondent à aucun item ouvert décrit** dans les Sections 1→8. La ligne « après Section 8 »
+> est donc ramenée à `0 | 0 | 0` : **tout item concret du plan ADR-009 est traité** (les 11
+> items du plan d'exécution sont ✅). *(Honnêteté CLAUDE.md : on signale l'incohérence du tally
+> plutôt que de fabriquer un item de plus pour « justifier » le résiduel.)*
+
+État global : **convergence ADR-009 complète au 2026-06-02**. Base fonctionnelle assainie sans
+refonte — briques transverses extraites + 13 controllers alignés sur le contrat ADR-009. Aucun
+item bloquant ni structurel ouvert.
 
 ---
 
@@ -248,9 +261,12 @@ guardrails (« Toute nouvelle route : `@ApiOperation` présent »).
 6. ✅ **`PaginationQueryPipe`** → les 3 parseurs de pagination unifiés (+ `query-normalizers`
    pour `normalizeQid`/`normalizePositiveInt`). **Fait le 2026-06-02** (cf. Section 4).
 
-### Priorité 3 — Cohérence structurelle — 🟡 Partiellement faite
+### Priorité 3 — Cohérence structurelle — ✅ Faite
 
-7. ⬜ **Guard au niveau classe côté participant** (exempter explicitement les routes publiques).
+7. ✅ **Guard au niveau classe côté participant** (exempter explicitement les routes publiques).
+   **Fait le 2026-06-02** (cf. Section 8). `@UseGuards(ParticipantJwtAuthGuard)` hissé au niveau
+   classe ; routes d'auth `login`/`refresh`/`logout` marquées `@Public()` ; les 18 `@UseGuards`
+   par méthode supprimés.
 8. ✅ **Helper `sendAvatarResponse(res, avatar)`** pour les en-têtes avatar (6 handlers).
    **Fait le 2026-06-02** (cf. Section 4). *(Renommé vs. `sendBinary` du plan initial : le helper
    encode la politique de cache **avatar** ; les exports CSV, en-têtes distincts, n'en relèvent pas.)*
@@ -376,6 +392,52 @@ Décision produit du 2026-06-02 : **migration complète** des chemins non confor
   `responses/:responseId` (sinon le segment statique `export` serait capté par le param +
   `ParseIntPipe` → 400). Même vigilance vérifiée pour `campaigns/:cid/participants/import` (POST,
   distinct des routes `:participantId/*`).
+
+## Section 8 — Guard participant au niveau classe (Priorité 3 item 7) — ✅ Traitée le 2026-06-02
+
+> Dernier item structurel ouvert du plan. **Aucune rupture de contrat** (placement de guard
+> strictement interne au transport) ⇒ aucune modification frontend.
+
+| Statut | Constat | Preuve | Résolution |
+|---|---|---|---|
+| ✅ (était 🟠/structurel) | `ParticipantController` appliquait `@UseGuards(ParticipantJwtAuthGuard)` **par méthode ×18** (divergence signalée Section 2, l.107) alors que la branche admin de ressources le déclare **au niveau classe** (pattern cible ADR-009 §2). Risque latent : un nouveau handler protégé pouvait être ajouté **sans** guard (oubli silencieux) | [participant.controller.ts](../applications/backend/src/presentation/participant-session/participant.controller.ts) (ex-`@UseGuards` répétés sur `session`, `profile`, `matrix`, `submit`, `export`, …) | `@UseGuards(ParticipantJwtAuthGuard)` **hissé au niveau classe** ; les **18** `@UseGuards` par méthode supprimés. Les **3 seules** routes publiques (`auth/login`, `auth/refresh`, `auth/logout`) marquées `@Public()` de façon **explicite** (l'exception, pas la règle — ADR-009 §2). Désormais : **protégé par défaut**, un handler ajouté sans annotation est gardé automatiquement. |
+
+**Briques créées** :
+- [`@Public()` + `IS_PUBLIC_KEY`](../applications/backend/src/presentation/public.decorator.ts) (racine
+  `presentation/` = frontière transport, réutilisable par tout controller authentifié au niveau classe) —
+  `SetMetadata(IS_PUBLIC_KEY, true)` marque une route exemptée du guard de classe.
+- [`ParticipantJwtAuthGuard`](../applications/backend/src/presentation/participant-session/participant-jwt-auth.guard.ts)
+  enrichi : `canActivate` lit la métadonnée via `Reflector` (`getAllAndOverride([handler, class])`) et
+  **court-circuite** (`return true`) sur les routes `@Public()` ; sinon délègue à `super.canActivate`
+  (passport JWT inchangé). `Reflector` injecté via `@Inject(Reflector)` (import **valeur** : la DI Nest le
+  résout par token, ce qui évite qu'un `import type` automatique ne casse l'injection au démarrage).
+
+**Équivalence comportementale prouvée** :
+- **Avant** : `login`/`refresh`/`logout` publics (sans guard JWT) ; les 18 autres routes gardées par méthode.
+- **Après** : guard de classe sur **toutes** les routes ; `login`/`refresh`/`logout` court-circuités par
+  `@Public()` → **public à l'identique** ; les 18 autres gardées par le guard de classe → **protégées à
+  l'identique**. Le `ThrottlerGuard` (login/refresh) et le `@Throttle` restent par méthode (concern distinct,
+  inchangé). `logout` lit toujours `req.user` en optionnel (guard court-circuité → `req.user` absent comme
+  avant : audit `actorId: null` préservé).
+- Mapping route ↔ garde **strictement identique** ; seul le **lieu de déclaration** change.
+
+**Conformité SOLID / Hexa vérifiée** :
+- **Aucune frontière franchie** : `@Public()`, `Reflector` et le guard vivent dans `presentation/`. Le guard
+  ne lit que des métadonnées de route + le résultat de la stratégie passport — **zéro** dépendance
+  application/domaine, aucune logique métier déplacée.
+- **SRP** : le guard garde une responsabilité unique (authentifier la requête, sauf exemption explicite) ;
+  `@Public()` ne porte qu'une métadonnée déclarative.
+- **OCP** : l'exemption est ajoutée par **composition par décorateur** (`@Public()`), sans modifier la
+  stratégie JWT ni les handlers ; un futur controller peut réutiliser `@Public()` sans toucher au guard.
+- **Sécurité par défaut (ADR-009 §2)** : l'inversion « tout protégé sauf exception explicite » remplace
+  « tout ouvert sauf guard posé à la main » → ferme la classe de bugs « guard oublié sur un nouveau handler ».
+- **« Ne pas inventer » (CLAUDE.md)** : `@Public()` est posé **uniquement** sur les 3 routes réellement
+  publiques (vérifié), pas par précaution sur des routes qui doivent rester protégées.
+
+**Vérifs** : `typecheck` backend ✅ (exit 0) ; Biome ✅ (3 fichiers, « No fixes applied » après correction
+de l'`import type` Reflector) ; tests backend `37/38` ✅ (même échec préexistant
+`calculate-scoring.usecase.spec.ts` — parité fixtures Python du moteur scoring, sans rapport ; aucun fichier
+scoring touché). Aucune modification frontend requise.
 
 ## Décisions à prendre
 
@@ -553,4 +615,24 @@ Décision produit du 2026-06-02 : **migration complète** des chemins non confor
   - **Ordre Express** vérifié : `responses/export[/anonymized]` déclaré **avant**
     `responses/:responseId` (évite la capture du segment statique par `ParseIntPipe`).
   - Résiduel **hors périmètre Section 7** : Plan d'exécution **Priorité 3 item 7** (guard
-    participant au niveau classe) reste ⬜.
+    participant au niveau classe) — **traité depuis** le 2026-06-02 (cf. Section 8).
+
+- **2026-06-02 — Section 8 (Guard participant au niveau classe / Priorité 3 item 7) : ✅ traitée.**
+  - 🟠/structurel→✅ `@UseGuards(ParticipantJwtAuthGuard)` **hissé au niveau classe** sur
+    `ParticipantController` ; les **18** `@UseGuards` par méthode supprimés. Sécurité **par défaut**
+    (ADR-009 §2) : un nouveau handler est gardé sans annotation.
+  - **Brique** `@Public()` + `IS_PUBLIC_KEY` créée (`presentation/public.decorator.ts`, réutilisable) ;
+    `ParticipantJwtAuthGuard.canActivate` lit la métadonnée via `Reflector` et court-circuite sur les
+    routes exemptées. Les **3 seules** routes publiques (`auth/login`/`refresh`/`logout`) marquées
+    `@Public()` explicitement. `Reflector` injecté via `@Inject(Reflector)` (import valeur → DI préservée).
+  - **Équivalence comportementale** : mapping route ↔ garde identique (3 publiques / 18 protégées) ;
+    seul le lieu de déclaration change. `ThrottlerGuard` + `@Throttle` inchangés ; audit `logout` préservé.
+  - **Conformité SOLID / Hexa** : aucune frontière franchie (guard + décorateur dans `presentation/`,
+    zéro lien application/domaine) ; SRP/OCP préservés (exemption par composition de décorateur) ;
+    « ne pas inventer » respecté (`@Public()` uniquement sur les routes réellement publiques).
+  - **Vérifs** : `typecheck` backend ✅ (exit 0) ; Biome ✅ (3 fichiers, « No fixes applied ») ;
+    tests backend `37/38` ✅ (même échec préexistant `calculate-scoring.usecase.spec.ts`, sans rapport ;
+    aucun fichier scoring touché). Aucune modification frontend requise.
+  - **Plan d'exécution** : dernier item ouvert (Priorité 3 item 7) coché → **les 11 items du plan sont ✅**.
+  - **Réconciliation du compteur** : incohérence de tally pré-existante signalée dans le récap exécutif
+    (le « Total état initial » ne somme pas le détail par axe) ; aucun item concret ne reste ouvert.

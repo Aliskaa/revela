@@ -67,9 +67,11 @@ import type { JwtValidatedUser } from '@src/presentation/jwt-validated-user';
 import { ResponsesExceptionFilter } from '@src/presentation/responses/responses-exception.filter';
 import { transparencyScoreSnapshotToJson } from '@src/presentation/transparency-snapshot.presenter';
 
+import { Public } from '@src/presentation/public.decorator';
 import { CurrentParticipantId } from './current-participant-id.decorator';
 import { ParticipantAuthExceptionFilter } from './participant-auth-exception.filter';
 import { ParticipantAvatarExceptionFilter } from './participant-avatar-exception.filter';
+
 import { ParticipantJwtAuthGuard } from './participant-jwt-auth.guard';
 import { ParticipantSessionExceptionFilter } from './participant-session-exception.filter';
 import {
@@ -95,6 +97,11 @@ import {
 @ApiTags('participant')
 @ApiBearerAuth('jwt')
 @Controller('participant')
+// Guard d'authentification au niveau classe (ADR-009 §2, comme la branche admin de ressources) :
+// toutes les routes sont protégées par défaut. Les seules exceptions — les routes d'auth
+// `login` / `refresh` / `logout` — sont marquées `@Public()` de façon explicite, ce qui
+// supprime les 18 `@UseGuards` par méthode (plus aucun handler protégé ne dépend d'un guard oublié).
+@UseGuards(ParticipantJwtAuthGuard)
 // Filtres au niveau classe (pattern cible ADR-009 §3, comme la branche admin). Les quatre
 // filtres capturent des types d'erreurs **disjoints** (auth / session / avatar / responses) :
 // les empiler ici est sans effet de bord — chaque exception n'est routée que vers son filtre.
@@ -150,6 +157,7 @@ export class ParticipantController {
     ) {}
 
     @Post('auth/login')
+    @Public()
     @UseGuards(ThrottlerGuard)
     @Throttle({ 'auth-strict': { limit: 5, ttl: 60_000 } })
     @ApiOperation({ summary: 'Authentification participant : pose les cookies httpOnly et ouvre une session.' })
@@ -211,6 +219,7 @@ export class ParticipantController {
      * Rotation : ancien token marqué `usedAt`. Réutilisation détectée → revoke famille.
      */
     @Post('auth/refresh')
+    @Public()
     @UseGuards(ThrottlerGuard)
     @Throttle({ 'auth-refresh': { limit: 30, ttl: 60_000 } })
     @ApiOperation({ summary: 'Rotation de la paire de cookies d’authentification participant.' })
@@ -256,6 +265,7 @@ export class ParticipantController {
 
     /** Déconnexion participant : révoque la famille du refresh courant et efface les cookies. */
     @Post('auth/logout')
+    @Public()
     @ApiOperation({ summary: 'Déconnexion participant : révoque le refresh courant et efface les cookies.' })
     public async logout(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
         const cookies = (req as Request & { cookies?: Record<string, string> }).cookies ?? {};
@@ -281,7 +291,6 @@ export class ParticipantController {
 
     /** Claims dérivés du JWT participant courant. */
     @Get('auth/me')
-    @UseGuards(ParticipantJwtAuthGuard)
     @ApiOperation({ summary: 'Claims du participant courant.' })
     public async me(@Req() req: Request) {
         const user = (req as Request & { user?: JwtValidatedUser }).user;
@@ -292,14 +301,12 @@ export class ParticipantController {
     }
 
     @Get('session')
-    @UseGuards(ParticipantJwtAuthGuard)
     @ApiOperation({ summary: 'Session du participant courant (campagnes et assignations).' })
     public async session(@CurrentParticipantId() participantId: number) {
         return this.getParticipantSession.execute(participantId);
     }
 
     @Patch('profile')
-    @UseGuards(ParticipantJwtAuthGuard)
     @ApiOperation({ summary: 'Met à jour le profil du participant courant.' })
     public async updateProfile(@CurrentParticipantId() participantId: number, @Body() body: unknown) {
         const parsed = updateParticipantProfileBodySchema.safeParse(body);
@@ -322,7 +329,6 @@ export class ParticipantController {
     }
 
     @Post('profile/avatar')
-    @UseGuards(ParticipantJwtAuthGuard)
     @UseInterceptors(
         FileInterceptor('file', {
             limits: { fileSize: 2 * 1024 * 1024 },
@@ -339,7 +345,6 @@ export class ParticipantController {
     // Lecture de l'avatar « moi » sous `/participant/profile/avatar` (ADR-010 R4 : pas de `/me`
     // redondant sous un namespace déjà self). Même chemin que le `POST` d'upload, verbe distinct.
     @Get('profile/avatar')
-    @UseGuards(ParticipantJwtAuthGuard)
     @ApiOperation({ summary: 'Récupère l’avatar du participant courant.' })
     public async getOwnAvatar(@CurrentParticipantId() participantId: number, @Res() res: Response) {
         const avatar = await this.getParticipantAvatar.execute(participantId);
@@ -349,7 +354,6 @@ export class ParticipantController {
     // `qid` supprimé de la query (ADR-010 R2, 3ᵉ catégorie) : une campagne ne porte qu'un seul
     // questionnaire, le use case le dérive de l'assignation. Seul `peers` reste (paramètre de vue).
     @Get('campaigns/:campaignId/matrix')
-    @UseGuards(ParticipantJwtAuthGuard)
     @ApiOperation({ summary: 'Matrice des réponses du participant courant pour une campagne.' })
     public async campaignMatrix(
         @CurrentParticipantId() participantId: number,
@@ -361,7 +365,6 @@ export class ParticipantController {
     }
 
     @Post('campaigns/:campaignId/confirm')
-    @UseGuards(ParticipantJwtAuthGuard)
     @ApiOperation({ summary: 'Confirme la participation du participant courant à une campagne.' })
     public async confirmCampaign(
         @CurrentParticipantId() participantId: number,
@@ -371,7 +374,6 @@ export class ParticipantController {
     }
 
     @Get('campaigns/:campaignId/peers')
-    @UseGuards(ParticipantJwtAuthGuard)
     @ApiOperation({ summary: 'Liste les pairs du participant courant dans une campagne.' })
     public async campaignPeers(
         @CurrentParticipantId() participantId: number,
@@ -381,7 +383,6 @@ export class ParticipantController {
     }
 
     @Get('campaigns/:campaignId/coach/avatar')
-    @UseGuards(ParticipantJwtAuthGuard)
     @ApiOperation({ summary: 'Récupère l’avatar du coach d’une campagne.' })
     public async getCampaignCoachAvatar(
         @CurrentParticipantId() participantId: number,
@@ -393,7 +394,6 @@ export class ParticipantController {
     }
 
     @Get('campaigns/:campaignId/peers/:peerParticipantId/avatar')
-    @UseGuards(ParticipantJwtAuthGuard)
     @ApiOperation({ summary: 'Récupère l’avatar d’un pair dans une campagne.' })
     public async getCampaignPeerAvatar(
         @CurrentParticipantId() participantId: number,
@@ -414,7 +414,6 @@ export class ParticipantController {
      * Retourne `{ snapshot: null }` tant que le coach/admin n'a pas activé le calcul.
      */
     @Get('campaigns/:campaignId/transparency')
-    @UseGuards(ParticipantJwtAuthGuard)
     @ApiOperation({ summary: 'Lit le score de transparence (P23) du participant courant pour une campagne.' })
     public async campaignTransparency(
         @CurrentParticipantId() participantId: number,
@@ -430,7 +429,6 @@ export class ParticipantController {
      * la diffusion est contrôlée (décision Laurent 2026-05-10).
      */
     @Get('campaigns/:campaignId/restitution')
-    @UseGuards(ParticipantJwtAuthGuard)
     @ApiOperation({ summary: 'Lit la restitution IA approuvée du participant courant pour une campagne.' })
     public async campaignAiRestitution(
         @CurrentParticipantId() participantId: number,
@@ -444,7 +442,6 @@ export class ParticipantController {
     }
 
     @Post('campaigns/:campaignId/peer-feedback/confirm')
-    @UseGuards(ParticipantJwtAuthGuard)
     @ApiOperation({ summary: 'Confirme le feedback entre pairs du participant courant pour une campagne.' })
     public async confirmCampaignPeerFeedback(
         @CurrentParticipantId() participantId: number,
@@ -454,7 +451,6 @@ export class ParticipantController {
     }
 
     @Post('campaigns/:campaignId/questionnaires/:qid/submit')
-    @UseGuards(ParticipantJwtAuthGuard)
     @ApiOperation({ summary: 'Soumet les réponses d’un questionnaire dans une campagne.' })
     public async submitCampaignQuestionnaire(
         @CurrentParticipantId() participantId: number,
@@ -472,7 +468,6 @@ export class ParticipantController {
      * finale (`/questionnaires/:qid/submit`).
      */
     @Get('campaigns/:campaignId/questionnaires/:qid/draft')
-    @UseGuards(ParticipantJwtAuthGuard)
     @ApiOperation({ summary: 'Lit le brouillon (autosave) d’un questionnaire dans une campagne.' })
     public async getCampaignQuestionnaireDraft(
         @CurrentParticipantId() participantId: number,
@@ -484,7 +479,6 @@ export class ParticipantController {
     }
 
     @Put('campaigns/:campaignId/questionnaires/:qid/draft')
-    @UseGuards(ParticipantJwtAuthGuard)
     @ApiOperation({ summary: 'Enregistre le brouillon (autosave) d’un questionnaire dans une campagne.' })
     public async upsertCampaignQuestionnaireDraft(
         @CurrentParticipantId() participantId: number,
@@ -497,7 +491,6 @@ export class ParticipantController {
     }
 
     @Get('responses/:responseId')
-    @UseGuards(ParticipantJwtAuthGuard)
     @ApiOperation({ summary: 'Lit une réponse appartenant au participant courant.' })
     public async getResponse(
         @CurrentParticipantId() participantId: number,
@@ -517,7 +510,6 @@ export class ParticipantController {
     // Export « mes données » sous `/participant/export` (ADR-010 R4/R6 : suffixe de ressource,
     // pas de `/me` redondant sous un namespace déjà self), ex-`/me/export`.
     @Get('export')
-    @UseGuards(ParticipantJwtAuthGuard)
     @ApiOperation({ summary: 'Export RGPD « mes données » du participant courant (articles 15 et 20).' })
     public async exportMyData(@CurrentParticipantId() participantId: number) {
         return this.exportParticipantSelfData.execute(participantId);
