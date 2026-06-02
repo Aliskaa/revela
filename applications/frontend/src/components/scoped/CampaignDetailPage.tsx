@@ -205,7 +205,7 @@ export function CampaignDetailPage({ scope, campaignId }: CampaignDetailPageProp
                         participantUrlPrefix={cfg.participantPathForCompany(campaign.companyId)}
                         matrixUrlPrefix={cfg.campaignUrlPrefix}
                         transparencyUrlPrefix={cfg.campaignUrlPrefix}
-                        // aiRestitutionUrlPrefix={cfg.aiRestitutionUrlPrefix}
+                        aiRestitutionUrlPrefix={cfg.campaignUrlPrefix}
                     />
                 </Stack>
 

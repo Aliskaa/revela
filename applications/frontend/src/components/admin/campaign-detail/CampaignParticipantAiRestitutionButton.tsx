@@ -2,6 +2,8 @@
 
 import { useAdminAiRestitution } from '@/hooks/aiRestitutions';
 import { Button, Tooltip } from '@mui/material';
+import { tableActionButtonSx } from '@/components/common/styles/listSurfaces';
+import { Link } from '@tanstack/react-router';
 import { BadgeCheck, Bot, Pencil, Sparkles, XCircle } from 'lucide-react';
 import type * as React from 'react';
 
@@ -74,15 +76,19 @@ export function CampaignParticipantAiRestitutionButton({
 }: CampaignParticipantAiRestitutionButtonProps) {
     const { data: envelope, isLoading } = useAdminAiRestitution(campaignId, participantId);
 
+    const restitution = envelope?.restitution ?? null;
+    const hasRestitution = restitution !== null;
+
+    const label = hasRestitution ? `${restitution.status}` : 'Lancer le retour IA';
     const status = envelope?.restitution?.status ?? 'none';
     const cfg = STATUS_VARIANT[status];
 
-    const href = `${aiRestitutionUrlPrefix}/${String(campaignId)}/participants/${String(participantId)}/ai-restitution`;
+    const to = `${aiRestitutionUrlPrefix}/${String(campaignId)}/participants/${String(participantId)}/ai-restitution`;
 
     return (
         <Tooltip title={cfg.tooltip}>
             <span>
-                <Button
+                {/* <Button
                     size="small"
                     variant={cfg.variant}
                     color={cfg.color}
@@ -92,6 +98,18 @@ export function CampaignParticipantAiRestitutionButton({
                     sx={{ borderRadius: 99 }}
                 >
                     {cfg.label}
+                </Button> */}
+                <Button
+                    component={Link}
+                    to={to}
+                    size="small"
+                    variant="outlined"
+                    color="primary"
+                    disabled={isLoading}
+                    startIcon={cfg.icon}
+                    sx={tableActionButtonSx}
+                >
+                    {label}
                 </Button>
             </span>
         </Tooltip>

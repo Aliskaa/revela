@@ -174,6 +174,7 @@ export function CampaignParticipantsTable({
                                                                 participantId={p.participantId}
                                                                 matrixUrlPrefix={matrixUrlPrefix}
                                                                 transparencyUrlPrefix={transparencyUrlPrefix}
+                                                                aiRestitutionUrlPrefix={aiRestitutionUrlPrefix}
                                                             />
                                                         </TableCell>
                                                     ) : null}
@@ -206,6 +207,7 @@ export function CampaignParticipantsTable({
                                     participantUrlPrefix={participantUrlPrefix}
                                     matrixUrlPrefix={matrixUrlPrefix}
                                     transparencyUrlPrefix={transparencyUrlPrefix}
+                                    aiRestitutionUrlPrefix={aiRestitutionUrlPrefix}
                                     showActions={hasActions}
                                 />
                             ))
@@ -297,6 +299,7 @@ type CampaignParticipantRowActionsProps = {
     participantId: number;
     matrixUrlPrefix?: string;
     transparencyUrlPrefix?: string;
+    aiRestitutionUrlPrefix?: string;
 };
 
 function CampaignParticipantRowActions({
@@ -304,6 +307,7 @@ function CampaignParticipantRowActions({
     participantId,
     matrixUrlPrefix,
     transparencyUrlPrefix,
+    aiRestitutionUrlPrefix,
 }: CampaignParticipantRowActionsProps) {
     if (!matrixUrlPrefix) {
         return null;
@@ -327,6 +331,13 @@ function CampaignParticipantRowActions({
                     transparencyUrlPrefix={transparencyUrlPrefix}
                 />
             ) : null}
+            {aiRestitutionUrlPrefix ? (
+                <CampaignParticipantAiRestitutionButton
+                    campaignId={campaignId}
+                    participantId={participantId}
+                    aiRestitutionUrlPrefix={aiRestitutionUrlPrefix}
+                />
+            ) : null}
         </Stack>
     );
 }
@@ -339,6 +350,7 @@ type CampaignParticipantMobileCardProps = {
     participantUrlPrefix?: string;
     matrixUrlPrefix?: string;
     transparencyUrlPrefix?: string;
+    aiRestitutionUrlPrefix?: string;
     showActions: boolean;
 };
 
@@ -350,6 +362,7 @@ function CampaignParticipantMobileCard({
     participantUrlPrefix,
     matrixUrlPrefix,
     transparencyUrlPrefix,
+    aiRestitutionUrlPrefix,
     showActions,
 }: CampaignParticipantMobileCardProps) {
     return (
@@ -397,6 +410,7 @@ function CampaignParticipantMobileCard({
                             participantId={participant.participantId}
                             matrixUrlPrefix={matrixUrlPrefix}
                             transparencyUrlPrefix={transparencyUrlPrefix}
+                            aiRestitutionUrlPrefix={aiRestitutionUrlPrefix}
                         />
                     ) : null}
 

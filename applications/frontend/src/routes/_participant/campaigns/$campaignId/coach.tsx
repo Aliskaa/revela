@@ -2,17 +2,15 @@
 
 import { Alert, Box, Card, CardContent, Link as MuiLink, Stack, Typography } from '@mui/material';
 import { Link, createFileRoute } from '@tanstack/react-router';
-import { Sparkles, UserRound, Users } from 'lucide-react';
+import { Sparkles, Users } from 'lucide-react';
 import * as React from 'react';
 
 import { EmptyState } from '@/components/common/EmptyState';
-import { CampaignCoachAvatar } from '@/components/participant-dashboard/CampaignCoachAvatar';
-import { PageHeader, ListPanel } from '@/components/common/layout';
+import { ListPanel, PageHeader } from '@/components/common/layout';
 import { LoadingCard } from '@/components/common/LoadingCard';
-import { useParticipantOwnAiRestitution } from '@/hooks/aiRestitutions';
-import ReactMarkdown from 'react-markdown';
 import { surfaceCardSx } from '@/components/common/styles/listSurfaces';
 import { useBreadcrumbs } from '@/components/layout/AppShellChromeContext';
+import { CampaignCoachAvatar } from '@/components/participant-dashboard/CampaignCoachAvatar';
 import { useParticipantSession } from '@/hooks/participantSession';
 import type { ParticipantSession } from '@aor/types';
 
@@ -89,7 +87,6 @@ function ParticipantCoachRoute() {
     const { campaignId: campaignIdParam } = Route.useParams();
     const campaignId = Number(campaignIdParam);
     const { data: session, isLoading, isError } = useParticipantSession();
-    const { data: aiRestitution } = useParticipantOwnAiRestitution(campaignId);
 
     const assignment = React.useMemo(() => {
         if (!session) return undefined;
