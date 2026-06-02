@@ -40,7 +40,6 @@ import type {
 } from '@src/application/admin/participants/update-admin-participant.usecase';
 import type { UploadAdminParticipantAvatarUseCase } from '@src/application/admin/participants/upload-admin-participant-avatar.usecase';
 import { AuditLoggerService } from '@src/application/audit/audit-logger.service';
-import type { GetParticipantQuestionnaireMatrixUseCase } from '@src/application/participant-session/get-participant-questionnaire-matrix.usecase';
 import { ResponsesExceptionFilter } from '@src/presentation/responses/responses-exception.filter';
 
 import { sendAvatarResponse } from '@src/presentation/avatar-response';
@@ -49,8 +48,7 @@ import { CurrentUser } from '@src/presentation/current-user.decorator';
 import type { JwtValidatedUser } from '@src/presentation/jwt-validated-user';
 import { type PaginationParams, PaginationQueryPipe } from '@src/presentation/pagination-query.pipe';
 import { ParticipantAvatarExceptionFilter } from '@src/presentation/participant-session/participant-avatar-exception.filter';
-import { GET_PARTICIPANT_QUESTIONNAIRE_MATRIX_USE_CASE_SYMBOL } from '@src/presentation/participant-session/participant.tokens';
-import { normalizePositiveInt, normalizeQid } from '@src/presentation/query-normalizers';
+import { normalizePositiveInt } from '@src/presentation/query-normalizers';
 import { AdminApplicationExceptionFilter } from './admin-application-exception.filter';
 import { AdminJwtAuthGuard } from './admin-jwt-auth.guard';
 import { participantDetailToAdminJson, participantToAdminJson } from './admin.presenters';
@@ -92,8 +90,6 @@ export class AdminParticipantsController {
         private readonly uploadAdminParticipantAvatar: UploadAdminParticipantAvatarUseCase,
         @Inject(UPDATE_ADMIN_PARTICIPANT_USE_CASE_SYMBOL)
         private readonly updateAdminParticipant: UpdateAdminParticipantUseCase,
-        @Inject(GET_PARTICIPANT_QUESTIONNAIRE_MATRIX_USE_CASE_SYMBOL)
-        private readonly getParticipantQuestionnaireMatrix: GetParticipantQuestionnaireMatrixUseCase,
         private readonly audit: AuditLoggerService
     ) {}
 
@@ -198,7 +194,9 @@ export class AdminParticipantsController {
         return this.importParticipantsCsv.execute(file?.buffer);
     }
 
-    @Post('participants/:participantId/invite')
+    // Créer une invitation = `POST` sur la sous-collection `invitations` (ADR-010 R5),
+    // ex-`/invite`. La sous-collection est lue par le `GET` voisin (même chemin, verbe distinct).
+    @Post('participants/:participantId/invitations')
     @ApiOperation({ summary: 'Crée une invitation pour un participant.' })
     public createInvite(
         @Param('participantId', ParseIntPipe) participantId: number,
@@ -207,28 +205,17 @@ export class AdminParticipantsController {
         return this.createParticipantInvite.execute(participantId, body);
     }
 
-    @Get('participants/:participantId/tokens')
-    @ApiOperation({ summary: 'Liste les tokens d’invitation d’un participant.' })
+    // Liste les invitations d'un participant (axe personne, indépendant de toute campagne),
+    // ex-`/tokens` : nommé d'après la ressource exposée, pas l'implémentation (token).
+    @Get('participants/:participantId/invitations')
+    @ApiOperation({ summary: 'Liste les invitations d’un participant.' })
     public listParticipantTokens(@Param('participantId', ParseIntPipe) participantId: number) {
         return this.listParticipantInvitationTokens.execute(participantId);
     }
 
-    @Get('participants/:participantId/matrix')
-    @ApiOperation({ summary: 'Matrice des réponses d’un participant pour un questionnaire.' })
-    public getParticipantMatrix(
-        @Param('participantId', ParseIntPipe) participantId: number,
-        @Query('qid') qidRaw: string,
-        @CurrentCoachScope() coachId: number | undefined
-    ) {
-        const qid = normalizeQid(qidRaw) ?? '';
-        return this.getParticipantQuestionnaireMatrix.execute({
-            participantId,
-            qid,
-            coachId,
-            peerColumnPerspective: 'received',
-            anonymizeReceivedPeerLabels: false,
-        });
-    }
+    // Le matrix a migré sur l'axe participation : `GET /admin/campaigns/:cid/participants/:pid/matrix`
+    // (AdminCampaignsController). Il n'existe plus sur l'axe personne — il dérivait d'un `qid` sans
+    // campagne et agrégeait toutes campagnes confondues (bug latent corrigé, cf. ADR-010 R3).
 
     @Delete('participants/:participantId')
     // Famille « suppression avec résumé » (RGPD erase) → 200 + corps, déclaré

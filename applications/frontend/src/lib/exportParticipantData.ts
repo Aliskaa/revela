@@ -9,7 +9,7 @@ import { BRAND_PRIMARY_RGB } from './theme';
 /**
  * Helpers de téléchargement RGPD de l'export « mes données » côté participant.
  *
- * Le backend (`GET /participant/me/export`) retourne le `ParticipantSelfDataExport` brut.
+ * Le backend (`GET /participant/export`) retourne le `ParticipantSelfDataExport` brut.
  * Ces helpers ne font *pas* de fetch — ils prennent le payload déjà téléchargé et
  * déclenchent soit un download JSON, soit la génération d'un PDF côté client (jsPDF).
  *

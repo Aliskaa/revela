@@ -11,7 +11,6 @@ import { ListAdminParticipantsUseCase } from '@src/application/admin/participant
 import { ListParticipantInvitationTokensUseCase } from '@src/application/admin/participants/list-participant-invitation-tokens.usecase';
 import { UpdateAdminParticipantUseCase } from '@src/application/admin/participants/update-admin-participant.usecase';
 import { UploadAdminParticipantAvatarUseCase } from '@src/application/admin/participants/upload-admin-participant-avatar.usecase';
-import { GetParticipantQuestionnaireMatrixUseCase } from '@src/application/participant-session/get-participant-questionnaire-matrix.usecase';
 import { type IInviteUrlConfigPort, INVITE_URL_CONFIG_PORT_SYMBOL } from '@src/interfaces/admin/IInviteUrlConfig.port';
 import {
     CAMPAIGNS_REPOSITORY_PORT_SYMBOL,
@@ -36,13 +35,7 @@ import {
     type IParticipantsWriterPort,
     PARTICIPANTS_REPOSITORY_PORT_SYMBOL,
 } from '@src/interfaces/participants/IParticipantsRepository.port';
-import {
-    type IResponsesSubmissionReaderPort,
-    RESPONSES_REPOSITORY_PORT_SYMBOL,
-} from '@src/interfaces/responses/IResponsesRepository.port';
 import { AuditModule } from '@src/presentation/audit/audit.module';
-
-import { GET_PARTICIPANT_QUESTIONNAIRE_MATRIX_USE_CASE_SYMBOL } from '@src/presentation/participant-session/participant.tokens';
 
 import { AdminParticipantsController } from './admin-participants.controller';
 import { AdminSharedModule } from './admin-shared.module';
@@ -142,14 +135,6 @@ import {
                 participants: IParticipantsIdentityReaderPort & IParticipantsWriterPort & IParticipantsAdminReadPort
             ) => new UpdateAdminParticipantUseCase({ participants }),
             inject: [PARTICIPANTS_REPOSITORY_PORT_SYMBOL],
-        },
-        {
-            provide: GET_PARTICIPANT_QUESTIONNAIRE_MATRIX_USE_CASE_SYMBOL,
-            useFactory: (
-                participants: IParticipantsIdentityReaderPort & IParticipantsAdminReadPort,
-                responses: IResponsesSubmissionReaderPort
-            ) => new GetParticipantQuestionnaireMatrixUseCase({ participants, responses }),
-            inject: [PARTICIPANTS_REPOSITORY_PORT_SYMBOL, RESPONSES_REPOSITORY_PORT_SYMBOL],
         },
     ],
 })

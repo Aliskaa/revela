@@ -68,7 +68,9 @@ export function CampaignParticipantTransparencyPage({
     const { data: participantDetail } = useParticipant(participantId);
     const qid = campaignDetail?.campaign.questionnaireId ?? '';
 
-    const { data: matrix, isLoading: matrixLoading } = useParticipantQuestionnaireMatrix(participantId, qid);
+    const { data: matrix, isLoading: matrixLoading } = useParticipantQuestionnaireMatrix(campaignId, participantId, {
+        enabled: qid.length > 0,
+    });
     const { data: envelope, isLoading: envelopeLoading } = useAdminCampaignParticipantTransparency(
         campaignId,
         participantId

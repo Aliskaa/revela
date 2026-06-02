@@ -365,7 +365,9 @@ export function CampaignParticipantAiRestitutionPage({
     const { data: envelope, isLoading: envelopeLoading } = useAdminAiRestitution(campaignId, participantId);
 
     const qid = campaignDetail?.campaign.questionnaireId ?? '';
-    const { data: matrix, isLoading: matrixLoading } = useParticipantQuestionnaireMatrix(participantId, qid);
+    const { data: matrix, isLoading: matrixLoading } = useParticipantQuestionnaireMatrix(campaignId, participantId, {
+        enabled: qid.length > 0,
+    });
 
     const generate = useGenerateAiRestitution();
     const edit = useEditAiRestitution();

@@ -45,8 +45,9 @@ export function useParticipantSessionMatrix(
             }
             return participantApiClient
                 .get(`/participant/campaigns/${validCampaignId}/matrix`, {
+                    // `qid` n'est plus envoyé (ADR-010 R2) : dérivé de la campagne côté serveur.
+                    // Il reste dans la clé de cache React Query (signature du hook) mais pas dans la requête.
                     params: {
-                        qid: q,
                         ...(peerPerspective === 'received' ? { peers: 'received' } : {}),
                     },
                 })
@@ -123,7 +124,7 @@ export function useConfirmPeerFeedback() {
  */
 export function useFetchParticipantSelfDataExport() {
     return useMutation<ParticipantSelfDataExport, Error, void>({
-        mutationFn: () => participantApiClient.get('/participant/me/export').then(r => r.data),
+        mutationFn: () => participantApiClient.get('/participant/export').then(r => r.data),
     });
 }
 

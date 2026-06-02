@@ -5,6 +5,7 @@ import { Module } from '@nestjs/common';
 import { AddParticipantToCampaignUseCase } from '@src/application/admin/campaigns/add-participant-to-campaign.usecase';
 import { CreateAdminCampaignUseCase } from '@src/application/admin/campaigns/create-admin-campaign.usecase';
 import { GetAdminCampaignDetailUseCase } from '@src/application/admin/campaigns/get-admin-campaign-detail.usecase';
+import { GetAdminCampaignParticipantMatrixUseCase } from '@src/application/admin/campaigns/get-admin-campaign-participant-matrix.usecase';
 import { GetAdminCampaignSynthesisMatrixUseCase } from '@src/application/admin/campaigns/get-admin-campaign-synthesis-matrix.usecase';
 import { ImportParticipantsToCampaignUseCase } from '@src/application/admin/campaigns/import-participants-to-campaign.usecase';
 import { InviteCampaignParticipantsUseCase } from '@src/application/admin/campaigns/invite-campaign-participants.usecase';
@@ -52,6 +53,7 @@ import {
     ADD_PARTICIPANT_TO_CAMPAIGN_USE_CASE_SYMBOL,
     CREATE_ADMIN_CAMPAIGN_USE_CASE_SYMBOL,
     GET_ADMIN_CAMPAIGN_DETAIL_USE_CASE_SYMBOL,
+    GET_ADMIN_CAMPAIGN_PARTICIPANT_MATRIX_USE_CASE_SYMBOL,
     GET_ADMIN_CAMPAIGN_SYNTHESIS_MATRIX_USE_CASE_SYMBOL,
     GET_PARTICIPANT_TRANSPARENCY_SCORE_USE_CASE_SYMBOL,
     IMPORT_PARTICIPANTS_TO_CAMPAIGN_USE_CASE_SYMBOL,
@@ -177,6 +179,14 @@ import { CampaignAccessGuard } from './campaign-access.guard';
                 responses: IResponsesSubmissionReaderPort
             ) => new GetParticipantQuestionnaireMatrixUseCase({ participants, responses }),
             inject: [PARTICIPANTS_REPOSITORY_PORT_SYMBOL, RESPONSES_REPOSITORY_PORT_SYMBOL],
+        },
+        {
+            // Orchestration admin (axe participation) : dérive `qid` de la campagne puis délègue à
+            // `GetParticipantQuestionnaireMatrixUseCase`. Miroir de la self-route participant.
+            provide: GET_ADMIN_CAMPAIGN_PARTICIPANT_MATRIX_USE_CASE_SYMBOL,
+            useFactory: (campaigns: ICampaignsReadPort, getMatrix: GetParticipantQuestionnaireMatrixUseCase) =>
+                new GetAdminCampaignParticipantMatrixUseCase({ campaigns, getMatrix }),
+            inject: [CAMPAIGNS_REPOSITORY_PORT_SYMBOL, GET_PARTICIPANT_QUESTIONNAIRE_MATRIX_USE_CASE_SYMBOL],
         },
         {
             provide: ACTIVATE_PARTICIPANT_TRANSPARENCY_SCORE_USE_CASE_SYMBOL,

@@ -36,6 +36,7 @@
 | **Total (au 2026-06-02, après Section 4)** | **2** | **0** | **11** | **9** |
 | **Total (au 2026-06-02, après Section 5)** | **2** | **0** | **9** | **11** |
 | **Total (au 2026-06-02, après Section 6)** | **2** | **0** | **8** | **12** |
+| **Total (au 2026-06-02, après Section 7)** | **1** | **0** | **2** | **19** |
 
 État global : **base fonctionnelle, conventions implicites divergentes**. Pas de
 refonte nécessaire — extraction de briques transverses + convergence progressive
@@ -261,18 +262,20 @@ guardrails (« Toute nouvelle route : `@ApiOperation` présent »).
 10. 🟡 **Décisions à arbitrer** (produit/tech) — partiellement traité en Section 5 :
     - ✅ convention `DELETE` (204 vs 200+corps) par famille → tranchée + rendue explicite par `@HttpCode`.
     - ✅ retrait du suffixe `...Endpoint` → fait (`addParticipant`).
-    - ⬜ `PATCH` vs `POST` pour les transitions d'état → renvoyé à la **Section 7** (ADR-010 R5, frontend coordonné).
-    - ⬜ schéma de chemin avatar unique → renvoyé à la **Section 7** (ADR-010 R4, frontend coordonné).
+    - ✅ `PATCH` vs `POST` pour les transitions d'état → **fait en Section 7** (`PATCH /campaigns/:cid/status`, `archive` fusionné ; ADR-010 R5, frontend coordonné).
+    - ✅ schéma de chemin avatar unique → **fait en Section 7** (`/participant/profile/avatar` GET+POST ; ADR-010 R4, frontend coordonné).
 11. ✅ **`@ApiOperation`** généralisé sur les 12 controllers restants (79 routes).
     **Fait le 2026-06-02** (cf. Section 6).
 
 ---
 
-## Section 7 — Conventions de design des URLs (ADR-010)
+## Section 7 — Conventions de design des URLs (ADR-010) — ✅ Traitée le 2026-06-02
 
 Décision produit du 2026-06-02 : **migration complète** des chemins non conformes
 (rupture de contrat frontend coordonnée), conventions figées dans
 [ADR-010](./adr/ADR-010-url-route-design-conventions.md) (règles R1→R6).
+**Exécutée backend + frontend dans la même vague** (règle impérative respectée) : les
+12 lignes de la table de migration sont appliquées, le bug latent matrix corrigé.
 
 > ⚠️ **Règle impérative — backend ↔ frontend indissociables.**
 > Toute modification d'une route backend (chemin, verbe HTTP, query/segment, forme du
@@ -285,16 +288,11 @@ Décision produit du 2026-06-02 : **migration complète** des chemins non confor
 > anciens chemins. Aucune PR de migration de route ne doit être mergée si le frontend
 > correspondant n'est pas inclus.
 
-### 🔴 Bug latent révélé par l'audit URL
+### ✅ Bug latent révélé par l'audit URL — corrigé le 2026-06-02
 
-| Statut | Constat | Preuve |
+| Statut | Constat | Résolution |
 |---|---|---|
-| 🔴 | `GET /admin/participants/:pid/matrix?qid=` **n'est pas scopé par campagne** : le controller n'passe jamais `campaignId` au use case (qui l'accepte pourtant en optionnel). Un participant pouvant remplir le même questionnaire dans plusieurs campagnes, le matrix **agrège toutes campagnes** et prend « la dernière en date » (`latestBySubmittedAt`) → résultats silencieusement mélangés | Controller [admin-participants.controller.ts:229-243](../applications/backend/src/presentation/admin/admin-participants.controller.ts#L229-L243) (pas de `campaignId`) ; use case accepte `campaignId?` [get-participant-questionnaire-matrix.usecase.ts:84](../applications/backend/src/application/participant-session/get-participant-questionnaire-matrix.usecase.ts#L84) et le propage [:115-119](../applications/backend/src/application/participant-session/get-participant-questionnaire-matrix.usecase.ts#L115-L119) ; agrégation « latest » [:50-59](../applications/backend/src/application/participant-session/get-participant-questionnaire-matrix.usecase.ts#L50-L59) |
-
-→ Corrigé par le déplacement du matrix sur l'*axe participation* (cf. table ci-dessous) :
-la campagne devient un segment obligatoire, le use case reçoit enfin `campaignId`.
-**Implication frontend** : l'admin doit choisir une campagne avant d'afficher le matrix
-(comme la self-route participant le fait déjà).
+| ✅ (était 🔴) | `GET /admin/participants/:pid/matrix?qid=` **n'était pas scopé par campagne** : le controller ne passait jamais `campaignId` au use case (qui l'accepte pourtant en optionnel). Un participant pouvant remplir le même questionnaire dans plusieurs campagnes, le matrix **agrégeait toutes campagnes** et prenait « la dernière en date » (`latestBySubmittedAt`) → résultats silencieusement mélangés | Route **déplacée sur l'axe participation** `GET /admin/campaigns/:cid/participants/:pid/matrix` (R3). La campagne est désormais un **segment obligatoire** : le nouveau use case [`GetAdminCampaignParticipantMatrixUseCase`](../applications/backend/src/application/admin/campaigns/get-admin-campaign-participant-matrix.usecase.ts) reçoit enfin `campaignId` et le propage à `GetParticipantQuestionnaireMatrixUseCase`. Le `qid` est **dérivé** de `campaign.questionnaireId` (plus lu en query). **Frontend** : la page matrix était déjà campagne-scopée (`CampaignParticipantMatrixPage`) → seul le hook a changé d'URL (de `participants/:pid/matrix?qid=` vers `campaigns/:cid/participants/:pid/matrix`). |
 
 ### Table de migration (avant → après)
 
@@ -323,17 +321,61 @@ la campagne devient un segment obligatoire, le use case reçoit enfin `campaignI
   revanche `qid` est **supprimé** du matrix car dérivable de la campagne (R2, 3ᵉ catégorie).
 - `/questionnaires`, `/scoring` — catalogues partagés sans préfixe acteur (R1).
 
-### Plan d'exécution URL — ⬜ À faire (migration complète, backend + frontend même vague)
+### Plan d'exécution URL — ✅ Fait le 2026-06-02 (migration complète, backend + frontend même vague)
 
-1. ⬜ **Backend** : appliquer les lignes de la table (renommages + `PATCH` status +
-   suppression `archive` + matrix sous campagne, en passant `campaignId` au use case et
-   en **dérivant `qid` de `campaign.questionnaireId`** plutôt que de le lire en query —
-   côté admin comme participant).
-2. ⬜ **Frontend** : mettre à jour tous les consommateurs (`hooks/admin.ts`,
-   `hooks/participantSession.ts`, routes) — **rupture assumée**, pas d'alias.
-3. ⬜ **Matrix admin** : ajouter le sélecteur de campagne dans l'UI (conséquence du
-   passage sur l'axe participation).
-4. ⬜ **Tests** : adapter les tests e2e/contract qui ciblent les anciens chemins.
+1. ✅ **Backend** : 12 lignes de la table appliquées (renommages + `PATCH` status +
+   suppression `archive` + matrix sous campagne). `campaignId` passé au use case et
+   **`qid` dérivé de `campaign.questionnaireId`** (plus lu en query) côté admin **et**
+   participant. Briques : nouveau use case admin `GetAdminCampaignParticipantMatrixUseCase`,
+   signature de `GetParticipantSessionQuestionnaireMatrixUseCase` simplifiée (param `qid` retiré).
+2. ✅ **Frontend** : tous les consommateurs mis à jour (`hooks/admin.ts` ×6,
+   `hooks/participantSession.ts` ×2, 3 pages `scoped/*` qui consomment le matrix,
+   doc `exportParticipantData.ts`) — **rupture assumée, pas d'alias**.
+3. ✅ **Matrix admin** : la page (`CampaignParticipantMatrixPage`) était **déjà**
+   campagne-scopée (route `/admin/campaigns/:cid/participants/:pid/matrix` + `campaignId`
+   issu de la route) → aucun nouveau sélecteur à ajouter ; seule l'URL appelée a changé.
+4. ✅ **Tests** : **aucun test e2e/contract ne ciblait les anciens chemins** (audit
+   `*.spec.ts` backend + `*.test.*` frontend = 0 occurrence). Rien à adapter ; les suites
+   passent à l'identique (backend 37/38, l'échec restant = `calculate-scoring.usecase.spec.ts`
+   préexistant, parité fixtures scoring, sans rapport ; aucun fichier scoring touché).
+
+### Conformité SOLID / Hexa vérifiée (Section 7)
+
+- **Direction des dépendances (Hexa)** : le nouveau use case
+  `GetAdminCampaignParticipantMatrixUseCase` vit dans `application/admin/campaigns/` et ne
+  dépend **que** du port `ICampaignsReadPort` (interface) et d'un autre use case
+  (`GetParticipantQuestionnaireMatrixUseCase`) — **zéro** dépendance presentation/infra. Le
+  controller (presentation) le consomme via **token d'injection** (presentation → application,
+  inversion ADR-008). La règle métier « une campagne détermine son questionnaire » (dérivation
+  du `qid`) vit dans la **couche application**, pas dans le transport — **miroir exact** du
+  pattern participant existant (`GetParticipantSessionQuestionnaireMatrixUseCase` qui dérive le
+  `qid` de l'assignation).
+- **SRP** : chaque brique garde une responsabilité unique — le use case dérive le `qid` et
+  délègue le calcul ; le moteur de matrice (`GetParticipantQuestionnaireMatrixUseCase`) reste seul
+  responsable du calcul ; les controllers restent en orchestration pure. La transition d'état
+  (statut campagne) reste dans l'entité/use case ; `PATCH` n'expose que le verbe transport.
+- **OCP** : comportement ajouté par **composition** (nouveau use case + `CampaignAccessGuard` +
+  décorateurs `@Patch`/`@Get`) **sans modifier** `GetParticipantQuestionnaireMatrixUseCase`,
+  désormais réutilisé par **3** appelants (self participant, matrix admin, activation transparence).
+- **DRY / source unique** : un seul moteur de matrice ; le `qid` n'a plus **aucune** copie de
+  dérivation côté transport (ni admin ni participant).
+- **Équivalence comportementale + correction de bug** : le 🔴 latent (matrix non scopé) est
+  **corrigé** par le passage sur l'axe participation (`campaignId` désormais transmis, plus
+  d'agrégation cross-campagnes). Le `qid` dérivé reste celui de la **même** campagne que le
+  frontend utilisait déjà → réponses identiques pour le cas mono-campagne, **correctes** pour le
+  multi-campagnes. Participant : `qid` était **redondant** (un questionnaire par campagne) → retiré
+  sans changer la dérivation. `status`/`archive` : comportement HTTP identique (`transitionTo`),
+  `archive` fusionné dans `PATCH /status {status:'archived'}`. Renommages
+  (`invitations`, `participants/import`, `export` en suffixe) et chemins (avatar self, export
+  participant) : **seuls le chemin/verbe changent**, formes de réponse inchangées.
+- **Garde-fou ADR-010 (backend ↔ frontend indissociables)** : les 12 routes ont migré **dans la
+  même vague** que leurs consommateurs frontend — **aucun chemin orphelin**. Les exports CSV admin
+  (`responses/export[/anonymized]`) n'ont **aucun** consommateur frontend (routes backend seules) →
+  migration frontend-neutre, **notée**.
+- **Ordre de résolution Express** : `responses/export[/anonymized]` est déclaré **avant**
+  `responses/:responseId` (sinon le segment statique `export` serait capté par le param +
+  `ParseIntPipe` → 400). Même vigilance vérifiée pour `campaigns/:cid/participants/import` (POST,
+  distinct des routes `:participantId/*`).
 
 ## Décisions à prendre
 
@@ -474,3 +516,41 @@ la campagne devient un segment obligatoire, le use case reçoit enfin `campaignI
     `route ↔ @ApiOperation` = **1:1** sur les 13 controllers.
   - Aucune modification frontend requise : ajout de métadonnées Swagger uniquement, aucun contrat
     d'API modifié.
+
+- **2026-06-02 — Section 7 (Design des URLs / ADR-010) : ✅ traitée (migration complète backend + frontend).**
+  - 🔴→✅ **Bug latent matrix** : `GET /admin/participants/:pid/matrix?qid=` (non scopé campagne,
+    agrégation cross-campagnes) **déplacé** sur l'axe participation
+    `GET /admin/campaigns/:cid/participants/:pid/matrix` (R3). `campaignId` désormais transmis ;
+    `qid` **dérivé** de la campagne.
+  - 🟡→✅ **12 lignes de migration** appliquées : `PATCH /campaigns/:cid/status` (+ `archive` fusionné,
+    R5) ; `POST /campaigns/:cid/invitations` (ex-`invite-company-participants`) ;
+    `POST /campaigns/:cid/participants/import` (ex-`import-participants`) ;
+    `POST /participants/:pid/invitations` (ex-`invite`) ; `GET /participants/:pid/invitations`
+    (ex-`tokens`) ; `GET /responses/export[/anonymized]` (ex-`/export/responses…`, R6) ;
+    `GET|POST /participant/profile/avatar` (ex-`avatars/me`, R4) ; `GET /participant/export`
+    (ex-`me/export`, R4) ; `GET /participant/campaigns/:cid/matrix` **sans `qid`** (R2).
+  - **Briques** : nouveau use case `GetAdminCampaignParticipantMatrixUseCase`
+    (`application/admin/campaigns/`, dérive `qid` de la campagne → délègue au moteur de matrice,
+    miroir de la self-route) + token `GET_ADMIN_CAMPAIGN_PARTICIPANT_MATRIX_USE_CASE_SYMBOL` ;
+    `GetParticipantSessionQuestionnaireMatrixUseCase` simplifié (param `qid` retiré, signature
+    `(participantId, campaignId, peers)`). Providers matrix admin déplacés
+    (admin-participants.module → admin-campaigns.module).
+  - **Frontend** : `hooks/admin.ts` (status→PATCH, archive→PATCH status, invitations ×2,
+    participants/import, matrix campagne-scopé + `adminKeys.participantMatrix(campaignId, participantId)`),
+    `hooks/participantSession.ts` (export, matrix sans `qid`), 3 pages `scoped/*`
+    (matrix/transparence/restitution IA → nouvelle signature `useParticipantQuestionnaireMatrix(campaignId, participantId, { enabled })`),
+    doc `exportParticipantData.ts`. **Rupture assumée, pas d'alias**. Exports CSV admin sans
+    consommateur frontend → frontend-neutre.
+  - **Conformité SOLID / Hexa** : direction des dépendances respectée (use case admin → port
+    `ICampaignsReadPort` + moteur de matrice, presentation → application via token) ; dérivation
+    du `qid` dans la couche **application** (pas le transport) ; OCP (moteur de matrice inchangé,
+    réutilisé par 3 appelants) ; SRP (orchestration pure côté controllers) ; équivalence
+    comportementale (mono-campagne identique, multi-campagnes corrigé) + correction du 🔴 latent.
+  - **Vérifs** : `typecheck` backend ✅ (exit 0) ; `typecheck` frontend ✅ (exit 0) ; Biome ✅
+    (15 fichiers, clean) ; tests backend `37/38` ✅ (même échec préexistant
+    `calculate-scoring.usecase.spec.ts`, sans rapport ; aucun fichier scoring touché) ; **0** test
+    e2e/contract ciblant les anciens chemins (rien à adapter).
+  - **Ordre Express** vérifié : `responses/export[/anonymized]` déclaré **avant**
+    `responses/:responseId` (évite la capture du segment statique par `ParseIntPipe`).
+  - Résiduel **hors périmètre Section 7** : Plan d'exécution **Priorité 3 item 7** (guard
+    participant au niveau classe) reste ⬜.

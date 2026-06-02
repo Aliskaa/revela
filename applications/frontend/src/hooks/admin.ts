@@ -34,8 +34,8 @@ export const adminKeys = {
         ['admin', 'participants', page, companyId, perPage, search ?? ''] as const,
     participant: (participantId: number) => ['admin', 'participants', participantId] as const,
     participantTokens: (participantId: number) => ['admin', 'participants', participantId, 'tokens'] as const,
-    participantMatrix: (participantId: number, qid: string) =>
-        ['admin', 'participants', participantId, 'matrix', qid] as const,
+    participantMatrix: (campaignId: number, participantId: number) =>
+        ['admin', 'campaigns', campaignId, 'participants', participantId, 'matrix'] as const,
     companies: ['admin', 'companies'] as const,
     company: (id: number) => ['admin', 'companies', id] as const,
     coaches: ['admin', 'coaches'] as const,
@@ -185,7 +185,7 @@ export function useCreateInvite() {
     >({
         mutationFn: ({ participantId, campaignId, questionnaireId, sendEmail }) =>
             apiClient
-                .post(`/admin/participants/${participantId}/invite`, {
+                .post(`/admin/participants/${participantId}/invitations`, {
                     campaign_id: campaignId,
                     questionnaire_id: questionnaireId,
                     send_email: Boolean(sendEmail),
@@ -205,18 +205,28 @@ export function useParticipantTokens(participantId: number | null) {
         queryKey: participantId
             ? adminKeys.participantTokens(participantId)
             : ['admin', 'participants', 'tokens', 'none'],
-        queryFn: () => apiClient.get(`/admin/participants/${participantId}/tokens`).then(r => r.data),
+        queryFn: () => apiClient.get(`/admin/participants/${participantId}/invitations`).then(r => r.data),
         enabled: typeof participantId === 'number' && participantId > 0,
     });
 }
 
-export function useParticipantQuestionnaireMatrix(participantId: number, qid: string) {
-    const q = qid.trim().toUpperCase();
+/**
+ * Matrice des scores d'un participant **dans une campagne** (axe participation, ADR-010 R3).
+ * Le `qid` n'est plus envoyé : il est dérivé de la campagne côté serveur. Le `enabled` reste
+ * gardé par l'appelant (ne charge pas si la campagne n'a pas de questionnaire associé).
+ */
+export function useParticipantQuestionnaireMatrix(
+    campaignId: number,
+    participantId: number,
+    options?: { enabled?: boolean }
+) {
     return useQuery<ParticipantQuestionnaireMatrix>({
-        queryKey: adminKeys.participantMatrix(participantId, q),
+        queryKey: adminKeys.participantMatrix(campaignId, participantId),
         queryFn: () =>
-            apiClient.get(`/admin/participants/${participantId}/matrix`, { params: { qid: q } }).then(r => r.data),
-        enabled: participantId > 0 && q.length > 0,
+            apiClient
+                .get(`/admin/campaigns/${campaignId}/participants/${participantId}/matrix`)
+                .then(r => r.data),
+        enabled: (options?.enabled ?? true) && campaignId > 0 && participantId > 0,
     });
 }
 
@@ -549,7 +559,7 @@ export function useUpdateAdminCampaignStatus() {
     >({
         mutationFn: ({ campaignId, status, align_starts_at_to_now }) =>
             apiClient
-                .post(`/admin/campaigns/${campaignId}/status`, {
+                .patch(`/admin/campaigns/${campaignId}/status`, {
                     status,
                     ...(align_starts_at_to_now ? { align_starts_at_to_now: true } : {}),
                 })
@@ -585,7 +595,10 @@ export function useArchiveAdminCampaign() {
     const qc = useQueryClient();
     const toast = useToast();
     return useMutation<AdminCampaign, Error, { campaignId: number }>({
-        mutationFn: ({ campaignId }) => apiClient.post(`/admin/campaigns/${campaignId}/archive`).then(r => r.data),
+        // L'archivage est une transition d'état : `PATCH /status { status: 'archived' }`
+        // (ADR-010 R5), l'ancien `POST /archive` n'existe plus côté backend.
+        mutationFn: ({ campaignId }) =>
+            apiClient.patch(`/admin/campaigns/${campaignId}/status`, { status: 'archived' }).then(r => r.data),
         onSuccess: (_data, vars) => {
             qc.invalidateQueries({ queryKey: adminKeys.campaigns });
             qc.invalidateQueries({ queryKey: adminKeys.campaign(vars.campaignId) });
@@ -602,7 +615,7 @@ export function useInviteCampaignParticipants() {
     return useMutation<{ created: number }, Error, { campaignId: number; participantIds?: number[] }>({
         mutationFn: ({ campaignId, participantIds }) =>
             apiClient
-                .post(`/admin/campaigns/${campaignId}/invite-company-participants`, {
+                .post(`/admin/campaigns/${campaignId}/invitations`, {
                     ...(participantIds !== undefined ? { participant_ids: participantIds } : {}),
                 })
                 .then(r => r.data),
@@ -669,7 +682,7 @@ export function useImportParticipantsToCampaign() {
     >({
         mutationFn: ({ campaignId, formData }) =>
             apiClient
-                .post(`/admin/campaigns/${campaignId}/import-participants`, formData, {
+                .post(`/admin/campaigns/${campaignId}/participants/import`, formData, {
                     headers: { 'Content-Type': 'multipart/form-data' },
                 })
                 .then(r => r.data),

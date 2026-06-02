@@ -74,7 +74,9 @@ export function CampaignParticipantMatrixPage({
         data: matrix,
         isLoading: matrixLoading,
         error,
-    } = useParticipantQuestionnaireMatrix(participantId, qid);
+        // `qid` n'est plus envoyé (dérivé de la campagne côté serveur) ; on garde le drapeau
+        // `enabled` pour ne pas charger quand la campagne n'a pas de questionnaire associé.
+    } = useParticipantQuestionnaireMatrix(campaignId, participantId, { enabled: qid.length > 0 });
 
     useBreadcrumbs(
         isAdmin

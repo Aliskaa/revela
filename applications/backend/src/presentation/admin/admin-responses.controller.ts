@@ -76,6 +76,34 @@ export class AdminResponsesController {
         };
     }
 
+    // Représentation/export = **suffixe** de la ressource `responses` (ADR-010 R6), ex-`/export/responses`.
+    // Déclaré AVANT `responses/:responseId` : sinon le segment statique `export` serait capté par le
+    // param (`ParseIntPipe` → 400). L'ordre de déclaration = ordre de résolution Express.
+    @Get('responses/export')
+    @ApiOperation({ summary: 'Exporte les réponses d’un questionnaire au format CSV.' })
+    public async exportResponses(@Query('qid') qidRaw: string, @Res() res: Response): Promise<void> {
+        const qid = normalizeQid(qidRaw) ?? '';
+        const { body, filename } = await this.exportAdminResponsesCsv.execute(qid);
+        res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+        res.send(body);
+    }
+
+    @Get('responses/export/anonymized')
+    @ApiOperation({ summary: 'Exporte les réponses anonymisées d’un questionnaire au format CSV.' })
+    public async exportAnonymized(
+        @Query('qid') qidRaw: string,
+        @Query('company_id') companyIdRaw: string,
+        @Res() res: Response
+    ): Promise<void> {
+        const qid = normalizeQid(qidRaw) ?? '';
+        const companyId = normalizePositiveInt(companyIdRaw);
+        const { body, filename } = await this.exportAdminAnonymizedResponsesCsv.execute(qid, companyId ?? Number.NaN);
+        res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+        res.send(body);
+    }
+
     @Get('responses/:responseId')
     @ApiOperation({ summary: 'Détail d’une réponse par son identifiant.' })
     public getResponse(
@@ -96,30 +124,5 @@ export class AdminResponsesController {
         @CurrentCoachScope() coachId: number | undefined
     ) {
         return this.deleteAdminResponse.execute(responseId, body.confirm, { coachId });
-    }
-
-    @Get('export/responses')
-    @ApiOperation({ summary: 'Exporte les réponses d’un questionnaire au format CSV.' })
-    public async exportResponses(@Query('qid') qidRaw: string, @Res() res: Response): Promise<void> {
-        const qid = normalizeQid(qidRaw) ?? '';
-        const { body, filename } = await this.exportAdminResponsesCsv.execute(qid);
-        res.setHeader('Content-Type', 'text/csv; charset=utf-8');
-        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-        res.send(body);
-    }
-
-    @Get('export/responses/anonymized')
-    @ApiOperation({ summary: 'Exporte les réponses anonymisées d’un questionnaire au format CSV.' })
-    public async exportAnonymized(
-        @Query('qid') qidRaw: string,
-        @Query('company_id') companyIdRaw: string,
-        @Res() res: Response
-    ): Promise<void> {
-        const qid = normalizeQid(qidRaw) ?? '';
-        const companyId = normalizePositiveInt(companyIdRaw);
-        const { body, filename } = await this.exportAdminAnonymizedResponsesCsv.execute(qid, companyId ?? Number.NaN);
-        res.setHeader('Content-Type', 'text/csv; charset=utf-8');
-        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-        res.send(body);
     }
 }

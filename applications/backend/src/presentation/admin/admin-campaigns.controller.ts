@@ -35,6 +35,7 @@ import {
 
 import type { AddParticipantToCampaignUseCase } from '@src/application/admin/campaigns/add-participant-to-campaign.usecase';
 import type { CreateAdminCampaignUseCase } from '@src/application/admin/campaigns/create-admin-campaign.usecase';
+import type { GetAdminCampaignParticipantMatrixUseCase } from '@src/application/admin/campaigns/get-admin-campaign-participant-matrix.usecase';
 import type { GetAdminCampaignDetailUseCase } from '@src/application/admin/campaigns/get-admin-campaign-detail.usecase';
 import type { GetAdminCampaignSynthesisMatrixUseCase } from '@src/application/admin/campaigns/get-admin-campaign-synthesis-matrix.usecase';
 import type { ImportParticipantsToCampaignUseCase } from '@src/application/admin/campaigns/import-participants-to-campaign.usecase';
@@ -62,6 +63,7 @@ import {
     ADD_PARTICIPANT_TO_CAMPAIGN_USE_CASE_SYMBOL,
     CREATE_ADMIN_CAMPAIGN_USE_CASE_SYMBOL,
     GET_ADMIN_CAMPAIGN_DETAIL_USE_CASE_SYMBOL,
+    GET_ADMIN_CAMPAIGN_PARTICIPANT_MATRIX_USE_CASE_SYMBOL,
     GET_ADMIN_CAMPAIGN_SYNTHESIS_MATRIX_USE_CASE_SYMBOL,
     GET_PARTICIPANT_TRANSPARENCY_SCORE_USE_CASE_SYMBOL,
     IMPORT_PARTICIPANTS_TO_CAMPAIGN_USE_CASE_SYMBOL,
@@ -89,6 +91,8 @@ export class AdminCampaignsController {
         private readonly getAdminCampaignDetail: GetAdminCampaignDetailUseCase,
         @Inject(GET_ADMIN_CAMPAIGN_SYNTHESIS_MATRIX_USE_CASE_SYMBOL)
         private readonly getAdminCampaignSynthesisMatrix: GetAdminCampaignSynthesisMatrixUseCase,
+        @Inject(GET_ADMIN_CAMPAIGN_PARTICIPANT_MATRIX_USE_CASE_SYMBOL)
+        private readonly getAdminCampaignParticipantMatrix: GetAdminCampaignParticipantMatrixUseCase,
         @Inject(INVITE_CAMPAIGN_PARTICIPANTS_USE_CASE_SYMBOL)
         private readonly inviteCampaignParticipants: InviteCampaignParticipantsUseCase,
         @Inject(IMPORT_PARTICIPANTS_TO_CAMPAIGN_USE_CASE_SYMBOL)
@@ -163,9 +167,11 @@ export class AdminCampaignsController {
         return this.createAdminCampaign.execute(body);
     }
 
-    @Post('campaigns/:campaignId/status')
+    // Transition d'état → `PATCH` (ADR-010 R5). L'archivage n'est pas un endpoint dédié :
+    // c'est `PATCH /status` avec `{ status: 'archived' }` (ex-`POST /archive` supprimé).
+    @Patch('campaigns/:campaignId/status')
     @UseGuards(CampaignAccessGuard)
-    @ApiOperation({ summary: 'Met à jour le statut d’une campagne.' })
+    @ApiOperation({ summary: 'Met à jour le statut d’une campagne (archivage inclus via { status: archived }).' })
     public async updateCampaignStatus(
         @Param('campaignId', ParseIntPipe) campaignId: number,
         @Body(new ZodValidationPipe(updateAdminCampaignStatusBodySchema)) body: UpdateAdminCampaignStatusBody
@@ -175,14 +181,9 @@ export class AdminCampaignsController {
         });
     }
 
-    @Post('campaigns/:campaignId/archive')
-    @UseGuards(CampaignAccessGuard)
-    @ApiOperation({ summary: 'Archive une campagne.' })
-    public async archiveCampaign(@Param('campaignId', ParseIntPipe) campaignId: number) {
-        return this.updateAdminCampaignStatus.execute(campaignId, 'archived');
-    }
-
-    @Post('campaigns/:campaignId/invite-company-participants')
+    // Créer des invitations = `POST` sur la sous-collection `invitations` (ADR-010 R5),
+    // pas un verbe métier dans l'URL (ex-`/invite-company-participants`).
+    @Post('campaigns/:campaignId/invitations')
     @UseGuards(CampaignAccessGuard)
     @ApiOperation({ summary: 'Invite des participants de l’entreprise rattachée à la campagne.' })
     public async inviteCompanyParticipants(
@@ -195,7 +196,9 @@ export class AdminCampaignsController {
         return this.inviteCampaignParticipants.execute(campaignId, { participantIds });
     }
 
-    @Post('campaigns/:campaignId/import-participants')
+    // Import sous la sous-collection `participants` (ADR-010 R5/R6 — aligné sur
+    // `companies/:id/participants/import`), ex-`/import-participants`.
+    @Post('campaigns/:campaignId/participants/import')
     @UseGuards(CampaignAccessGuard)
     @UseInterceptors(FileInterceptor('file'))
     @ApiOperation({ summary: 'Importe des participants dans une campagne via un fichier CSV.' })
@@ -218,6 +221,23 @@ export class AdminCampaignsController {
         // Ouvert à l'admin et au coach (le coach est restreint à ses campagnes via
         // `CampaignAccessGuard`). Cf. P08 du suivi produit 2026-05-02.
         return this.addParticipantToCampaign.execute(campaignId, body, { coachId });
+    }
+
+    /**
+     * Matrice des réponses d'un participant **dans le contexte d'une campagne** (axe participation,
+     * ADR-010 R3). Le `qid` n'est pas lu en query : il est dérivé de la campagne par le use case.
+     * Le déplacement sur l'axe participation corrige le bug latent de l'ex-route
+     * `/admin/participants/:pid/matrix?qid=` qui agrégeait toutes campagnes confondues.
+     */
+    @Get('campaigns/:campaignId/participants/:participantId/matrix')
+    @UseGuards(CampaignAccessGuard)
+    @ApiOperation({ summary: 'Matrice des réponses d’un participant pour une campagne (questionnaire dérivé).' })
+    public getCampaignParticipantMatrix(
+        @Param('campaignId', ParseIntPipe) campaignId: number,
+        @Param('participantId', ParseIntPipe) participantId: number,
+        @CurrentCoachScope() coachId: number | undefined
+    ) {
+        return this.getAdminCampaignParticipantMatrix.execute({ campaignId, participantId, coachId });
     }
 
     /**

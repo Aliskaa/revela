@@ -64,7 +64,6 @@ import { PARTICIPANT_COOKIE_NAMES, clearAuthCookies, setAuthCookies } from '@src
 import { REFRESH_TOKEN_MANAGER_SYMBOL } from '@src/presentation/auth/auth-refresh.module';
 import { sendAvatarResponse } from '@src/presentation/avatar-response';
 import type { JwtValidatedUser } from '@src/presentation/jwt-validated-user';
-import { normalizeQid } from '@src/presentation/query-normalizers';
 import { ResponsesExceptionFilter } from '@src/presentation/responses/responses-exception.filter';
 import { transparencyScoreSnapshotToJson } from '@src/presentation/transparency-snapshot.presenter';
 
@@ -337,7 +336,9 @@ export class ParticipantController {
         return this.uploadParticipantAvatar.execute(participantId, file);
     }
 
-    @Get('avatars/me')
+    // Lecture de l'avatar « moi » sous `/participant/profile/avatar` (ADR-010 R4 : pas de `/me`
+    // redondant sous un namespace déjà self). Même chemin que le `POST` d'upload, verbe distinct.
+    @Get('profile/avatar')
     @UseGuards(ParticipantJwtAuthGuard)
     @ApiOperation({ summary: 'Récupère l’avatar du participant courant.' })
     public async getOwnAvatar(@CurrentParticipantId() participantId: number, @Res() res: Response) {
@@ -345,23 +346,18 @@ export class ParticipantController {
         sendAvatarResponse(res, avatar);
     }
 
+    // `qid` supprimé de la query (ADR-010 R2, 3ᵉ catégorie) : une campagne ne porte qu'un seul
+    // questionnaire, le use case le dérive de l'assignation. Seul `peers` reste (paramètre de vue).
     @Get('campaigns/:campaignId/matrix')
     @UseGuards(ParticipantJwtAuthGuard)
     @ApiOperation({ summary: 'Matrice des réponses du participant courant pour une campagne.' })
     public async campaignMatrix(
         @CurrentParticipantId() participantId: number,
         @Param('campaignId', ParseIntPipe) campaignId: number,
-        @Query('qid') qid?: string,
         @Query('peers') peers?: string
     ) {
-        const normalizedQid = normalizeQid(qid);
         const peerColumnPerspective = peers === 'received' ? 'received' : 'given';
-        return this.getParticipantSessionMatrix.execute(
-            participantId,
-            normalizedQid,
-            campaignId,
-            peerColumnPerspective
-        );
+        return this.getParticipantSessionMatrix.execute(participantId, campaignId, peerColumnPerspective);
     }
 
     @Post('campaigns/:campaignId/confirm')
@@ -518,7 +514,9 @@ export class ParticipantController {
      * Le frontend consomme cette donnée pour proposer un téléchargement JSON brut **et**
      * un rendu PDF (jsPDF, généré côté client à partir du même JSON).
      */
-    @Get('me/export')
+    // Export « mes données » sous `/participant/export` (ADR-010 R4/R6 : suffixe de ressource,
+    // pas de `/me` redondant sous un namespace déjà self), ex-`/me/export`.
+    @Get('export')
     @UseGuards(ParticipantJwtAuthGuard)
     @ApiOperation({ summary: 'Export RGPD « mes données » du participant courant (articles 15 et 20).' })
     public async exportMyData(@CurrentParticipantId() participantId: number) {

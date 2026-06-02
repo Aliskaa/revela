@@ -18,10 +18,14 @@ export class GetParticipantSessionQuestionnaireMatrixUseCase {
         }
     ) {}
 
+    /**
+     * Le `qid` n'est plus un paramètre d'entrée (ADR-010 R2) : il est **dérivé de la campagne**
+     * via l'assignation du participant. Une campagne ne portant qu'un seul questionnaire, le
+     * `campaignId` (segment de route) suffit à sélectionner l'assignation, donc le questionnaire.
+     */
     public async execute(
         participantId: number,
-        qid?: string,
-        campaignId?: number,
+        campaignId: number,
         peerColumnPerspective: 'given' | 'received' = 'given'
     ): Promise<ParticipantQuestionnaireMatrix> {
         const assignments = await this.ports.participants.listInviteAssignmentsForParticipant(participantId);
@@ -29,14 +33,7 @@ export class GetParticipantSessionQuestionnaireMatrixUseCase {
             throw new ParticipantAssignedQuestionnaireMissingError();
         }
 
-        const match = assignments.find(assignment => {
-            if (assignment.campaignId === null || assignment.campaignId === undefined) {
-                return false;
-            }
-            const qidMatches = qid === undefined || assignment.questionnaireId.toUpperCase() === qid;
-            const campaignMatches = campaignId === undefined || assignment.campaignId === campaignId;
-            return qidMatches && campaignMatches;
-        });
+        const match = assignments.find(assignment => assignment.campaignId === campaignId);
         if (!match) {
             throw new ParticipantQuestionnaireNotAllowedError();
         }
