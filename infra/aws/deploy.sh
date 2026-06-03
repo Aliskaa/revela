@@ -453,8 +453,16 @@ ssm_restart_cmds=(
     'cd /opt/revela'
     'PREV_BACKEND_TAG=$(grep -oE "revela/backend:[a-zA-Z0-9._-]+" docker-compose.yml | head -1 | sed "s|.*revela/backend:||")'
     'PREV_FRONTEND_TAG=$(grep -oE "revela/frontend:[a-zA-Z0-9._-]+" docker-compose.yml | head -1 | sed "s|.*revela/frontend:||")'
+)
+# Ne reecrire le tag QUE pour les services reellement deployes : sinon un
+# deploy frontend-only repointe le backend vers un tag inexistant (et inversement).
+$DEPLOY_BACKEND && ssm_restart_cmds+=(
     "sudo sed -i 's|revela/backend:[a-zA-Z0-9._-]*|revela/backend:${IMAGE_TAG}|g' /opt/revela/docker-compose.yml"
+)
+$DEPLOY_FRONTEND && ssm_restart_cmds+=(
     "sudo sed -i 's|revela/frontend:[a-zA-Z0-9._-]*|revela/frontend:${IMAGE_TAG}|g' /opt/revela/docker-compose.yml"
+)
+ssm_restart_cmds+=(
     "aws ecr get-login-password --region ${REGION} | sudo docker login --username AWS --password-stdin ${REGISTRY}"
     "sudo docker compose pull ${pull_services_str}"
 )
@@ -465,7 +473,7 @@ if $MIGRATE_DB; then
     )
 fi
 ssm_restart_cmds+=(
-    "sudo docker compose up -d --force-recreate --remove-orphans ${compose_services_str}"
+    "sudo docker compose up -d --force-recreate --no-deps --remove-orphans ${compose_services_str}"
     "$container_check_cmd"
     "$ec2_prune_revela_repo_fn"
 )
