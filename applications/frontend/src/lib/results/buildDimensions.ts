@@ -16,9 +16,6 @@ export const avg = (values: (number | null)[]): number | null => {
     return Math.round((nums.reduce((s, v) => s + v, 0) / nums.length) * 10) / 10;
 };
 
-const bestScore = (row: { scientific: number | null; self: number | null; peers: (number | null)[] }): number | null =>
-    row.scientific ?? row.self ?? avg(row.peers);
-
 export const buildDimensions = (matrix: ParticipantQuestionnaireMatrix): DimensionView[] => {
     const dims: DimensionView[] = [];
     const rowMap = new Map(matrix.rows.map(r => [r.score_key, r]));
@@ -43,8 +40,8 @@ export const buildDimensions = (matrix: ParticipantQuestionnaireMatrix): Dimensi
             for (const dp of rd.diff_pairs) {
                 const eRow = rowMap.get(dp.e);
                 const wRow = rowMap.get(dp.w);
-                const eVal = eRow ? bestScore(eRow) : null;
-                const wVal = wRow ? bestScore(wRow) : null;
+                const eVal = eRow?.scientific ?? null;
+                const wVal = wRow?.scientific ?? null;
                 if (eVal !== null && wVal !== null) {
                     const diff = eVal - wVal;
                     const message = diff > 0 ? dp.if_e_gt : diff < 0 ? dp.if_w_gt : '';

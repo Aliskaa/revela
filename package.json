@@ -1,7 +1,7 @@
 {
   "name": "questionnaire-platform",
   "private": true,
-  "version": "0.2.0",
+  "version": "0.2.1",
   "packageManager": "pnpm@10.8.1",
   "scripts": {
     "build:libs": "pnpm --filter @aor/logger build && pnpm --filter @aor/utils build && pnpm --filter @aor/domain build && pnpm --filter @aor/ports build && pnpm --filter @aor/types build && pnpm --filter @aor/scoring build && pnpm --filter @aor/drizzle build && pnpm --filter @aor/questionnaires build",

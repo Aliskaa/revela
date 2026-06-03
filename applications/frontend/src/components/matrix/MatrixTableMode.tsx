@@ -118,9 +118,7 @@ export function MatrixTableMode({ matrix, showInterpretations = true }: MatrixTa
     );
 
     const renderGapRow = (pair: PairBlock) => {
-        const selfGap = absDiff(pair.eRow.self, pair.wRow.self);
         const sciGap = absDiff(pair.eRow.scientific, pair.wRow.scientific);
-        const peerGaps = pair.eRow.peers.map((e, i) => absDiff(e, pair.wRow.peers[i] ?? null));
         const fmt = (v: number | null) => (v === null ? '—' : v);
         const pickGapLabel = (a: number | null, b: number | null): string | null => {
             if (a === null || b === null || !pair.ifEGt || !pair.ifWGt) return null;
@@ -161,20 +159,13 @@ export function MatrixTableMode({ matrix, showInterpretations = true }: MatrixTa
                         Écart
                     </Typography>
                 </TableCell>
-                {renderGapCell(
-                    selfGap,
-                    null,
-                    { fontWeight: 800, color: 'primary.main' },
-                    `gap-${pair.eRow.score_key}-self`
-                )}
-                {peerGaps.map((g, i) =>
-                    renderGapCell(
-                        g,
-                        null,
-                        { fontWeight: 700, color: 'text.secondary' },
-                        `gap-${pair.eRow.score_key}-peer-${matrix.peer_columns[i]?.response_id ?? i}`
-                    )
-                )}
+                <TableCell sx={tableCellSx} />
+                {matrix.peer_columns.map((col, i) => (
+                    <TableCell
+                        key={`gap-${pair.eRow.score_key}-peer-${col.response_id ?? i}`}
+                        sx={tableCellSx}
+                    />
+                ))}
                 {renderGapCell(
                     sciGap,
                     pickGapLabel(pair.eRow.scientific, pair.wRow.scientific),

@@ -166,18 +166,14 @@ function GapBlock({
 }
 
 function GapPanel({
-    matrix,
     pair,
     showInterpretations,
 }: {
-    matrix: ParticipantQuestionnaireMatrix;
     pair: PairBlock;
     showInterpretations: boolean;
 }) {
     const { eRow, wRow, ifEGt, ifWGt } = pair;
-    const selfGap = absDiff(eRow.self, wRow.self);
     const sciGap = absDiff(eRow.scientific, wRow.scientific);
-    const peerGaps = eRow.peers.map((e, i) => absDiff(e, wRow.peers[i] ?? null));
     const pickGapLabel = (a: number | null, b: number | null): string | null => {
         if (a === null || b === null || !ifEGt || !ifWGt) return null;
         if (a > b) return ifEGt;
@@ -205,23 +201,6 @@ function GapPanel({
                 Écart |je suis − je veux|
             </Typography>
             <Stack direction="row" flexWrap="wrap" gap={1.4} useFlexGap alignItems="flex-start">
-                <GapBlock
-                    pillLabel="Auto"
-                    gap={selfGap}
-                    color="primary.main"
-                    interpretation={null}
-                    showInterpretations={showInterpretations}
-                />
-                {peerGaps.map((g, i) => (
-                    <GapBlock
-                        key={`gap-peer-${matrix.peer_columns[i]?.response_id ?? i}`}
-                        pillLabel={matrix.peer_columns[i]?.label ?? `Pair ${i + 1}`}
-                        gap={g}
-                        color="tint.peerStrong"
-                        interpretation={null}
-                        showInterpretations={showInterpretations}
-                    />
-                ))}
                 <GapBlock
                     pillLabel="Scientifique"
                     gap={sciGap}
@@ -278,7 +257,7 @@ function DimensionCard({
                             <RowBars matrix={matrix} row={pair.eRow} />
                             <RowBars matrix={matrix} row={pair.wRow} />
                         </Stack>
-                        <GapPanel matrix={matrix} pair={pair} showInterpretations={showInterpretations} />
+                        <GapPanel pair={pair} showInterpretations={showInterpretations} />
                     </Box>
                 ))}
 
