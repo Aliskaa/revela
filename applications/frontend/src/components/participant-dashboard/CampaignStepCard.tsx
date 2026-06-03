@@ -2,9 +2,11 @@
 
 import { Box, Button, ButtonBase, Chip, Stack, Typography } from '@mui/material';
 import { ArrowRight, BadgeCheck, Brain, ClipboardList, Lock, Users } from 'lucide-react';
-import type { ElementType } from 'react';
+import { type ElementType, useState } from 'react';
 
 import type { ParticipantSession } from '@aor/types';
+
+import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 
 export type CampaignStepState = 'completed' | 'current' | 'locked';
 
@@ -102,6 +104,7 @@ export function CampaignStepCard({
     onConfirmPeerFeedback,
     confirmingPeerFeedback = false,
 }: CampaignStepCardProps) {
+    const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
     const Icon = step.icon;
     const isPeerFeedbackStep = step.routeKind === 'peer-feedback';
     const showPeerFeedbackConfirm =
@@ -190,13 +193,29 @@ export function CampaignStepCard({
                             size="small"
                             disableElevation
                             startIcon={<BadgeCheck size={14} />}
-                            onClick={onConfirmPeerFeedback}
+                            onClick={() => setConfirmDialogOpen(true)}
                             disabled={confirmingPeerFeedback}
                             sx={{ borderRadius: 3 }}
                         >
                             {confirmingPeerFeedback ? 'Confirmation…' : "J'ai terminé mes feedbacks"}
                         </Button>
                     </Stack>
+                )}
+                {showPeerFeedbackConfirm && (
+                    <ConfirmDialog
+                        open={confirmDialogOpen}
+                        title="Terminer vos feedbacks ?"
+                        description={`Vous avez saisi ${peerRatingsCount} feedback${
+                            peerRatingsCount > 1 ? 's' : ''
+                        }. Une fois cette étape terminée, vos réponses seront verrouillées et vous ne pourrez plus ajouter ni modifier de feedback. Cette action est irréversible.`}
+                        confirmIcon={<BadgeCheck size={14} />}
+                        pending={confirmingPeerFeedback}
+                        onConfirm={() => {
+                            setConfirmDialogOpen(false);
+                            onConfirmPeerFeedback?.();
+                        }}
+                        onClose={() => setConfirmDialogOpen(false)}
+                    />
                 )}
                 {step.state === 'locked' && (
                     <Stack direction="row" spacing={0.7} alignItems="center" sx={{ mt: 1.2, color: 'text.disabled' }}>
